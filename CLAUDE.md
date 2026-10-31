@@ -44,14 +44,29 @@ LeetCode-style puzzles set inside real open-source repos pinned to a commit. v1 
 
 Fill these in as they are created:
 
+From the repo root:
+
 ```
 pnpm dev                 # web app
-pnpm test                # unit tests
-pnpm e2e                 # Playwright
-pnpm validate            # content validation (calls ingest/validate.py)
-uv run ingest snapshot <slug>   # clone, index, upload one repo
-uv run ingest seed       # load content/ into Postgres
+pnpm test                # unit tests (ingest only so far)
+pnpm e2e                 # stub, exits 1: Playwright isn't set up yet
+pnpm validate            # stub, exits 1: ingest/validate.py doesn't exist yet
 ```
+
+From `ingest/`:
+
+```
+uv run ingest snapshot <slug>   # fetch, filter, index, write to ingest/out/ (no upload yet)
+uv run ingest seed              # stub, exits 1: will load content/ into Postgres
+uv run python -m pytest         # not `uv run pytest`: Windows Application Control can block pytest.exe
+uv run ruff check .
+uv run ruff format --check .
+uv run pyright
+uv run python scripts/gen_proto.py            # regenerate SCIP bindings from the vendored scip.proto
+uv run python scripts/regen_fixture_index.py  # rebuild the test fixture's index after changing it
+```
+
+`snapshot` needs `scip-typescript` on PATH: `npm install -g @sourcegraph/scip-typescript@0.6.0`.
 
 ## Environment
 
