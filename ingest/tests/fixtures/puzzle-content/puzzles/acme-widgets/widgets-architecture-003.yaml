@@ -1,0 +1,19 @@
+id: widgets-architecture-003
+snapshot: acme-widgets@a1b2c3d
+type: architecture
+difficulty: easy
+title: Fixture widgets-architecture-003
+prompt: 'Select the function that turns raw widget text into a trimmed string.
+
+  '
+answer:
+  kind: symbol
+  id: src/util/helpers.js#parse
+  accept:
+  - src/index.js#parse
+  accept_reasons:
+  - src/index.js re-exports the same function.
+solution: solutions/widgets-architecture-003.md
+authors:
+- fixture-author
+verified_by: []

@@ -1,0 +1,24 @@
+id: widgets-find-001
+snapshot: acme-widgets@a1b2c3d4e5f60718293a4b5c6d7e8f9012345678
+type: find
+difficulty: easy
+title: Fixture widgets-find-001
+prompt: 'In src/router/layer.js, select the method that decides whether a path has
+  a trailing slash.
+
+  '
+answer:
+  kind: symbol
+  id: src/router/layer.js#Layer.match
+  accept: []
+  accept_reasons: []
+solution: solutions/widgets-find-001.md
+authors:
+- fixture-author
+verified_by:
+- anshi
+hints:
+- FIXTURE-HINT Routes are matched layer by layer.
+tags:
+- routing
+- http

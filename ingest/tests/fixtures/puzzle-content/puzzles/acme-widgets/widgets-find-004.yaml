@@ -1,0 +1,21 @@
+id: widgets-find-004
+snapshot: acme-widgets@a1b2c3d
+type: find
+difficulty: easy
+title: Fixture widgets-find-004
+prompt: 'Select the lines that set the three retry settings. Select the lines.
+
+  '
+answer:
+  kind: location
+  path: src/config.js
+  anchor:
+  - 10
+  - 12
+  window:
+  - 8
+  - 20
+solution: solutions/widgets-find-004.md
+authors:
+- fixture-author
+verified_by: []
