@@ -49,6 +49,8 @@ Fill these in as they are created:
 From the repo root:
 
 ```
+pnpm db                  # start local Postgres, apply migrations (stays running)
+pnpm db:reset            # delete all local database data
 pnpm dev                 # web app
 pnpm test                # unit tests (ingest only so far)
 pnpm e2e                 # stub, exits 1: Playwright isn't set up yet

@@ -1,5 +1,27 @@
 # DEVLOG
 
+## Contracts for the localhost MVP
+
+Type: Addition
+
+Goal: Let several agents build the site at once and have the parts fit, with no accounts or API keys needed to run it on localhost.
+
+What should be done: Fix the database schema, API shapes and local stand-ins before any feature work starts, and record them in the spec.
+
+What was done (technical):
+
+- `supabase/migrations/0001_init.sql` implements spec section 8. It adds `snapshots.name`, `occurrences.end_col`, `puzzles.choices` and `puzzles.verified_by`. RLS plus column grants deny clients `answer_json` and `solutions`, confirmed by querying as the `anon` role.
+- `scripts/localdb.mjs` runs real Postgres 18 from the `embedded-postgres` npm package, with data in `.localdb/`. No Docker or install needed. `pg_trgm`, roles and RLS all work on Windows. `supabase/local/shim.sql` adds the roles and `auth` schema Supabase provides, so the same migrations run in both places.
+- `web/lib/api-types.ts` holds the API shapes. Spec section 9 lists the routes, including the localhost-only `/api/dev/*` and `/snapshots/*`.
+- `INGEST_OUT_DIR` and `INGEST_WORK_DIR` let git worktrees share one set of fetched repos and snapshots.
+
+Decisions:
+
+- Localhost mode covers TypeScript, JavaScript and Python. Go isn't installed here and its installer may need admin rights, so it's left for later.
+- Express is dropped from the launch repos: it's under the 5k-line minimum and its index leaves most calls unresolved.
+- GitHub OAuth, R2 upload and deployment aren't being built yet, because they can't be tested without accounts. A dev login stands in, refused outside localhost and in production.
+- A separate agent that never sees the key may do the blind second solve, recorded as `agent:<name>`, and the puzzle page says no person has checked it. Replace these with human solves before a public launch.
+
 ## Promote undefined methods to canonical symbols
 
 Type: Change
