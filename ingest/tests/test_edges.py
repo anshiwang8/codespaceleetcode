@@ -132,9 +132,11 @@ def test_every_occurrence_token_spells_its_symbol_name(conversion: Conversion) -
     # Promotion trusts SCIP's locals, so a wrong link would show up as a mismatched token.
     names = {symbol.symbol_id: symbol.name for symbol in conversion.symbols}
     for occurrence in conversion.occurrences:
-        line = (TINY_REPO / occurrence.file).read_text(encoding="utf-8").splitlines()[
-            occurrence.line - 1
-        ]
+        line = (
+            (TINY_REPO / occurrence.file)
+            .read_text(encoding="utf-8")
+            .splitlines()[occurrence.line - 1]
+        )
         assert line[occurrence.col - 1 :].startswith(names[occurrence.symbol_id]), occurrence
 
 
