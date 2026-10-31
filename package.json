@@ -1,0 +1,12 @@
+{
+  "name": "codebase-puzzles",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "pnpm@12.6.0",
+  "scripts": {
+    "dev": "pnpm --filter web dev",
+    "test": "cd ingest && uv run python -m pytest",
+    "e2e": "node -e \"console.error('pnpm e2e: not implemented yet'); process.exit(1)\"",
+    "validate": "node -e \"console.error('pnpm validate: not implemented yet (ingest/validate.py does not exist)'); process.exit(1)\""
+  }
+}

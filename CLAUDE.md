@@ -55,17 +55,25 @@ uv run ingest seed       # load content/ into Postgres
 
 ## Environment
 
-Documented in `.env.example`; never commit real values.
+Split per package and documented in each `.env.example`; never commit real values. R2 write credentials must never appear in `web/`.
+
+`web/.env.example`:
 
 ```
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
+NEXT_PUBLIC_SNAPSHOT_CDN_URL=
+```
+
+`ingest/.env.example`:
+
+```
 R2_ACCOUNT_ID=
 R2_ACCESS_KEY_ID=
 R2_SECRET_ACCESS_KEY=
 R2_BUCKET=
-NEXT_PUBLIC_SNAPSHOT_CDN_URL=
+SUPABASE_DB_URL=
 ```
 
 ## DEVLOG

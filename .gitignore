@@ -1,0 +1,17 @@
+# Node
+node_modules/
+.next/
+
+# Python
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+
+# Ingest working data and output
+ingest/work/
+ingest/out/
+
+# Env files: only the examples are committed
+.env*
+!.env.example
