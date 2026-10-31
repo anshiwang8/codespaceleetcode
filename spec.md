@@ -1,0 +1,302 @@
+# Spec: Codebase Puzzles
+
+A LeetCode-style site where every puzzle is set in a real open-source repository, pinned to a commit. Users read the code in a browser IDE and submit a precise answer, which is graded automatically. Each puzzle comes with a written solution.
+
+Scope for v1: **Find**, **Trace**, and **Architecture** puzzles. No code execution, no bug fixing, no AI mode.
+
+---
+
+## 1. Core principle: every puzzle has one checkable answer
+
+The product only works if grading is objective. Each puzzle must have exactly one correct answer, or a closed, enumerated set of equivalent answers. Three rules make that hold:
+
+1. **Answers are references, never prose.** Every answer is a canonical ID taken from the snapshot's code index (a symbol, a file, a line span, or a choice ID). The grader compares IDs. It never interprets text.
+2. **Users answer by selecting, not typing.** The UI collects answers by clicking symbols, files, or lines in the viewer ("Select as answer"). Users never type a path or name, so there is no formatting ambiguity.
+3. **No puzzle is published until it is proven unique.** The CI validator and a blind second solve (section 6) must both pass.
+
+If an author cannot write a prompt that has one answer, the puzzle is rejected. It does not ship with a fuzzy grader.
+
+---
+
+## 2. Puzzle types
+
+### Find
+Locate one specific thing in the codebase.
+- Examples: "Which function decides whether a route path matches a trailing slash?" "In which file is the default request timeout defined?"
+- Answer kinds: `symbol`, `file`, `location`.
+
+### Trace
+Follow execution or data flow between two fixed points.
+- Example: "Starting at `app.listen`, list the functions called, in order, until the first byte of an HTTP response is written. Direct calls only."
+- Answer kind: `sequence`.
+- The prompt must name the start symbol and the end condition, and state whether calls are direct or transitive.
+
+### Architecture
+Understand structure: module responsibilities, boundaries, dependencies, extension points.
+- Examples: "Select every module that imports the session store directly." "To add a new compression codec, which single file would you register it in?"
+- Answer kinds: `set`, `symbol`, `file`, `choice`.
+
+---
+
+## 3. Answer kinds and grading
+
+All answer IDs come from the snapshot index, so every one exists at the pinned SHA.
+
+**ID formats**
+- File: `src/router/index.ts`
+- Symbol: `src/router/index.ts#Router.handle`, using the SCIP-derived qualified name. Same-name collisions in one file get a `~N` suffix in index order.
+- Location: `src/router/index.ts:L120-L135`
+
+| Kind | User submits | Correct when |
+|---|---|---|
+| `symbol` | One symbol ID | Equals `answer.id`, or is in `answer.accept` |
+| `file` | One file path | Equals `answer.path`, or is in `answer.accept` |
+| `location` | A line selection in one file | Same file, the selection covers every line in `answer.anchor`, and the selection lies within `answer.window` |
+| `sequence` | Ordered list of symbol IDs | Exact ordered match with `answer.ids`, or with one of `answer.accept_sequences` |
+| `set` | Unordered set of IDs | Set equality with `answer.ids` |
+| `choice` | One option ID | Equals `answer.option` |
+
+Grading rules:
+- `location` exists for answers that aren't a whole symbol, such as a config block or a specific branch inside a function. `anchor` is the minimal set of lines that must be selected. `window` is the maximum span allowed (at most 30 lines), which stops users from selecting the whole file. Prefer `symbol` whenever the target is a whole symbol.
+- `set` puzzles **show the required count** ("Select all 3"). This removes "did I find them all?" ambiguity, and costs little difficulty.
+- `accept` / `accept_sequences` are only for genuinely equivalent answers, such as a re-export alias of the same function. Each entry needs a written reason in `answer.accept_reasons`.
+- No partial credit in v1. Each submission is either correct or incorrect.
+
+---
+
+## 4. Puzzle authoring rules
+
+A prompt must pin down everything that could otherwise produce a second valid answer:
+
+- **Scope.** Name the directory or package when the same name exists in more than one place. Exclude tests, examples, vendored code, and generated code unless they are the subject.
+- **Definition vs. usage.** Say "the function that defines X" or "the call site that triggers X", never just "where X happens".
+- **Direction and depth (Trace).** Give the start symbol, the end condition, direct vs. transitive calls, and how to handle stdlib and third-party calls. The default is to skip them, and the prompt must say so.
+- **Runtime path (Trace).** Fix the configuration, e.g. "with default options" or "for a GET request".
+- **Granularity.** Specify the answer kind in the prompt ("Select a function", "Select a file", "Select the lines").
+- **No reliance on comments or docs** as the only evidence. The answer must be derivable from the code.
+- **One concept per puzzle.** If a prompt needs "and", split it into two puzzles.
+
+### Puzzle file format
+
+One YAML file per puzzle at `content/puzzles/<repo-slug>/<puzzle-id>.yaml`, validated against `content/schema/puzzle.schema.json`.
+
+```yaml
+id: express-find-003
+snapshot: expressjs-express@5a3c1e9          # must exist in content/repos.yaml
+type: find                                    # find | trace | architecture
+difficulty: easy                              # easy | medium | hard
+title: Trailing slash decision
+prompt: |
+  In lib/router/, select the function that decides whether a request path
+  with a trailing slash matches a route defined without one. Select a function.
+answer:
+  kind: symbol
+  id: lib/router/layer.js#Layer.match
+  accept: []
+  accept_reasons: []
+hints:
+  - Routes are matched layer by layer.
+solution: solutions/express-find-003.md       # relative to content/
+tags: [routing, http]
+authors: [anshi]
+verified_by: []                               # filled in by the blind second solver
+```
+
+Trace example:
+
+```yaml
+answer:
+  kind: sequence
+  ids:
+    - lib/application.js#app.listen
+    - lib/application.js#app.handle
+    - lib/router/index.js#Router.handle
+    - lib/router/layer.js#Layer.handle_request
+  accept_sequences: []
+```
+
+### Solutions
+
+Each `solutions/<id>.md` contains: the answer, the navigation path a strong engineer would take (where to start, what to search for, which definitions to jump to), and why plausible wrong answers are wrong. Solutions are only visible after a correct submission or an explicit "give up".
+
+---
+
+## 5. Repositories
+
+Defined in `content/repos.yaml`:
+
+```yaml
+- slug: expressjs-express
+  url: https://github.com/expressjs/express
+  sha: 5a3c1e9...           # full 40-char SHA, immutable once puzzles reference it
+  language: javascript
+  license: MIT
+```
+
+Selection criteria for v1:
+- Permissive or copyleft OSS license (MIT, Apache-2.0, BSD, GPL). Keep the license file in the snapshot and show attribution on every puzzle page.
+- 5k–100k lines of non-test source.
+- Languages: TypeScript/JavaScript, Python, Go. Each must have a working SCIP indexer.
+- Target 10–15 repos at launch, with 4+ puzzles each across all three types.
+
+A snapshot is immutable. To move a repo to a newer commit, create a new snapshot and port the puzzles explicitly.
+
+---
+
+## 6. Validation pipeline (CI)
+
+`content/` changes run `pnpm validate` (calls `ingest/validate.py`). A puzzle merges only if all checks pass.
+
+**Schema**
+- The YAML matches the JSON schema. The ID is unique. The snapshot exists. The solution file exists.
+
+**Existence**
+- Every answer ID (`id`, `ids`, `accept*`, `path`, `anchor`, `window`) resolves in the snapshot index.
+
+**Uniqueness heuristics** (failures need an explicit `validator_overrides` entry with a reason)
+- `symbol`: if another definition shares the answer's short name inside the prompt's stated scope, fail unless it is listed in `accept` or the prompt names the file.
+- `sequence`: each consecutive pair must be a real caller→callee edge in the SCIP reference graph. If the start symbol has another path to the end condition of equal or shorter length, warn.
+- `set`: each member exists. The count shown in the UI equals `len(ids)`.
+- `location`: `anchor` ⊆ `window`, and `window` ≤ 30 lines.
+- `choice`: exactly one option is marked correct, and there are 3–5 options.
+
+**Blind second solve (human)**
+- A second person solves the puzzle without seeing the answer key, then adds their name to `verified_by`. If their answer differs from the key, either the key is wrong or the prompt is ambiguous. Fix the prompt. Never fix this by adding to `accept` unless the two answers are truly equivalent.
+- Publishing requires `verified_by` to be non-empty.
+
+---
+
+## 7. System architecture
+
+### Stack
+| Layer | Choice |
+|---|---|
+| Web app | Next.js (App Router) + TypeScript (strict), deployed on Vercel |
+| Code viewer | Monaco (`@monaco-editor/react`) + custom file tree |
+| DB + auth | Supabase: Postgres, GitHub OAuth |
+| Code storage | Cloudflare R2 behind CDN: raw files + `manifest.json` per snapshot |
+| Code intelligence | SCIP indexers (`scip-typescript`, `scip-python`, `scip-go`), converted into Postgres tables |
+| Search | Postgres `pg_trgm` over file contents |
+| Ingestion + validation | Python (uv), run locally and in GitHub Actions |
+| Content | YAML + Markdown in `content/`, seeded into Postgres |
+
+SCIP, not plain tree-sitter, is required for v1. Unique answers depend on precise definitions and resolved references. Name-matched references would make `sequence` validation and symbol uniqueness checks unreliable.
+
+### Repository layout
+```
+/web                 Next.js app
+/ingest              Python: clone, filter, index, upload, seed, validate
+/content
+  repos.yaml
+  schema/puzzle.schema.json
+  puzzles/<repo-slug>/<id>.yaml
+  solutions/<id>.md
+/supabase/migrations SQL migrations
+spec.md
+CLAUDE.md
+DEVLOG.md
+```
+
+### Ingestion flow (offline)
+```
+repos.yaml
+  → git clone + checkout pinned SHA
+  → filter: drop vendored dirs, binaries, generated files, files > 1 MB
+  → run SCIP indexer → index.scip
+  → convert: files, symbols, occurrences, call edges → Postgres
+  → upload files + manifest.json → R2 at /snapshots/<slug>@<sha>/
+  → validate content/puzzles → seed puzzles + solutions → Postgres
+```
+
+### Runtime flow
+```
+puzzle list → puzzle page
+  → GET puzzle (prompt, type, answer kind, count for sets; no answer key)
+  → manifest.json from CDN → file tree
+  → open file → raw file from CDN → Monaco
+  → hover / click symbol → /api/symbols (definition, references)
+  → search → /api/search
+  → "Select as answer" builds the submission from canonical IDs
+  → POST /api/puzzles/:id/submit → server grades → { correct }
+  → on correct or give-up → GET solution
+```
+
+---
+
+## 8. Data model
+
+```sql
+repos        (id, slug, url, language, license)
+snapshots    (id, repo_id, sha, manifest_url, indexed_at)
+files        (id, snapshot_id, path, size, language, content)        -- content: pg_trgm index
+symbols      (id, snapshot_id, file_id, symbol_id, name, kind,
+              start_line, end_line)                                  -- symbol_id = canonical ID
+occurrences  (symbol_pk, file_id, line, col, role)                   -- role: definition | reference
+call_edges   (snapshot_id, caller_symbol_id, callee_symbol_id)
+puzzles      (id, snapshot_id, slug, type, difficulty, title, prompt,
+              answer_kind, answer_json, set_count, hints, tags, published)
+solutions    (puzzle_id, body_md)
+users        (id, github_login, created_at)                          -- via Supabase auth
+submissions  (id, user_id, puzzle_id, answer_json, correct, created_at,
+              time_on_puzzle_ms)
+progress     (user_id, puzzle_id, status, attempts, solved_at, gave_up)
+```
+
+`answer_json` and `solutions` are only readable through server routes using the service role. Row-level security denies client access.
+
+---
+
+## 9. API
+
+| Route | Method | Returns |
+|---|---|---|
+| `/api/puzzles` | GET | List with filters (type, difficulty, repo, tag) and the user's status |
+| `/api/puzzles/:slug` | GET | Prompt, metadata, answer kind, set count, snapshot info. **Never the key.** |
+| `/api/puzzles/:slug/submit` | POST | `{ correct, attempts }` |
+| `/api/puzzles/:slug/solution` | GET | Solution markdown, only if solved or given up |
+| `/api/puzzles/:slug/give-up` | POST | Marks given up, unlocks solution |
+| `/api/snapshots/:id/symbols?file=&line=&col=` | GET | Definition + references at a position |
+| `/api/snapshots/:id/symbols/outline?file=` | GET | Symbols in a file |
+| `/api/snapshots/:id/search?q=` | GET | File/line matches, capped at 200 |
+
+Submit validates that every submitted ID exists in the snapshot before grading. Requests are rate-limited per user.
+
+---
+
+## 10. UI
+
+- **Puzzle list:** filter by type, difficulty, repo; solved state per row.
+- **Puzzle page:** prompt panel (left), file tree + Monaco + search (center), answer tray (right).
+  - The answer tray shows the required kind, the current selection, and for `set` the "n of N selected" count. For `sequence`, an ordered list with drag to reorder.
+  - Go-to-definition (F12 / ctrl-click), find references, and a breadcrumb trail of visited files.
+  - Repo name, SHA, license, and link back to GitHub at that SHA.
+- **Result:** correct / incorrect, attempt count. Solution unlocks on correct or give-up.
+- **Profile:** solved counts by type and difficulty.
+
+---
+
+## 11. Non-goals for v1
+
+- Bug-fix puzzles and any code execution
+- AI-assisted mode
+- User-submitted puzzles or private repos
+- Partial credit, leaderboards, contests
+- Mobile-optimized IDE (read-only puzzle list must work on mobile)
+
+---
+
+## 12. Milestones
+
+1. **Ingest:** pipeline for 3 repos (one per language); files on R2; index in Postgres.
+2. **Viewer:** file tree, Monaco, search, go-to-definition, find references.
+3. **Puzzles:** schema, validator in CI, grader, answer tray, 30 puzzles with blind second solves.
+4. **Users:** GitHub auth, submissions, progress, solutions unlock.
+5. **Launch content:** 10–15 repos, 60+ puzzles.
+
+---
+
+## 13. Open questions
+
+- Should `location` answers be dropped entirely in favour of `symbol` + `choice`? Decide after authoring the first 30 puzzles.
+- Show set counts on every `set` puzzle, or only on easy and medium?
+- Time-based scoring, or solved/unsolved only?

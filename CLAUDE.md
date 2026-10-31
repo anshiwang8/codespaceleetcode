@@ -1,0 +1,82 @@
+# CLAUDE.md
+
+Operational rules for working in this repo. Read `spec.md` before any non-trivial change. The spec is the source of truth; if code and spec disagree, stop and flag it.
+
+## Project
+
+LeetCode-style puzzles set inside real open-source repos pinned to a commit. v1 has three puzzle types: Find, Trace, Architecture. Users navigate code in a browser IDE and submit a precise answer, which is graded server-side against a canonical answer key.
+
+## Layout
+
+- `web/` is the Next.js App Router app (TypeScript strict), deployed on Vercel.
+- `ingest/` is the Python pipeline (uv): clone, filter, SCIP index, upload to R2, seed, validate.
+- `content/` holds `repos.yaml`, `schema/`, `puzzles/<repo-slug>/<id>.yaml`, `solutions/<id>.md`.
+- `supabase/migrations/` holds SQL migrations. Never edit an applied migration; add a new one.
+
+## Non-negotiable rules
+
+1. **Answer keys never reach the client.** `answer_json` and solutions are read only in server routes with the service role. No answer data in props, page payloads, logs sent to the browser, or error messages. RLS denies client reads on `puzzles.answer_json` and `solutions`.
+2. **Answers are canonical IDs.** Files are `path`, symbols are `path#Qualified.name[~N]`, locations are `path:Lstart-Lend`. The grader compares IDs. Never add fuzzy matching, string similarity, case-insensitive matching, or LLM grading.
+3. **Users select answers, never type them.** Every answer input in the UI is built from clicks on the tree, symbols, or lines.
+4. **Snapshots are immutable.** Never change the SHA of an existing snapshot. A newer commit means a new snapshot.
+5. **Every puzzle passes `pnpm validate`.** Never weaken a validator check to get a puzzle through. Use `validator_overrides` with a written reason, and only when the check is a false positive.
+6. **Uniqueness is fixed in the prompt, not the key.** If a puzzle has two plausible answers, tighten the prompt's scope. Only add to `accept` for truly equivalent answers (e.g. a re-export of the same function), with a reason in `accept_reasons`.
+7. **Code intelligence comes from SCIP.** Don't substitute name-based matching for definitions, references, or call edges.
+8. **v1 scope only.** No code execution, bug-fix puzzles, or AI mode. If a task needs them, stop and flag it.
+
+## Conventions
+
+- TypeScript strict, no `any`. Validate route inputs with zod.
+- Server-only modules go in `web/lib/server/` and import `server-only`.
+- Python: type hints, `ruff` + `pyright` clean. Run with `uv run`.
+- Puzzle IDs: `<repo-short>-<type>-<nnn>`, e.g. `express-trace-002`.
+- One concept per puzzle. If the prompt needs "and", split it.
+
+## Testing
+
+- Grader: unit tests for every answer kind, including wrong file, wrong order, extra/missing set members, selection outside the window, and anchor not covered.
+- Validator: fixture puzzles that must pass and fixture puzzles that must fail, one per check.
+- API: tests that `/api/puzzles/:slug` and errors from `/submit` never contain answer data.
+- e2e (Playwright): solve one puzzle of each type end to end against a fixture snapshot.
+- Run the full suite before marking any task done.
+
+## Commands
+
+Fill these in as they are created:
+
+```
+pnpm dev                 # web app
+pnpm test                # unit tests
+pnpm e2e                 # Playwright
+pnpm validate            # content validation (calls ingest/validate.py)
+uv run ingest snapshot <slug>   # clone, index, upload one repo
+uv run ingest seed       # load content/ into Postgres
+```
+
+## Environment
+
+Documented in `.env.example`; never commit real values.
+
+```
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+R2_ACCOUNT_ID=
+R2_ACCESS_KEY_ID=
+R2_SECRET_ACCESS_KEY=
+R2_BUCKET=
+NEXT_PUBLIC_SNAPSHOT_CDN_URL=
+```
+
+## DEVLOG
+
+Keep `DEVLOG.md` updated whenever a feature or fix lands. Each entry:
+
+```
+Type: Addition | Fix | Change | Removal
+Goal: ...
+What should be done: ...
+What was done (technical): ...
+```
+
+Plain, speakable English; keep specific technical terms.
