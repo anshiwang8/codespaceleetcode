@@ -10,7 +10,7 @@ TEXT_SUFFIXES = frozenset({".example", ".js", ".json", ".mjs", ".ts", ".tsx"})
 
 def _env_keys(path: Path) -> set[str]:
     lines = path.read_text(encoding="utf-8").splitlines()
-    return {line.split("=", 1)[0] for line in lines if line.strip()}
+    return {line.split("=", 1)[0] for line in lines if line.strip() and not line.startswith("#")}
 
 
 def test_no_r2_references_in_web() -> None:
@@ -31,6 +31,10 @@ def test_env_examples_match_the_split() -> None:
         "NEXT_PUBLIC_SUPABASE_ANON_KEY",
         "SUPABASE_SERVICE_ROLE_KEY",
         "NEXT_PUBLIC_SNAPSHOT_CDN_URL",
+        "DATABASE_URL",
+        "SNAPSHOT_DIR",
+        "DEV_AUTH_TEST_HOST",
+        "TEST_DATABASE_URL",
     }
     assert _env_keys(REPO_ROOT / "ingest" / ".env.example") == {
         "R2_ACCOUNT_ID",
