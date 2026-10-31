@@ -1,5 +1,21 @@
 # DEVLOG
 
+## Grader, API routes and dev login
+
+Type: Addition
+
+Goal: Grade answers on the server and give the UI everything in spec section 9, without an answer key ever reaching a client.
+
+What should be done: Build the grader, every API route, the localhost dev login and the route standing in for the CDN, with tests that actively look for leaks.
+
+What was done (technical):
+
+- `web/lib/server/grader.ts` compares IDs exactly for all six answer kinds. Only `submit.ts` reads `answer_json`, and a test enforces that.
+- Dev login is refused unless `NODE_ENV` isn't production and the Host, `X-Forwarded-Host` and `Origin` are all local. `pnpm dev` binds to `127.0.0.1`, since a server on all interfaces would let someone on the same network spoof the Host header.
+- `/snapshots/<name>/...` serves only `manifest.json` and `files/<path>`, as plain text with `nosniff`. About 20 traversal forms were refused against a running server. A build trace showed its dynamic paths pulling the whole project, including solutions, into the server output; `turbopackIgnore` fixed that.
+- 406 web tests run against real Postgres. Breaking 39 protections one at a time, the suite caught all 39.
+- Rate limits are in memory and per process: 60 submits and 240 searches a minute. They'd need a shared store before a real deployment.
+
 ## Contracts for the localhost MVP
 
 Type: Addition

@@ -297,6 +297,11 @@ progress     (user_id, puzzle_id, status, attempts, solved_at, gave_up)
 
 Response shapes live in `web/lib/api-types.ts`. Submit validates that every submitted ID exists in the snapshot before grading. Requests are rate-limited per user. Reading a puzzle needs no sign-in; submitting and giving up do.
 
+- Signed-out requests to `/solution` and `/api/me/stats` get 401. A signed-in user who hasn't unlocked a solution gets 403.
+- Every graded submission counts as an attempt, including ones after solving. A rejected request doesn't.
+- A correct submission after giving up returns `correct: true`, but the status stays `given_up`, so stats stay honest. Giving up on a solved puzzle leaves it `solved`.
+- Search is case-insensitive. The Postgres planner chooses between the trigram index and the path index, because forcing trigram was only faster when nothing matched.
+
 ---
 
 ## 10. UI

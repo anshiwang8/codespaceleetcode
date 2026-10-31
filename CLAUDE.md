@@ -51,8 +51,11 @@ From the repo root:
 ```
 pnpm db                  # start local Postgres, apply migrations (stays running)
 pnpm db:reset            # delete all local database data
-pnpm dev                 # web app
-pnpm test                # unit tests (ingest only so far)
+pnpm dev                 # web app, bound to 127.0.0.1 because dev login trusts the Host header
+pnpm test                # all unit tests: test:ingest, then test:web (needs pnpm db running)
+pnpm --filter web lint
+pnpm --filter web typecheck   # plain tsc needs next typegen first
+pnpm --filter web build
 pnpm e2e                 # stub, exits 1: Playwright isn't set up yet
 pnpm validate            # stub, exits 1: ingest/validate.py doesn't exist yet
 ```
@@ -83,7 +86,13 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 NEXT_PUBLIC_SNAPSHOT_CDN_URL=
+DATABASE_URL=
+SNAPSHOT_DIR=
+DEV_AUTH_TEST_HOST=
+TEST_DATABASE_URL=
 ```
+
+None of these are needed on localhost: `DATABASE_URL` and `SNAPSHOT_DIR` have local defaults outside production.
 
 `ingest/.env.example`:
 
