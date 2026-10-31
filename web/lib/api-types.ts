@@ -74,6 +74,11 @@ export interface SolutionResponse {
   bodyMd: string;
 }
 
+/** POST /api/puzzles/:slug/give-up. A puzzle already solved stays `solved`. */
+export interface GiveUpResponse {
+  status: PuzzleStatus;
+}
+
 export interface ManifestFile {
   path: string;
   size: number;
