@@ -1,0 +1,23 @@
+id: widgets-architecture-002
+snapshot: acme-widgets@a1b2c3d
+type: architecture
+difficulty: easy
+title: Fixture widgets-architecture-002
+prompt: 'Which statement describes how routing is split up?
+
+  '
+answer:
+  kind: choice
+  option: b
+solution: solutions/widgets-architecture-002.md
+authors:
+- fixture-author
+verified_by:
+- anshi
+choices:
+- id: a
+  label: One class does everything
+- id: b
+  label: Router delegates to Layer
+- id: c
+  label: Routes are generated at build time

@@ -1,0 +1,20 @@
+id: case-find-001
+snapshot: acme-widgets@a1b2c3d
+type: find
+difficulty: easy
+title: Fixture case-find-001
+prompt: 'Select the thing this fixture asks for.
+
+  '
+answer:
+  kind: location
+  path: src/config.js
+  anchor:
+  - 10
+  window:
+  - 8
+  - 20
+solution: solutions/case-find-001.md
+authors:
+- fixture-author
+verified_by: []

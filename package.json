@@ -9,7 +9,7 @@
     "test:ingest": "cd ingest && uv run python -m pytest",
     "test:web": "pnpm --filter web test",
     "e2e": "node -e \"console.error('pnpm e2e: not implemented yet'); process.exit(1)\"",
-    "validate": "node -e \"console.error('pnpm validate: not implemented yet (ingest/validate.py does not exist)'); process.exit(1)\"",
+    "validate": "cd ingest && uv run ingest validate",
     "db": "node scripts/localdb.mjs start",
     "db:reset": "node scripts/localdb.mjs reset"
   },

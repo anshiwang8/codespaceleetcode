@@ -1,0 +1,15 @@
+id: widgets-find-002
+snapshot: acme-widgets@a1b2c3d
+type: find
+difficulty: easy
+title: Fixture widgets-find-002
+prompt: 'In src/legacy/, select the method that produces the output. Select a method.
+
+  '
+answer:
+  kind: symbol
+  id: src/legacy/view.js#View.render
+solution: solutions/widgets-find-002.md
+authors:
+- fixture-author
+verified_by: []

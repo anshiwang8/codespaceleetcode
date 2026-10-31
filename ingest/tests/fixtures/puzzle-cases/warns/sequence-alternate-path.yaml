@@ -1,0 +1,20 @@
+id: case-trace-001
+snapshot: acme-widgets@a1b2c3d
+type: trace
+difficulty: easy
+title: Fixture case-trace-001
+prompt: 'Starting at App.listen, list the methods called until a layer handles the
+  request.
+
+  '
+answer:
+  kind: sequence
+  ids:
+  - src/app.js#App.listen
+  - src/app.js#App.handle
+  - src/router/index.js#Router.handle
+  - src/router/layer.js#Layer.handle
+solution: solutions/case-trace-001.md
+authors:
+- fixture-author
+verified_by: []
