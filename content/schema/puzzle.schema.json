@@ -77,10 +77,7 @@
             "enum": [
               "symbol-unique",
               "sequence-edges",
-              "sequence-alternate-path",
-              "set-count",
-              "location-window",
-              "choice-options"
+              "sequence-alternate-path"
             ]
           },
           "reason": { "$ref": "#/$defs/text" }

@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import type { Submission } from "@/lib/api-types";
 import { answerKeySchema, grade, parseLocationId, type AnswerKey } from "@/lib/server/grader";
@@ -208,5 +210,16 @@ describe("answerKeySchema", () => {
     [{ kind: "sequence", ids: [] }],
   ])("refuses the malformed key %j", (key) => {
     expect(answerKeySchema.safeParse(key).success).toBe(false);
+  });
+});
+
+// ingest/tests/test_grading.py runs this same table, so the two graders can't drift apart.
+describe("shared grading cases", () => {
+  const cases = JSON.parse(
+    readFileSync(join(process.cwd(), "..", "content", "schema", "grading-cases.json"), "utf8"),
+  ) as { name: string; answer: unknown; submission: Submission; correct: boolean }[];
+
+  it.each(cases)("$name", ({ answer, submission, correct }) => {
+    expect(grade(answerKeySchema.parse(answer), submission)).toBe(correct);
   });
 });

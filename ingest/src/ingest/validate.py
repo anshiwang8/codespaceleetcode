@@ -32,13 +32,12 @@ from ingest.repos import Repo, load_repos
 from ingest.snapshot_index import IndexedSymbol, SnapshotIndex
 
 # The heuristics a validator_overrides entry can cover. Must match the enum in puzzle.schema.json.
+# set-count, location-window and choice-options can't be false positives, since each failure means
+# the puzzle can't be solved or graded as written. So no override can cover them.
 OVERRIDABLE_CHECKS = (
     "symbol-unique",
     "sequence-edges",
     "sequence-alternate-path",
-    "set-count",
-    "location-window",
-    "choice-options",
 )
 _WARNING_CHECKS = frozenset({"sequence-alternate-path"})
 

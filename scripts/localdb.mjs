@@ -69,6 +69,8 @@ async function start() {
     password: PASSWORD,
     port: PORT,
     persistent: true,
+    // Windows otherwise defaults to WIN1252, which can't hold every character in real repos.
+    initdbFlags: ["--encoding=UTF8"],
     onLog: () => {},
   });
   if (!existsSync(join(DATA_DIR, "PG_VERSION"))) await server.initialise();

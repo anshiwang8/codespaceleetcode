@@ -61,7 +61,9 @@ def is_correct(answer: Answer, submission: object) -> bool:
             ids = tuple(_string_list(fields["ids"]) or ())
             return ids == answer.ids or ids in answer.accept_sequences
         case SetAnswer():
-            return set(_string_list(fields["ids"]) or ()) == set(answer.ids)
+            ids = _string_list(fields["ids"]) or []
+            # A duplicate is wrong even if the members match, as in web/lib/server/grader.ts.
+            return len(ids) == len(set(ids)) and set(ids) == set(answer.ids)
         case ChoiceAnswer():
             return fields["option"] == answer.option
 

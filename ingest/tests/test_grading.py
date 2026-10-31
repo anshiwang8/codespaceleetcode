@@ -1,8 +1,12 @@
 """Spec section 3's grading rules, as used by blind-check."""
 
+import json
+from typing import Any, cast
+
 import pytest
 
 from ingest.grading import is_correct, shape_problem
+from ingest.paths import REPO_ROOT
 from ingest.puzzles import (
     Answer,
     ChoiceAnswer,
@@ -11,6 +15,7 @@ from ingest.puzzles import (
     SequenceAnswer,
     SetAnswer,
     SymbolAnswer,
+    build_answer,
 )
 
 SYMBOL = SymbolAnswer("a.js#A.run", ("b.js#run",), ("A re-export.",))
@@ -84,3 +89,15 @@ def test_time_on_puzzle_is_ignored() -> None:
 def test_malformed_submissions_are_flagged_and_wrong(answer: Answer, submission: object) -> None:
     assert shape_problem(answer.kind, submission) is not None
     assert not is_correct(answer, submission)
+
+
+SHARED_CASES = cast(
+    list[dict[str, Any]],
+    json.loads((REPO_ROOT / "content" / "schema" / "grading-cases.json").read_text("utf-8")),
+)
+
+
+@pytest.mark.parametrize("case", SHARED_CASES, ids=lambda case: str(case["name"]))
+def test_shared_grading_cases(case: dict[str, Any]) -> None:
+    # web/tests/grader.test.ts runs this same table, so the two graders can't drift apart.
+    assert is_correct(build_answer(case["answer"]), case["submission"]) is case["correct"]

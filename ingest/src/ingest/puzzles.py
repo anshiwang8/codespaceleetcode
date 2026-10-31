@@ -191,7 +191,7 @@ def _build_puzzle(document: dict[str, Any], path: Path) -> Puzzle:
         difficulty=document["difficulty"],
         title=document["title"],
         prompt=document["prompt"],
-        answer=_build_answer(document["answer"]),
+        answer=build_answer(document["answer"]),
         choices=None
         if choices is None
         else tuple(Choice(choice["id"], choice["label"]) for choice in choices),
@@ -208,7 +208,7 @@ def _build_puzzle(document: dict[str, Any], path: Path) -> Puzzle:
     )
 
 
-def _build_answer(block: dict[str, Any]) -> Answer:
+def build_answer(block: dict[str, Any]) -> Answer:
     accept = tuple[str, ...](block.get("accept", ()))
     reasons = tuple[str, ...](block.get("accept_reasons", ()))
     match block["kind"]:

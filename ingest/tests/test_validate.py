@@ -125,7 +125,7 @@ def test_an_override_never_covers_existence_or_reasons(path: Path, tmp_path: Pat
 def test_an_override_for_another_check_doesnt_cover(tmp_path: Path) -> None:
     path = CASES / "must_fail" / "symbol-unique--no-scope-stated.yaml"
     document = cast(dict[str, Any], yaml.safe_load(path.read_text(encoding="utf-8")))
-    document["validator_overrides"] = [{"check": "set-count", "reason": "The wrong check."}]
+    document["validator_overrides"] = [{"check": "sequence-edges", "reason": "The wrong check."}]
     text = yaml.safe_dump(document, sort_keys=False)
     report = validate_content(content_with_case(tmp_path / "c", text, path.stem), SNAPSHOTS)
     assert _checks(report) == {"symbol-unique"}
