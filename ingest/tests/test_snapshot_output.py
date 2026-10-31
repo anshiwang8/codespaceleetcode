@@ -164,6 +164,31 @@ def test_typescript_projects_run_deepest_first_and_end_with_a_catch_all(tmp_path
     ]
 
 
+def test_solution_style_tsconfigs_are_not_projects(tmp_path: Path) -> None:
+    def write(relative: str, text: str) -> None:
+        _touch(tmp_path / relative)
+        (tmp_path / relative).write_text(text, encoding="utf-8")
+
+    write("tsconfig.json", '{"compilerOptions": {"paths": {"@x/*": ["packages/*"]}}}')
+    write(
+        "packages/solution/tsconfig.json",
+        """{
+          // Only points elsewhere, with a comment and a trailing comma.
+          "files": [],
+          "include": [],
+          "references": [{"path": "./tsconfig.build.json"},],
+        }""",
+    )
+    write("packages/real/tsconfig.json", '{"include": ["src/**/*"], "references": [{"path": "x"}]}')
+    write("packages/broken/tsconfig.json", '{"files": [')
+    assert indexer.write_typescript_projects(tmp_path) == [
+        "packages/broken/tsconfig.scip.json",
+        "packages/real/tsconfig.scip.json",
+        "tsconfig.scip.json",
+        "tsconfig.scip-fallback.json",
+    ]
+
+
 def test_typescript_project_config_widens_scope_and_keeps_the_repos_options(
     tmp_path: Path,
 ) -> None:

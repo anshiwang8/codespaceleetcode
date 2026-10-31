@@ -126,20 +126,8 @@ class SourceExtents:
 
     def find(self, line: int, col: int) -> Extent | None:
         """Return the definition named by the token at this position, if it names one."""
-        token = self._node_at(line, col)
-        node = token
-        while node is not None:
-            if (
-                node.type in _FUNCTION_DEFINITIONS
-                or node.type in _BLOCK_DEFINITIONS
-                or node.type in _OTHER_DEFINITIONS
-                or node.type in _VALUE_FIELDS
-            ):
-                # Any further out is a definition this token is merely inside, like a function
-                # holding the variable or the destructured parameter named here.
-                return self._extent(node) if _is_named_by(node, token) else None
-            node = node.parent
-        return None
+        node = self._definition_named_at(line, col)
+        return self._extent(node) if node is not None else None
 
     def redefines(self, line: int, col: int) -> bool:
         """Whether a SCIP reference here is really another definition of its symbol.
@@ -147,10 +135,8 @@ class SourceExtents:
         scip-python gives one symbol a definition role only at its first `def`. An `@overload`'s
         implementation or a property's setter is a reference sitting on a `def` name.
         """
-        if not self.is_python:
-            return False
-        extent = self.find(line, col)
-        return extent is not None and extent.is_function
+        node = self._definition_named_at(line, col) if self.is_python else None
+        return node is not None and node.type in _BLOCK_DEFINITIONS
 
     def is_non_call(self, line: int, col: int) -> bool:
         """Whether a reference here is a type, decorator, base class or repeated definition."""
@@ -191,6 +177,22 @@ class SourceExtents:
                     found.append(target)
                 current = current.child_by_field_name("right")
         return found
+
+    def _definition_named_at(self, line: int, col: int) -> Node | None:
+        token = self._node_at(line, col)
+        node = token
+        while node is not None:
+            if (
+                node.type in _FUNCTION_DEFINITIONS
+                or node.type in _BLOCK_DEFINITIONS
+                or node.type in _OTHER_DEFINITIONS
+                or node.type in _VALUE_FIELDS
+            ):
+                # Any further out is a definition this token is merely inside, like a function
+                # holding the variable or the destructured parameter named here.
+                return node if _is_named_by(node, token) else None
+            node = node.parent
+        return None
 
     def _node_at(self, line: int, col: int) -> Node | None:
         if self._root is None or line >= len(self._lines):

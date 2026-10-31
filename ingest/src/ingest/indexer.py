@@ -2,12 +2,14 @@
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
 from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
+from typing import cast
 
 from ingest.errors import IngestError
 from ingest.fetch import remove_tree
@@ -34,21 +36,27 @@ _TSCONFIG = "tsconfig.scip.json"
 _TSCONFIG_FALLBACK = "tsconfig.scip-fallback.json"
 # A repo's own `include` and `references` tend to hide source, and they're built for emitting
 # packages, which this never does. These configs keep its compiler options and paths, and widen the
-# scope to every file below them.
+# scope to every file below them. `bundler` resolution reads source the way a person does. A repo's
+# Node16 setting rejects a `paths` entry pointing at a directory in an ES module, relying on
+# node_modules links that a snapshot never installs, and every such import would go unresolved.
 _TSCONFIG_OVERRIDES: Mapping[str, object] = {
     "allowJs": True,
     "composite": False,
     "declaration": False,
     "declarationMap": False,
     "incremental": False,
+    "module": "esnext",
+    "moduleResolution": "bundler",
     "noEmit": True,
     "skipLibCheck": True,
 }
+# tsconfig.json allows comments and trailing commas. The first alternative keeps strings intact, so
+# a glob like "**/*" isn't mistaken for a comment.
+_JSONC_NOISE = re.compile(r'("(?:\\.|[^"\\])*")|//[^\n]*|/\*.*?\*/', re.DOTALL)
+_TRAILING_COMMA = re.compile(r",(\s*[}\]])")
 _TSCONFIG_DEFAULTS: Mapping[str, object] = {
     "experimentalDecorators": True,
     "jsx": "preserve",
-    "module": "esnext",
-    "moduleResolution": "bundler",
     "target": "esnext",
 }
 # scip-python reads this name before pyrightconfig.json or pyproject.toml, so it beats the repo's
@@ -155,8 +163,29 @@ def _typescript_project_dirs(stage_dir: Path) -> list[Path]:
         config.parent
         for config in stage_dir.rglob("tsconfig.json")
         if not NON_SOURCE_DIRS.intersection(config.relative_to(stage_dir).parts[:-1])
+        and not _only_points_to_references(config)
     ]
     return sorted(directories, key=lambda directory: (-len(directory.parts), directory))
+
+
+def _only_points_to_references(tsconfig: Path) -> bool:
+    """Whether this is a solution-style config, with `references` but no files of its own.
+
+    Nothing builds with its options, and adopting them would hide the `paths` of a config further
+    up: nestjs/nest's packages import each other through paths only its root config defines.
+    """
+    text = tsconfig.read_text(encoding="utf-8", errors="replace")
+    without_comments = _JSONC_NOISE.sub(lambda match: match.group(1) or "", text)
+    try:
+        parsed: object = json.loads(_TRAILING_COMMA.sub(r"\1", without_comments))
+    except json.JSONDecodeError:
+        return False  # Let scip-typescript report it. The catch-all still covers its files.
+    if not isinstance(parsed, dict):
+        return False
+    config = cast(dict[str, object], parsed)
+    return (
+        bool(config.get("references")) and config.get("files") == [] and not config.get("include")
+    )
 
 
 def _run_scip_python(stage_dir: Path) -> IndexResult:

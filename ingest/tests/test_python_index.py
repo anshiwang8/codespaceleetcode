@@ -230,6 +230,17 @@ def test_python_position_inside_a_definition_does_not_name_it() -> None:
     assert extents.find(0, 6) is None  # nor does the parameter
 
 
+def test_only_a_def_or_class_name_redefines_a_symbol() -> None:
+    source = b"def f():\n    pass\nclass C:\n    pass\nkeys = {f: lambda: 1}\ng = lambda: 1\nf()\n"
+    extents = SourceExtents("x.py", source)
+    assert extents.redefines(0, 4)
+    assert extents.redefines(2, 6)
+    assert not extents.redefines(4, 8)  # a dict key with a lambda value
+    assert not extents.redefines(5, 0)
+    assert not extents.redefines(6, 0)
+    assert not SourceExtents("x.js", b"function f() {}\n").redefines(0, 9)
+
+
 def test_python_type_annotation_is_a_non_call() -> None:
     extents = SourceExtents("x.py", b"def f():\n    a: Foo = Foo()\n")
     assert extents.is_non_call(1, 7)
