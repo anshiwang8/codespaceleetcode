@@ -6,7 +6,7 @@ Output lines and columns are 1-based, matching location IDs (`path:L120-L135`) a
 import re
 from collections import Counter
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from enum import StrEnum
 
 from ingest.edges import edges_for_document
@@ -54,6 +54,8 @@ _KIND_FROM_SUFFIX = {
     Suffix.TERM: "term",
     Suffix.TYPE: "type",
 }
+# scip-python gives every symbol kind 0, but its descriptors are unambiguous.
+_PYTHON_KIND_FROM_SUFFIX = {Suffix.TERM: "variable", Suffix.TYPE: "class"}
 _CAMEL_BOUNDARY = re.compile(r"(?<=[a-z0-9])(?=[A-Z])")
 
 
@@ -72,6 +74,13 @@ class SymbolRecord:
     span: Span
     body: Span
     callable: bool
+    # Later definitions of one SCIP symbol: Python's `@overload` stubs put the real body last, and
+    # so do a property's setter and a function redefined in `try`/`except`.
+    other_bodies: tuple[Span, ...] = ()
+
+    @property
+    def bodies(self) -> tuple[Span, ...]:
+        return (self.body, *self.other_bodies)
 
 
 @dataclass(frozen=True, order=True)
@@ -79,6 +88,7 @@ class OccurrenceRecord:
     file: str
     line: int
     col: int
+    end_col: int
     symbol_id: str
     role: str
 
@@ -92,6 +102,7 @@ class ConversionStats:
     references_to_external_symbols: int = 0
     references_outside_callables: int = 0
     references_to_non_callables: int = 0
+    references_not_calls: int = 0
 
 
 @dataclass
@@ -100,8 +111,9 @@ class PromotedSymbols:
 
     records: list[SymbolRecord] = field(default_factory=list[SymbolRecord])
     by_local: dict[str, SymbolRecord] = field(default_factory=dict[str, SymbolRecord])
-    definition_sites: dict[tuple[int, int], SymbolRecord] = field(
-        default_factory=dict[tuple[int, int], SymbolRecord]
+    # (line, col) of each property token, with the column where the token ends.
+    definition_sites: dict[tuple[int, int], tuple[SymbolRecord, int]] = field(
+        default_factory=dict[tuple[int, int], tuple[SymbolRecord, int]]
     )
     # `exports` in `exports.x = ...` shares x's local, but it isn't a reference to x.
     exports_roots: set[tuple[int, int]] = field(default_factory=set[tuple[int, int]])
@@ -127,8 +139,10 @@ def convert_index(index: scip_pb2.Index, read_source: Callable[[str], bytes | No
     # Symbols come first so references in earlier files can resolve to ones defined in later files.
     owners: dict[str, SymbolRecord] = {}
     promoted: dict[str, PromotedSymbols] = {}
+    extents_by_path: dict[str, SourceExtents] = {}
     for path, document in documents:
         extents = SourceExtents(path, read_source(path))
+        extents_by_path[path] = extents
         _collect_definitions(path, document, extents, ids, owners, stats)
         promoted[path] = _promote(path, document, extents, ids, owners, stats)
 
@@ -141,14 +155,17 @@ def convert_index(index: scip_pb2.Index, read_source: Callable[[str], bytes | No
     defined_in = _group_by_file(all_symbols)
     for path, document in documents:
         here = promoted[path]
+        extents = extents_by_path[path]
 
         def resolve(
             symbol: str, by_local: dict[str, SymbolRecord] = here.by_local
         ) -> SymbolRecord | None:
             return by_local.get(symbol) if is_local(symbol) else owners.get(symbol)
 
-        _collect_occurrences(path, document, owners, here, occurrences, stats)
-        edges.update(edges_for_document(document, defined_in.get(path, []), resolve, stats))
+        _collect_occurrences(path, document, owners, here, extents, occurrences, stats)
+        edges.update(
+            edges_for_document(document, defined_in.get(path, []), resolve, extents, stats)
+        )
 
     symbols = sorted(all_symbols, key=lambda s: (s.file, s.span, s.symbol_id))
     return Conversion(symbols, sorted(occurrences), sorted(edges), stats)
@@ -168,12 +185,13 @@ def _collect_definitions(
     # SCIP doesn't promise an occurrence order, so "index order" means source order: it's stable.
     for occurrence in sorted(document.occurrences, key=occurrence_span):
         symbol = occurrence.symbol
-        if (
-            is_local(symbol)
-            or not occurrence.symbol_roles & DEFINITION_ROLE
-            or symbol in owners
-            or symbol in excluded
-        ):
+        if is_local(symbol) or symbol in excluded:
+            continue
+        owner = owners.get(symbol)
+        if owner is not None:
+            owners[symbol] = _with_later_definition(owner, occurrence, path, extents)
+            continue
+        if not occurrence.symbol_roles & DEFINITION_ROLE:
             continue
 
         descriptors = parse_descriptors(symbol)
@@ -184,7 +202,7 @@ def _collect_definitions(
 
         kind = kinds.get(symbol, _UNKNOWN_KIND)
         if kind == _UNKNOWN_KIND:
-            kind = _KIND_FROM_SUFFIX.get(descriptors[-1].suffix, _UNKNOWN_KIND)
+            kind = _kind_from_descriptors(descriptors, extents.is_python)
         name_span = occurrence_span(occurrence)
         extent, source_of_range = _resolve_extent(occurrence, name_span, kind, extents)
         stats.range_sources[source_of_range] += 1
@@ -253,7 +271,10 @@ def _promote(
             None,
         )
         if local is not None and local in promoted.by_local:
-            promoted.definition_sites[position] = promoted.by_local[local]
+            promoted.definition_sites[position] = (
+                promoted.by_local[local],
+                target.property_end_col,
+            )
             continue
         extent = extents.find(*position)
         if extent is None:
@@ -269,7 +290,7 @@ def _promote(
             callable=True,
         )
         promoted.records.append(record)
-        promoted.definition_sites[position] = record
+        promoted.definition_sites[position] = (record, target.property_end_col)
         stats.range_sources[RangeSource.TREE_SITTER] += 1
         if local is None:
             stats.promoted["syntax_only"] += 1
@@ -304,12 +325,30 @@ def _resolve_extent(
     occurrence: scip_pb2.Occurrence, name_span: Span, kind: str, extents: SourceExtents
 ) -> tuple[Extent, RangeSource]:
     enclosing = enclosing_span(occurrence)
-    if enclosing is not None:
-        return Extent(enclosing, enclosing, kind in _VARIABLE_KINDS), RangeSource.SCIP
     found = extents.find(name_span.start_line, name_span.start_col)
+    if enclosing is not None:
+        if extents.is_python and found is not None and found.is_function:
+            # SCIP's range includes decorators and annotations, which the body doesn't run.
+            return Extent(enclosing, found.body, is_function=True), RangeSource.SCIP
+        return Extent(enclosing, enclosing, kind in _VARIABLE_KINDS), RangeSource.SCIP
     if found is not None:
         return found, RangeSource.TREE_SITTER
     return Extent(name_span, name_span, is_function=False), RangeSource.NAME_ONLY
+
+
+def _with_later_definition(
+    owner: SymbolRecord, occurrence: scip_pb2.Occurrence, path: str, extents: SourceExtents
+) -> SymbolRecord:
+    span = occurrence_span(occurrence)
+    is_definition = occurrence.symbol_roles & DEFINITION_ROLE
+    if owner.file != path or not (
+        is_definition or extents.redefines(span.start_line, span.start_col)
+    ):
+        return owner
+    found = extents.find(span.start_line, span.start_col)
+    if found is None or not found.is_function or found.body in owner.bodies:
+        return owner
+    return replace(owner, other_bodies=(*owner.other_bodies, found.body))
 
 
 def _collect_occurrences(
@@ -317,11 +356,14 @@ def _collect_occurrences(
     document: scip_pb2.Document,
     owners: dict[str, SymbolRecord],
     promoted: PromotedSymbols,
+    extents: SourceExtents,
     occurrences: set[OccurrenceRecord],
     stats: ConversionStats,
 ) -> None:
-    for (line, col), record in promoted.definition_sites.items():
-        occurrences.add(OccurrenceRecord(path, line + 1, col + 1, record.symbol_id, "definition"))
+    for (line, col), (record, end_col) in promoted.definition_sites.items():
+        occurrences.add(
+            OccurrenceRecord(path, line + 1, col + 1, end_col + 1, record.symbol_id, "definition")
+        )
 
     for occurrence in document.occurrences:
         if is_local(occurrence.symbol):
@@ -335,7 +377,12 @@ def _collect_occurrences(
             ):
                 occurrences.add(
                     OccurrenceRecord(
-                        path, span.start_line + 1, span.start_col + 1, record.symbol_id, "reference"
+                        path,
+                        span.start_line + 1,
+                        span.start_col + 1,
+                        _end_col(span, extents),
+                        record.symbol_id,
+                        "reference",
                     )
                 )
             continue
@@ -346,15 +393,27 @@ def _collect_occurrences(
                 stats.references_to_external_symbols += 1
             continue
         span = occurrence_span(occurrence)
+        is_definition = is_definition or (
+            owner.file == path and extents.redefines(span.start_line, span.start_col)
+        )
         occurrences.add(
             OccurrenceRecord(
                 file=path,
                 line=span.start_line + 1,
                 col=span.start_col + 1,
+                end_col=_end_col(span, extents),
                 symbol_id=owner.symbol_id,
                 role="definition" if is_definition else "reference",
             )
         )
+
+
+def _end_col(span: Span, extents: SourceExtents) -> int:
+    """The token's exclusive 1-based end. One that wraps ends at the end of its first line."""
+    if span.end_line == span.start_line:
+        return span.end_col + 1
+    line_end = extents.line_end_col(span.start_line)
+    return (line_end if line_end is not None else span.start_col + 1) + 1
 
 
 def _group_by_file(records: list[SymbolRecord]) -> dict[str, list[SymbolRecord]]:
@@ -365,7 +424,20 @@ def _group_by_file(records: list[SymbolRecord]) -> dict[str, list[SymbolRecord]]
 
 
 def _is_file_symbol(symbol: str) -> bool:
-    return all(d.suffix is Suffix.NAMESPACE for d in parse_descriptors(symbol))
+    descriptors = parse_descriptors(symbol)
+    # scip-python names a module `pkg.core`/__init__: rather than with namespaces alone.
+    names_module = descriptors[-1].suffix is Suffix.META and descriptors[-1].name == "__init__"
+    return names_module or all(d.suffix is Suffix.NAMESPACE for d in descriptors)
+
+
+def _kind_from_descriptors(descriptors: list[Descriptor], is_python: bool) -> str:
+    last = descriptors[-1]
+    if not is_python:
+        return _KIND_FROM_SUFFIX.get(last.suffix, _UNKNOWN_KIND)
+    if last.suffix is Suffix.METHOD:
+        in_class = len(descriptors) > 1 and descriptors[-2].suffix is Suffix.TYPE
+        return "method" if in_class else "function"
+    return _PYTHON_KIND_FROM_SUFFIX.get(last.suffix, _UNKNOWN_KIND)
 
 
 def _exclusion_reason(descriptors: list[Descriptor]) -> str:

@@ -4,6 +4,7 @@ from collections import Counter
 from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import StrEnum
+from pathlib import PurePosixPath
 
 from ingest.errors import IngestError
 
@@ -27,6 +28,7 @@ _SIMPLE_SUFFIXES = {
     "!": Suffix.MACRO,
 }
 _NOT_A_NAMED_SYMBOL = frozenset({Suffix.PARAMETER, Suffix.TYPE_PARAMETER, Suffix.META})
+_PYTHON_SUFFIXES = frozenset({".py", ".pyi"})
 
 
 @dataclass(frozen=True)
@@ -58,8 +60,9 @@ def parse_descriptors(symbol: str) -> list[Descriptor]:
 def qualified_name(descriptors: Iterable[Descriptor], path: str) -> str | None:
     """Return the dotted name inside a file, or None if the symbol can't be a puzzle answer.
 
-    None covers the file itself, parameters, type parameters, and scip-typescript's meta
-    descriptors (`weak0:`), whose names carry a counter rather than a stable identity.
+    None covers the file itself, parameters, type parameters, and meta descriptors:
+    scip-typescript's `weak0:`, whose names carry a counter rather than a stable identity, and
+    scip-python's `__init__:`, which stands for the module.
     """
     remaining = _strip_file_namespaces(list(descriptors), path)
     if not remaining or remaining[-1].suffix in _NOT_A_NAMED_SYMBOL:
@@ -68,7 +71,9 @@ def qualified_name(descriptors: Iterable[Descriptor], path: str) -> str | None:
 
 
 def short_name(qualified: str) -> str:
-    return qualified.rsplit(".", 1)[-1]
+    # scip-typescript marks accessors and constructors in the name, as in `Router.<get>size`.
+    name = qualified.rsplit(".", 1)[-1]
+    return name.removeprefix("<get>").removeprefix("<set>").removeprefix("<").removesuffix(">")
 
 
 class CanonicalIds:
@@ -85,11 +90,18 @@ class CanonicalIds:
 
 
 def _strip_file_namespaces(descriptors: list[Descriptor], path: str) -> list[Descriptor]:
-    # scip-typescript encodes the file path as leading namespaces: lib/`application.js`/
+    # scip-python encodes the module as one dotted namespace: `requests.sessions`/. Python has no
+    # other namespaces, so the first one is always the module, whatever root pyright resolved it to.
+    if PurePosixPath(path).suffix in _PYTHON_SUFFIXES:
+        first_is_module = bool(descriptors) and descriptors[0].suffix is Suffix.NAMESPACE
+        return descriptors[1:] if first_is_module else descriptors
+    # scip-typescript encodes the path as leading namespaces, one per part: lib/`application.js`/.
+    # They start at the nearest package.json, so in a monorepo they're only the path's tail.
     parts = path.split("/")
-    leading = descriptors[: len(parts)]
-    if [(d.name, d.suffix) for d in leading] == [(part, Suffix.NAMESPACE) for part in parts]:
-        return descriptors[len(parts) :]
+    for count in range(1, len(parts) + 1):
+        leading = descriptors[:count]
+        if [(d.name, d.suffix) for d in leading] == [(p, Suffix.NAMESPACE) for p in parts[-count:]]:
+            return descriptors[count:]
     return descriptors
 
 

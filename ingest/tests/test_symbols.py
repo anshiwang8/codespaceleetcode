@@ -10,6 +10,7 @@ from ingest.symbols import (
     Suffix,
     parse_descriptors,
     qualified_name,
+    short_name,
 )
 
 PREFIX = "scip-typescript npm express 5.3.0 "
@@ -62,6 +63,63 @@ def test_parse_rejects_malformed_symbols(broken: str) -> None:
 )
 def test_qualified_name(descriptors: str, expected: str | None) -> None:
     assert _qualified(descriptors) == expected
+
+
+PYTHON_PREFIX = "scip-python python snapshot 0 "
+
+
+@pytest.mark.parametrize(
+    ("descriptors", "path", "expected"),
+    [
+        ("`requests.sessions`/Session#send().", "requests/sessions.py", "Session.send"),
+        ("`src.requests.sessions`/Session#send().", "src/requests/sessions.py", "Session.send"),
+        ("requests/check().", "requests/__init__.py", "check"),
+        ("top/main().", "top.py", "main"),
+        ("`a.b`/f().g().", "a/b.py", "f.g"),
+        ("`a.b`/C#D#run().", "a/b.py", "C.D.run"),
+        ("`a.b`/C#attr.", "a/b.pyi", "C.attr"),
+        ("`a.b`/__init__:", "a/b.py", None),
+        ("`a.b`/C#__init__().", "a/b.py", "C.__init__"),
+        ("`a.b`/f().(x)", "a/b.py", None),
+    ],
+)
+def test_python_module_namespace_is_stripped(
+    descriptors: str, path: str, expected: str | None
+) -> None:
+    parsed = parse_descriptors(PYTHON_PREFIX + descriptors)
+    assert qualified_name(parsed, path) == expected
+
+
+@pytest.mark.parametrize(
+    ("descriptors", "path", "expected"),
+    [
+        ("packages/core/src/`index.ts`/run().", "packages/core/src/index.ts", "run"),
+        ("src/`index.ts`/run().", "packages/core/src/index.ts", "run"),
+        ("`index.ts`/run().", "packages/core/index.ts", "run"),
+        ("src/`index.ts`/Tools/tool().", "packages/core/src/index.ts", "Tools.tool"),
+        # A namespace that merely shares a directory's name isn't the file's path.
+        ("src/run().", "packages/src/index.ts", "src.run"),
+    ],
+)
+def test_typescript_namespaces_can_start_at_a_nested_package(
+    descriptors: str, path: str, expected: str
+) -> None:
+    assert qualified_name(parse_descriptors(PREFIX + descriptors), path) == expected
+
+
+@pytest.mark.parametrize(
+    ("qualified", "name"),
+    [
+        ("Router.handle", "handle"),
+        ("Router.<get>size", "size"),
+        ("Router.<set>size", "size"),
+        ("Router.<constructor>", "constructor"),
+        ("run", "run"),
+        ("Hono.#dispatch", "#dispatch"),
+    ],
+)
+def test_short_name(qualified: str, name: str) -> None:
+    assert short_name(qualified) == name
 
 
 def test_canonical_ids_suffix_collisions_within_a_file_only() -> None:

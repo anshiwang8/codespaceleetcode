@@ -1,40 +1,92 @@
-"""Find where a definition's body ends when SCIP doesn't say.
+"""Answer syntax questions about an exact position in a source file.
 
-scip-typescript emits no enclosing range for `Layer.prototype.match = function () {}`. SCIP still
-decides what the symbol is and what refers to it. tree-sitter only answers one question: given the
-exact position of a SCIP definition, which syntax node does it name, and where does that node end?
-No names are looked up or matched here.
+scip-typescript emits no enclosing range for `Layer.prototype.match = function () {}`, getters, or
+`handle = () => {}` class fields. scip-python's ranges cover a function's decorators and
+annotations, which aren't part of what it runs. SCIP still decides what a symbol is and what refers
+to it. tree-sitter only answers two questions: given the exact position of a SCIP definition, which
+syntax node does it name, and where does that node end? And is a SCIP reference in a type, not in
+code? No names are looked up or matched here.
 """
 
 from dataclasses import dataclass
 from pathlib import PurePosixPath
 
 import tree_sitter_javascript
+import tree_sitter_python
+import tree_sitter_typescript
 from tree_sitter import Language, Node, Parser
 
 from ingest.scip_parse import Span
 
-_JAVASCRIPT_SUFFIXES = frozenset({".cjs", ".js", ".jsx", ".mjs"})
 _FUNCTION_DEFINITIONS = frozenset(
     {
+        "abstract_class_declaration",
         "class_declaration",
         "function_declaration",
         "generator_function_declaration",
         "method_definition",
     }
 )
+# Python's definitions run only their block: decorators, annotations and base classes are evaluated
+# by whatever encloses the definition.
+_BLOCK_DEFINITIONS = frozenset({"class_definition", "function_definition"})
+# TypeScript declarations that nothing calls as a whole. Their kinds come from SCIP.
+_OTHER_DEFINITIONS = frozenset(
+    {
+        "abstract_method_signature",
+        "enum_assignment",
+        "function_signature",
+        "internal_module",
+        "method_signature",
+        "module",
+        "property_signature",
+    }
+)
 # Where a definition's value lives, by the node type the definition's name sits in.
 _VALUE_FIELDS = {
+    "assignment": "right",
     "assignment_expression": "right",
     "field_definition": "value",
     "pair": "value",
+    "public_field_definition": "value",
     "variable_declarator": "value",
 }
+# The first of these fields a node has is where its name is.
+_NAME_FIELDS = ("name", "left", "key", "property")
 _FUNCTION_VALUES = frozenset(
-    {"arrow_function", "class", "function", "function_expression", "generator_function"}
+    {"arrow_function", "class", "function", "function_expression", "generator_function", "lambda"}
 )
+# A reference inside one of these is evaluated at definition time or isn't evaluated at all. Either
+# way it isn't a call made by the enclosing function.
+_ECMASCRIPT_NON_CALLS = frozenset(
+    {
+        "class_heritage",
+        "decorator",
+        "type_annotation",
+        "type_arguments",
+        "type_identifier",
+        "type_parameters",
+        "type_query",
+    }
+)
+_PYTHON_NON_CALLS = frozenset({"type"})
 
-_PARSER = Parser(Language(tree_sitter_javascript.language()))
+_JAVASCRIPT = Parser(Language(tree_sitter_javascript.language()))
+_TYPESCRIPT = Parser(Language(tree_sitter_typescript.language_typescript()))
+_TSX = Parser(Language(tree_sitter_typescript.language_tsx()))
+_PYTHON = Parser(Language(tree_sitter_python.language()))
+_PARSERS = {
+    ".cjs": _JAVASCRIPT,
+    ".cts": _TYPESCRIPT,
+    ".js": _JAVASCRIPT,
+    ".jsx": _JAVASCRIPT,
+    ".mjs": _JAVASCRIPT,
+    ".mts": _TYPESCRIPT,
+    ".py": _PYTHON,
+    ".pyi": _PYTHON,
+    ".ts": _TYPESCRIPT,
+    ".tsx": _TSX,
+}
 
 
 @dataclass(frozen=True)
@@ -58,40 +110,71 @@ class PropertyAssignment:
     property_name: str
     property_line: int
     property_col: int
+    property_end_col: int
 
 
 class SourceExtents:
-    """Extents for one source file. Positions are 0-based, with UTF-16 columns as in SCIP."""
+    """Syntax for one source file. Positions are 0-based, with UTF-16 columns as in SCIP."""
 
     def __init__(self, path: str, source: bytes | None) -> None:
-        supported = PurePosixPath(path).suffix.lower() in _JAVASCRIPT_SUFFIXES
+        parser = _PARSERS.get(PurePosixPath(path).suffix.lower())
+        self.is_python = parser is _PYTHON
+        self._is_javascript = parser is _JAVASCRIPT
+        self._non_calls = _PYTHON_NON_CALLS if self.is_python else _ECMASCRIPT_NON_CALLS
         self._lines = source.split(b"\n") if source is not None else []
-        self._root = _PARSER.parse(source).root_node if supported and source is not None else None
+        self._root = parser.parse(source).root_node if parser and source is not None else None
 
     def find(self, line: int, col: int) -> Extent | None:
-        if self._root is None or line >= len(self._lines):
-            return None
-        point = (line, _utf16_to_byte(self._lines[line], col))
-        node = self._root.descendant_for_point_range(point, point)
+        """Return the definition named by the token at this position, if it names one."""
+        token = self._node_at(line, col)
+        node = token
         while node is not None:
-            if node.type in _FUNCTION_DEFINITIONS:
-                span = self._span(node)
-                return Extent(span, span, is_function=True)
-            if node.type in _VALUE_FIELDS:
-                span = self._span(node)
-                value = _final_value(node)
-                if value is not None and value.type in _FUNCTION_VALUES:
-                    return Extent(span, self._span(value), is_function=True)
-                return Extent(span, span, is_function=False)
+            if (
+                node.type in _FUNCTION_DEFINITIONS
+                or node.type in _BLOCK_DEFINITIONS
+                or node.type in _OTHER_DEFINITIONS
+                or node.type in _VALUE_FIELDS
+            ):
+                # Any further out is a definition this token is merely inside, like a function
+                # holding the variable or the destructured parameter named here.
+                return self._extent(node) if _is_named_by(node, token) else None
             node = node.parent
         return None
+
+    def redefines(self, line: int, col: int) -> bool:
+        """Whether a SCIP reference here is really another definition of its symbol.
+
+        scip-python gives one symbol a definition role only at its first `def`. An `@overload`'s
+        implementation or a property's setter is a reference sitting on a `def` name.
+        """
+        if not self.is_python:
+            return False
+        extent = self.find(line, col)
+        return extent is not None and extent.is_function
+
+    def is_non_call(self, line: int, col: int) -> bool:
+        """Whether a reference here is a type, decorator, base class or repeated definition."""
+        if self.redefines(line, col):
+            return True
+        node = self._node_at(line, col)
+        while node is not None:
+            if node.type in self._non_calls:
+                return True
+            node = node.parent
+        return False
+
+    def line_end_col(self, line: int) -> int | None:
+        """The line's length, without its line ending. None if the source isn't available."""
+        if line >= len(self._lines):
+            return None
+        return _byte_to_utf16(self._lines[line].rstrip(b"\r"), len(self._lines[line]))
 
     def function_property_assignments(self) -> list[PropertyAssignment]:
         """Return each `root.name` target of a top-level assignment whose value is a function.
 
         Computed targets (`app[method] = ...`) and deeper chains (`a.b.c = ...`) don't qualify.
         """
-        if self._root is None:
+        if self._root is None or not self._is_javascript:
             return []
         found: list[PropertyAssignment] = []
         for statement in self._root.named_children:
@@ -108,6 +191,25 @@ class SourceExtents:
                     found.append(target)
                 current = current.child_by_field_name("right")
         return found
+
+    def _node_at(self, line: int, col: int) -> Node | None:
+        if self._root is None or line >= len(self._lines):
+            return None
+        point = (line, _utf16_to_byte(self._lines[line], col))
+        return self._root.descendant_for_point_range(point, point)
+
+    def _extent(self, node: Node) -> Extent:
+        span = self._span(node)
+        if node.type in _FUNCTION_DEFINITIONS:
+            return Extent(span, span, is_function=True)
+        if node.type in _BLOCK_DEFINITIONS:
+            block = node.child_by_field_name("body")
+            return Extent(span, self._span(block) if block else span, is_function=True)
+        if node.type in _VALUE_FIELDS:
+            value = _final_value(node)
+            if value is not None and value.type in _FUNCTION_VALUES:
+                return Extent(span, self._span(value), is_function=True)
+        return Extent(span, span, is_function=False)
 
     def _property_target(self, left: Node | None) -> PropertyAssignment | None:
         if left is None or left.type != "member_expression":
@@ -131,6 +233,7 @@ class SourceExtents:
             property_name=name.text.decode("utf-8"),
             property_line=name_span.start_line,
             property_col=name_span.start_col,
+            property_end_col=name_span.end_col,
         )
 
     def _span(self, node: Node) -> Span:
@@ -142,6 +245,20 @@ class SourceExtents:
             end_line,
             _byte_to_utf16(self._lines[end_line], end_byte),
         )
+
+
+def _is_named_by(definition: Node, token: Node | None) -> bool:
+    name = next(
+        (
+            node
+            for field in _NAME_FIELDS
+            if (node := definition.child_by_field_name(field)) is not None
+        ),
+        None,
+    )
+    if name is None or token is None:
+        return True  # Anonymous, like `export default function () {}`.
+    return name.start_byte <= token.start_byte and token.end_byte <= name.end_byte
 
 
 def _final_value(node: Node) -> Node | None:
