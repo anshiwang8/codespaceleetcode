@@ -12,6 +12,8 @@ LeetCode-style puzzles set inside real open-source repos pinned to a commit. v1 
 - `ingest/` is the Python pipeline (uv): clone, filter, SCIP index, upload to R2, seed, validate.
 - `content/` holds `repos.yaml`, `schema/`, `puzzles/<repo-slug>/<id>.yaml`, `solutions/<id>.md`.
 - `supabase/migrations/` holds SQL migrations. Never edit an applied migration; add a new one.
+- `supabase/local/shim.sql` adds what hosted Supabase provides, for the local database only.
+- `web/lib/api-types.ts` holds the API response shapes the routes and UI share.
 
 ## Non-negotiable rules
 

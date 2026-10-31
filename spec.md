@@ -47,6 +47,8 @@ All answer IDs come from the snapshot index, so every one exists at the pinned S
 - Symbol: `src/router/index.ts#Router.handle`, using the SCIP-derived qualified name. Same-name collisions in one file get a `~N` suffix in index order.
 - Location: `src/router/index.ts:L120-L135`
 
+Lines and columns are 1-based everywhere. Columns count UTF-16 units, matching Monaco.
+
 | Kind | User submits | Correct when |
 |---|---|---|
 | `symbol` | One symbol ID | Equals `answer.id`, or is in `answer.accept` |
@@ -108,12 +110,23 @@ Trace example:
 answer:
   kind: sequence
   ids:
-    - lib/application.js#app.listen
-    - lib/application.js#app.handle
-    - lib/router/index.js#Router.handle
-    - lib/router/layer.js#Layer.handle_request
+    - src/core/app.ts#App.listen
+    - src/core/app.ts#App.handle
+    - src/router/index.ts#Router.handle
+    - src/router/layer.ts#Layer.run
   accept_sequences: []
 ```
+
+The other answer kinds:
+
+```yaml
+answer: { kind: file, path: src/config.ts, accept: [], accept_reasons: [] }
+answer: { kind: location, path: src/config.ts, anchor: [120, 121], window: [118, 135] }
+answer: { kind: set, ids: [src/a.ts, src/b.ts, src/c.ts] }
+answer: { kind: choice, option: b }
+```
+
+`anchor` and `window` are `[first_line, last_line]`, inclusive. A `choice` puzzle also has a top-level `choices` list of `{ id, label }`, which is the only part of it clients may see.
 
 ### Solutions
 
@@ -136,8 +149,9 @@ Defined in `content/repos.yaml`:
 Selection criteria for v1:
 - Permissive or copyleft OSS license (MIT, Apache-2.0, BSD, GPL). Keep the license file in the snapshot and show attribution on every puzzle page.
 - 5k–100k lines of non-test source.
-- Languages: TypeScript/JavaScript, Python, Go. Each must have a working SCIP indexer.
+- Languages: TypeScript/JavaScript, Python, Go. Each must have a working SCIP indexer. The localhost MVP covers TypeScript/JavaScript and Python; Go comes later.
 - Target 10–15 repos at launch, with 4+ puzzles each across all three types.
+- The index must support the puzzles. Plain CommonJS can leave most method calls unresolved (see section 7), so a repo needs enough real call edges for its Trace puzzles.
 
 A snapshot is immutable. To move a repo to a newer commit, create a new snapshot and port the puzzles explicitly.
 
@@ -163,6 +177,7 @@ A snapshot is immutable. To move a repo to a newer commit, create a new snapshot
 **Blind second solve (human)**
 - A second person solves the puzzle without seeing the answer key, then adds their name to `verified_by`. If their answer differs from the key, either the key is wrong or the prompt is ambiguous. Fix the prompt. Never fix this by adding to `accept` unless the two answers are truly equivalent.
 - Publishing requires `verified_by` to be non-empty.
+- For the localhost MVP, a separate agent that never sees the key may do this solve, recorded as `agent:<name>`. The puzzle page shows that no person has checked it. Replace these with human solves before a public launch.
 
 ---
 
@@ -181,6 +196,20 @@ A snapshot is immutable. To move a repo to a newer commit, create a new snapshot
 | Content | YAML + Markdown in `content/`, seeded into Postgres |
 
 SCIP, not plain tree-sitter, is required for v1. Unique answers depend on precise definitions and resolved references. Name-matched references would make `sequence` validation and symbol uniqueness checks unreliable.
+
+tree-sitter has two narrow jobs, both anchored to an exact SCIP position: finding where a definition ends when the indexer gives no range, and naming top-level `root.name = function () {}` methods that scip-typescript leaves undefined. Those promoted methods get IDs, but a call to one only becomes an edge if SCIP itself resolved it.
+
+### Localhost mode
+
+The site runs on localhost with no accounts or keys. Each hosted service has a local stand-in, and the app reaches it through the same interface:
+
+| Hosted | Local stand-in |
+|---|---|
+| Supabase Postgres | Real Postgres from the `embedded-postgres` npm package, data in `.localdb/`. `supabase/local/shim.sql` adds the roles and `auth` schema Supabase provides, so migrations run unchanged |
+| Supabase GitHub OAuth | A dev login that sets a cookie, refused unless the request is from localhost and `NODE_ENV` isn't `production` |
+| R2 behind a CDN | The route `/snapshots/<name>/...` serves `ingest/out/<name>/...`. `NEXT_PUBLIC_SNAPSHOT_CDN_URL` overrides it when set |
+
+GitHub OAuth, R2 upload and deployment aren't built yet. They're needed before a public launch.
 
 ### Repository layout
 ```
@@ -225,16 +254,19 @@ puzzle list → puzzle page
 
 ## 8. Data model
 
+The source of truth is `supabase/migrations/`.
+
 ```sql
 repos        (id, slug, url, language, license)
-snapshots    (id, repo_id, sha, manifest_url, indexed_at)
+snapshots    (id, repo_id, sha, name, manifest_url, indexed_at)      -- name = <slug>@<sha>
 files        (id, snapshot_id, path, size, language, content)        -- content: pg_trgm index
 symbols      (id, snapshot_id, file_id, symbol_id, name, kind,
               start_line, end_line)                                  -- symbol_id = canonical ID
-occurrences  (symbol_pk, file_id, line, col, role)                   -- role: definition | reference
+occurrences  (symbol_pk, file_id, line, col, end_col, role)          -- role: definition | reference
 call_edges   (snapshot_id, caller_symbol_id, callee_symbol_id)
 puzzles      (id, snapshot_id, slug, type, difficulty, title, prompt,
-              answer_kind, answer_json, set_count, hints, tags, published)
+              answer_kind, answer_json, set_count, choices, hints, tags,
+              verified_by, published)
 solutions    (puzzle_id, body_md)
 users        (id, github_login, created_at)                          -- via Supabase auth
 submissions  (id, user_id, puzzle_id, answer_json, correct, created_at,
@@ -258,8 +290,12 @@ progress     (user_id, puzzle_id, status, attempts, solved_at, gave_up)
 | `/api/snapshots/:id/symbols?file=&line=&col=` | GET | Definition + references at a position |
 | `/api/snapshots/:id/symbols/outline?file=` | GET | Symbols in a file |
 | `/api/snapshots/:id/search?q=` | GET | File/line matches, capped at 200 |
+| `/api/me` | GET | The signed-in user, and whether dev login is available |
+| `/api/me/stats` | GET | Solved counts by type and difficulty |
+| `/api/dev/login`, `/api/dev/logout` | POST | Localhost mode only: start or end a dev session |
+| `/snapshots/<name>/<path>` | GET | Localhost mode only: `manifest.json` or a raw file |
 
-Submit validates that every submitted ID exists in the snapshot before grading. Requests are rate-limited per user.
+Response shapes live in `web/lib/api-types.ts`. Submit validates that every submitted ID exists in the snapshot before grading. Requests are rate-limited per user. Reading a puzzle needs no sign-in; submitting and giving up do.
 
 ---
 

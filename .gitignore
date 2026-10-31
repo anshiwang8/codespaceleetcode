@@ -12,6 +12,10 @@ __pycache__/
 ingest/work/
 ingest/out/
 
+# Local database data and agent worktrees
+.localdb/
+.claude/worktrees/
+
 # Env files: only the examples are committed
 .env*
 !.env.example
