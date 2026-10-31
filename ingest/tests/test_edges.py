@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from ingest.convert import Conversion, convert_index
+from ingest.convert import Conversion, SymbolRecord, convert_index
 from ingest.extents import SourceExtents
 from ingest.scip_parse import Span, load_index
 
@@ -29,9 +29,17 @@ def test_exact_call_edges(conversion: Conversion) -> None:
         ("lib/main.js#Widget", "lib/main.js#greet"),
         ("lib/main.js#Widget.render", "lib/main.js#greet"),
         ("lib/main.js#Widget.renderTwice", "lib/main.js#Widget.render"),
+        ("lib/main.js#app.listen", "lib/main.js#greet"),
+        ("lib/main.js#app.start", "lib/main.js#app.listen"),
         ("lib/main.js#greet", "lib/main.js#format"),
         ("lib/main.js#outer", "lib/main.js#format"),
         ("lib/main.js#passAsValue", "lib/main.js#format"),
+        ("lib/main.js#res.json", "lib/main.js#format"),
+        ("lib/main.js#res.jsonAlias", "lib/main.js#format"),
+        ("lib/main.js#res.send", "lib/main.js#format"),
+        ("lib/main.js#setup", "lib/main.js#format"),
+        ("lib/utils.js#clean", "lib/utils.js#base"),
+        ("lib/utils.js#cleanAll", "lib/utils.js#clean"),
     ]
 
 
@@ -53,12 +61,57 @@ def test_top_level_references_produce_no_edge(conversion: Conversion) -> None:
     assert conversion.stats.references_outside_callables > 0
 
 
-def test_expando_methods_stay_absent_rather_than_guessed(conversion: Conversion) -> None:
-    # scip-typescript reports `app.listen = function` as a local with no definition. Rule 7 forbids
-    # recovering it by name, so it has no ID and its call to greet produces no edge.
-    ids = {symbol.symbol_id for symbol in conversion.symbols}
-    assert "lib/main.js#app" in ids
-    assert not [symbol_id for symbol_id in ids if "listen" in symbol_id]
+def _record(conversion: Conversion, symbol_id: str) -> SymbolRecord:
+    return next(s for s in conversion.symbols if s.symbol_id == symbol_id)
+
+
+def test_promoted_methods_get_ids_kinds_and_ranges(conversion: Conversion) -> None:
+    listen = _record(conversion, "lib/main.js#app.listen")
+    assert (listen.name, listen.kind, listen.callable) == ("listen", "method", True)
+    assert (listen.span.start_line + 1, listen.span.last_line + 1) == (40, 42)
+    assert _record(conversion, "lib/utils.js#clean").kind == "function"
+    assert conversion.stats.promoted == {"scip_local": 4, "syntax_only": 3}
+
+
+def test_promoted_local_keeps_its_scip_references(conversion: Conversion) -> None:
+    # `this.listen()` resolves in SCIP to the local at the `app.listen` property.
+    occurrences = [o for o in conversion.occurrences if o.symbol_id == "lib/main.js#app.listen"]
+    assert [(o.line, o.col, o.role) for o in occurrences] == [
+        (40, 5, "definition"),
+        (45, 15, "reference"),
+    ]
+
+
+def test_exports_references_resolve_through_the_shared_local(conversion: Conversion) -> None:
+    occurrences = [o for o in conversion.occurrences if o.symbol_id == "lib/utils.js#clean"]
+    assert [(o.line, o.role) for o in occurrences] == [(7, "definition"), (12, "reference")]
+
+
+def test_method_without_a_scip_local_is_never_a_callee(conversion: Conversion) -> None:
+    # SCIP doesn't resolve `this.send()`. Matching it to res.send by name would break rule 7.
+    assert ("lib/main.js#res.json", "lib/main.js#res.send") not in conversion.edges
+    occurrences = [o for o in conversion.occurrences if o.symbol_id == "lib/main.js#res.send"]
+    assert [(o.line, o.role) for o in occurrences] == [(69, "definition")]
+
+
+def test_chained_aliases_share_a_body_and_both_call(conversion: Conversion) -> None:
+    json = _record(conversion, "lib/main.js#res.json")
+    alias = _record(conversion, "lib/main.js#res.jsonAlias")
+    assert json.body == alias.body
+    assert ("lib/main.js#res.jsonAlias", "lib/main.js#format") in conversion.edges
+
+
+@pytest.mark.parametrize(
+    "absent",
+    [
+        "lib/main.js#app.config",  # not a function
+        "lib/main.js#app.computed",  # computed target
+        "lib/main.js#app.dynamic",  # computed target inside a callback
+        "lib/main.js#app.nested",  # not a top-level statement
+    ],
+)
+def test_other_assignment_shapes_are_not_promoted(conversion: Conversion, absent: str) -> None:
+    assert absent not in {symbol.symbol_id for symbol in conversion.symbols}
 
 
 def test_prototype_method_range_comes_from_tree_sitter(conversion: Conversion) -> None:
@@ -73,6 +126,16 @@ def test_every_occurrence_and_edge_resolves_to_a_symbol(conversion: Conversion) 
     ids = {symbol.symbol_id for symbol in conversion.symbols}
     assert {occurrence.symbol_id for occurrence in conversion.occurrences} <= ids
     assert {symbol_id for edge in conversion.edges for symbol_id in edge} <= ids
+
+
+def test_every_occurrence_token_spells_its_symbol_name(conversion: Conversion) -> None:
+    # Promotion trusts SCIP's locals, so a wrong link would show up as a mismatched token.
+    names = {symbol.symbol_id: symbol.name for symbol in conversion.symbols}
+    for occurrence in conversion.occurrences:
+        line = (TINY_REPO / occurrence.file).read_text(encoding="utf-8").splitlines()[
+            occurrence.line - 1
+        ]
+        assert line[occurrence.col - 1 :].startswith(names[occurrence.symbol_id]), occurrence
 
 
 def test_occurrences_are_one_based(conversion: Conversion) -> None:

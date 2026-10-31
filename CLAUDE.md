@@ -21,7 +21,7 @@ LeetCode-style puzzles set inside real open-source repos pinned to a commit. v1 
 4. **Snapshots are immutable.** Never change the SHA of an existing snapshot. A newer commit means a new snapshot.
 5. **Every puzzle passes `pnpm validate`.** Never weaken a validator check to get a puzzle through. Use `validator_overrides` with a written reason, and only when the check is a false positive.
 6. **Uniqueness is fixed in the prompt, not the key.** If a puzzle has two plausible answers, tighten the prompt's scope. Only add to `accept` for truly equivalent answers (e.g. a re-export of the same function), with a reason in `accept_reasons`.
-7. **Code intelligence comes from SCIP.** Don't substitute name-based matching for definitions, references, or call edges.
+7. **Code intelligence comes from SCIP.** Don't substitute name-based matching for definitions, references, or call edges. One narrow exception: scip-typescript leaves top-level `root.name = function () {}` undefined, so `ingest/src/ingest/convert.py` promotes those methods using SCIP's resolved root and the assignment syntax at that exact position. References still come only from SCIP's own locals, never from a name lookup.
 8. **v1 scope only.** No code execution, bug-fix puzzles, or AI mode. If a task needs them, stop and flag it.
 
 ## Conventions

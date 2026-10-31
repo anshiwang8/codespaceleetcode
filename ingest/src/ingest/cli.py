@@ -66,6 +66,7 @@ def _print_summary(
     typer.echo(f"Edges:    {len(conversion.edges)}")
     typer.echo(f"Skipped files: {sum(skipped.values())}{_breakdown(skipped)}")
     typer.echo(f"Excluded definitions:{_breakdown(stats.excluded_definitions)}")
+    typer.echo(f"Promoted symbols (only scip_local can be a callee):{_breakdown(stats.promoted)}")
     typer.echo(f"Symbol ranges from:{_breakdown(stats.range_sources)}")
     typer.echo(
         f"References to symbols outside the snapshot: {stats.references_to_external_symbols}"

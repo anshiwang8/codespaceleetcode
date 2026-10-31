@@ -1,10 +1,10 @@
 """Derive call edges from SCIP references: each one belongs to its innermost enclosing callable."""
 
+from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from ingest.proto import scip_pb2
 from ingest.scip_parse import DEFINITION_ROLE, occurrence_span
-from ingest.symbols import is_local
 
 if TYPE_CHECKING:
     from ingest.convert import ConversionStats, SymbolRecord
@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 def edges_for_document(
     document: scip_pb2.Document,
     defined_here: "list[SymbolRecord]",
-    owners: "dict[str, SymbolRecord]",
+    resolve: "Callable[[str], SymbolRecord | None]",
     stats: "ConversionStats",
 ) -> set[tuple[str, str]]:
     """Return (caller_symbol_id, callee_symbol_id) pairs for one document.
@@ -24,23 +24,28 @@ def edges_for_document(
     callers = [record for record in defined_here if record.callable]
     edges: set[tuple[str, str]] = set()
     for occurrence in document.occurrences:
-        if is_local(occurrence.symbol) or occurrence.symbol_roles & DEFINITION_ROLE:
+        if occurrence.symbol_roles & DEFINITION_ROLE:
             continue
-        callee = owners.get(occurrence.symbol)
+        callee = resolve(occurrence.symbol)
         if callee is None:
             continue
         span = occurrence_span(occurrence)
-        caller = _innermost(callers, span.start_line, span.start_col)
-        if caller is None:
+        innermost = _innermost(callers, span.start_line, span.start_col)
+        if not innermost:
             stats.references_outside_callables += 1
         elif not callee.callable:
             stats.references_to_non_callables += 1
         else:
-            edges.add((caller.symbol_id, callee.symbol_id))
+            edges.update((caller.symbol_id, callee.symbol_id) for caller in innermost)
     return edges
 
 
-def _innermost(callers: "list[SymbolRecord]", line: int, col: int) -> "SymbolRecord | None":
-    # The latest start is the innermost, because definition ranges nest rather than overlap.
+def _innermost(callers: "list[SymbolRecord]", line: int, col: int) -> "list[SymbolRecord]":
+    """Return the innermost callers. There are several only when aliases share one body, as in
+    `req.get = req.header = function () {}`."""
     containing = [record for record in callers if record.body.contains(line, col)]
-    return max(containing, key=lambda r: (r.body.start_line, r.body.start_col), default=None)
+    if not containing:
+        return []
+    # The latest start is the innermost, because definition ranges nest rather than overlap.
+    body = max(record.body for record in containing)
+    return [record for record in containing if record.body == body]

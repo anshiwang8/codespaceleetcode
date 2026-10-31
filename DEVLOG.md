@@ -1,5 +1,27 @@
 # DEVLOG
 
+## Promote undefined methods to canonical symbols
+
+Type: Change
+
+Goal: Give Express's main methods canonical IDs, since scip-typescript reports `app.listen = function` and `res.send = function` as locals with no definition. This replaces the "known problem" in the entry below.
+
+What should be done: Name these methods without resolving anything by name, then report plainly what still can't be linked. Approved as a narrow exception to rule 7, now written into `CLAUDE.md`.
+
+What was done (technical):
+
+- `_promote` in `convert.py` handles top-level `root.name = function () {}`, including each target of a chain like `req.get = req.header = function`. Computed targets, non-function values and nested assignments don't qualify.
+- The root must resolve in SCIP, at its exact position, to a symbol defined in that file. `exports.x` counts when `exports` and `x` share one SCIP local, and its ID has no root, so it reads `lib/utils.js#compileETag`.
+- A method is linked to its references only through the SCIP local at its own property position. This gives two tiers, shown in the summary. `scip_local` methods can be callees. `syntax_only` methods have an ID and outgoing edges but can never be a callee.
+- Aliases sharing one body each get the outgoing edges.
+- On Express this took `lib/` from 14 functions and methods to 66, and from 3 call edges to 21. I read all 21 against the source and each one matches a real reference.
+
+Still missing, and not recoverable from SCIP:
+
+- 60 of 73 `this.method()` calls to same-file methods in `app`, `res` and `req` are unresolved, including all 47 in `response.js` and `request.js`. So `res.*` and `req.*` methods have no incoming edges.
+- `app.handle` has no incoming edge and `app.listen` has no outgoing edge, because `app.listen` passes `this` to `http.createServer`. Spec section 4's Trace example can't validate at this SHA.
+- `defineGetter(req, 'query', ...)` getters, `app[method]` verbs, and non-function exports like `exports.etag` have no IDs.
+
 ## Monorepo scaffold and first ingest pipeline
 
 Type: Addition

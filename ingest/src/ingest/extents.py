@@ -48,6 +48,18 @@ class Extent:
     is_function: bool
 
 
+@dataclass(frozen=True)
+class PropertyAssignment:
+    """One target of a top-level `root.name = function () {}` statement."""
+
+    root_name: str
+    root_line: int
+    root_col: int
+    property_name: str
+    property_line: int
+    property_col: int
+
+
 class SourceExtents:
     """Extents for one source file. Positions are 0-based, with UTF-16 columns as in SCIP."""
 
@@ -73,6 +85,53 @@ class SourceExtents:
                 return Extent(span, span, is_function=False)
             node = node.parent
         return None
+
+    def function_property_assignments(self) -> list[PropertyAssignment]:
+        """Return each `root.name` target of a top-level assignment whose value is a function.
+
+        Computed targets (`app[method] = ...`) and deeper chains (`a.b.c = ...`) don't qualify.
+        """
+        if self._root is None:
+            return []
+        found: list[PropertyAssignment] = []
+        for statement in self._root.named_children:
+            assignment = statement.named_children[0] if statement.named_children else None
+            if statement.type != "expression_statement" or assignment is None:
+                continue
+            value = _final_value(assignment)
+            if value is None or value.type not in _FUNCTION_VALUES:
+                continue
+            current: Node | None = assignment
+            while current is not None and current.type == "assignment_expression":
+                target = self._property_target(current.child_by_field_name("left"))
+                if target is not None:
+                    found.append(target)
+                current = current.child_by_field_name("right")
+        return found
+
+    def _property_target(self, left: Node | None) -> PropertyAssignment | None:
+        if left is None or left.type != "member_expression":
+            return None
+        root = left.child_by_field_name("object")
+        name = left.child_by_field_name("property")
+        if (
+            root is None
+            or name is None
+            or root.type != "identifier"
+            or root.text is None
+            or name.text is None
+        ):
+            return None
+        root_span = self._span(root)
+        name_span = self._span(name)
+        return PropertyAssignment(
+            root_name=root.text.decode("utf-8"),
+            root_line=root_span.start_line,
+            root_col=root_span.start_col,
+            property_name=name.text.decode("utf-8"),
+            property_line=name_span.start_line,
+            property_col=name_span.start_col,
+        )
 
     def _span(self, node: Node) -> Span:
         start_line, start_byte = node.start_point
