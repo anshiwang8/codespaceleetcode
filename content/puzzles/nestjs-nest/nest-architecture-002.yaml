@@ -1,0 +1,30 @@
+id: nest-architecture-002
+snapshot: nestjs-nest@8d9dd9d
+type: architecture
+difficulty: hard
+title: A request-scoped global interceptor
+prompt: |
+  A module lists the provider `{ provide: APP_INTERCEPTOR, useClass: AuditInterceptor }`
+  in its `providers`, and `AuditInterceptor` is decorated with
+  `@Injectable({ scope: Scope.REQUEST })`. Read `insertProvider` and
+  `applyApplicationProviders` in packages/core/scanner.ts and the methods they call. When
+  `applyApplicationProviders` runs after bootstrap, what happens to this global
+  interceptor?
+answer:
+  kind: choice
+  option: b
+choices:
+  - id: a
+    label: Its shared instance is passed to ApplicationConfig.addGlobalInterceptor
+  - id: b
+    label: Its InstanceWrapper is passed to ApplicationConfig.addGlobalRequestInterceptor
+  - id: c
+    label: Startup fails with RequestScopedGlobalEnhancerException
+  - id: d
+    label: It is ignored, because only static providers can be global enhancers
+hints:
+  - The scope is read from the class when the provider is inserted, and recorded for later.
+solution: solutions/nest-architecture-002.md
+tags: [enhancers, scopes]
+authors: [agent-author-1]
+verified_by: []

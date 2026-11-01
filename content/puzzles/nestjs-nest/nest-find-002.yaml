@@ -1,0 +1,21 @@
+id: nest-find-002
+snapshot: nestjs-nest@8d9dd9d
+type: find
+difficulty: medium
+title: Skipping the global module binding
+prompt: |
+  `NestContainer.bindGlobalModuleToModule` in packages/core/injector/container.ts links one
+  global module into one target module by importing it. Before doing so it returns early
+  for two kinds of target. Select the lines that make up this early return, including its
+  condition. Select the lines.
+answer:
+  kind: location
+  path: packages/core/injector/container.ts
+  anchor: [336, 338]
+  window: [335, 340]
+hints:
+  - The early return is the first statement in the method body.
+solution: solutions/nest-find-002.md
+tags: [modules, global-modules]
+authors: [agent-author-1]
+verified_by: []
