@@ -1,0 +1,22 @@
+id: rtk-find-002
+snapshot: reduxjs-redux-toolkit@0fd611c
+type: find
+difficulty: medium
+title: Thunk condition returns false
+prompt: |
+  In packages/toolkit/src/createAsyncThunk.ts, the thunk created by the action
+  creator runs the user's optional `condition` callback before dispatching
+  anything. Select the lines of the `if` statement that, when the callback's
+  result is exactly `false`, throws a plain object (not an Error instance) to
+  stop the thunk: from the `if` line through its closing brace.
+answer:
+  kind: location
+  path: packages/toolkit/src/createAsyncThunk.ts
+  anchor: [639, 645]
+  window: [633, 650]
+hints:
+  - The callback's result is awaited first if it is a promise.
+solution: solutions/rtk-find-002.md
+tags: [async-thunk]
+authors: [agent-author-2]
+verified_by: []
