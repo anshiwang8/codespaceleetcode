@@ -1,5 +1,26 @@
 # DEVLOG
 
+## Puzzle schema, validator, seed and blind-solve tools
+
+Type: Addition
+
+Goal: Stop a puzzle shipping unless it's provably checkable, and load everything into Postgres.
+
+What should be done: Implement every check in spec section 6, the `ingest seed` command, and tools that let a solver answer without seeing a key.
+
+What was done (technical):
+
+- `content/schema/puzzle.schema.json` and `uv run ingest validate` cover the schema, existence and uniqueness checks. Error messages name fields, never values.
+- `uv run ingest seed` validates first, skips snapshots already loaded, and upserts puzzles so users keep their progress. 15 synthetic repos of 100k lines took 70 seconds to load and 1.1 seconds to re-seed.
+- `blind-export` writes only what a solver may see, with a test that fails if any answer value appears. `blind-check` prints pass or fail only, and won't record a solver who is also the puzzle's author.
+- Breaking 18 critical behaviours one at a time, the tests caught all 18.
+
+Fixes after review:
+
+- The Python grader ignored duplicate set members while the web grader rejected them, so a blind solve could pass something the site would mark wrong. Both now reject them, and both test suites run `content/schema/grading-cases.json`.
+- `set-count`, `location-window` and `choice-options` can no longer be overridden, since a hand-edited `verified_by` could otherwise publish an unsolvable puzzle.
+- Windows made the local database WIN1252, which can't hold every character in real repos. `scripts/localdb.mjs` now forces UTF-8.
+
 ## Grader, API routes and dev login
 
 Type: Addition

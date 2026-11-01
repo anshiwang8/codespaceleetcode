@@ -57,14 +57,16 @@ pnpm --filter web lint
 pnpm --filter web typecheck   # plain tsc needs next typegen first
 pnpm --filter web build
 pnpm e2e                 # stub, exits 1: Playwright isn't set up yet
-pnpm validate            # stub, exits 1: ingest/validate.py doesn't exist yet
+pnpm validate            # every check in spec section 6
 ```
 
 From `ingest/`:
 
 ```
 uv run ingest snapshot <slug>   # fetch, filter, index, write to ingest/out/ (no upload yet)
-uv run ingest seed              # stub, exits 1: will load content/ into Postgres
+uv run ingest seed [--force]    # validate, then load snapshots and puzzles into Postgres
+uv run ingest blind-export --out <file> [--repo <slug>]   # puzzles with only what a solver may see
+uv run ingest blind-check <answers.json> --solver <name> [--write]   # grade a blind solve; prints pass or fail, never the key
 uv run python -m pytest         # not `uv run pytest`: Windows Application Control can block pytest.exe
 uv run ruff check .
 uv run ruff format --check .
@@ -72,6 +74,10 @@ uv run pyright
 uv run python scripts/gen_proto.py            # regenerate SCIP bindings from the vendored scip.proto
 uv run python scripts/regen_fixture_index.py  # rebuild the test fixture's index after changing it
 ```
+
+`INGEST_TEST_DB_URL` turns on the seed tests. It's separate from `SUPABASE_DB_URL`, so tests can't touch a real database.
+
+`content/schema/grading-cases.json` is run by both the web and Python test suites, so the two graders can't drift apart. Add new grading rules there.
 
 `snapshot` needs `scip-typescript` on PATH: `npm install -g @sourcegraph/scip-typescript@0.6.0`.
 
