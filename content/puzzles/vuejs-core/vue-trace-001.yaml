@@ -5,7 +5,7 @@ difficulty: medium
 title: From baseCompile into the AST walk
 prompt: |
   In packages/compiler-core/src/, start at `baseCompile` called with a template string and
-  default options. list the chain of functions, in call order, where each one calls the next, until you reach the function that
+  default options. List the chain of functions, in call order, where each one calls the next, until you reach the function that
   loops over a parent node's child nodes while the AST is being transformed. Include the
   start and the final function. Direct calls only: each entry must be called from the body
   of the one before it. Skip constructors, node and directive transform functions that are

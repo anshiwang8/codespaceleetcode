@@ -1,7 +1,7 @@
 id: rxjs-architecture-001
 snapshot: reactivex-rxjs@54796b3
 type: architecture
-difficulty: medium
+difficulty: easy
 title: The errors the single operator raises itself
 prompt: |
   Read `singleOperator` in packages/rxjs/src/single.ts. Besides forwarding errors from its

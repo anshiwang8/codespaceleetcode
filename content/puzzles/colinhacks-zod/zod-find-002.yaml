@@ -1,7 +1,7 @@
 id: zod-find-002
 snapshot: colinhacks-zod@2554b70
 type: find
-difficulty: hard
+difficulty: easy
 title: When a folded intersection is closed
 prompt: |
   `foldObjects` in packages/zod/src/v4/core/to-json-schema.ts merges the object members of

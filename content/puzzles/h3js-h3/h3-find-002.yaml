@@ -1,7 +1,7 @@
 id: h3-find-002
 snapshot: h3js-h3@f0e1780
 type: find
-difficulty: medium
+difficulty: easy
 title: Request smuggling guard
 prompt: |
   In src/utils/, select the function that rejects an incoming request with a

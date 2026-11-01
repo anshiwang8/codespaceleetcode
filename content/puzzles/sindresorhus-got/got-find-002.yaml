@@ -1,7 +1,7 @@
 id: got-find-002
 snapshot: sindresorhus-got@6b5aafc
 type: find
-difficulty: medium
+difficulty: easy
 title: Default retryable status codes
 prompt: |
   In source/core/options.ts, the default option values include a `retry`

@@ -5,7 +5,7 @@ difficulty: medium
 title: Subscribing to a BehaviorSubject
 prompt: |
   Start at `BehaviorSubject._subscribe` in packages/rxjs/src/behavior-subject.ts, for a
-  subject that has not completed or errored. list the chain of functions, in call order, where each one calls the next, until you
+  subject that has not completed or errored. List the chain of functions, in call order, where each one calls the next, until you
   reach the method that adds the subscriber to the set of live observers. Include the start
   and the final method. Direct calls only: each entry must be called from the body of the
   one before it. Skip getters, and skip calls on the subscriber object and on built-ins.

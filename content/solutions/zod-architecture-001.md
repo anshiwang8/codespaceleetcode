@@ -1,6 +1,6 @@
 # zod-architecture-001: Folding a closed object with a catchall object
 
-**Answer:** b, `{ type: "string" }`.
+**Answer:** a, `{ type: "string" }`.
 
 ## Path
 1. The first loop of `foldObjects` accepts both members: each has `type: "object"` and only keywords from `FOLDABLE_KEYS` (`type`, `properties`, `required`, `additionalProperties`).

@@ -1,7 +1,7 @@
 id: rtk-architecture-003
 snapshot: reduxjs-redux-toolkit@0fd611c
 type: architecture
-difficulty: medium
+difficulty: easy
 title: Classes in the toolkit core
 prompt: |
   In packages/toolkit/src/ (ignore the query/ folder and tests), exactly 4

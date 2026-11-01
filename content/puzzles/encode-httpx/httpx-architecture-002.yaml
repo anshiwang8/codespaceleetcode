@@ -1,7 +1,7 @@
 id: httpx-architecture-002
 snapshot: encode-httpx@b5addb6
 type: architecture
-difficulty: hard
+difficulty: medium
 title: Which mounted transport wins
 prompt: |
   A Client keeps its mounted transports in a dict keyed by URLPattern, re-sorted

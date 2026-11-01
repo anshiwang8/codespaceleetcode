@@ -6,7 +6,7 @@ title: From scan to a registered provider
 prompt: |
   In packages/core/scanner.ts, start at `DependenciesScanner.scan`. A module in the
   application lists one plain class in its `providers` array (not an object with a
-  `provide` key). list the chain of functions, in call order, where each one calls the next, until the `NestContainer` method
+  `provide` key). List the chain of functions, in call order, where each one calls the next, until the `NestContainer` method
   that adds that provider to its module is reached. Include the start and the final
   function. Direct calls only: each entry must be called from the body of the one before it
   (a call inside an inline callback counts as part of its enclosing function). Skip

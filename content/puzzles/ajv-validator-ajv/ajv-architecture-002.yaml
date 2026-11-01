@@ -1,7 +1,7 @@
 id: ajv-architecture-002
 snapshot: ajv-validator-ajv@f177fe3
 type: architecture
-difficulty: hard
+difficulty: easy
 title: Block nodes in the code generator
 prompt: |
   The code generator in lib/compile/codegen/index.ts models generated source as
@@ -20,7 +20,7 @@ answer:
     - lib/compile/codegen/index.ts#Catch
     - lib/compile/codegen/index.ts#Finally
 hints:
-  - Search the file for "extends BlockNode".
+  - Look at how the node classes in this file relate to each other.
 solution: solutions/ajv-architecture-002.md
 tags: [code-generation, class-hierarchy]
 authors: [agent-author-2]

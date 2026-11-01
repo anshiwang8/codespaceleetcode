@@ -1,6 +1,6 @@
 # hono-architecture-001: Where the default app ends up after a fallback
 
-**Answer:** b, `TrieRouter`
+**Answer:** d, `TrieRouter`
 
 ## Path
 1. `src/hono.ts` gives `SmartRouter` the list `[RegExpRouter, TrieRouter]`.

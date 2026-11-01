@@ -1,6 +1,6 @@
 # rxjs-architecture-002: A late subscriber after a shared source completes
 
-**Answer:** b, the source is subscribed again through a new Subject.
+**Answer:** a, the source is subscribed again through a new Subject.
 
 ## Path
 1. In `packages/rxjs/src/share.ts`, the destructured config gives `resetOnComplete = true` by default (also `resetOnError` and `resetOnRefCountZero`), and `connector` defaults to `() => new Subject<T>()`.

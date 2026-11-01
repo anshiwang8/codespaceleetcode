@@ -1,7 +1,7 @@
 id: hono-architecture-002
 snapshot: honojs-hono@17ad0e2
 type: architecture
-difficulty: medium
+difficulty: easy
 title: Routers that can ask SmartRouter to fall back
 prompt: |
   `SmartRouter` skips to its next candidate when a router raises `UnsupportedPathError`.

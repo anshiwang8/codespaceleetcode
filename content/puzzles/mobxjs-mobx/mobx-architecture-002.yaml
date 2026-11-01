@@ -1,7 +1,7 @@
 id: mobx-architecture-002
 snapshot: mobxjs-mobx@b05f0de
 type: architecture
-difficulty: hard
+difficulty: easy
 title: Who constructs a Reaction
 prompt: |
   In the packages/*/src/ directories (ignore tests, docs and examples),
@@ -16,7 +16,7 @@ answer:
     - packages/mobx-react/src/observerClass.ts#createReaction
     - packages/mobx-react-lite/src/useObserver.ts#createReaction
 hints:
-  - Search for "new Reaction" under packages/. Two of the four functions have the same name but live in different packages.
+  - Two of the four functions have the same name but live in different packages.
 solution: solutions/mobx-architecture-002.md
 tags: [reactions, react-bindings]
 authors: [agent-author-2]

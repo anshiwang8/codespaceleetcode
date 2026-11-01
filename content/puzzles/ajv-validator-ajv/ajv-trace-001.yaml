@@ -12,7 +12,8 @@ prompt: |
   standard-library and third-party calls.
 
   Assume default options, a schema object (not a string key) that has not been
-  compiled before and is not a meta-schema. Include the start function in your
+  compiled before and is not a meta-schema. Follow the schema object
+  passed to `validate`, and ignore any meta-schema validation along the way. Include the start function in your
   sequence.
 answer:
   kind: sequence

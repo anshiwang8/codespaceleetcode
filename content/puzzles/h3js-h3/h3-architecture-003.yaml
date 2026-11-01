@@ -1,7 +1,7 @@
 id: h3-architecture-003
 snapshot: h3js-h3@f0e1780
 type: architecture
-difficulty: hard
+difficulty: medium
 title: Callers of callMiddleware
 prompt: |
   In src/, `callMiddleware` is defined in src/middleware.ts. Outside that file,
@@ -14,7 +14,7 @@ answer:
     - src/h3.ts#createDispatcher
     - src/rules/middleware.ts#routeRules
 hints:
-  - Use Find All References on callMiddleware and ignore the imports.
+  - Some of the calls sit inside closures that these functions return.
 solution: solutions/h3-architecture-003.md
 tags: [middleware, call-graph]
 authors: [agent-author-2]

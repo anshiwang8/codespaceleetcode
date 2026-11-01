@@ -1,7 +1,7 @@
 id: got-architecture-002
 snapshot: sindresorhus-got@6b5aafc
 type: architecture
-difficulty: medium
+difficulty: easy
 title: Direct subclasses of RequestError
 prompt: |
   In source/ (ignore test/ and benchmark/), exactly 9 classes extend

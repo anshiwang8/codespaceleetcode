@@ -7,9 +7,9 @@ prompt: |
   In lib/compile/validate/, when the `coerceTypes` option is on and a value has
   the wrong type, Ajv generates code that converts it, for example a string
   "false" or the number 0 becoming the boolean false, or a number becoming a
-  string. Select the function whose body contains these per-target-type
-  conversion rules (not the function that merely decides whether to coerce
-  and calls it). Select a function.
+  string. Select the top-level function that contains these per-target-type
+  conversion rules, directly or in a nested helper (not the function that merely
+  decides whether to coerce and calls it). Select a function.
 answer:
   kind: symbol
   id: lib/compile/validate/dataType.ts#coerceData

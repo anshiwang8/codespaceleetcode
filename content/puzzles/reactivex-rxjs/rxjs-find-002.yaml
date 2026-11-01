@@ -1,7 +1,7 @@
 id: rxjs-find-002
 snapshot: reactivex-rxjs@54796b3
 type: find
-difficulty: medium
+difficulty: easy
 title: Which AbortSignal the upstream subscription uses
 prompt: |
   In `subscribeToSource` in packages/rxjs/src/util/observable-helpers.ts, the upstream
