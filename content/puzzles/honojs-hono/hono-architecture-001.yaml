@@ -1,0 +1,31 @@
+id: hono-architecture-001
+snapshot: honojs-hono@17ad0e2
+type: architecture
+difficulty: hard
+title: Where the default app ends up after a fallback
+prompt: |
+  An app is created with the Hono class from src/hono.ts with no options, and its only
+  route is registered as `app.get('/files/:path{.*}', handler)`. Read how `SmartRouter` in
+  src/router/smart-router/ and the routers it is given in src/router/ treat that path.
+  Once the first request has been matched, which class's `match` implementation serves
+  every later request?
+answer:
+  kind: choice
+  option: b
+choices:
+  - id: a
+    label: RegExpRouter
+  - id: b
+    label: TrieRouter
+  - id: c
+    label: LinearRouter
+  - id: d
+    label: PatternRouter
+  - id: e
+    label: SmartRouter's own match method, which keeps trying each router on every request
+hints:
+  - Look for where a path pattern can make a router throw during `add`, and what `SmartRouter.match` does about it.
+solution: solutions/hono-architecture-001.md
+tags: [routing, design]
+authors: [agent-author-1]
+verified_by: []

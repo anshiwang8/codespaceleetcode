@@ -1,0 +1,20 @@
+id: hono-find-002
+snapshot: honojs-hono@17ad0e2
+type: find
+difficulty: medium
+title: The no-compose fast path
+prompt: |
+  In `Hono.#dispatch` in src/hono-base.ts, a request skips the call to `compose` and
+  invokes its handler directly when the router matched a particular number of handlers.
+  Select the single line that holds the condition for this fast path.
+answer:
+  kind: location
+  path: src/hono-base.ts
+  anchor: [449, 449]
+  window: [447, 470]
+hints:
+  - The fast path is an `if` that appears before the call to `compose` in the same method.
+solution: solutions/hono-find-002.md
+tags: [routing, middleware, performance]
+authors: [agent-author-1]
+verified_by: []
