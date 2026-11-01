@@ -164,6 +164,19 @@ def test_every_body_of_an_overload_counts_but_only_one_id(conversion: Conversion
     assert (f"{MODELS}#Session", f"{MODELS}#Session.fetch") not in conversion.edges
 
 
+@pytest.mark.parametrize(
+    ("symbol_id", "expected"),
+    [
+        (f"{MODELS}#Session.fetch", (44, 51)),  # from the first stub through the implementation
+        (f"{MODELS}#Session.state", (32, 38)),  # from the getter through the setter
+    ],
+)
+def test_range_covers_every_definition(
+    conversion: Conversion, symbol_id: str, expected: tuple[int, int]
+) -> None:
+    assert _lines(_record(conversion, symbol_id)) == expected
+
+
 def test_a_redefinition_is_a_definition_occurrence(conversion: Conversion) -> None:
     occurrences = [o for o in conversion.occurrences if o.symbol_id == f"{MODELS}#Session.fetch"]
     assert [(o.line, o.role) for o in occurrences] == [

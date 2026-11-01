@@ -348,7 +348,13 @@ def _with_later_definition(
     found = extents.find(span.start_line, span.start_col)
     if found is None or not found.is_function or found.body in owner.bodies:
         return owner
-    return replace(owner, other_bodies=(*owner.other_bodies, found.body))
+    # The first definition can be a bare overload signature, so the range runs through the last.
+    end = max((owner.span.end_line, owner.span.end_col), (found.span.end_line, found.span.end_col))
+    return replace(
+        owner,
+        span=Span(owner.span.start_line, owner.span.start_col, *end),
+        other_bodies=(*owner.other_bodies, found.body),
+    )
 
 
 def _collect_occurrences(

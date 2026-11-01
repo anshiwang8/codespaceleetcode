@@ -136,6 +136,7 @@ def test_types_decorators_and_base_classes_are_not_calls(conversion: Conversion)
 def test_every_body_of_an_overload_counts(conversion: Conversion) -> None:
     overloaded = _record(conversion, f"{ROUTER}#overloaded")
     assert len(overloaded.bodies) == 2
+    assert _lines(overloaded) == (16, 20)  # the signatures through the implementation
     assert (f"{ROUTER}#overloaded", f"{UTIL}#helper") in conversion.edges
 
 
