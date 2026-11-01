@@ -64,12 +64,12 @@ pnpm validate            # every check in spec section 6
 From `ingest/`:
 
 ```
-uv run ingest snapshot <slug>   # fetch, filter, index, write to ingest/out/ (no upload yet)
-uv run ingest snapshot-all [--force]   # every repo in repos.yaml. --force after any pipeline change, since finished snapshots are skipped
-uv run ingest seed [--force]    # validate, then load snapshots and puzzles into Postgres
-uv run ingest blind-export --out <file> [--repo <slug>]   # puzzles with only what a solver may see
-uv run ingest blind-check <answers.json> --solver <name> [--write]   # grade a blind solve; prints pass or fail, never the key
-uv run python -m pytest         # not `uv run pytest`: Windows Application Control can block pytest.exe
+uv run python -m ingest snapshot <slug>   # fetch, filter, index, write to ingest/out/ (no upload yet)
+uv run python -m ingest snapshot-all [--force]   # every repo in repos.yaml. --force after any pipeline change, since finished snapshots are skipped
+uv run python -m ingest seed [--force]    # validate, then load snapshots and puzzles into Postgres
+uv run python -m ingest blind-export --out <file> [--repo <slug>]   # puzzles with only what a solver may see
+uv run python -m ingest blind-check <answers.json> --solver <name> [--write]   # grade a blind solve; prints pass or fail, never the key
+uv run python -m pytest         # always `python -m`: Windows Application Control can block generated .exe launchers
 uv run ruff check .
 uv run ruff format --check .
 uv run pyright
