@@ -800,6 +800,20 @@
   font-size: 11px;
 }
 
+/* These sit inside scrolling panels, which would clip an outline drawn outside the box. */
+.treeName:focus-visible,
+.treePick:focus-visible,
+.treePickActive:focus-visible,
+.outlineName:focus-visible,
+.searchMatch:focus-visible,
+.tabLabel:focus-visible,
+.tabClose:focus-visible,
+.sidebarTab:focus-visible,
+.sidebarTabActive:focus-visible,
+.trail button:focus-visible {
+  outline-offset: -2px;
+}
+
 /* Below laptop width the panels stack. Spec section 11: the IDE isn't mobile-optimized. */
 @media (max-width: 899px) {
   .workspace {
@@ -836,5 +850,12 @@
 
   .tray {
     border-top: 1px solid var(--line-strong);
+  }
+
+  /* Attribution stays on screen however far the stacked page scrolls. */
+  .attribution {
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
   }
 }

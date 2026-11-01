@@ -25,12 +25,13 @@ export function FileTree({ files, activePath, expanded, onToggleDir, onOpenFile,
   const expandedSet = useMemo(() => new Set(expanded), [expanded]);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Keep the open file in view, so a jump to another file shows up here too.
+  // Keep the open file in view, so a jump to another file shows up here too. Opening a file expands
+  // its folders in the same update, so its row is already there. Folding a folder doesn't scroll.
   useEffect(() => {
     containerRef.current
       ?.querySelector<HTMLElement>('[data-active="true"]')
       ?.scrollIntoView({ block: "nearest" });
-  }, [activePath, expanded]);
+  }, [activePath]);
 
   const matches = useMemo(() => {
     if (!deferredFilter) return null;

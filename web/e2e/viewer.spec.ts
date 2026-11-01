@@ -233,6 +233,20 @@ test.describe("puzzle page furniture", () => {
     await expect(page.getByRole("button", { name: /hint/ })).toHaveCount(0);
   });
 
+  test("the page and Monaco follow the system's light or dark setting", async ({ page }) => {
+    const colors = () =>
+      page.evaluate(() => ({
+        body: getComputedStyle(document.body).backgroundColor,
+        editor: getComputedStyle(document.querySelector(".monaco-editor .monaco-editor-background") as Element)
+          .backgroundColor,
+      }));
+    await openPuzzle(page, "e2e-find-symbol");
+    await page.locator(".monaco-editor .view-line").first().waitFor();
+    await expect.poll(colors).toEqual({ body: "rgb(12, 14, 16)", editor: "rgb(16, 19, 22)" });
+    await page.emulateMedia({ colorScheme: "light" });
+    await expect.poll(colors).toEqual({ body: "rgb(242, 240, 235)", editor: "rgb(253, 252, 250)" });
+  });
+
   test("panels resize by dragging and by keyboard", async ({ page }) => {
     await openPuzzle(page, "e2e-find-symbol");
     const splitter = page.getByRole("separator", { name: "Resize the prompt panel" });

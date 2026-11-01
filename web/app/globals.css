@@ -10,7 +10,7 @@
   --line-strong: #3b434b;
   --text: #d7dbe0;
   --text-muted: #949ca5;
-  --text-faint: #767e87;
+  --text-faint: #848c95;
   --accent: #e5b567;
   --accent-text: #e5b567;
   --accent-ink: #1b1508;
@@ -43,7 +43,7 @@
     --line-strong: #bdb9ae;
     --text: #24272b;
     --text-muted: #595e65;
-    --text-faint: #6d7178;
+    --text-faint: #666a71;
     --accent: #8a5a00;
     --accent-text: #7a4f00;
     --accent-ink: #fffaf0;
@@ -163,6 +163,10 @@ input {
   border-color: transparent;
   background: transparent;
   color: var(--text-muted);
+}
+
+.btn-quiet:disabled {
+  border-color: transparent;
 }
 
 .btn-small {
