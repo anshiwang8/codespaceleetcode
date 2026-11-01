@@ -32,4 +32,4 @@ validator_overrides:
 solution: solutions/ajv-trace-001.md
 tags: [compile, code-generation]
 authors: [agent-author-2]
-verified_by: [agent:blind-2]
+verified_by: [agent:blind-2, agent:blind-4]

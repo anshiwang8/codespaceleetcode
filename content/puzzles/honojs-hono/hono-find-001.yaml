@@ -17,4 +17,4 @@ hints:
 solution: solutions/hono-find-001.md
 tags: [routing, options]
 authors: [agent-author-1]
-verified_by: [agent:blind-1]
+verified_by: [agent:blind-1, agent:blind-4]

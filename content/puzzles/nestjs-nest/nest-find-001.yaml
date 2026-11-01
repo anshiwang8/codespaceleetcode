@@ -4,9 +4,9 @@ type: find
 difficulty: easy
 title: Where a circular import is reported
 prompt: |
-  In packages/core/scanner.ts, while a module's `imports` are registered, one method
-  refuses an entry that is `undefined`, which is how a circular file import shows
-  up. Select the method that contains that check. Select a function.
+  In packages/core/scanner.ts, `reflectImports` hands each entry of a module's
+  `imports` metadata to one method, and that method refuses an entry that is
+  `undefined`. Select the method. Select a function.
 answer:
   kind: symbol
   id: packages/core/scanner.ts#DependenciesScanner.insertImport
@@ -17,4 +17,4 @@ hints:
 solution: solutions/nest-find-001.md
 tags: [modules, errors]
 authors: [agent-author-1]
-verified_by: [agent:blind-1]
+verified_by: [agent:blind-1, agent:blind-5]

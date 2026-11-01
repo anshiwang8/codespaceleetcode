@@ -27,4 +27,4 @@ hints:
 solution: solutions/mobx-trace-001.md
 tags: [reactivity, batching]
 authors: [agent-author-2]
-verified_by: [agent:blind-2]
+verified_by: [agent:blind-2, agent:blind-4]
