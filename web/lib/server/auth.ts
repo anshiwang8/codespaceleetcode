@@ -36,9 +36,10 @@ function isLocalHost(host: string): boolean {
   return LOCAL_HOSTNAMES.has(hostname) || hostname === process.env.DEV_AUTH_TEST_HOST?.toLowerCase();
 }
 
-function isLocalOrigin(origin: string): boolean {
+/** Another app on a different local port isn't this site, so it can't use the dev session. */
+function isSameOrigin(origin: string, host: string): boolean {
   try {
-    return isLocalHost(new URL(origin).host);
+    return new URL(origin).host.toLowerCase() === host.toLowerCase();
   } catch {
     return false;
   }
@@ -56,7 +57,7 @@ export function isDevAuthAllowed(headers: HeaderReader): boolean {
   const forwarded = headers.get("x-forwarded-host");
   if (forwarded && !forwarded.split(",").every(isLocalHost)) return false;
   const origin = headers.get("origin");
-  return !origin || isLocalOrigin(origin);
+  return !origin || isSameOrigin(origin, host);
 }
 
 function readCookie(header: string | null, name: string): string | null {

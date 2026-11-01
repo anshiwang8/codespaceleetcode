@@ -13,7 +13,11 @@ from ingest.puzzles import (
     SymbolAnswer,
 )
 
-_LOCATION_ID = re.compile(r"(?P<path>.+):L(?P<first>[1-9][0-9]*)-L(?P<last>[1-9][0-9]*)")
+# Line terminators match what `.` excludes in web/lib/server/grader.ts. The digit limit keeps both
+# graders within safe integers, and stops int() raising on an absurdly long number.
+_LOCATION_ID = re.compile(
+    r"(?P<path>[^\n\r\u2028\u2029]+):L(?P<first>[1-9][0-9]{0,14})-L(?P<last>[1-9][0-9]{0,14})"
+)
 _SHAPES = {
     "symbol": 'a string "id"',
     "file": 'a string "path"',

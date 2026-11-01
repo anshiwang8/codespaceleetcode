@@ -477,3 +477,23 @@ def test_unreachable_database_is_a_clear_error_without_the_password() -> None:
         _seed(url)
     assert "s3cret-value" not in str(caught.value)
     assert "Could not connect" in str(caught.value)
+
+
+def test_a_rebuilt_snapshot_reloads_without_force(db_url: str, tmp_path: Path) -> None:
+    out = tmp_path / "out"
+    shutil.copytree(SNAPSHOTS, out)
+    _seed(db_url, out=out)
+
+    # A snapshot's SHA stays the same when the pipeline improves, but its index changes.
+    symbols = next(path for path in out.glob("*/symbols.jsonl"))
+    lines = symbols.read_text(encoding="utf-8").splitlines()
+    first = json.loads(lines[0])
+    first["end_line"] += 1
+    lines[0] = json.dumps(first)
+    symbols.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    _seed(db_url, out=out)
+    assert (
+        _one(db_url, b"select end_line from symbols where symbol_id = %s", first["symbol_id"])
+        == first["end_line"]
+    )

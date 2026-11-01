@@ -61,10 +61,12 @@ export default async function setup(project: TestProject): Promise<(() => Promis
   } catch (error) {
     // A refused connection is an AggregateError with an empty message, but it does have a code.
     const reason = (error as NodeJS.ErrnoException).code ?? String(error);
-    console.warn(
-      `\n[web tests] SKIPPING every database test: no Postgres at ${server.host} (${reason}).\n` +
-        "[web tests] Run `pnpm db` first, or set TEST_DATABASE_URL.\n",
-    );
+    const message = `no Postgres at ${server.host} (${reason}). Run \`pnpm db\` first, or set TEST_DATABASE_URL.`;
+    // These tests guard the answer-key rules, so skipping them must be a choice, not an accident.
+    if (process.env.ALLOW_NO_DB !== "1") {
+      throw new Error(`[web tests] ${message} ALLOW_NO_DB=1 runs without them.`);
+    }
+    console.warn(`\n[web tests] SKIPPING every database test: ${message}\n`);
     project.provide("testDatabaseUrl", null);
     return;
   }

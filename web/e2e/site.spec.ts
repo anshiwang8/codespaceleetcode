@@ -87,7 +87,7 @@ test.describe("puzzle list", () => {
     try {
       await client.query("update puzzles set published = false");
       await page.goto("/");
-      await expect(visible(page, "no-puzzles-seeded")).toContainText("uv run ingest seed");
+      await expect(visible(page, "no-puzzles-seeded")).toContainText("uv run python -m ingest seed");
     } finally {
       await client.query("update puzzles set published = true");
       await client.end();

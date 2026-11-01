@@ -27,7 +27,7 @@ export default async function ProfilePage() {
       {stats.total === 0 ? (
         <p className="notice">
           No puzzles are published yet. From <code>ingest/</code>, run{" "}
-          <code>uv run ingest seed</code>.
+          <code>uv run python -m ingest seed</code>.
         </p>
       ) : (
         <div className={styles.tables}>

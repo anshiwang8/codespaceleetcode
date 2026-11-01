@@ -87,6 +87,12 @@ describe("isDevAuthAllowed", () => {
     expect(isDevAuthAllowed(headers({ host: "localhost:3000", origin }))).toBe(false);
   });
 
+  it("refuses a different local port, which is some other app", () => {
+    expect(
+      isDevAuthAllowed(headers({ host: "localhost:3000", origin: "http://localhost:5173" })),
+    ).toBe(false);
+  });
+
   it("allows a local Origin", () => {
     const allowed = isDevAuthAllowed(
       headers({ host: "localhost:3000", origin: "http://localhost:3000" }),

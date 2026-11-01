@@ -1,6 +1,7 @@
 // Runs a real Postgres for localhost mode, with no install, Docker or accounts.
 //
 //   node scripts/localdb.mjs start    Start it and apply pending migrations. Stops on Ctrl+C.
+//   node scripts/localdb.mjs migrate  Apply pending migrations to a running database.
 //   node scripts/localdb.mjs reset    Delete all local data. Run `start` again afterward.
 //
 // LOCALDB_PORT and LOCALDB_DIR let parallel checkouts run their own copy.
@@ -63,6 +64,7 @@ async function applyMigrations() {
 }
 
 async function start() {
+  const recentLogs = [];
   const server = new EmbeddedPostgres({
     databaseDir: DATA_DIR,
     user: "postgres",
@@ -71,10 +73,22 @@ async function start() {
     persistent: true,
     // Windows otherwise defaults to WIN1252, which can't hold every character in real repos.
     initdbFlags: ["--encoding=UTF8"],
-    onLog: () => {},
+    onLog: (message) => recentLogs.push(String(message).trim()),
+    onError: (message) => recentLogs.push(String(message).trim()),
   });
-  if (!existsSync(join(DATA_DIR, "PG_VERSION"))) await server.initialise();
-  await server.start();
+  try {
+    if (!existsSync(join(DATA_DIR, "PG_VERSION"))) await server.initialise();
+    await server.start();
+  } catch (error) {
+    // embedded-postgres rejects with undefined, so Postgres's own log is the only explanation.
+    console.error(
+      `Couldn't start Postgres on port ${PORT} with data in ${DATA_DIR}.\n` +
+        "Usually another copy is running, or something else holds that port. Stop it, or set LOCALDB_PORT.\n" +
+        recentLogs.slice(-8).join("\n") +
+        (error ? `\n${error}` : ""),
+    );
+    process.exit(1);
+  }
 
   let stopping = false;
   const stop = async () => {
@@ -94,10 +108,18 @@ async function start() {
 const command = process.argv[2];
 if (command === "start") {
   await start();
+} else if (command === "migrate") {
+  await ensureDatabase();
+  await applyMigrations();
 } else if (command === "reset") {
-  rmSync(DATA_DIR, { recursive: true, force: true });
+  try {
+    rmSync(DATA_DIR, { recursive: true, force: true });
+  } catch {
+    console.error(`Couldn't delete ${DATA_DIR}. Stop the local database first, then try again.`);
+    process.exit(1);
+  }
   console.log(`Deleted ${DATA_DIR}`);
 } else {
-  console.error("Usage: node scripts/localdb.mjs start|reset");
+  console.error("Usage: node scripts/localdb.mjs start|migrate|reset");
   process.exit(1);
 }

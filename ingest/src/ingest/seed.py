@@ -1,5 +1,6 @@
 """Load repos, snapshots, puzzles and solutions into Postgres."""
 
+import hashlib
 import os
 import time
 from collections.abc import Callable
@@ -143,6 +144,13 @@ def _seed(
     )
 
 
+def _content_hash(directory: Path) -> str:
+    digest = hashlib.sha256()
+    for name in ("manifest.json", "symbols.jsonl", "occurrences.jsonl", "call_edges.jsonl"):
+        digest.update((directory / name).read_bytes())
+    return digest.hexdigest()
+
+
 def _load_repo(
     connection: Connection, repo: Repo, directory: Path, force: bool
 ) -> SnapshotCounts | None:
@@ -164,17 +172,20 @@ def _load_repo(
     )
     name = repo.snapshot_name
     manifest_url = f"/snapshots/{name}/manifest.json"
-    row = connection.execute("select id from snapshots where name = %s", (name,)).fetchone()
+    content_hash = _content_hash(directory)
+    row = connection.execute(
+        "select id, content_hash from snapshots where name = %s", (name,)
+    ).fetchone()
     if row is None:
         snapshot_id = _fetch_id(
             connection,
             """
-            insert into snapshots (repo_id, sha, name, manifest_url)
-            values (%s, %s, %s, %s) returning id
+            insert into snapshots (repo_id, sha, name, manifest_url, content_hash)
+            values (%s, %s, %s, %s, %s) returning id
             """,
-            (repo_id, repo.sha, name, manifest_url),
+            (repo_id, repo.sha, name, manifest_url, content_hash),
         )
-    elif not force:
+    elif not force and row[1] == content_hash:
         return None
     else:
         # Keep the snapshot row. Deleting it would cascade to puzzles and users' progress.
@@ -182,8 +193,11 @@ def _load_repo(
         connection.execute("delete from files where snapshot_id = %s", (snapshot_id,))
         connection.execute("delete from call_edges where snapshot_id = %s", (snapshot_id,))
         connection.execute(
-            "update snapshots set indexed_at = now(), manifest_url = %s where id = %s",
-            (manifest_url, snapshot_id),
+            """
+            update snapshots set indexed_at = now(), manifest_url = %s, content_hash = %s
+            where id = %s
+            """,
+            (manifest_url, content_hash, snapshot_id),
         )
 
     files, undecodable = _copy_files(connection, snapshot_id, directory, manifest)

@@ -1,5 +1,49 @@
 # DEVLOG
 
+## Review fixes before merging the MVP
+
+Type: Fix
+
+Goal: Act on two independent reviews before merging to main: one attacking the code and the rules, one checking answer keys against the code.
+
+What should be done: Fix what they found without weakening any rule, and record what's still open.
+
+What was done (technical):
+
+- **A repo could run code on Windows.** The npm `.cmd` shims run a bare `node`, and `cmd.exe` looks in the current directory first, so a `node.cmd` in a repo would have run during indexing. None of the 15 has one. `run_tool` now sets `NoDefaultCurrentDirectoryInExePath`, and Windows executables are no longer copied to the stage folder. A test proves the attack works without the protection and fails with it.
+- **Rebuilt snapshots never reached the database,** so correct answers were rejected as not in the snapshot. Seeding now compares a `content_hash` (migration 0002) and reloads when it differs.
+- **Database failures printed only `undefined`.** They now name the port and show Postgres's last log lines.
+- **`pnpm local` printed the wrong address** when port 3000 was busy. It now uses `PORT` strictly and fails rather than moving. It also applies migrations to a database it finds already running.
+- **Rule 1 tests skipped silently with no database, and the run still passed.** They now fail unless `ALLOW_NO_DB=1` is set.
+- Dev login now refuses requests from other local ports, so another local app can't act on your session. The graders now agree on absurd locations, with cases added to the shared table. A NUL in a page filter is ignored.
+- `python -m ingest` replaces the generated launcher everywhere, because Windows Application Control can block generated `.exe` files.
+- Answer-key audit of 76 of the 85 puzzles: no wrong keys. It caught three solutions naming stale option letters and five lowercase sentence starts, both from my own bulk edits, plus three ambiguous prompts and three that gave their answer away. Those were rewritten and re-solved. Twelve puzzles were relabelled to their real difficulty. A re-solve then caught that my rewrite of `nest-find-001` allowed a second answer, so it was tightened and solved again.
+
+Still open:
+
+- Blindness of the second solves can't be independently confirmed, and author and solver are similar models. The key audit is the stronger evidence, and it didn't cover the 9 `file` puzzles.
+- `LOCALDB_PORT` is only honoured by the scripts, so `pnpm db` on another port needs a matching `DATABASE_URL` for `pnpm dev`.
+- A user stays `solved` if a puzzle's key later changes.
+- The `/symbols` route caps references at 500 with no `truncated` flag. The UI infers it from the list length; 149 symbols exceed it.
+- Unknown puzzle URLs return HTTP 200 with a not-found page, because `loading.tsx` starts streaming first.
+- Ctrl+C in a Git Bash window hasn't been tried by hand. It was confirmed in a Windows console.
+
+## Puzzle viewer and 85 puzzles
+
+Type: Addition
+
+Goal: A site you can actually use: browse puzzles, read real code in an IDE, select an answer, get graded, read the solution.
+
+What should be done: Build spec section 10, write and verify puzzles for all 15 repos, and test it end to end.
+
+What was done (technical):
+
+- Puzzle list with URL filters, three-panel puzzle page, Monaco bundled locally with no CDN, go-to-definition, find references and hover from the index, search, outline, answer tray for all six kinds, hints, give-up, solutions, profile, and dark and light themes.
+- Monaco is imported without its language services, so every definition and reference comes from the index (rule 7). Prompts, hints and solutions render as markdown with raw HTML dropped.
+- `pnpm e2e` runs 52 Playwright tests with its own database and server, from a cold build each time, since reusing a build left the page reloading forever on alternating runs.
+- Real data exposed a bug where find references silently dropped results: nest's `Injectable` showed 159 of 873.
+- 85 puzzles across 15 repos, 4 to 6 each, covering all three types and six answer kinds. All pass `pnpm validate` and a blind solve by a separate agent, recorded as `agent:<name>`. `b` was the correct option on 10 of 15 `choice` puzzles, so people could guess, and correct options are now spread evenly.
+
 ## Fifteen repos, Python indexing and one-command start
 
 Type: Addition

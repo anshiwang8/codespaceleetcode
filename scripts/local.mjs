@@ -12,7 +12,8 @@ import pg from "pg";
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const PORT = Number(process.env.LOCALDB_PORT ?? 54329);
 const DATABASE_URL = `postgres://postgres:postgres@localhost:${PORT}/codebase_puzzles`;
-const SITE_URL = "http://127.0.0.1:3000";
+const SITE_PORT = Number(process.env.PORT ?? 3000);
+const SITE_URL = `http://127.0.0.1:${SITE_PORT}`;
 const children = [];
 
 function fail(message) {
@@ -42,6 +43,11 @@ async function databaseIsUp() {
 async function ensureDatabase() {
   if (await databaseIsUp()) {
     console.log(`Using the database already running on port ${PORT}.`);
+    const migrated = spawnSync(process.execPath, [join(ROOT, "scripts/localdb.mjs"), "migrate"], {
+      cwd: ROOT,
+      stdio: "inherit",
+    });
+    if (migrated.status !== 0) fail("Applying migrations to the running database failed.");
     return;
   }
   console.log("Starting the local database...");
@@ -90,7 +96,8 @@ function seed() {
 function serve() {
   console.log(`\nStarting the site at ${SITE_URL}\n`);
   // pnpm is a .cmd file on Windows, which only a shell can start.
-  const web = spawn("pnpm --filter web dev", {
+  // An explicit port fails if it's taken, where the default would quietly move to another one.
+  const web = spawn(`pnpm --filter web exec next dev -H 127.0.0.1 -p ${SITE_PORT}`, {
     cwd: ROOT,
     stdio: "inherit",
     shell: true,

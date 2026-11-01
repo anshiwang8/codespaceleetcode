@@ -17,7 +17,7 @@ LeetCode-style puzzles set inside real open-source repos pinned to a commit. v1 
 
 ## Non-negotiable rules
 
-1. **Answer keys never reach the client.** `answer_json` and solutions are read only in server routes with the service role. No answer data in props, page payloads, logs sent to the browser, or error messages. RLS denies client reads on `puzzles.answer_json` and `solutions`.
+1. **Answer keys never reach the client.** `answer_json` and solutions are read only in server routes through the server-side database connection (the service role on Supabase, `DATABASE_URL` on localhost). No answer data in props, page payloads, logs sent to the browser, or error messages. RLS denies client reads on `puzzles.answer_json` and `solutions`.
 2. **Answers are canonical IDs.** Files are `path`, symbols are `path#Qualified.name[~N]`, locations are `path:Lstart-Lend`. The grader compares IDs. Never add fuzzy matching, string similarity, case-insensitive matching, or LLM grading.
 3. **Users select answers, never type them.** Every answer input in the UI is built from clicks on the tree, symbols, or lines.
 4. **Snapshots are immutable.** Never change the SHA of an existing snapshot. A newer commit means a new snapshot.
@@ -49,15 +49,15 @@ Fill these in as they are created:
 From the repo root:
 
 ```
-pnpm local               # everything: database, seed, site at http://127.0.0.1:3000
+pnpm local               # database, seed, site at http://127.0.0.1:3000 (PORT changes the port). Needs snapshots: see README.md on a fresh clone
 pnpm db                  # start local Postgres, apply migrations (stays running)
 pnpm db:reset            # delete all local database data
 pnpm dev                 # web app, bound to 127.0.0.1 because dev login trusts the Host header
-pnpm test                # all unit tests: test:ingest, then test:web (needs pnpm db running)
+pnpm test                # all unit tests: test:ingest, then test:web. Web tests fail without pnpm db running or TEST_DATABASE_URL; ALLOW_NO_DB=1 skips the database ones
 pnpm --filter web lint
 pnpm --filter web typecheck   # plain tsc needs next typegen first
 pnpm --filter web build
-pnpm e2e                 # stub, exits 1: Playwright isn't set up yet
+pnpm e2e                 # Playwright. Starts its own database and server, and can run beside pnpm dev
 pnpm validate            # every check in spec section 6
 ```
 

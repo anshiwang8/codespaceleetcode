@@ -204,6 +204,10 @@ SCIP, not plain tree-sitter, is required for v1. Unique answers depend on precis
 
 tree-sitter has two narrow jobs, both anchored to an exact SCIP position: finding where a definition ends when the indexer gives no range, and naming top-level `root.name = function () {}` methods that scip-typescript leaves undefined. Those promoted methods get IDs, but a call to one only becomes an edge if SCIP itself resolved it.
 
+### Fetching untrusted repos
+
+The pipeline never runs a fetched repo's code. It doesn't install dependencies or run scripts. Indexers run with the stage folder as their working directory, so Windows executables are left out of that folder and `NoDefaultCurrentDirectoryInExePath` stops the npm `.cmd` shims finding a repo's own `node.cmd`. Symlinks are checked out as plain text files.
+
 ### Localhost mode
 
 The site runs on localhost with no accounts or keys. Each hosted service has a local stand-in, and the app reaches it through the same interface:
@@ -279,7 +283,7 @@ submissions  (id, user_id, puzzle_id, answer_json, correct, created_at,
 progress     (user_id, puzzle_id, status, attempts, solved_at, gave_up)
 ```
 
-`answer_json` and `solutions` are only readable through server routes using the service role. Row-level security denies client access.
+`answer_json` and `solutions` are only readable through server routes, using the service role on Supabase and `DATABASE_URL` on localhost. Row-level security denies client access.
 
 ---
 
@@ -300,7 +304,7 @@ progress     (user_id, puzzle_id, status, attempts, solved_at, gave_up)
 | `/api/dev/login`, `/api/dev/logout` | POST | Localhost mode only: start or end a dev session |
 | `/snapshots/<name>/<path>` | GET | Localhost mode only: `manifest.json` or a raw file |
 
-Response shapes live in `web/lib/api-types.ts`. Submit validates that every submitted ID exists in the snapshot before grading. Requests are rate-limited per user. Reading a puzzle needs no sign-in; submitting and giving up do.
+Response shapes live in `web/lib/api-types.ts`. Submit validates that every submitted ID exists in the snapshot before grading. Submit and search are rate-limited, in memory and per process, so a real deployment needs a shared store. Reading a puzzle needs no sign-in; submitting and giving up do.
 
 - Signed-out requests to `/solution` and `/api/me/stats` get 401. A signed-in user who hasn't unlocked a solution gets 403.
 - Every graded submission counts as an attempt, including ones after solving. A rejected request doesn't.

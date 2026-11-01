@@ -30,6 +30,7 @@ PYTHON_INSTALL_HELP = (
 )
 
 _INDEX_FILE = "index.scip"
+_WINDOWS_EXECUTABLE_SUFFIXES = frozenset({".bat", ".cmd", ".com", ".exe", ".ps1"})
 _NODE_HEAP = "--max-old-space-size=8192"
 # Written beside each tsconfig.json, in the stage dir only, so never one of the snapshot's files.
 _TSCONFIG = "tsconfig.scip.json"
@@ -81,9 +82,15 @@ class IndexResult:
 
 
 def stage_files(checkout: Path, kept: Iterable[str], stage_dir: Path) -> None:
-    """Copy kept files to a clean dir, so the indexer sees only what the snapshot contains."""
+    """Copy kept files to a clean dir, so the indexer sees only what the snapshot contains.
+
+    The exception is anything Windows could execute, since indexers run with this dir as their
+    working directory. No indexer reads those files, and they stay in the snapshot's files/.
+    """
     remove_tree(stage_dir)
     for rel_path in kept:
+        if Path(rel_path).suffix.lower() in _WINDOWS_EXECUTABLE_SUFFIXES:
+            continue
         destination = stage_dir / rel_path
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(checkout / rel_path, destination)
@@ -101,9 +108,9 @@ def _run_scip_typescript(stage_dir: Path) -> IndexResult:
     executable = shutil.which("scip-typescript")
     if executable is None:
         raise IngestError(TYPESCRIPT_INSTALL_HELP)
-    version = _run("scip-typescript", executable, "--version", cwd=stage_dir).strip()
+    version = run_tool("scip-typescript", executable, "--version", cwd=stage_dir).strip()
     index_path = stage_dir / _INDEX_FILE
-    _run(
+    run_tool(
         "scip-typescript",
         executable,
         "index",
@@ -197,7 +204,7 @@ def _run_scip_python(stage_dir: Path) -> IndexResult:
         # Forward slashes, because NODE_OPTIONS treats a backslash in quotes as an escape.
         node_options.append(f'--require "{_WINDOWS_SHIM.as_posix()}"')
     env = {"NODE_OPTIONS": " ".join(node_options)}
-    version = _run("scip-python", executable, "--version", cwd=stage_dir, env=env).strip()
+    version = run_tool("scip-python", executable, "--version", cwd=stage_dir, env=env).strip()
 
     _write_json(
         stage_dir / _PYRIGHT_CONFIG_FILE,
@@ -207,7 +214,7 @@ def _run_scip_python(stage_dir: Path) -> IndexResult:
     environment = stage_dir / _PYTHON_ENVIRONMENT_FILE
     _write_json(environment, [])
     index_path = stage_dir / _INDEX_FILE
-    _run(
+    run_tool(
         "scip-python",
         executable,
         "index",
@@ -252,13 +259,15 @@ def _write_json(path: Path, value: object) -> None:
     path.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
 
 
-def _run(
+def run_tool(
     tool: str, executable: str, *args: str, cwd: Path, env: Mapping[str, str] | None = None
 ) -> str:
     result = subprocess.run(
         [executable, *args],
         cwd=cwd,
-        env={**os.environ, **(env or {})},
+        # The npm .cmd shims run a bare `node`, and cmd.exe would look for it in the current
+        # directory first: the stage dir, which holds untrusted repo files.
+        env={**os.environ, "NoDefaultCurrentDirectoryInExePath": "1", **(env or {})},
         capture_output=True,
         encoding="utf-8",
         errors="replace",

@@ -3,9 +3,10 @@ import { FilterBar } from "@/components/list/FilterBar";
 import { PuzzleTable } from "@/components/list/PuzzleTable";
 import styles from "@/components/list/list.module.css";
 import { getCurrentUser } from "@/lib/server/auth";
+import { textValue } from "@/lib/server/http";
 import { listPuzzles, type PuzzleFilters } from "@/lib/server/puzzles";
 
-const textFilter = z.string().min(1).max(200);
+const textFilter = textValue(200);
 
 // A bad or repeated value in the URL is ignored rather than failing the whole page.
 function parseFilters(params: Record<string, string | string[] | undefined>): PuzzleFilters {
@@ -33,7 +34,7 @@ export default async function PuzzleListPage({ searchParams }: PageProps<"/">) {
         <h1>No puzzles seeded yet</h1>
         <p className="muted">The database is running, but it has no published puzzles.</p>
         <p className="muted">
-          From <code>ingest/</code>, run <code>uv run ingest seed</code>, then reload this page.
+          From <code>ingest/</code>, run <code>uv run python -m ingest seed</code>, then reload this page.
         </p>
       </main>
     );
