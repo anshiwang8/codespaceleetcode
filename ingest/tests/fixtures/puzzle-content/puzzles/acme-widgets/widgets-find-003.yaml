@@ -1,0 +1,14 @@
+# A comment that must survive.
+id: widgets-find-003
+snapshot: acme-widgets@a1b2c3d4 # sha prefix
+type: find
+difficulty: medium
+title: Default timeout
+prompt: |
+  Select the file that holds the default settings.
+  Select a file.
+answer: { kind: file, path: src/config.js, accept: [], accept_reasons: [] }
+solution: solutions/widgets-find-003.md
+tags: [config]
+authors: [fixture-author]
+verified_by: []   # filled in by the blind second solver

@@ -49,17 +49,24 @@ Fill these in as they are created:
 From the repo root:
 
 ```
-pnpm dev                 # web app
-pnpm test                # unit tests (ingest only so far)
+pnpm db                  # start local Postgres, apply migrations (stays running)
+pnpm db:reset            # delete all local database data
+pnpm dev                 # web app, bound to 127.0.0.1 because dev login trusts the Host header
+pnpm test                # all unit tests: test:ingest, then test:web (needs pnpm db running)
+pnpm --filter web lint
+pnpm --filter web typecheck   # plain tsc needs next typegen first
+pnpm --filter web build
 pnpm e2e                 # stub, exits 1: Playwright isn't set up yet
-pnpm validate            # stub, exits 1: ingest/validate.py doesn't exist yet
+pnpm validate            # every check in spec section 6
 ```
 
 From `ingest/`:
 
 ```
 uv run ingest snapshot <slug>   # fetch, filter, index, write to ingest/out/ (no upload yet)
-uv run ingest seed              # stub, exits 1: will load content/ into Postgres
+uv run ingest seed [--force]    # validate, then load snapshots and puzzles into Postgres
+uv run ingest blind-export --out <file> [--repo <slug>]   # puzzles with only what a solver may see
+uv run ingest blind-check <answers.json> --solver <name> [--write]   # grade a blind solve; prints pass or fail, never the key
 uv run python -m pytest         # not `uv run pytest`: Windows Application Control can block pytest.exe
 uv run ruff check .
 uv run ruff format --check .
@@ -67,6 +74,10 @@ uv run pyright
 uv run python scripts/gen_proto.py            # regenerate SCIP bindings from the vendored scip.proto
 uv run python scripts/regen_fixture_index.py  # rebuild the test fixture's index after changing it
 ```
+
+`INGEST_TEST_DB_URL` turns on the seed tests. It's separate from `SUPABASE_DB_URL`, so tests can't touch a real database.
+
+`content/schema/grading-cases.json` is run by both the web and Python test suites, so the two graders can't drift apart. Add new grading rules there.
 
 `snapshot` needs `scip-typescript` on PATH: `npm install -g @sourcegraph/scip-typescript@0.6.0`.
 
@@ -81,7 +92,13 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 NEXT_PUBLIC_SNAPSHOT_CDN_URL=
+DATABASE_URL=
+SNAPSHOT_DIR=
+DEV_AUTH_TEST_HOST=
+TEST_DATABASE_URL=
 ```
+
+None of these are needed on localhost: `DATABASE_URL` and `SNAPSHOT_DIR` have local defaults outside production.
 
 `ingest/.env.example`:
 

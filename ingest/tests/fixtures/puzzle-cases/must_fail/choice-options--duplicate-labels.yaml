@@ -1,0 +1,22 @@
+id: case-architecture-001
+snapshot: acme-widgets@a1b2c3d
+type: architecture
+difficulty: easy
+title: Fixture case-architecture-001
+prompt: 'Select the thing this fixture asks for.
+
+  '
+answer:
+  kind: choice
+  option: a
+solution: solutions/case-architecture-001.md
+authors:
+- fixture-author
+verified_by: []
+choices:
+- id: a
+  label: Same
+- id: b
+  label: Same
+- id: c
+  label: Option c

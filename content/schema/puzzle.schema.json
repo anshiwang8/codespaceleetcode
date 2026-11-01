@@ -1,0 +1,248 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://codebase-puzzles.local/schema/puzzle.schema.json",
+  "title": "Puzzle",
+  "description": "One file at content/puzzles/<repo-slug>/<id>.yaml. See spec.md sections 3 and 4.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "snapshot",
+    "type",
+    "difficulty",
+    "title",
+    "prompt",
+    "answer",
+    "solution",
+    "authors",
+    "verified_by"
+  ],
+  "properties": {
+    "id": {
+      "description": "<repo-short>-<type>-<nnn>",
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*-(find|trace|architecture)-[0-9]{3}$"
+    },
+    "snapshot": {
+      "description": "<slug>@<sha or sha prefix of at least 7>, which must exist in content/repos.yaml",
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]*@[0-9a-f]{7,40}$"
+    },
+    "type": { "enum": ["find", "trace", "architecture"] },
+    "difficulty": { "enum": ["easy", "medium", "hard"] },
+    "title": { "$ref": "#/$defs/text" },
+    "prompt": { "$ref": "#/$defs/text" },
+    "answer": { "$ref": "#/$defs/answer" },
+    "choices": {
+      "description": "The options of a choice puzzle. Clients see this, so it can't say which is correct. How many there are is a validator check, so an override can reach it.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "label"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[A-Za-z0-9_-]+$" },
+          "label": { "$ref": "#/$defs/text" }
+        }
+      }
+    },
+    "hints": { "type": "array", "items": { "$ref": "#/$defs/text" } },
+    "solution": {
+      "description": "Relative to content/.",
+      "type": "string",
+      "pattern": "^solutions/[^/\\\\]+\\.md$"
+    },
+    "tags": { "type": "array", "items": { "$ref": "#/$defs/text" }, "uniqueItems": true },
+    "authors": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/text" },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "verified_by": {
+      "description": "Blind second solvers. An agent:<name> entry means it wasn't a person. Publishing needs at least one.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/text" },
+      "uniqueItems": true
+    },
+    "validator_overrides": {
+      "description": "Only for a uniqueness heuristic that is a false positive (CLAUDE.md rule 5).",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["check", "reason"],
+        "properties": {
+          "check": {
+            "enum": [
+              "symbol-unique",
+              "sequence-edges",
+              "sequence-alternate-path"
+            ]
+          },
+          "reason": { "$ref": "#/$defs/text" }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "$ref": "#/$defs/isFind" },
+      "then": { "$ref": "#/$defs/findAnswers" }
+    },
+    {
+      "if": { "$ref": "#/$defs/isTrace" },
+      "then": { "$ref": "#/$defs/traceAnswers" }
+    },
+    {
+      "if": { "$ref": "#/$defs/isArchitecture" },
+      "then": { "$ref": "#/$defs/architectureAnswers" }
+    },
+    {
+      "if": { "$ref": "#/$defs/isChoice" },
+      "then": { "required": ["choices"] },
+      "else": { "not": { "required": ["choices"] } }
+    }
+  ],
+  "$defs": {
+    "text": { "type": "string", "pattern": "\\S" },
+    "ids": { "type": "array", "items": { "$ref": "#/$defs/text" } },
+    "lineRange": {
+      "description": "[first_line, last_line], inclusive and 1-based.",
+      "type": "array",
+      "items": { "type": "integer", "minimum": 1 },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "sequence": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/text" },
+      "minItems": 2
+    },
+    "isFind": {
+      "required": ["type"],
+      "properties": { "type": { "const": "find" } }
+    },
+    "isTrace": {
+      "required": ["type"],
+      "properties": { "type": { "const": "trace" } }
+    },
+    "isArchitecture": {
+      "required": ["type"],
+      "properties": { "type": { "const": "architecture" } }
+    },
+    "isChoice": {
+      "required": ["answer"],
+      "properties": {
+        "answer": {
+          "required": ["kind"],
+          "properties": { "kind": { "const": "choice" } }
+        }
+      }
+    },
+    "findAnswers": {
+      "properties": {
+        "answer": { "properties": { "kind": { "enum": ["symbol", "file", "location"] } } }
+      }
+    },
+    "traceAnswers": {
+      "properties": {
+        "answer": { "properties": { "kind": { "enum": ["sequence"] } } }
+      }
+    },
+    "architectureAnswers": {
+      "properties": {
+        "answer": { "properties": { "kind": { "enum": ["set", "symbol", "file", "choice"] } } }
+      }
+    },
+    "answer": {
+      "type": "object",
+      "required": ["kind"],
+      "properties": {
+        "kind": { "enum": ["symbol", "file", "location", "sequence", "set", "choice"] }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "symbol" } } },
+          "then": { "$ref": "#/$defs/symbolAnswer" }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "file" } } },
+          "then": { "$ref": "#/$defs/fileAnswer" }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "location" } } },
+          "then": { "$ref": "#/$defs/locationAnswer" }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "sequence" } } },
+          "then": { "$ref": "#/$defs/sequenceAnswer" }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "set" } } },
+          "then": { "$ref": "#/$defs/setAnswer" }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "choice" } } },
+          "then": { "$ref": "#/$defs/choiceAnswer" }
+        }
+      ]
+    },
+    "symbolAnswer": {
+      "additionalProperties": false,
+      "required": ["kind", "id"],
+      "properties": {
+        "kind": true,
+        "id": { "$ref": "#/$defs/text" },
+        "accept": { "$ref": "#/$defs/ids" },
+        "accept_reasons": { "$ref": "#/$defs/ids" }
+      }
+    },
+    "fileAnswer": {
+      "additionalProperties": false,
+      "required": ["kind", "path"],
+      "properties": {
+        "kind": true,
+        "path": { "$ref": "#/$defs/text" },
+        "accept": { "$ref": "#/$defs/ids" },
+        "accept_reasons": { "$ref": "#/$defs/ids" }
+      }
+    },
+    "locationAnswer": {
+      "additionalProperties": false,
+      "required": ["kind", "path", "anchor", "window"],
+      "properties": {
+        "kind": true,
+        "path": { "$ref": "#/$defs/text" },
+        "anchor": { "$ref": "#/$defs/lineRange" },
+        "window": { "$ref": "#/$defs/lineRange" }
+      }
+    },
+    "sequenceAnswer": {
+      "additionalProperties": false,
+      "required": ["kind", "ids"],
+      "properties": {
+        "kind": true,
+        "ids": { "$ref": "#/$defs/sequence" },
+        "accept_sequences": { "type": "array", "items": { "$ref": "#/$defs/sequence" } },
+        "accept_reasons": { "$ref": "#/$defs/ids" }
+      }
+    },
+    "setAnswer": {
+      "additionalProperties": false,
+      "required": ["kind", "ids"],
+      "properties": {
+        "kind": true,
+        "ids": { "type": "array", "items": { "$ref": "#/$defs/text" }, "minItems": 1 }
+      }
+    },
+    "choiceAnswer": {
+      "additionalProperties": false,
+      "required": ["kind", "option"],
+      "properties": {
+        "kind": true,
+        "option": { "type": "string", "pattern": "^[A-Za-z0-9_-]+$" }
+      }
+    }
+  }
+}

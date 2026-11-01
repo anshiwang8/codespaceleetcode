@@ -1,0 +1,18 @@
+id: case-architecture-001
+snapshot: acme-widgets@a1b2c3d
+type: architecture
+difficulty: easy
+title: Fixture case-architecture-001
+prompt: 'Select the three files that do this.
+
+  '
+answer:
+  kind: set
+  ids:
+  - src/app.js
+  - src/queue.js
+  - src/shapes.js
+solution: solutions/case-architecture-001.md
+authors:
+- fixture-author
+verified_by: []

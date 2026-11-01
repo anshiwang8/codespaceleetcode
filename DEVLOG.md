@@ -1,5 +1,64 @@
 # DEVLOG
 
+## Puzzle schema, validator, seed and blind-solve tools
+
+Type: Addition
+
+Goal: Stop a puzzle shipping unless it's provably checkable, and load everything into Postgres.
+
+What should be done: Implement every check in spec section 6, the `ingest seed` command, and tools that let a solver answer without seeing a key.
+
+What was done (technical):
+
+- `content/schema/puzzle.schema.json` and `uv run ingest validate` cover the schema, existence and uniqueness checks. Error messages name fields, never values.
+- `uv run ingest seed` validates first, skips snapshots already loaded, and upserts puzzles so users keep their progress. 15 synthetic repos of 100k lines took 70 seconds to load and 1.1 seconds to re-seed.
+- `blind-export` writes only what a solver may see, with a test that fails if any answer value appears. `blind-check` prints pass or fail only, and won't record a solver who is also the puzzle's author.
+- Breaking 18 critical behaviours one at a time, the tests caught all 18.
+
+Fixes after review:
+
+- The Python grader ignored duplicate set members while the web grader rejected them, so a blind solve could pass something the site would mark wrong. Both now reject them, and both test suites run `content/schema/grading-cases.json`.
+- `set-count`, `location-window` and `choice-options` can no longer be overridden, since a hand-edited `verified_by` could otherwise publish an unsolvable puzzle.
+- Windows made the local database WIN1252, which can't hold every character in real repos. `scripts/localdb.mjs` now forces UTF-8.
+
+## Grader, API routes and dev login
+
+Type: Addition
+
+Goal: Grade answers on the server and give the UI everything in spec section 9, without an answer key ever reaching a client.
+
+What should be done: Build the grader, every API route, the localhost dev login and the route standing in for the CDN, with tests that actively look for leaks.
+
+What was done (technical):
+
+- `web/lib/server/grader.ts` compares IDs exactly for all six answer kinds. Only `submit.ts` reads `answer_json`, and a test enforces that.
+- Dev login is refused unless `NODE_ENV` isn't production and the Host, `X-Forwarded-Host` and `Origin` are all local. `pnpm dev` binds to `127.0.0.1`, since a server on all interfaces would let someone on the same network spoof the Host header.
+- `/snapshots/<name>/...` serves only `manifest.json` and `files/<path>`, as plain text with `nosniff`. About 20 traversal forms were refused against a running server. A build trace showed its dynamic paths pulling the whole project, including solutions, into the server output; `turbopackIgnore` fixed that.
+- 406 web tests run against real Postgres. Breaking 39 protections one at a time, the suite caught all 39.
+- Rate limits are in memory and per process: 60 submits and 240 searches a minute. They'd need a shared store before a real deployment.
+
+## Contracts for the localhost MVP
+
+Type: Addition
+
+Goal: Let several agents build the site at once and have the parts fit, with no accounts or API keys needed to run it on localhost.
+
+What should be done: Fix the database schema, API shapes and local stand-ins before any feature work starts, and record them in the spec.
+
+What was done (technical):
+
+- `supabase/migrations/0001_init.sql` implements spec section 8. It adds `snapshots.name`, `occurrences.end_col`, `puzzles.choices` and `puzzles.verified_by`. RLS plus column grants deny clients `answer_json` and `solutions`, confirmed by querying as the `anon` role.
+- `scripts/localdb.mjs` runs real Postgres 18 from the `embedded-postgres` npm package, with data in `.localdb/`. No Docker or install needed. `pg_trgm`, roles and RLS all work on Windows. `supabase/local/shim.sql` adds the roles and `auth` schema Supabase provides, so the same migrations run in both places.
+- `web/lib/api-types.ts` holds the API shapes. Spec section 9 lists the routes, including the localhost-only `/api/dev/*` and `/snapshots/*`.
+- `INGEST_OUT_DIR` and `INGEST_WORK_DIR` let git worktrees share one set of fetched repos and snapshots.
+
+Decisions:
+
+- Localhost mode covers TypeScript, JavaScript and Python. Go isn't installed here and its installer may need admin rights, so it's left for later.
+- Express is dropped from the launch repos: it's under the 5k-line minimum and its index leaves most calls unresolved.
+- GitHub OAuth, R2 upload and deployment aren't being built yet, because they can't be tested without accounts. A dev login stands in, refused outside localhost and in production.
+- A separate agent that never sees the key may do the blind second solve, recorded as `agent:<name>`, and the puzzle page says no person has checked it. Replace these with human solves before a public launch.
+
 ## Promote undefined methods to canonical symbols
 
 Type: Change
