@@ -1,0 +1,21 @@
+id: flask-find-001
+snapshot: pallets-flask@49943b5
+type: find
+difficulty: easy
+title: Running request preprocessing callbacks
+prompt: |
+  In src/flask/app.py, select the Flask method that, for the current request,
+  first runs the registered URL value preprocessors and then runs the registered
+  before-request callbacks, returning early as soon as one of those callbacks
+  produces a non-None value. Select a method.
+answer:
+  kind: symbol
+  id: src/flask/app.py#Flask.preprocess_request
+  accept: []
+  accept_reasons: []
+hints:
+  - It's called from the method that wraps both dispatching and error handling.
+solution: solutions/flask-find-001.md
+tags: [request-lifecycle, hooks]
+authors: [agent-author-3]
+verified_by: []

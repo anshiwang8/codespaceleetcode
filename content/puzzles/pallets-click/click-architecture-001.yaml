@@ -1,0 +1,29 @@
+id: click-architecture-001
+snapshot: pallets-click@2247b35
+type: architecture
+difficulty: medium
+title: Precedence of fallback value sources
+prompt: |
+  Read Parameter.consume_value in src/click/core.py (the base-class version, not
+  the Option override that adds prompting). Suppose the value for a parameter was
+  not given on the command line, and the parameter has an environment variable
+  that is set, an entry in the context's default_map, and a default of its own.
+  Which of these does consume_value return? Select one option.
+answer:
+  kind: choice
+  option: a
+choices:
+  - id: a
+    label: The value of the environment variable.
+  - id: b
+    label: The entry from the context's default_map.
+  - id: c
+    label: The parameter's own default.
+  - id: d
+    label: None of them; it raises an error because the sources conflict.
+hints:
+  - The method works through the sources one after another, each guarded by a check that the value is still unset.
+solution: solutions/click-architecture-001.md
+tags: [parameters, configuration]
+authors: [agent-author-3]
+verified_by: []

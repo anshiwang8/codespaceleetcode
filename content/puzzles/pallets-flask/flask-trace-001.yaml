@@ -1,0 +1,28 @@
+id: flask-trace-001
+snapshot: pallets-flask@49943b5
+type: trace
+difficulty: medium
+title: The automatic OPTIONS response
+prompt: |
+  Start at Flask.wsgi_app in src/flask/app.py. A client sends an OPTIONS request
+  to a URL whose matched rule has provide_automatic_options set to true. No
+  exception is raised, and no before_request callback returns a value. Select the
+  chain of Flask methods, in call order, where each one directly calls the next,
+  ending at the method that builds the automatic OPTIONS response.
+  Direct calls only. Skip standard-library and third-party calls, and skip calls to
+  helpers such as ensure_sync that are not part of the chain.
+answer:
+  kind: sequence
+  ids:
+    - src/flask/app.py#Flask.wsgi_app
+    - src/flask/app.py#Flask.full_dispatch_request
+    - src/flask/app.py#Flask.dispatch_request
+    - src/flask/app.py#Flask.make_default_options_response
+  accept_sequences: []
+  accept_reasons: []
+hints:
+  - The decision is made by checking an attribute of the matched rule, just before the view function would be called.
+solution: solutions/flask-trace-001.md
+tags: [request-lifecycle, routing]
+authors: [agent-author-3]
+verified_by: []
