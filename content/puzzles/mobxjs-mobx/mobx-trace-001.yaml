@@ -1,0 +1,31 @@
+id: mobx-trace-001
+snapshot: mobxjs-mobx@b05f0de
+type: trace
+difficulty: medium
+title: From a value write to running reactions
+prompt: |
+  Starting at the `set` method of `ObservableValue` in
+  packages/mobx/src/types/observablevalue.ts, list the functions called, in
+  order, until `runReactions` (in packages/mobx/src/core/reaction.ts) is
+  called. List direct calls only (each function must be called literally in the
+  body of the previous one), and skip standard-library and third-party calls.
+
+  Assume the new value differs from the old one, no interceptors or change
+  listeners are registered, and the write happens outside any action,
+  transaction or batch, so the global batch counter drops back to zero. Include
+  the start function in your sequence.
+answer:
+  kind: sequence
+  ids:
+    - packages/mobx/src/types/observablevalue.ts#ObservableValue.set
+    - packages/mobx/src/types/observablevalue.ts#ObservableValue.setNewValue_
+    - packages/mobx/src/core/atom.ts#Atom.reportChanged
+    - packages/mobx/src/core/observable.ts#endBatch
+    - packages/mobx/src/core/reaction.ts#runReactions
+  accept_sequences: []
+hints:
+  - ObservableValue extends Atom, and the method that announces a change lives on the base class.
+solution: solutions/mobx-trace-001.md
+tags: [reactivity, batching]
+authors: [agent-author-2]
+verified_by: []
