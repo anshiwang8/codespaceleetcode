@@ -71,12 +71,16 @@ export function ActionBar({ activePath, cursor, selection, draft, pick, repoUrl,
         <button
           type="button"
           className="btn btn-small btn-quiet"
-          title="Find references (shift-F12)"
+          title={
+            cursorHere?.referencesCappedAt
+              ? `This symbol has more references than the ${cursorHere.referencesCappedAt} listed. Use Search for the rest.`
+              : "Find references (shift-F12)"
+          }
           disabled={!symbol}
           data-testid="find-references"
           onClick={() => viewerRef.current?.findReferences()}
         >
-          References
+          {cursorHere?.referencesCappedAt ? `References (first ${cursorHere.referencesCappedAt})` : "References"}
         </button>
       </div>
 

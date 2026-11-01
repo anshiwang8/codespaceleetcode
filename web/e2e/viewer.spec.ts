@@ -49,12 +49,58 @@ test.describe("code viewer", () => {
     await expectOpenFile(page, FILES.router);
   });
 
+  test("find references lists every file, even across many", async ({ page }) => {
+    // More files than Monaco's listener-leak heuristic allows models for, which must stay quiet.
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    const paths = Array.from({ length: 250 }, (_, index) => `generated/file${index}.ts`);
+    await page.route("**/api/snapshots/*/symbols?*", async (route) => {
+      const response = await route.fetch();
+      const body = (await response.json()) as { symbol: unknown; references: unknown[] };
+      if (body.symbol) {
+        body.references = paths.map((file) => ({ file, line: 1, col: 1, endCol: 4 }));
+      }
+      await route.fulfill({ response, json: body });
+    });
+    await page.route("**/files/generated/**", (route) => route.fulfill({ contentType: "text/plain", body: "use(thing);" }));
+
+    await openPuzzle(page, "e2e-find-symbol");
+    await openFile(page, FILES.views);
+    await cursorOnSymbol(page, "export function renderNotFound", "renderNotFound", "src/views.ts#renderNotFound");
+    await expect(page.getByTestId("find-references")).toHaveText("References");
+    await page.getByTestId("find-references").click();
+    await expect(page.locator(".peekview-widget .head")).toContainText("References (251)"); // And the definition.
+    expect(errors).toEqual([]);
+  });
+
+  test("a symbol at the reference cap says the list is cut short", async ({ page }) => {
+    await page.route("**/api/snapshots/*/symbols?*", async (route) => {
+      const response = await route.fetch();
+      const body = (await response.json()) as { symbol: unknown; references: unknown[] };
+      if (body.symbol) {
+        body.references = Array.from({ length: 500 }, (_, index) => ({
+          file: FILES.views,
+          line: 1,
+          col: index + 1,
+          endCol: index + 2,
+        }));
+      }
+      await route.fulfill({ response, json: body });
+    });
+    await openPuzzle(page, "e2e-find-symbol");
+    await openFile(page, FILES.views);
+    await cursorOnSymbol(page, "export function renderNotFound", "renderNotFound", "src/views.ts#renderNotFound");
+    await expect(page.getByTestId("find-references")).toHaveText("References (first 500)");
+  });
+
   test("hovering a name shows its symbol from the index", async ({ page }) => {
     await openPuzzle(page, "e2e-find-symbol");
     await openFile(page, FILES.router);
     const line = page.locator(".monaco-editor .view-line", { hasText: "this.match" }).first();
     await line.locator("span", { hasText: /^match$/ }).last().hover();
-    await expect(page.locator(".monaco-hover")).toContainText("src/router.ts#Router.match");
+    await expect(page.locator(".monaco-hover").filter({ visible: true }).first()).toContainText(
+      "src/router.ts#Router.match",
+    );
   });
 
   test("a local variable has no symbol, and nothing goes wrong", async ({ page }) => {

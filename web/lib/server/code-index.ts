@@ -1,14 +1,14 @@
 import "server-only";
-import type {
-  OutlineResponse,
-  SearchResponse,
-  SourcePosition,
-  SymbolAtPositionResponse,
-  SymbolInfo,
+import {
+  REFERENCE_CAP,
+  type OutlineResponse,
+  type SearchResponse,
+  type SourcePosition,
+  type SymbolAtPositionResponse,
+  type SymbolInfo,
 } from "@/lib/api-types";
 import { getPool } from "@/lib/server/db";
 
-const REFERENCE_CAP = 500;
 const SEARCH_CAP = 200;
 const SEARCH_LINE_CHARS = 1000;
 

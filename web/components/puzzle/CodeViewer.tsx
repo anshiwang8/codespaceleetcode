@@ -3,7 +3,7 @@
 import Editor, { loader, type OnMount } from "@monaco-editor/react";
 import { type RefObject, useCallback, useEffect, useImperativeHandle, useRef, useState, useSyncExternalStore } from "react";
 import styles from "@/components/puzzle/puzzle.module.css";
-import type { ManifestFile, SymbolAtPositionResponse, SymbolInfo } from "@/lib/api-types";
+import { type ManifestFile, REFERENCE_CAP, type SymbolAtPositionResponse, type SymbolInfo } from "@/lib/api-types";
 import { type LineRange, selectionToLines } from "@/lib/client/answer";
 import { api } from "@/lib/client/api";
 import {
@@ -29,6 +29,8 @@ export interface CursorInfo {
   symbol: SymbolInfo | null;
   /** True while the index is being asked about this position. */
   pending: boolean;
+  /** How many references the API capped this symbol's list at, or null if it wasn't. */
+  referencesCappedAt: number | null;
 }
 
 export interface SelectionInfo {
@@ -43,7 +45,6 @@ export interface ViewerHandle {
 
 // Past this size, highlighting a file costs more than it's worth. Ingest caps files at 1 MB.
 const LARGE_FILE_CHARS = 512 * 1024;
-const REFERENCE_FILE_LIMIT = 50;
 const REFERENCE_LOAD_CONCURRENCY = 6;
 const CURSOR_DEBOUNCE_MS = 120;
 
@@ -253,7 +254,9 @@ export default function CodeViewer({
           ...(context.includeDeclaration && result.definition ? [result.definition] : []),
           ...result.references,
         ];
-        const files = [...new Set(positions.map((item) => item.file))].slice(0, REFERENCE_FILE_LIMIT);
+        // Monaco's peek needs a model for each file. Leaving any out would quietly shorten the list,
+        // which matters when a puzzle asks what uses a symbol.
+        const files = [...new Set(positions.map((item) => item.file))];
         const usable = new Set<string>();
         for (let start = 0; start < files.length; start += REFERENCE_LOAD_CONCURRENCY) {
           await Promise.all(
@@ -384,12 +387,17 @@ export default function CodeViewer({
         return;
       }
       const base = { path, line: position.lineNumber, col: position.column };
-      callbacks.current.onCursor({ ...base, symbol: null, pending: true });
+      callbacks.current.onCursor({ ...base, symbol: null, pending: true, referencesCappedAt: null });
       const current = request;
       timer = setTimeout(() => {
         void store.lookup(model, position.lineNumber, position.column).then((result) => {
           if (current !== request) return;
-          callbacks.current.onCursor({ ...base, symbol: result?.symbol ?? null, pending: false });
+          callbacks.current.onCursor({
+            ...base,
+            symbol: result?.symbol ?? null,
+            pending: false,
+            referencesCappedAt: result && result.references.length >= REFERENCE_CAP ? REFERENCE_CAP : null,
+          });
         });
       }, CURSOR_DEBOUNCE_MS);
     };

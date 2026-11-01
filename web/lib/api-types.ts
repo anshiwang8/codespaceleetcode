@@ -112,6 +112,9 @@ export interface SourcePosition {
   endCol: number;
 }
 
+/** The most references one response carries. A full list means there may be more. */
+export const REFERENCE_CAP = 500;
+
 /** GET /api/snapshots/:id/symbols?file=&line=&col= */
 export interface SymbolAtPositionResponse {
   symbol: SymbolInfo | null;

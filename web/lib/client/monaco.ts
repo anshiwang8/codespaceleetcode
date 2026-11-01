@@ -4,6 +4,7 @@
 // This deliberately imports the bare editor rather than the package's main entry. The main entry
 // also brings TypeScript's language service, which would answer go-to-definition by itself from
 // whatever models happen to be open. Code intelligence has to come from the SCIP index (rule 7).
+import { errorHandler } from "monaco-editor/base/common/errors.js";
 import * as monaco from "monaco-editor/editor/editor.api.js";
 import "monaco-editor/features/register.all.js";
 import "monaco-editor/languages/definitions/css/register.js";
@@ -21,6 +22,15 @@ const environment: monaco.Environment = {
   getWorker: () => new Worker(new URL("./monaco.worker.ts", import.meta.url), { type: "module" }),
 };
 (globalThis as { MonacoEnvironment?: monaco.Environment }).MonacoEnvironment = environment;
+
+// Find references keeps a model per referencing file, and a popular symbol has hundreds. Past 200
+// models Monaco's leak heuristic throws an uncaught error, though nothing is leaking: they're all
+// wanted for the life of the page. Every other error still goes through.
+const reportUnexpectedError = errorHandler.unexpectedErrorHandler;
+errorHandler.unexpectedErrorHandler = (error) => {
+  if (error instanceof Error && error.name === "ListenerLeakError") return;
+  reportUnexpectedError(error);
+};
 
 export { monaco };
 export type Monaco = typeof monaco;
