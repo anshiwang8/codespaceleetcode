@@ -1,0 +1,23 @@
+id: ajv-architecture-001
+snapshot: ajv-validator-ajv@f177fe3
+type: architecture
+difficulty: medium
+title: Where validation keywords are registered
+prompt: |
+  The default `Ajv` class (lib/ajv.ts) registers its keywords through
+  vocabularies. In lib/vocabularies/, select the one file that registers, in a
+  single vocabulary list, the keywords `required`, `pattern`, `enum` and
+  `const` together with the other value-validation keywords such as the
+  length, item and property count limits. Select a file (the file with that
+  list, not a file that implements one keyword's code).
+answer:
+  kind: file
+  path: lib/vocabularies/validation/index.ts
+  accept: []
+  accept_reasons: []
+hints:
+  - Ajv._addVocabularies in lib/ajv.ts imports a draft-07 list of vocabularies, which in turn imports each vocabulary's index.
+solution: solutions/ajv-architecture-001.md
+tags: [vocabularies, extension-points]
+authors: [agent-author-2]
+verified_by: []

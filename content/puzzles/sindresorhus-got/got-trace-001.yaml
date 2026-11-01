@@ -1,0 +1,29 @@
+id: got-trace-001
+snapshot: sindresorhus-got@6b5aafc
+type: trace
+difficulty: medium
+title: From flush to timeout timers
+prompt: |
+  Starting at `Request.flush` in source/core/index.ts, list the functions
+  called, in order, until the function defined in source/core/timed-out.ts that
+  attaches the per-phase timeout timers to the underlying `ClientRequest` is
+  called. List direct calls only (each function must be called literally in the
+  body of the previous one), and skip standard-library and third-party calls.
+
+  Assume the first attempt of a plain request: default options, no cache, no
+  HTTP/2, and the request function returns a `ClientRequest` rather than an
+  already-built response. Include the start function in your sequence.
+answer:
+  kind: sequence
+  ids:
+    - source/core/index.ts#Request.flush
+    - source/core/index.ts#Request._makeRequest
+    - source/core/index.ts#Request._onRequest
+    - source/core/timed-out.ts#timedOut
+  accept_sequences: []
+hints:
+  - flush first prepares the body and then calls a method that issues the actual HTTP request.
+solution: solutions/got-trace-001.md
+tags: [request-lifecycle, timeouts]
+authors: [agent-author-2]
+verified_by: []

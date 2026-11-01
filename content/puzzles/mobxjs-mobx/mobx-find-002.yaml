@@ -1,0 +1,23 @@
+id: mobx-find-002
+snapshot: mobxjs-mobx@b05f0de
+type: find
+difficulty: medium
+title: Runaway reaction cycle guard
+prompt: |
+  In packages/mobx/src/core/reaction.ts, the helper that drains the queue of
+  pending reactions loops while there are reactions left, because running a
+  reaction can queue more. Select the lines of the `if` statement inside that
+  loop that protects against reactions which keep re-triggering each other
+  forever: from the `if` line through its closing brace. It logs an error and
+  discards the queued reactions.
+answer:
+  kind: location
+  path: packages/mobx/src/core/reaction.ts
+  anchor: [292, 300]
+  window: [288, 306]
+hints:
+  - A module-level constant above the helper defines the iteration limit.
+solution: solutions/mobx-find-002.md
+tags: [reactions, safety]
+authors: [agent-author-2]
+verified_by: []

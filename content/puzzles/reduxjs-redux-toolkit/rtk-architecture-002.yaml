@@ -1,0 +1,29 @@
+id: rtk-architecture-002
+snapshot: reduxjs-redux-toolkit@0fd611c
+type: architecture
+difficulty: hard
+title: Default middleware order
+prompt: |
+  In packages/toolkit/src/getDefaultMiddleware.ts, `getDefaultMiddleware()` is
+  called with no options while `process.env.NODE_ENV` is not "production".
+  Following the code, which option lists the middleware in the returned array
+  in order, from index 0 (the first one in the array) onward? Select one
+  option.
+answer:
+  kind: choice
+  option: b
+choices:
+  - id: a
+    label: thunk, immutable-state check, serializable-state check, action-creator check
+  - id: b
+    label: action-creator check, immutable-state check, thunk, serializable-state check
+  - id: c
+    label: action-creator check, thunk, immutable-state check, serializable-state check
+  - id: d
+    label: immutable-state check, thunk, serializable-state check, action-creator check
+hints:
+  - Pay attention to whether each one is added with push or unshift.
+solution: solutions/rtk-architecture-002.md
+tags: [middleware, configureStore]
+authors: [agent-author-2]
+verified_by: []
