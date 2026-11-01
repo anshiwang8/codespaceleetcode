@@ -1,0 +1,22 @@
+id: requests-find-001
+snapshot: psf-requests@3c7baaa
+type: find
+difficulty: easy
+title: Merging request settings with session defaults
+prompt: |
+  In src/requests/sessions.py, select the module-level function that combines a
+  per-request setting with the corresponding session-level setting. When both are
+  mappings it builds a new mapping from the session's entries overlaid with the
+  request's entries, and it then removes every key whose merged value is None.
+  Select a function (not a method).
+answer:
+  kind: symbol
+  id: src/requests/sessions.py#merge_setting
+  accept: []
+  accept_reasons: []
+hints:
+  - Session.prepare_request calls this helper several times, once per setting it merges.
+solution: solutions/requests-find-001.md
+tags: [sessions, configuration]
+authors: [agent-author-3]
+verified_by: []
