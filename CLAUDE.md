@@ -23,7 +23,7 @@ LeetCode-style puzzles set inside real open-source repos pinned to a commit. v1 
 4. **Snapshots are immutable.** Never change the SHA of an existing snapshot. A newer commit means a new snapshot.
 5. **Every puzzle passes `pnpm validate`.** Never weaken a validator check to get a puzzle through. Use `validator_overrides` with a written reason, and only when the check is a false positive.
 6. **Uniqueness is fixed in the prompt, not the key.** If a puzzle has two plausible answers, tighten the prompt's scope. Only add to `accept` for truly equivalent answers (e.g. a re-export of the same function), with a reason in `accept_reasons`.
-7. **Code intelligence comes from SCIP.** Don't substitute name-based matching for definitions, references, or call edges. One narrow exception: scip-typescript leaves top-level `root.name = function () {}` undefined, so `ingest/src/ingest/convert.py` promotes those methods using SCIP's resolved root and the assignment syntax at that exact position. References still come only from SCIP's own locals, never from a name lookup.
+7. **Code intelligence comes from SCIP.** Don't substitute name-based matching for definitions, references, or call edges. One narrow exception: scip-typescript leaves top-level `root.name = function () {}` undefined, so `ingest/src/ingest/convert.py` promotes those methods using SCIP's resolved root and the assignment syntax at that exact position. References still come only from SCIP's own locals, never from a name lookup. tree-sitter also answers position-only questions: whether a reference at a given spot is a type, decorator or base class, and whether a Python reference sits on a `def` or `class` name.
 8. **v1 scope only.** No code execution, bug-fix puzzles, or AI mode. If a task needs them, stop and flag it.
 
 ## Conventions
@@ -31,7 +31,7 @@ LeetCode-style puzzles set inside real open-source repos pinned to a commit. v1 
 - TypeScript strict, no `any`. Validate route inputs with zod.
 - Server-only modules go in `web/lib/server/` and import `server-only`.
 - Python: type hints, `ruff` + `pyright` clean. Run with `uv run`.
-- Puzzle IDs: `<repo-short>-<type>-<nnn>`, e.g. `express-trace-002`.
+- Puzzle IDs: `<repo-short>-<type>-<nnn>`, e.g. `hono-trace-002`.
 - One concept per puzzle. If the prompt needs "and", split it.
 
 ## Testing
@@ -49,6 +49,7 @@ Fill these in as they are created:
 From the repo root:
 
 ```
+pnpm local               # everything: database, seed, site at http://127.0.0.1:3000
 pnpm db                  # start local Postgres, apply migrations (stays running)
 pnpm db:reset            # delete all local database data
 pnpm dev                 # web app, bound to 127.0.0.1 because dev login trusts the Host header
@@ -64,6 +65,7 @@ From `ingest/`:
 
 ```
 uv run ingest snapshot <slug>   # fetch, filter, index, write to ingest/out/ (no upload yet)
+uv run ingest snapshot-all [--force]   # every repo in repos.yaml. --force after any pipeline change, since finished snapshots are skipped
 uv run ingest seed [--force]    # validate, then load snapshots and puzzles into Postgres
 uv run ingest blind-export --out <file> [--repo <slug>]   # puzzles with only what a solver may see
 uv run ingest blind-check <answers.json> --solver <name> [--write]   # grade a blind solve; prints pass or fail, never the key
@@ -79,7 +81,7 @@ uv run python scripts/regen_fixture_index.py  # rebuild the test fixture's index
 
 `content/schema/grading-cases.json` is run by both the web and Python test suites, so the two graders can't drift apart. Add new grading rules there.
 
-`snapshot` needs `scip-typescript` on PATH: `npm install -g @sourcegraph/scip-typescript@0.6.0`.
+Snapshots need the indexers on PATH: `npm install -g @sourcegraph/scip-typescript@0.6.0 @sourcegraph/scip-python@0.6.8`.
 
 ## Environment
 
