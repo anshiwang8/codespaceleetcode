@@ -1,0 +1,27 @@
+id: vue-trace-001
+snapshot: vuejs-core@24c9d0b
+type: trace
+difficulty: medium
+title: From baseCompile into the AST walk
+prompt: |
+  In packages/compiler-core/src/, start at `baseCompile` called with a template string and
+  default options. List the functions called, in order, until you reach the function that
+  loops over a parent node's child nodes while the AST is being transformed. Include the
+  start and the final function. Direct calls only: each entry must be called from the body
+  of the one before it. Skip constructors, node and directive transform functions that are
+  only passed around in arrays, and third-party or standard-library calls.
+answer:
+  kind: sequence
+  ids:
+    - packages/compiler-core/src/compile.ts#baseCompile
+    - packages/compiler-core/src/transform.ts#transform
+    - packages/compiler-core/src/transform.ts#traverseNode
+    - packages/compiler-core/src/transform.ts#traverseChildren
+  accept_sequences: []
+  accept_reasons: []
+hints:
+  - The transform stage works on the AST that the parser produced. Find the entry point of that stage first.
+solution: solutions/vue-trace-001.md
+tags: [compiler, ast]
+authors: [agent-author-1]
+verified_by: []

@@ -1,0 +1,22 @@
+id: vue-architecture-001
+snapshot: vuejs-core@24c9d0b
+type: architecture
+difficulty: easy
+title: Directive transforms in the base compiler preset
+prompt: |
+  `getBaseTransformPreset` in packages/compiler-core/src/compile.ts returns two things: a
+  list of node transforms and a record of directive transforms keyed by directive name.
+  Select all 3 files, all under packages/compiler-core/src/transforms/, that define the
+  functions registered in that directive-transform record.
+answer:
+  kind: set
+  ids:
+    - packages/compiler-core/src/transforms/vBind.ts
+    - packages/compiler-core/src/transforms/vModel.ts
+    - packages/compiler-core/src/transforms/vOn.ts
+hints:
+  - The record is the second element of the returned array. Follow each value's import.
+solution: solutions/vue-architecture-001.md
+tags: [compiler, directives]
+authors: [agent-author-1]
+verified_by: []
