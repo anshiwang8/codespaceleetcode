@@ -1,0 +1,29 @@
+id: click-trace-001
+snapshot: pallets-click@2247b35
+type: trace
+difficulty: medium
+title: From shell completion request to a parsed context
+prompt: |
+  Start at the function `shell_complete` in src/click/shell_completion.py, called
+  with the instruction "bash_complete" (shell bash, instruction complete) for a
+  registered shell. Select the chain of functions and methods, in call order,
+  where each one directly calls the next, ending at the first call that creates a
+  Context by parsing arguments with Command.make_context.
+  Direct calls only. Skip class constructors, standard-library calls, and calls
+  to the `echo` helper.
+answer:
+  kind: sequence
+  ids:
+    - src/click/shell_completion.py#shell_complete
+    - src/click/shell_completion.py#ShellComplete.complete
+    - src/click/shell_completion.py#ShellComplete.get_completions
+    - src/click/shell_completion.py#_resolve_context
+    - src/click/core.py#Command.make_context
+  accept_sequences: []
+  accept_reasons: []
+hints:
+  - The "complete" instruction branch is the second one in shell_complete.
+solution: solutions/click-trace-001.md
+tags: [shell-completion]
+authors: [agent-author-3]
+verified_by: []

@@ -1,0 +1,21 @@
+id: click-find-003
+snapshot: pallets-click@2247b35
+type: find
+difficulty: easy
+title: Where the progress bar is implemented
+prompt: |
+  The public function `click.progressbar` in src/click/termui.py builds and returns
+  an object that renders and updates a progress bar on the terminal. Within
+  src/click/, select the file that defines the class of that returned object.
+  Select a file.
+answer:
+  kind: file
+  path: src/click/_termui_impl.py
+  accept: []
+  accept_reasons: []
+hints:
+  - Look at the return statement of the public function and follow the name it calls.
+solution: solutions/click-find-003.md
+tags: [terminal-ui]
+authors: [agent-author-3]
+verified_by: []
