@@ -1,4 +1,4 @@
-"""`python -m ingest`, which needs no generated launcher: Windows Application Control can block those."""
+"""`python -m ingest`. It needs no generated launcher, which Windows can block."""
 
 from ingest.cli import app
 
