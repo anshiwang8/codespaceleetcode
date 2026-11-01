@@ -11,6 +11,6 @@
 
 ## Why the other options are wrong
 
-- a: nothing in `callLayer` turns `undefined` into an empty 200. An empty 200 happens later, in `prepareResponseBody`, only if the whole chain eventually yields `null` or `undefined`.
-- c: there is no check that `next` was invoked. `next` is memoized with `nextCalled`, so calling it late is safe, and no error is thrown.
-- d: a 404 only appears if the chain reaches `NoHandler` (no matching route) and the final value is `kNotFound`. It is not produced by the middleware returning `undefined`.
+- d: nothing in `callLayer` turns `undefined` into an empty 200. An empty 200 happens later, in `prepareResponseBody`, only if the whole chain eventually yields `null` or `undefined`.
+- a: there is no check that `next` was invoked. `next` is memoized with `nextCalled`, so calling it late is safe, and no error is thrown.
+- c: a 404 only appears if the chain reaches `NoHandler` (no matching route) and the final value is `kNotFound`. It is not produced by the middleware returning `undefined`.

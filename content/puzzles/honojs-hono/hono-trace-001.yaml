@@ -5,7 +5,7 @@ difficulty: medium
 title: From app.request to the middleware chain
 prompt: |
   In src/hono-base.ts, start at `Hono.request`, called with a URL string, for a route whose
-  match returns two or more handlers. List the functions called, in order, until the
+  match returns two or more handlers. list the chain of functions, in call order, where each one calls the next, until the
   function that chains the matched handlers into a single callable (the middleware
   composer) is reached. Include the start and the final function. Direct calls only: each
   entry must be called from the body of the one before it. Skip constructors, built-ins

@@ -13,6 +13,6 @@ Trace the arguments through `calculateRetryDelay` in `source/core/calculate-retr
 
 ## Why the others are wrong
 
-- a: The 0 branch needs `retryAfter > computedValue`, and `computedValue` is `Infinity` here.
+- d: The 0 branch needs `retryAfter > computedValue`, and `computedValue` is `Infinity` here.
 - b: That is the value of the last line, which only runs when there is no `retryAfter` (and the status is not 413).
-- d: The 1 ms minimum comes from `Math.max(1, ...)` only when the computed value would otherwise be below 1, which does not apply.
+- a: The 1 ms minimum comes from `Math.max(1, ...)` only when the computed value would otherwise be below 1, which does not apply.

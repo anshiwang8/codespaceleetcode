@@ -1,6 +1,6 @@
 # requests-architecture-002: Choosing among mounted adapters
 
-**Answer:** option `a`, the adapter registered under the longest matching prefix.
+**Answer:** option `c`, the adapter registered under the longest matching prefix.
 
 ## How to find it
 
@@ -12,5 +12,5 @@
 ## Why the other options are wrong
 
 - b: mount order doesn't decide. A short prefix mounted later is moved behind longer ones.
-- c: same reason; first-mounted wins only by accident when it is also the longest.
+- a: same reason; first-mounted wins only by accident when it is also the longest.
 - d: `get_adapter` compares the full prefix string with `startswith`, not just the scheme, so host and path parts matter.

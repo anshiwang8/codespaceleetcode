@@ -16,13 +16,13 @@ answer:
   option: c
 choices:
   - id: a
-    label: NOT_TRACKING_
+    label: STALE_
   - id: b
-    label: UP_TO_DATE_
+    label: NOT_TRACKING_
   - id: c
     label: POSSIBLY_STALE_
   - id: d
-    label: STALE_
+    label: UP_TO_DATE_
 hints:
   - propagateChanged only marks X's direct observers as STALE_. R is not a direct observer of X.
 solution: solutions/mobx-architecture-001.md

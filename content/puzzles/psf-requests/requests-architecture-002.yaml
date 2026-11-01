@@ -11,14 +11,14 @@ prompt: |
   Which adapter does Session.get_adapter return? Select one option.
 answer:
   kind: choice
-  option: a
+  option: c
 choices:
   - id: a
-    label: The adapter registered under the longest matching prefix.
+    label: The adapter that was mounted first, whatever its prefix length.
   - id: b
     label: The adapter that was mounted most recently, whatever its prefix length.
   - id: c
-    label: The adapter that was mounted first, whatever its prefix length.
+    label: The adapter registered under the longest matching prefix.
   - id: d
     label: The adapter registered under the URL's scheme; any host or path in a prefix is ignored.
 hints:

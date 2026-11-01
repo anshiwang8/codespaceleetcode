@@ -11,18 +11,18 @@ prompt: |
   every later request?
 answer:
   kind: choice
-  option: b
+  option: d
 choices:
   - id: a
     label: RegExpRouter
   - id: b
-    label: TrieRouter
+    label: SmartRouter's own match method, which keeps trying each router on every request
   - id: c
     label: LinearRouter
   - id: d
-    label: PatternRouter
+    label: TrieRouter
   - id: e
-    label: SmartRouter's own match method, which keeps trying each router on every request
+    label: PatternRouter
 hints:
   - Look for where a path pattern can make a router throw during `add`, and what `SmartRouter.match` does about it.
 solution: solutions/hono-architecture-001.md

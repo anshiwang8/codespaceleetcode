@@ -11,6 +11,6 @@
 
 ## Why the others are wrong
 
-- b and c are consulted only if the environment variable gave nothing.
-- d: there is no conflict detection; the guards make the sources a fallback chain.
+- b and d are consulted only if the environment variable gave nothing.
+- c: there is no conflict detection; the guards make the sources a fallback chain.
 - `Option.consume_value` calls `super().consume_value` first and only adds prompting afterwards, which is why the prompt asks about the base version.

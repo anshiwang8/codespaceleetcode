@@ -5,8 +5,7 @@ difficulty: medium
 title: From a value write to running reactions
 prompt: |
   Starting at the `set` method of `ObservableValue` in
-  packages/mobx/src/types/observablevalue.ts, list the functions called, in
-  order, until `runReactions` (in packages/mobx/src/core/reaction.ts) is
+  packages/mobx/src/types/observablevalue.ts, list the chain of functions, in call order, where each one calls the next, until `runReactions` (in packages/mobx/src/core/reaction.ts) is
   called. List direct calls only (each function must be called literally in the
   body of the previous one), and skip standard-library and third-party calls.
 

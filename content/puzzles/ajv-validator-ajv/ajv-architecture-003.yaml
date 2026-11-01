@@ -10,16 +10,16 @@ prompt: |
   second call? Select one option.
 answer:
   kind: choice
-  option: b
+  option: d
 choices:
   - id: a
     label: compileSchema runs again, producing a second, separate validation function.
   - id: b
-    label: compileSchema does not run again; the second call returns the validation function stored on the cached schema entry from the first call.
+    label: compileSchema does not run again, but the second call wraps the cached function in a new function before returning it.
   - id: c
     label: The second call throws because a schema with that key already exists.
   - id: d
-    label: compileSchema does not run again, but the second call wraps the cached function in a new function before returning it.
+    label: compileSchema does not run again; the second call returns the validation function stored on the cached schema entry from the first call.
 hints:
   - Look at what _addSchema returns when its cache already holds the schema, and what compile does with sch.validate.
 solution: solutions/ajv-architecture-003.md

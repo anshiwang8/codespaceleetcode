@@ -7,8 +7,8 @@ prompt: |
   Start at the function `shell_complete` in src/click/shell_completion.py, called
   with the instruction "bash_complete" (shell bash, instruction complete) for a
   registered shell. Select the chain of functions and methods, in call order,
-  where each one directly calls the next, ending at the first call that creates a
-  Context by parsing arguments with Command.make_context.
+  where each one directly calls the next, ending with the method that
+  creates a Context by parsing arguments, Command.make_context. Include it.
   Direct calls only. Skip class constructors, standard-library calls, and calls
   to the `echo` helper.
 answer:

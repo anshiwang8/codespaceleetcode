@@ -1,6 +1,6 @@
 # flask-architecture-002: Order of response postprocessing
 
-**Answer:** option `a`.
+**Answer:** option `c`.
 
 ## How to find it
 
@@ -12,5 +12,5 @@
 ## Why the others are wrong
 
 - b puts the session save first, but it is the last block.
-- c swaps the first two blocks.
+- a swaps the first two blocks.
 - d: the two groups are separate loops, never interleaved.

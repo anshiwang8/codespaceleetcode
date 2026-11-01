@@ -11,16 +11,16 @@ prompt: |
   option.
 answer:
   kind: choice
-  option: b
+  option: a
 choices:
   - id: a
-    label: thunk, immutable-state check, serializable-state check, action-creator check
-  - id: b
     label: action-creator check, immutable-state check, thunk, serializable-state check
-  - id: c
-    label: action-creator check, thunk, immutable-state check, serializable-state check
-  - id: d
+  - id: b
     label: immutable-state check, thunk, serializable-state check, action-creator check
+  - id: c
+    label: thunk, immutable-state check, serializable-state check, action-creator check
+  - id: d
+    label: action-creator check, thunk, immutable-state check, serializable-state check
 hints:
   - Pay attention to whether each one is added with push or unshift.
 solution: solutions/rtk-architecture-002.md

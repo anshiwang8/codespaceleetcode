@@ -18,9 +18,9 @@ choices:
   - id: b
     label: A, P, B
   - id: c
-    label: P, A, B
-  - id: d
     label: A, B (P is dropped because a job with the same id is already queued)
+  - id: d
+    label: P, A, B
 hints:
   - Check which branch of `queueJob` a PRE job takes, then trace the binary search in `findInsertionIndex`.
 solution: solutions/vue-architecture-002.md

@@ -1,6 +1,6 @@
 # rtk-architecture-002: Default middleware order
 
-**Answer:** option b, action-creator check, immutable-state check, thunk, serializable-state check.
+**Answer:** option a, action-creator check, immutable-state check, thunk, serializable-state check.
 
 ## How to get there
 
@@ -13,6 +13,6 @@ Read `getDefaultMiddleware` (the function returned by `buildGetDefaultMiddleware
 
 ## Why the others are wrong
 
-- a: treats everything as pushed in the order the options are destructured.
-- c: puts thunk before immutable, which would be true if the immutable middleware were pushed rather than unshifted.
-- d: forgets that the action-creator check is unshifted after the others, so it ends up first and not last.
+- c: treats everything as pushed in the order the options are destructured.
+- d: puts thunk before immutable, which would be true if the immutable middleware were pushed rather than unshifted.
+- b: forgets that the action-creator check is unshifted after the others, so it ends up first and not last.

@@ -11,14 +11,14 @@ prompt: |
   steps run? Select one option.
 answer:
   kind: choice
-  option: a
+  option: c
 choices:
   - id: a
-    label: Context callbacks first, then the registered after_request functions, then the session is saved.
+    label: The registered after_request functions first, then the context callbacks, then the session is saved.
   - id: b
     label: The session is saved first, then the registered after_request functions, then the context callbacks.
   - id: c
-    label: The registered after_request functions first, then the context callbacks, then the session is saved.
+    label: Context callbacks first, then the registered after_request functions, then the session is saved.
   - id: d
     label: Context callbacks and registered functions are interleaved in registration order, and the session is saved last.
 hints:

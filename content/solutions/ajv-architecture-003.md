@@ -1,6 +1,6 @@
 # ajv-architecture-003: Compiling the same schema twice
 
-**Answer:** option b. `compileSchema` does not run again, and the second call returns the validation function stored on the cached schema entry.
+**Answer:** option d. `compileSchema` does not run again, and the second call returns the validation function stored on the cached schema entry.
 
 ## How to get there
 
@@ -12,4 +12,4 @@
 
 - a: The cache hit and the `sch.validate ||` check together prevent a second compilation.
 - c: The "already exists" error comes from `_checkUnique`, which is only reached for a schema that is not in the cache. A cache hit returns before it. This schema has no `$id` anyway, so `_checkUnique` is not called at all.
-- d: `compile` returns `sch.validate` as is. Nothing wraps it.
+- b: `compile` returns `sch.validate` as is. Nothing wraps it.

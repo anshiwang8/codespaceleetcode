@@ -13,6 +13,6 @@ R stays `POSSIBLY_STALE_` until `runReaction_` runs it. At that point `shouldCom
 
 ## Why the others are wrong
 
-- a: `NOT_TRACKING_` means a derivation that is not holding dependency data (not yet run, or disposed). R has run.
-- b: R is changed by `propagateMaybeChanged`, so it is no longer `UP_TO_DATE_`.
-- d: `STALE_` is only set directly on observers of the changed atom (C here), or later on R through `propagateChangeConfirmed` after C recomputes to a different value.
+- b: `NOT_TRACKING_` means a derivation that is not holding dependency data (not yet run, or disposed). R has run.
+- d: R is changed by `propagateMaybeChanged`, so it is no longer `UP_TO_DATE_`.
+- a: `STALE_` is only set directly on observers of the changed atom (C here), or later on R through `propagateChangeConfirmed` after C recomputes to a different value.

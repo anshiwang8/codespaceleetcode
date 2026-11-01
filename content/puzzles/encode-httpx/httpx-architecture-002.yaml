@@ -12,16 +12,16 @@ prompt: |
   Select one option.
 answer:
   kind: choice
-  option: b
+  option: d
 choices:
   - id: a
-    label: The one for "https://", because its pattern is shorter and so is matched first.
-  - id: b
-    label: The one for "https://example.com", because patterns with a longer host sort ahead of those with a shorter one.
-  - id: c
     label: Whichever of the two was passed first in the mounts argument.
-  - id: d
+  - id: b
+    label: The one for "https://", because its pattern is shorter and so is matched first.
+  - id: c
     label: Whichever of the two was passed last in the mounts argument.
+  - id: d
+    label: The one for "https://example.com", because patterns with a longer host sort ahead of those with a shorter one.
 hints:
   - Look at the priority property of URLPattern.
 solution: solutions/httpx-architecture-002.md

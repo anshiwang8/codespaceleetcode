@@ -6,7 +6,7 @@ title: From emit to merging intersection members
 prompt: |
   In packages/zod/src/v4/core/, start at `JSONSchemaGenerator.emit`, called for a schema
   whose JSON Schema output contains an `allOf` of two plain object members (no union among
-  the members). List the functions called, in order, until you reach the function that
+  the members). list the chain of functions, in call order, where each one calls the next, until you reach the function that
   merges a list of object schemas into one object schema. Include the start and the final
   function. Direct calls only: each entry must be called from the body of the one before
   it. Skip constructors, getters, and calls to the standard library.

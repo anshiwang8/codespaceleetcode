@@ -1,6 +1,6 @@
 # httpx-architecture-002: Which mounted transport wins
 
-**Answer:** option `b`, the transport mounted for `"https://example.com"`.
+**Answer:** option `d`, the transport mounted for `"https://example.com"`.
 
 ## How to find it
 
@@ -11,5 +11,5 @@
 
 ## Why the others are wrong
 
-- a: shorter patterns are matched later, not first.
-- c, d: insertion order is irrelevant after the sort; the sort key doesn't look at it.
+- b: shorter patterns are matched later, not first.
+- a, c: insertion order is irrelevant after the sort; the sort key doesn't look at it.
