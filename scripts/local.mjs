@@ -66,14 +66,14 @@ function checkSnapshots() {
   if (snapshots.length === 0) {
     fail(
       "No snapshots found in ingest/out. Build them first (this fetches and indexes every repo):\n" +
-        "  cd ingest && uv run ingest snapshot-all",
+        "  cd ingest && uv run python -m ingest snapshot-all",
     );
   }
 }
 
 function seed() {
   console.log("Loading snapshots and puzzles. The first run takes a few minutes; later runs skip this.");
-  const result = spawnSync("uv", ["run", "ingest", "seed"], {
+  const result = spawnSync("uv", ["run", "python", "-m", "ingest", "seed"], {
     cwd: join(ROOT, "ingest"),
     stdio: "inherit",
     env: { ...process.env, SUPABASE_DB_URL: DATABASE_URL },
