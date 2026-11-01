@@ -1,0 +1,26 @@
+id: rtk-trace-001
+snapshot: reduxjs-redux-toolkit@0fd611c
+type: trace
+difficulty: medium
+title: Sorted adapter and removeAll
+prompt: |
+  Starting at `createSortedStateAdapter` in
+  packages/toolkit/src/entities/sorted_state_adapter.ts, list the functions
+  called, in order, until `createSingleArgumentStateOperator` (in
+  packages/toolkit/src/entities/state_adapter.ts) is called. List direct calls
+  only (each function must be called literally in the body of the previous
+  one), and skip standard-library and third-party calls. Include the start
+  function in your sequence.
+answer:
+  kind: sequence
+  ids:
+    - packages/toolkit/src/entities/sorted_state_adapter.ts#createSortedStateAdapter
+    - packages/toolkit/src/entities/unsorted_state_adapter.ts#createUnsortedStateAdapter
+    - packages/toolkit/src/entities/state_adapter.ts#createSingleArgumentStateOperator
+  accept_sequences: []
+hints:
+  - The sorted adapter reuses a few operations from the other kind of adapter instead of redefining them.
+solution: solutions/rtk-trace-001.md
+tags: [entity-adapter]
+authors: [agent-author-2]
+verified_by: [agent:blind-2]

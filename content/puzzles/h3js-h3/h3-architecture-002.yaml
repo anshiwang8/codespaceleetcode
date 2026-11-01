@@ -1,0 +1,28 @@
+id: h3-architecture-002
+snapshot: h3js-h3@f0e1780
+type: architecture
+difficulty: medium
+title: Middleware that returns undefined
+prompt: |
+  An H3 app has one global middleware registered with `use()`. The middleware
+  is a synchronous function that takes `(event, next)`, never calls `next()`,
+  and returns `undefined`. Following the code in src/middleware.ts (`callLayer`
+  and `isUnhandledResponse`), what happens to the request? Select one option.
+answer:
+  kind: choice
+  option: b
+choices:
+  - id: a
+    label: An HTTPError with status 500 is thrown because next() was never called.
+  - id: b
+    label: The framework calls next() on the middleware's behalf, so the following layer or route handler runs.
+  - id: c
+    label: The request is answered with a 404 because the middleware did not handle it.
+  - id: d
+    label: The chain stops and an empty 200 response is sent.
+hints:
+  - Look at what callLayer does with the value returned by the middleware function.
+solution: solutions/h3-architecture-002.md
+tags: [middleware]
+authors: [agent-author-2]
+verified_by: [agent:blind-2]

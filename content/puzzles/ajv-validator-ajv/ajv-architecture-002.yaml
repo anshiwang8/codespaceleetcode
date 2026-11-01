@@ -1,0 +1,27 @@
+id: ajv-architecture-002
+snapshot: ajv-validator-ajv@f177fe3
+type: architecture
+difficulty: hard
+title: Block nodes in the code generator
+prompt: |
+  The code generator in lib/compile/codegen/index.ts models generated source as
+  a tree of node classes. Exactly 7 classes in that file extend `BlockNode`
+  directly (a class that extends another subclass of `BlockNode` does not
+  count, and neither does one that extends `ParentNode` or `Node`). Select
+  all 7 classes.
+answer:
+  kind: set
+  ids:
+    - lib/compile/codegen/index.ts#Else
+    - lib/compile/codegen/index.ts#If
+    - lib/compile/codegen/index.ts#For
+    - lib/compile/codegen/index.ts#Func
+    - lib/compile/codegen/index.ts#Try
+    - lib/compile/codegen/index.ts#Catch
+    - lib/compile/codegen/index.ts#Finally
+hints:
+  - Search the file for "extends BlockNode".
+solution: solutions/ajv-architecture-002.md
+tags: [code-generation, class-hierarchy]
+authors: [agent-author-2]
+verified_by: [agent:blind-2]

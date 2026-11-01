@@ -1,5 +1,51 @@
 # DEVLOG
 
+## Fifteen repos, Python indexing and one-command start
+
+Type: Addition
+
+Goal: Have real content to test: 15 repos across TypeScript and Python, loaded and running with one command.
+
+What should be done: Support Python, choose 15 repos that meet spec section 5 and index well, and make the site start with `pnpm local`.
+
+What was done (technical):
+
+- Ten TypeScript repos: hono, vue, nest, zod, rxjs, mobx, redux-toolkit, ajv, got, h3. Five Python: requests, flask, click, httpx, fastapi. Each has 6k to 65k lines of non-test source, and hundreds of call edges in it.
+- `uv run ingest snapshot-all` builds them all and prints a table. Each snapshot gets a `summary.json`, and `occurrences.jsonl` now has `end_col`.
+- Real bugs fixed, all of which failed silently or gave wrong data: scip-python crashed on load on Windows (a preload shim fixes it) and a forward-slash `--cwd` gave an empty index. Pyright read our own `pyproject.toml` by walking up the tree. Absolute imports under `src/` never matched their definitions. `@overload`s and property setters were reported as references. Decorators, annotations and base classes counted as calls. Forcing `bundler` module resolution took Nest from 0 to 1,015 cross-package edges.
+- `pnpm local` starts the database, loads content, and runs the site. On a clean database it loaded 11,860 files, 57,886 symbols and 717,816 occurrences in under 20 seconds.
+- Spot-checking 600 random functions and methods across the 15 repos, 590 had their name within the first lines of their stated range. None of the 429 in `fastapi/` itself missed, so its misses are outside its source, such as docs and tests. I didn't look into the misses in the other three Python repos. No snapshot has a dangling edge.
+
+Known gaps:
+
+- TypeScript object-literal members and functions wrapped in a call (`const x = wrap(() => ...)`) get no ID, and calls inside them give no edges. Redux Toolkit is the thinnest for its size, probably because of this, though that's not confirmed.
+- scip-python can't give an ID to a class shadowing a builtin, such as `requests.exceptions.ConnectionError`. Attributes in `__slots__` classes add a few false edges.
+- Python is indexed as if on Linux, so results are the same on any machine, which leaves Windows-only code without IDs.
+- Indexing has only been run on Windows.
+
+Decisions: Express is out, and vitest was rejected because scip-typescript emits a malformed symbol from one of its test fixtures. TypeScript object-literal members stay without IDs, because recovering them would widen the exception to rule 7.
+
+## Puzzle schema, validator, seed and blind-solve tools
+
+Type: Addition
+
+Goal: Stop a puzzle shipping unless it's provably checkable, and load everything into Postgres.
+
+What should be done: Implement every check in spec section 6, the `ingest seed` command, and tools that let a solver answer without seeing a key.
+
+What was done (technical):
+
+- `content/schema/puzzle.schema.json` and `uv run ingest validate` cover the schema, existence and uniqueness checks. Error messages name fields, never values.
+- `uv run ingest seed` validates first, skips snapshots already loaded, and upserts puzzles so users keep their progress. 15 synthetic repos of 100k lines took 70 seconds to load and 1.1 seconds to re-seed.
+- `blind-export` writes only what a solver may see, with a test that fails if any answer value appears. `blind-check` prints pass or fail only, and won't record a solver who is also the puzzle's author.
+- Breaking 18 critical behaviours one at a time, the tests caught all 18.
+
+Fixes after review:
+
+- The Python grader ignored duplicate set members while the web grader rejected them, so a blind solve could pass something the site would mark wrong. Both now reject them, and both test suites run `content/schema/grading-cases.json`.
+- `set-count`, `location-window` and `choice-options` can no longer be overridden, since a hand-edited `verified_by` could otherwise publish an unsolvable puzzle.
+- Windows made the local database WIN1252, which can't hold every character in real repos. `scripts/localdb.mjs` now forces UTF-8.
+
 ## Grader, API routes and dev login
 
 Type: Addition

@@ -1,0 +1,29 @@
+id: requests-architecture-002
+snapshot: psf-requests@3c7baaa
+type: architecture
+difficulty: medium
+title: Choosing among mounted adapters
+prompt: |
+  A requests Session keeps a registry of transport adapters keyed by URL prefix.
+  Read Session.mount and Session.get_adapter in src/requests/sessions.py.
+  Suppose several registered prefixes (for example "https://", and
+  "https://example.com/api/") all match the start of the URL being requested.
+  Which adapter does Session.get_adapter return? Select one option.
+answer:
+  kind: choice
+  option: c
+choices:
+  - id: a
+    label: The adapter that was mounted first, whatever its prefix length.
+  - id: b
+    label: The adapter that was mounted most recently, whatever its prefix length.
+  - id: c
+    label: The adapter registered under the longest matching prefix.
+  - id: d
+    label: The adapter registered under the URL's scheme; any host or path in a prefix is ignored.
+hints:
+  - Look at what mount does to the other entries after inserting one.
+solution: solutions/requests-architecture-002.md
+tags: [adapters, sessions]
+authors: [agent-author-3]
+verified_by: [agent:blind-3]

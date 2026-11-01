@@ -1,0 +1,30 @@
+id: requests-trace-002
+snapshot: psf-requests@3c7baaa
+type: trace
+difficulty: hard
+title: Where proxy credentials become a header
+prompt: |
+  Start at HTTPAdapter.send in src/requests/adapters.py. Assume the request URL is
+  routed through an HTTP proxy (not a SOCKS proxy) whose URL contains a
+  username and password, and that no proxy manager for that proxy URL has been
+  cached on the adapter yet. Select the chain of methods and functions, in call
+  order, where each one directly calls the next, ending at the function that turns
+  the username and password into the header value `Basic ...`.
+  Direct calls only. Skip constructors, standard-library calls and third-party
+  (urllib3) calls.
+answer:
+  kind: sequence
+  ids:
+    - src/requests/adapters.py#HTTPAdapter.send
+    - src/requests/adapters.py#HTTPAdapter.get_connection_with_tls_context
+    - src/requests/adapters.py#HTTPAdapter.proxy_manager_for
+    - src/requests/adapters.py#HTTPAdapter.proxy_headers
+    - src/requests/auth.py#_basic_auth_str
+  accept_sequences: []
+  accept_reasons: []
+hints:
+  - The connection lookup is where the proxy decision is made.
+solution: solutions/requests-trace-002.md
+tags: [proxies, adapters, auth]
+authors: [agent-author-3]
+verified_by: [agent:blind-3]

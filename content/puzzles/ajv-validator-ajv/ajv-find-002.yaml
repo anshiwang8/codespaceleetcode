@@ -1,0 +1,23 @@
+id: ajv-find-002
+snapshot: ajv-validator-ajv@f177fe3
+type: find
+difficulty: medium
+title: Source text becomes a function
+prompt: |
+  In `compileSchema` in lib/compile/index.ts, the generated source text of the
+  validation function is turned into a real, callable function and then
+  instantiated with the Ajv instance and its scope values. Select the lines
+  of the two statements that do this: the one that builds a function from the
+  source text, and the one that calls that result to obtain the validation
+  function.
+answer:
+  kind: location
+  path: lib/compile/index.ts
+  anchor: [171, 172]
+  window: [163, 185]
+hints:
+  - The text is built from the code generator's output just before this point, and handed to a function constructor.
+solution: solutions/ajv-find-002.md
+tags: [code-generation, compile]
+authors: [agent-author-2]
+verified_by: [agent:blind-2]

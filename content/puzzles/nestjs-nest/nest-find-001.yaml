@@ -1,0 +1,19 @@
+id: nest-find-001
+snapshot: nestjs-nest@8d9dd9d
+type: find
+difficulty: easy
+title: Where a circular import is reported
+prompt: |
+  In packages/core/scanner.ts, exactly one method throws `CircularDependencyException`.
+  Select the method (the definition that contains the `throw`).
+answer:
+  kind: symbol
+  id: packages/core/scanner.ts#DependenciesScanner.insertImport
+  accept: []
+  accept_reasons: []
+hints:
+  - The module scanner registers a module's `imports` entries one by one.
+solution: solutions/nest-find-001.md
+tags: [modules, errors]
+authors: [agent-author-1]
+verified_by: [agent:blind-1]

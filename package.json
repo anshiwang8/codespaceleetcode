@@ -4,6 +4,7 @@
   "private": true,
   "packageManager": "pnpm@12.6.0",
   "scripts": {
+    "local": "node scripts/local.mjs",
     "dev": "pnpm --filter web dev",
     "test": "pnpm run test:ingest && pnpm run test:web",
     "test:ingest": "cd ingest && uv run python -m pytest",

@@ -1,0 +1,21 @@
+id: hono-find-003
+snapshot: honojs-hono@17ad0e2
+type: find
+difficulty: medium
+title: First router tried by the default app
+prompt: |
+  The Hono class exported from src/hono.ts builds a `SmartRouter` from two candidate
+  routers. Select the file that defines the class of the candidate that `SmartRouter`
+  tries first. Select a file. Choose the file with the class definition, not a file that
+  only re-exports it.
+answer:
+  kind: file
+  path: src/router/reg-exp-router/router.ts
+  accept: []
+  accept_reasons: []
+hints:
+  - Check the order of the array passed as `routers`, then check how `SmartRouter.match` iterates it.
+solution: solutions/hono-find-003.md
+tags: [routing]
+authors: [agent-author-1]
+verified_by: [agent:blind-1]

@@ -1,0 +1,24 @@
+id: mobx-find-001
+snapshot: mobxjs-mobx@b05f0de
+type: find
+difficulty: medium
+title: Diffing a derivation's dependencies
+prompt: |
+  In packages/mobx/src/core/, a derivation (a reaction or a computed value)
+  records which observables it read while its function ran. Select the
+  function that then compares that new list with the derivation's previous
+  list, registers the derivation as an observer of observables it read for the
+  first time, and unregisters it from observables it no longer reads. Select
+  a function (the one that performs the comparison, not the one that runs the
+  derivation's function).
+answer:
+  kind: symbol
+  id: packages/mobx/src/core/derivation.ts#bindDependencies
+  accept: []
+  accept_reasons: []
+hints:
+  - The function that runs the derivation's function and collects what it reads calls this one right after the run.
+solution: solutions/mobx-find-001.md
+tags: [reactivity, dependency-tracking]
+authors: [agent-author-2]
+verified_by: [agent:blind-2]

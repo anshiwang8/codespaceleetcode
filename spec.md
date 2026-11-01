@@ -30,6 +30,7 @@ Follow execution or data flow between two fixed points.
 - Example: "Starting at `app.listen`, list the functions called, in order, until the first byte of an HTTP response is written. Direct calls only."
 - Answer kind: `sequence`.
 - The prompt must name the start symbol and the end condition, and state whether calls are direct or transitive.
+- A call edge means a reference inside a function body, so it also covers functions passed as values and some property reads. In a real audit, 60–89% of edges were written as literal calls. Authors must read the code to confirm each step. A Python constructor call points at the class, not `__init__`. TypeScript's `new Foo` points at `Foo.<constructor>` when one exists. Interface calls point at the interface method, not an implementation.
 
 ### Architecture
 Understand structure: module responsibilities, boundaries, dependencies, extension points.
@@ -48,6 +49,8 @@ All answer IDs come from the snapshot index, so every one exists at the pinned S
 - Location: `src/router/index.ts:L120-L135`
 
 Lines and columns are 1-based everywhere. Columns count UTF-16 units, matching Monaco.
+
+Split a symbol ID on its first `#`, since private TypeScript members add another (`src/hono-base.ts#Hono.#dispatch`). IDs can contain `<get>`, `<set>` and `<constructor>`. A symbol's range runs from its first definition through its last, so overload signatures and their body count as one symbol.
 
 | Kind | User submits | Correct when |
 |---|---|---|
@@ -83,22 +86,22 @@ A prompt must pin down everything that could otherwise produce a second valid an
 One YAML file per puzzle at `content/puzzles/<repo-slug>/<puzzle-id>.yaml`, validated against `content/schema/puzzle.schema.json`.
 
 ```yaml
-id: express-find-003
-snapshot: expressjs-express@5a3c1e9          # must exist in content/repos.yaml
+id: hono-find-003
+snapshot: honojs-hono@17ad0e2                # must exist in content/repos.yaml
 type: find                                    # find | trace | architecture
 difficulty: easy                              # easy | medium | hard
 title: Trailing slash decision
 prompt: |
-  In lib/router/, select the function that decides whether a request path
+  In src/router/, select the function that decides whether a request path
   with a trailing slash matches a route defined without one. Select a function.
 answer:
   kind: symbol
-  id: lib/router/layer.js#Layer.match
+  id: src/router/layer.ts#Layer.match
   accept: []
   accept_reasons: []
 hints:
   - Routes are matched layer by layer.
-solution: solutions/express-find-003.md       # relative to content/
+solution: solutions/hono-find-003.md          # relative to content/
 tags: [routing, http]
 authors: [anshi]
 verified_by: []                               # filled in by the blind second solver
@@ -139,10 +142,10 @@ Each `solutions/<id>.md` contains: the answer, the navigation path a strong engi
 Defined in `content/repos.yaml`:
 
 ```yaml
-- slug: expressjs-express
-  url: https://github.com/expressjs/express
-  sha: 5a3c1e9...           # full 40-char SHA, immutable once puzzles reference it
-  language: javascript
+- slug: honojs-hono
+  url: https://github.com/honojs/hono
+  sha: 17ad0e2...           # full 40-char SHA, immutable once puzzles reference it
+  language: typescript
   license: MIT
 ```
 
@@ -159,7 +162,9 @@ A snapshot is immutable. To move a repo to a newer commit, create a new snapshot
 
 ## 6. Validation pipeline (CI)
 
-`content/` changes run `pnpm validate` (calls `ingest/validate.py`). A puzzle merges only if all checks pass.
+`content/` changes run `pnpm validate` (calls `uv run ingest validate`). A puzzle merges only if all checks pass. It needs the snapshots in `ingest/out/`, which aren't committed, so CI has to build or restore them first. No CI workflow exists yet.
+
+Only `symbol-unique`, `sequence-edges` and `sequence-alternate-path` can take a `validator_overrides` entry. `set-count`, `location-window` and `choice-options` can't, because each failure means the puzzle can't be solved or graded as written.
 
 **Schema**
 - The YAML matches the JSON schema. The ID is unique. The snapshot exists. The solution file exists.
@@ -168,7 +173,7 @@ A snapshot is immutable. To move a repo to a newer commit, create a new snapshot
 - Every answer ID (`id`, `ids`, `accept*`, `path`, `anchor`, `window`) resolves in the snapshot index.
 
 **Uniqueness heuristics** (failures need an explicit `validator_overrides` entry with a reason)
-- `symbol`: if another definition shares the answer's short name inside the prompt's stated scope, fail unless it is listed in `accept` or the prompt names the file.
+- `symbol`: if another definition shares the answer's short name inside the prompt's stated scope, fail unless it is listed in `accept`. Naming the answer's file narrows the scope to that file, so a same-named definition inside it still fails. A stated scope is a prompt token exactly matching a manifest path that contains the answer. A directory needs a slash (`lib/`), and if several qualify the widest wins. With none, the scope is the whole snapshot.
 - `sequence`: each consecutive pair must be a real caller→callee edge in the SCIP reference graph. If the start symbol has another path to the end condition of equal or shorter length, warn.
 - `set`: each member exists. The count shown in the UI equals `len(ids)`.
 - `location`: `anchor` ⊆ `window`, and `window` ≤ 30 lines.
@@ -205,7 +210,7 @@ The site runs on localhost with no accounts or keys. Each hosted service has a l
 
 | Hosted | Local stand-in |
 |---|---|
-| Supabase Postgres | Real Postgres from the `embedded-postgres` npm package, data in `.localdb/`. `supabase/local/shim.sql` adds the roles and `auth` schema Supabase provides, so migrations run unchanged |
+| Supabase Postgres | Real Postgres from the `embedded-postgres` npm package, data in `.localdb/`, always UTF-8. `supabase/local/shim.sql` adds the roles and `auth` schema Supabase provides, so migrations run unchanged |
 | Supabase GitHub OAuth | A dev login that sets a cookie, refused unless the request is from localhost and `NODE_ENV` isn't `production` |
 | R2 behind a CDN | The route `/snapshots/<name>/...` serves `ingest/out/<name>/...`. `NEXT_PUBLIC_SNAPSHOT_CDN_URL` overrides it when set |
 

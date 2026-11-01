@@ -1,0 +1,21 @@
+id: vue-find-001
+snapshot: vuejs-core@24c9d0b
+type: find
+difficulty: medium
+title: Deferring a notified effect
+prompt: |
+  In packages/reactivity/src/effect.ts, `ReactiveEffect.notify` does not run the effect.
+  Unless the effect is already marked as notified, it hands the effect to a module-level
+  function in the same file, which marks it as notified and chains it onto a pending list
+  to be run later. Select that function.
+answer:
+  kind: symbol
+  id: packages/reactivity/src/effect.ts#batch
+  accept: []
+  accept_reasons: []
+hints:
+  - Read the last statement of `ReactiveEffect.notify`.
+solution: solutions/vue-find-001.md
+tags: [reactivity, effects]
+authors: [agent-author-1]
+verified_by: [agent:blind-1]

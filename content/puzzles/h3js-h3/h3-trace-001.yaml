@@ -1,0 +1,30 @@
+id: h3-trace-001
+snapshot: h3js-h3@f0e1780
+type: trace
+difficulty: medium
+title: From request to JSON body
+prompt: |
+  Starting at the `"~request"` method of `H3Core` in src/h3.ts, list the
+  functions called, in order, until the function that checks whether a handler's
+  return value can be serialized as JSON is called. List direct calls only (each
+  function must be called literally in the body of the previous one), and skip
+  standard-library and third-party calls.
+
+  Assume the route handler returned a plain object synchronously (not a
+  Promise, not an Error and not a Response), and the request is not rejected
+  as malformed. Include the start function in your sequence.
+answer:
+  kind: sequence
+  ids:
+    - src/h3.ts#H3Core."~request"
+    - src/response.ts#toResponse
+    - src/response.ts#prepareResponse
+    - src/response.ts#prepareResponseBody
+    - src/utils/internal/object.ts#isJSONSerializable
+  accept_sequences: []
+hints:
+  - After the handler runs, "~request" passes the result to a function in src/response.ts.
+solution: solutions/h3-trace-001.md
+tags: [response, request-lifecycle]
+authors: [agent-author-2]
+verified_by: [agent:blind-2]

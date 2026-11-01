@@ -1,0 +1,21 @@
+id: rtk-architecture-003
+snapshot: reduxjs-redux-toolkit@0fd611c
+type: architecture
+difficulty: medium
+title: Classes in the toolkit core
+prompt: |
+  In packages/toolkit/src/ (ignore the query/ folder and tests), exactly 4
+  classes are declared. Select all 4 classes.
+answer:
+  kind: set
+  ids:
+    - packages/toolkit/src/createAsyncThunk.ts#RejectWithValue
+    - packages/toolkit/src/createAsyncThunk.ts#FulfillWithMeta
+    - packages/toolkit/src/listenerMiddleware/exceptions.ts#TaskAbortError
+    - packages/toolkit/src/utils.ts#Tuple
+hints:
+  - Most of the toolkit is written as functions, so a search for the `class` keyword narrows this down quickly.
+solution: solutions/rtk-architecture-003.md
+tags: [classes]
+authors: [agent-author-2]
+verified_by: [agent:blind-2]

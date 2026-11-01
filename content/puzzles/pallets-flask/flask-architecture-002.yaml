@@ -1,0 +1,29 @@
+id: flask-architecture-002
+snapshot: pallets-flask@49943b5
+type: architecture
+difficulty: medium
+title: Order of response postprocessing
+prompt: |
+  Read Flask.process_response in src/flask/app.py. It handles callbacks
+  registered with after_this_request (stored on the request's context), the
+  after_request functions registered on the app or blueprints, and saving the
+  session. Which statement correctly describes the order in which these three
+  steps run? Select one option.
+answer:
+  kind: choice
+  option: c
+choices:
+  - id: a
+    label: The registered after_request functions first, then the context callbacks, then the session is saved.
+  - id: b
+    label: The session is saved first, then the registered after_request functions, then the context callbacks.
+  - id: c
+    label: Context callbacks first, then the registered after_request functions, then the session is saved.
+  - id: d
+    label: Context callbacks and registered functions are interleaved in registration order, and the session is saved last.
+hints:
+  - Read the method top to bottom.
+solution: solutions/flask-architecture-002.md
+tags: [request-lifecycle, hooks, sessions]
+authors: [agent-author-3]
+verified_by: [agent:blind-3]

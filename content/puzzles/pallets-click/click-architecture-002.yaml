@@ -1,0 +1,21 @@
+id: click-architecture-002
+snapshot: pallets-click@2247b35
+type: architecture
+difficulty: medium
+title: Control-flow exceptions outside ClickException
+prompt: |
+  In src/click/exceptions.py, most exception classes derive, directly or through
+  another class in the file, from ClickException. Select all 2 classes in that
+  file that do not derive from ClickException (ClickException itself is not one
+  of the answers).
+answer:
+  kind: set
+  ids:
+    - src/click/exceptions.py#Abort
+    - src/click/exceptions.py#Exit
+hints:
+  - Command.main has separate except clauses for these two, apart from the one for ClickException.
+solution: solutions/click-architecture-002.md
+tags: [errors, control-flow]
+authors: [agent-author-3]
+verified_by: [agent:blind-3]

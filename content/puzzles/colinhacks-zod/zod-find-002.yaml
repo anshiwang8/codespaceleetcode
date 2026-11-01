@@ -1,0 +1,22 @@
+id: zod-find-002
+snapshot: colinhacks-zod@2554b70
+type: find
+difficulty: hard
+title: When a folded intersection is closed
+prompt: |
+  `foldObjects` in packages/zod/src/v4/core/to-json-schema.ts merges the object members of
+  an intersection into one object schema. Near its end it decides what `additionalProperties`
+  the merged object gets. Select the lines holding the check that sets
+  `additionalProperties` to `false` for the merged object, together with that assignment.
+  Select the lines.
+answer:
+  kind: location
+  path: packages/zod/src/v4/core/to-json-schema.ts
+  anchor: [517, 518]
+  window: [515, 519]
+hints:
+  - The check is a single `if` whose other branch collects constraints from the members.
+solution: solutions/zod-find-002.md
+tags: [json-schema, intersection]
+authors: [agent-author-1]
+verified_by: [agent:blind-1]

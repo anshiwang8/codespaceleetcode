@@ -1,0 +1,23 @@
+id: flask-architecture-001
+snapshot: pallets-flask@49943b5
+type: architecture
+difficulty: easy
+title: What a custom session interface must implement
+prompt: |
+  Flask lets an application replace how sessions are stored by assigning a
+  different session interface object. In src/flask/sessions.py, the base class
+  SessionInterface provides working defaults for most of its methods but leaves
+  some of them unimplemented, with a body that only raises NotImplementedError.
+  Select all 2 methods of SessionInterface that a replacement interface is
+  therefore required to provide.
+answer:
+  kind: set
+  ids:
+    - src/flask/sessions.py#SessionInterface.open_session
+    - src/flask/sessions.py#SessionInterface.save_session
+hints:
+  - Look for the methods that Flask calls at the start and at the end of a request.
+solution: solutions/flask-architecture-001.md
+tags: [sessions, extension-points]
+authors: [agent-author-3]
+verified_by: [agent:blind-3]

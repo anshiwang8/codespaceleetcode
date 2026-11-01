@@ -1,0 +1,21 @@
+id: flask-find-002
+snapshot: pallets-flask@49943b5
+type: find
+difficulty: medium
+title: Re-raising when no handler matches
+prompt: |
+  In Flask.handle_user_exception in src/flask/app.py, an exception that the
+  HTTPException branch did not take is looked up in the registered error
+  handlers. Select the lines (the `if` statement and its body) that re-raise the
+  exception being handled, unchanged, when no registered error handler was found.
+answer:
+  kind: location
+  path: src/flask/app.py
+  anchor: [911, 912]
+  window: [906, 914]
+hints:
+  - The re-raise is a bare statement with no exception argument.
+solution: solutions/flask-find-002.md
+tags: [errors, request-lifecycle]
+authors: [agent-author-3]
+verified_by: [agent:blind-3]

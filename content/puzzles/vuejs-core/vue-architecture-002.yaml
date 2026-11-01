@@ -1,0 +1,29 @@
+id: vue-architecture-002
+snapshot: vuejs-core@24c9d0b
+type: architecture
+difficulty: hard
+title: Where a pre-flush watcher lands in the queue
+prompt: |
+  Read the job queue in packages/runtime-core/src/scheduler.ts. The queue currently holds
+  two jobs, in this order: job A with id 2, then job B with id 5. Both are flagged QUEUED
+  and neither has the PRE flag. No flush is in progress (`flushIndex` is -1). `queueJob`
+  is now called once with job P, which has id 5, the PRE flag, and is not flagged QUEUED.
+  What is the order of the queue afterwards?
+answer:
+  kind: choice
+  option: b
+choices:
+  - id: a
+    label: A, B, P
+  - id: b
+    label: A, P, B
+  - id: c
+    label: A, B (P is dropped because a job with the same id is already queued)
+  - id: d
+    label: P, A, B
+hints:
+  - Check which branch of `queueJob` a PRE job takes, then trace the binary search in `findInsertionIndex`.
+solution: solutions/vue-architecture-002.md
+tags: [scheduler, design]
+authors: [agent-author-1]
+verified_by: [agent:blind-1]

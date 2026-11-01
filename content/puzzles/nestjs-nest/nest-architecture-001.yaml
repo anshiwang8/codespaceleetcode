@@ -1,0 +1,22 @@
+id: nest-architecture-001
+snapshot: nestjs-nest@8d9dd9d
+type: architecture
+difficulty: medium
+title: Who actually invokes guards, interceptors and pipes
+prompt: |
+  In the non-test source under packages/core/, select all 3 files that call the
+  user-supplied enhancer instance itself: a guard's `canActivate`, an interceptor's
+  `intercept` on the interceptor object, and a pipe's `transform`. Files that only call
+  another Nest class which does this on their behalf do not count.
+answer:
+  kind: set
+  ids:
+    - packages/core/guards/guards-consumer.ts
+    - packages/core/interceptors/interceptors-consumer.ts
+    - packages/core/pipes/pipes-consumer.ts
+hints:
+  - The classes that look up which enhancers apply are separate from the ones that run them.
+solution: solutions/nest-architecture-001.md
+tags: [request-pipeline, guards, interceptors, pipes]
+authors: [agent-author-1]
+verified_by: [agent:blind-1]

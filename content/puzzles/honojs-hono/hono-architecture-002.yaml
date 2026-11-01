@@ -1,0 +1,22 @@
+id: hono-architecture-002
+snapshot: honojs-hono@17ad0e2
+type: architecture
+difficulty: medium
+title: Routers that can ask SmartRouter to fall back
+prompt: |
+  `SmartRouter` skips to its next candidate when a router raises `UnsupportedPathError`.
+  Among the non-test source files under src/router/, select all 3 files that contain a
+  `throw` of `UnsupportedPathError` (the file that merely declares the error class does not
+  count, and neither does a file that only catches it).
+answer:
+  kind: set
+  ids:
+    - src/router/linear-router/router.ts
+    - src/router/pattern-router/router.ts
+    - src/router/reg-exp-router/router.ts
+hints:
+  - Each router class is defined in a router.ts inside its own directory.
+solution: solutions/hono-architecture-002.md
+tags: [routing, errors]
+authors: [agent-author-1]
+verified_by: [agent:blind-1]

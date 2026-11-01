@@ -1,0 +1,23 @@
+id: rtk-architecture-001
+snapshot: reduxjs-redux-toolkit@0fd611c
+type: architecture
+difficulty: easy
+title: Where immer's produce is renamed
+prompt: |
+  The core Redux Toolkit sources in packages/toolkit/src/ (ignore the query/
+  folder and tests) do not import `produce` from immer directly. They use it
+  under the name `createNextState`, which comes from one small internal module
+  that re-exports a handful of immer's runtime functions. Select the file in
+  packages/toolkit/src/ (not under query/) where `produce` is renamed to
+  `createNextState`. Select a file.
+answer:
+  kind: file
+  path: packages/toolkit/src/immerImports.ts
+  accept: []
+  accept_reasons: []
+hints:
+  - Check where createReducer.ts imports createNextState from.
+solution: solutions/rtk-architecture-001.md
+tags: [immer, module-structure]
+authors: [agent-author-2]
+verified_by: [agent:blind-2]

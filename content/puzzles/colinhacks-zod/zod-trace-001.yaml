@@ -1,0 +1,27 @@
+id: zod-trace-001
+snapshot: colinhacks-zod@2554b70
+type: trace
+difficulty: hard
+title: From emit to merging intersection members
+prompt: |
+  In packages/zod/src/v4/core/, start at `JSONSchemaGenerator.emit`, called for a schema
+  whose JSON Schema output contains an `allOf` of two plain object members (no union among
+  the members). list the chain of functions, in call order, where each one calls the next, until you reach the function that
+  merges a list of object schemas into one object schema. Include the start and the final
+  function. Direct calls only: each entry must be called from the body of the one before
+  it. Skip constructors, getters, and calls to the standard library.
+answer:
+  kind: sequence
+  ids:
+    - packages/zod/src/v4/core/json-schema-generator.ts#JSONSchemaGenerator.emit
+    - packages/zod/src/v4/core/to-json-schema.ts#finalize
+    - packages/zod/src/v4/core/to-json-schema.ts#foldIntersection
+    - packages/zod/src/v4/core/to-json-schema.ts#foldObjects
+  accept_sequences: []
+  accept_reasons: []
+hints:
+  - "`emit` is a thin wrapper that delegates to two functions imported from to-json-schema.ts."
+solution: solutions/zod-trace-001.md
+tags: [json-schema, intersection]
+authors: [agent-author-1]
+verified_by: [agent:blind-1]

@@ -1,0 +1,21 @@
+id: vue-find-002
+snapshot: vuejs-core@24c9d0b
+type: find
+difficulty: medium
+title: Dropping dependencies a run did not read
+prompt: |
+  In packages/reactivity/src/effect.ts, `cleanupDeps` walks an effect's dependency links
+  after the effect function has run. Links whose version is still -1 were not read during
+  that run. Select the lines in `cleanupDeps` that unlink such a stale dependency from both
+  the dep's subscriber list and the effect's own dependency list. Select the lines.
+answer:
+  kind: location
+  path: packages/reactivity/src/effect.ts
+  anchor: [334, 336]
+  window: [331, 337]
+hints:
+  - Both removals are calls to two small helper functions in the same file.
+solution: solutions/vue-find-002.md
+tags: [reactivity, effects]
+authors: [agent-author-1]
+verified_by: [agent:blind-1]

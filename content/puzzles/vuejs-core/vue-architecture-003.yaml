@@ -1,0 +1,21 @@
+id: vue-architecture-003
+snapshot: vuejs-core@24c9d0b
+type: architecture
+difficulty: medium
+title: Registry of DOM-only directive transforms
+prompt: |
+  In packages/compiler-dom/src/, the `compile` function merges a module-level record of
+  DOM-specific directive transforms (keyed by directive name) into the options it passes
+  to the base compiler. To register one more DOM-only directive transform in that record,
+  select the single file where the record is defined. Select a file.
+answer:
+  kind: file
+  path: packages/compiler-dom/src/index.ts
+  accept: []
+  accept_reasons: []
+hints:
+  - Look at the argument `compile` passes to `baseCompile` under the `directiveTransforms` key.
+solution: solutions/vue-architecture-003.md
+tags: [compiler, extension-points]
+authors: [agent-author-1]
+verified_by: [agent:blind-1]

@@ -168,8 +168,33 @@ def test_columns_convert_through_utf16_for_non_ascii_lines() -> None:
     assert extent.body.start_col == 16
 
 
-def test_non_javascript_files_have_no_tree_sitter_extent() -> None:
-    assert SourceExtents("x.ts", b"const a = 1;\n").find(0, 6) is None
+def test_unsupported_languages_have_no_tree_sitter_extent() -> None:
+    extents = SourceExtents("x.go", b"func a() {}\n")
+    assert extents.find(0, 5) is None
+    assert not extents.is_non_call(0, 5)
+
+
+def test_only_javascript_gets_property_promotion() -> None:
+    source = b"a.b = function () {};\n"
+    assert SourceExtents("x.js", source).function_property_assignments()
+    assert not SourceExtents("x.ts", source).function_property_assignments()
+
+
+def test_promoted_definition_end_col_is_the_property_token(conversion: Conversion) -> None:
+    listen = next(
+        o
+        for o in conversion.occurrences
+        if o.symbol_id == "lib/main.js#app.listen" and o.role == "definition"
+    )
+    assert listen.end_col - listen.col == len("listen")
+
+
+def test_end_col_spans_exactly_the_token(conversion: Conversion) -> None:
+    names = {symbol.symbol_id: symbol.name for symbol in conversion.symbols}
+    for occurrence in conversion.occurrences:
+        text = (TINY_REPO / occurrence.file).read_text(encoding="utf-8")
+        line = text.splitlines()[occurrence.line - 1]
+        assert line[occurrence.col - 1 : occurrence.end_col - 1] == names[occurrence.symbol_id]
 
 
 def test_span_last_line_ignores_an_end_at_column_zero() -> None:

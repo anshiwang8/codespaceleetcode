@@ -1,0 +1,20 @@
+id: hono-find-001
+snapshot: honojs-hono@17ad0e2
+type: find
+difficulty: easy
+title: The strict-routing switch
+prompt: |
+  In the Hono class constructor in src/hono-base.ts, `this.getPath` is chosen from the
+  `strict` option. When `strict` is `false`, it is set to a function defined in
+  src/utils/url.ts. Select that function.
+answer:
+  kind: symbol
+  id: src/utils/url.ts#getPathNoStrict
+  accept: []
+  accept_reasons: []
+hints:
+  - Read the last line of the constructor and follow the branch taken when `strict` is `false`.
+solution: solutions/hono-find-001.md
+tags: [routing, options]
+authors: [agent-author-1]
+verified_by: [agent:blind-1]
