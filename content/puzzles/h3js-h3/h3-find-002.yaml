@@ -1,0 +1,21 @@
+id: h3-find-002
+snapshot: h3js-h3@f0e1780
+type: find
+difficulty: easy
+title: Request smuggling guard
+prompt: |
+  In src/utils/, select the function that rejects an incoming request with a
+  400 status when the request carries both a Content-Length header and a
+  Transfer-Encoding header. Select a function (the one that contains the
+  check, not a helper it calls).
+answer:
+  kind: symbol
+  id: src/utils/body.ts#assertBodySize
+  accept: []
+  accept_reasons: []
+hints:
+  - Search src/utils/ for the header name that is not Content-Length.
+solution: solutions/h3-find-002.md
+tags: [security, body]
+authors: [agent-author-2]
+verified_by: [agent:blind-2]

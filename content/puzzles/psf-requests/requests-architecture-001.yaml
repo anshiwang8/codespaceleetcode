@@ -1,0 +1,23 @@
+id: requests-architecture-001
+snapshot: psf-requests@3c7baaa
+type: architecture
+difficulty: easy
+title: Concrete authentication classes
+prompt: |
+  In src/requests/auth.py, authentication is pluggable: a callable that receives
+  a PreparedRequest and returns it can be passed as `auth`. Select all 3 classes
+  in that file that derive, directly or through another class in the file, from the
+  base class of auth implementations (select the three derived classes, not the
+  base class itself).
+answer:
+  kind: set
+  ids:
+    - src/requests/auth.py#HTTPBasicAuth
+    - src/requests/auth.py#HTTPProxyAuth
+    - src/requests/auth.py#HTTPDigestAuth
+hints:
+  - One of them derives from another one rather than from the base class.
+solution: solutions/requests-architecture-001.md
+tags: [auth, extension-points]
+authors: [agent-author-3]
+verified_by: [agent:blind-3]

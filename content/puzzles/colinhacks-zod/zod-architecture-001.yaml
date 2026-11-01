@@ -1,0 +1,30 @@
+id: zod-architecture-001
+snapshot: colinhacks-zod@2554b70
+type: architecture
+difficulty: hard
+title: Folding a closed object with a catchall object
+prompt: |
+  Read `foldObjects` in packages/zod/src/v4/core/to-json-schema.ts, including the helper
+  `undeclaredConstraint` it uses. It is called with exactly two members, both accepted for
+  folding. Member A is `{ type: "object", properties: { a: { type: "string" } },
+  required: ["a"], additionalProperties: false }`. Member B is `{ type: "object",
+  properties: { b: { type: "number" } }, additionalProperties: { type: "string" } }`.
+  What `additionalProperties` does the object returned by `foldObjects` carry?
+answer:
+  kind: choice
+  option: a
+choices:
+  - id: a
+    label: '{ type: "string" }, the constraint taken from member B'
+  - id: b
+    label: Nothing; the property is left unset
+  - id: c
+    label: '{ allOf: [{ type: "string" }] }'
+  - id: d
+    label: "false, because member A is closed"
+hints:
+  - The check on whether every member has `additionalProperties === false` comes first. Work out whether it is true here.
+solution: solutions/zod-architecture-001.md
+tags: [json-schema, intersection]
+authors: [agent-author-1]
+verified_by: [agent:blind-1]

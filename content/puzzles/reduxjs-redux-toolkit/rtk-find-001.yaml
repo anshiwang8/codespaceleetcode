@@ -1,0 +1,24 @@
+id: rtk-find-001
+snapshot: reduxjs-redux-toolkit@0fd611c
+type: find
+difficulty: medium
+title: Detecting a state mutation
+prompt: |
+  In packages/toolkit/src/ (outside the query/ folder), the immutability check
+  middleware takes a snapshot of the state tree before an action reaches the
+  reducers, and after the action compares it with the state. Select the
+  function that does this comparison: it recurses through the tracked snapshot
+  and the current value together and returns an object saying whether
+  something was mutated, along with the dotted path of the mutated property.
+  Select a function (not the one that builds the snapshot).
+answer:
+  kind: symbol
+  id: packages/toolkit/src/immutableStateInvariantMiddleware.ts#detectMutations
+  accept: []
+  accept_reasons: []
+hints:
+  - The snapshot builder and the comparer are two separate top-level functions in the same file.
+solution: solutions/rtk-find-001.md
+tags: [middleware, immutability]
+authors: [agent-author-2]
+verified_by: [agent:blind-2]

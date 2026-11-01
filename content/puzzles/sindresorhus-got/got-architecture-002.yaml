@@ -1,0 +1,28 @@
+id: got-architecture-002
+snapshot: sindresorhus-got@6b5aafc
+type: architecture
+difficulty: easy
+title: Direct subclasses of RequestError
+prompt: |
+  In source/ (ignore test/ and benchmark/), exactly 9 classes extend
+  `RequestError` directly (a class that extends another subclass of
+  `RequestError` does not count; neither does a class that only extends
+  `Error`). Select all 9 classes.
+answer:
+  kind: set
+  ids:
+    - source/core/errors.ts#MaxRedirectsError
+    - source/core/errors.ts#HTTPError
+    - source/core/errors.ts#CacheError
+    - source/core/errors.ts#UploadError
+    - source/core/errors.ts#TimeoutError
+    - source/core/errors.ts#ReadError
+    - source/core/errors.ts#RetryError
+    - source/core/errors.ts#AbortError
+    - source/core/response.ts#ParseError
+hints:
+  - Not all of them live in errors.ts.
+solution: solutions/got-architecture-002.md
+tags: [errors, class-hierarchy]
+authors: [agent-author-2]
+verified_by: [agent:blind-2]

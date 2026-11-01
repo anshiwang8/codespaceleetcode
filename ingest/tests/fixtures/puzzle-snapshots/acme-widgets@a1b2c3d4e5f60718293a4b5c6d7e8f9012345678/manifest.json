@@ -1,0 +1,73 @@
+{
+  "slug": "acme-widgets",
+  "url": "https://example.test/acme/widgets",
+  "sha": "a1b2c3d4e5f60718293a4b5c6d7e8f9012345678",
+  "language": "javascript",
+  "license": "MIT",
+  "indexer": {
+    "name": "scip-typescript",
+    "version": "0.0.0-fixture"
+  },
+  "files": [
+    {
+      "path": "assets/latin1.txt",
+      "size": 5,
+      "language": "other"
+    },
+    {
+      "path": "src/app.js",
+      "size": 191,
+      "language": "javascript"
+    },
+    {
+      "path": "src/config.js",
+      "size": 989,
+      "language": "javascript"
+    },
+    {
+      "path": "src/index.js",
+      "size": 73,
+      "language": "javascript"
+    },
+    {
+      "path": "src/jobs/job.js",
+      "size": 109,
+      "language": "javascript"
+    },
+    {
+      "path": "src/legacy/view.js",
+      "size": 45,
+      "language": "javascript"
+    },
+    {
+      "path": "src/queue.js",
+      "size": 160,
+      "language": "javascript"
+    },
+    {
+      "path": "src/router/index.js",
+      "size": 60,
+      "language": "javascript"
+    },
+    {
+      "path": "src/router/layer.js",
+      "size": 91,
+      "language": "javascript"
+    },
+    {
+      "path": "src/router/route.js",
+      "size": 61,
+      "language": "javascript"
+    },
+    {
+      "path": "src/shapes.js",
+      "size": 80,
+      "language": "javascript"
+    },
+    {
+      "path": "src/util/helpers.js",
+      "size": 73,
+      "language": "javascript"
+    }
+  ]
+}

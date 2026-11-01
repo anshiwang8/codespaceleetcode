@@ -1,0 +1,21 @@
+id: zod-find-001
+snapshot: colinhacks-zod@2554b70
+type: find
+difficulty: easy
+title: Building the failure result of safeParse
+prompt: |
+  In packages/zod/src/v4/core/parse.ts, `_safeParse` returns a result object when running
+  the schema produced issues. That object is built by a function declared in the same
+  file, whose `error` property is only constructed when it is first read. Select that
+  function.
+answer:
+  kind: symbol
+  id: packages/zod/src/v4/core/parse.ts#failure
+  accept: []
+  accept_reasons: []
+hints:
+  - Look at the last line of the inner function that `_safeParse` returns.
+solution: solutions/zod-find-001.md
+tags: [parsing, errors]
+authors: [agent-author-1]
+verified_by: [agent:blind-1]

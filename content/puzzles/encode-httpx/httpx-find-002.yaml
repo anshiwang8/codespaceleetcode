@@ -1,0 +1,22 @@
+id: httpx-find-002
+snapshot: encode-httpx@b5addb6
+type: find
+difficulty: medium
+title: Dropping credentials on cross-origin redirects
+prompt: |
+  In BaseClient._redirect_headers in httpx/_client.py, when a redirect leaves the
+  original origin, the Authorization header is removed, except when the redirect is
+  a plain upgrade from http to https. Select the lines of the inner `if`
+  statement that makes this exception and removes the header (from that `if` line
+  through the line that removes the header).
+answer:
+  kind: location
+  path: httpx/_client.py
+  anchor: [553, 556]
+  window: [550, 560]
+hints:
+  - The statement is nested inside the origin comparison.
+solution: solutions/httpx-find-002.md
+tags: [redirects, security]
+authors: [agent-author-3]
+verified_by: [agent:blind-3]

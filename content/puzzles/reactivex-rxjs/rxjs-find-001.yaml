@@ -1,0 +1,21 @@
+id: rxjs-find-001
+snapshot: reactivex-rxjs@54796b3
+type: find
+difficulty: easy
+title: The shared upstream-subscription helper
+prompt: |
+  In packages/rxjs/src/util/observable-helpers.ts, one function is called by operators such
+  as `filter`, `reduce` and `scan` to subscribe to their upstream source. It lets the
+  operator override the `next`, `error` or `complete` handlers, and it ties the upstream
+  subscription's `AbortSignal` to the derived subscriber. Select that function.
+answer:
+  kind: symbol
+  id: packages/rxjs/src/util/observable-helpers.ts#subscribeToSource
+  accept: []
+  accept_reasons: []
+hints:
+  - Open the operator implementation for `filter` and look at what its callback calls first.
+solution: solutions/rxjs-find-001.md
+tags: [operators, subscription]
+authors: [agent-author-1]
+verified_by: [agent:blind-1]

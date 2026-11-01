@@ -1,0 +1,23 @@
+id: requests-find-002
+snapshot: psf-requests@3c7baaa
+type: find
+difficulty: medium
+title: Dropping the body on a redirect
+prompt: |
+  Inside SessionRedirectMixin.resolve_redirects in src/requests/sessions.py,
+  a redirected request may have its body removed together with the headers that
+  describe that body. This happens only when the redirect's status code is not
+  one of the two codes that must preserve the method and body.
+  Select the lines of the single conditional block that does this, from the `if`
+  line (including its multi-line condition) through its last statement.
+answer:
+  kind: location
+  path: src/requests/sessions.py
+  anchor: [250, 258]
+  window: [246, 262]
+hints:
+  - Look for the Content-Length header being popped.
+solution: solutions/requests-find-002.md
+tags: [redirects, http]
+authors: [agent-author-3]
+verified_by: [agent:blind-3]

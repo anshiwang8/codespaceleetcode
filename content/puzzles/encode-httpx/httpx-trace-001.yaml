@@ -1,0 +1,29 @@
+id: httpx-trace-001
+snapshot: encode-httpx@b5addb6
+type: trace
+difficulty: medium
+title: From Client.send to the redirect request headers
+prompt: |
+  Start at the method `send` of the synchronous class Client (not AsyncClient) in
+  httpx/_client.py. Assume the first response is a redirect that has a Location
+  header, and the request is sent with follow_redirects enabled. Select the chain
+  of methods, in call order, where each one directly calls the next, ending at
+  the method that computes the headers for the follow-up request.
+  Direct calls only. Skip class constructors, standard-library and third-party
+  calls, and the hook and auth-flow calls that are not part of the chain.
+answer:
+  kind: sequence
+  ids:
+    - httpx/_client.py#Client.send
+    - httpx/_client.py#Client._send_handling_auth
+    - httpx/_client.py#Client._send_handling_redirects
+    - httpx/_client.py#BaseClient._build_redirect_request
+    - httpx/_client.py#BaseClient._redirect_headers
+  accept_sequences: []
+  accept_reasons: []
+hints:
+  - The redirect loop lives one level below the auth loop.
+solution: solutions/httpx-trace-001.md
+tags: [client, redirects]
+authors: [agent-author-3]
+verified_by: [agent:blind-3]

@@ -1,0 +1,20 @@
+id: hono-find-001
+snapshot: honojs-hono@17ad0e2
+type: find
+difficulty: easy
+title: The strict-routing switch
+prompt: |
+  In src/utils/url.ts, select the function that drops a trailing slash from the
+  request path, which is what makes `/users/` route like `/users` when an app is
+  created with strict mode off. Select a function.
+answer:
+  kind: symbol
+  id: src/utils/url.ts#getPathNoStrict
+  accept: []
+  accept_reasons: []
+hints:
+  - Look at how the Hono class constructor in src/hono-base.ts chooses `this.getPath`.
+solution: solutions/hono-find-001.md
+tags: [routing, options]
+authors: [agent-author-1]
+verified_by: [agent:blind-1, agent:blind-4]

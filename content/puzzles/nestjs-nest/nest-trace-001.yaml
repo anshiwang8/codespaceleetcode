@@ -1,0 +1,29 @@
+id: nest-trace-001
+snapshot: nestjs-nest@8d9dd9d
+type: trace
+difficulty: hard
+title: From scan to a registered provider
+prompt: |
+  In packages/core/scanner.ts, start at `DependenciesScanner.scan`. A module in the
+  application lists one plain class in its `providers` array (not an object with a
+  `provide` key). List the chain of functions, in call order, where each one calls the next, until the `NestContainer` method
+  that adds that provider to its module is reached. Include the start and the final
+  function. Direct calls only: each entry must be called from the body of the one before it
+  (a call inside an inline callback counts as part of its enclosing function). Skip
+  constructors, getters, and third-party or standard-library calls.
+answer:
+  kind: sequence
+  ids:
+    - packages/core/scanner.ts#DependenciesScanner.scan
+    - packages/core/scanner.ts#DependenciesScanner.scanModulesForDependencies
+    - packages/core/scanner.ts#DependenciesScanner.reflectProviders
+    - packages/core/scanner.ts#DependenciesScanner.insertProvider
+    - packages/core/injector/container.ts#NestContainer.addProvider
+  accept_sequences: []
+  accept_reasons: []
+hints:
+  - Scanning first finds the modules, then reads each module's metadata in a separate pass.
+solution: solutions/nest-trace-001.md
+tags: [bootstrap, modules, providers]
+authors: [agent-author-1]
+verified_by: [agent:blind-1]

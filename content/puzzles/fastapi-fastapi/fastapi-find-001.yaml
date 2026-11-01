@@ -1,0 +1,22 @@
+id: fastapi-find-001
+snapshot: fastapi-fastapi@45cb225
+type: find
+difficulty: easy
+title: Validating and serializing the endpoint's return value
+prompt: |
+  In fastapi/routing.py, select the module-level function that takes the value an
+  endpoint returned and, when a response model field is available, validates it
+  against that field (raising ResponseValidationError if validation fails) and
+  serializes the result. When there is no field, it falls back to
+  jsonable_encoder. Select a function.
+answer:
+  kind: symbol
+  id: fastapi/routing.py#serialize_response
+  accept: []
+  accept_reasons: []
+hints:
+  - It is called from the inner request-handling function built by get_request_handler.
+solution: solutions/fastapi-find-001.md
+tags: [responses, validation]
+authors: [agent-author-3]
+verified_by: [agent:blind-3]

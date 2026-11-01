@@ -1,0 +1,28 @@
+id: rxjs-architecture-002
+snapshot: reactivex-rxjs@54796b3
+type: architecture
+difficulty: hard
+title: A late subscriber after a shared source completes
+prompt: |
+  Read the `share` operator in packages/rxjs/src/share.ts. An application calls
+  `source[share]()` with no config, so every default applies. The source is asynchronous.
+  Subscriber A subscribes, receives values, and is completed when the source completes.
+  Some time later, subscriber B subscribes to the shared observable. What happens?
+answer:
+  kind: choice
+  option: a
+choices:
+  - id: a
+    label: B causes the source to be subscribed again, through a new Subject from the connector
+  - id: b
+    label: B is completed immediately without any values, because the shared Subject is already completed
+  - id: c
+    label: B waits forever, attached to the old Subject, which never emits again
+  - id: d
+    label: B receives the last value the source emitted, then completes
+hints:
+  - Look at what the `complete` handler passed to `source.subscribe` does with `resetOnComplete`.
+solution: solutions/rxjs-architecture-002.md
+tags: [multicasting, share]
+authors: [agent-author-1]
+verified_by: [agent:blind-1]

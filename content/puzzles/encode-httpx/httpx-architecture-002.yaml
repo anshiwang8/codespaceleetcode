@@ -1,0 +1,30 @@
+id: httpx-architecture-002
+snapshot: encode-httpx@b5addb6
+type: architecture
+difficulty: medium
+title: Which mounted transport wins
+prompt: |
+  A Client keeps its mounted transports in a dict keyed by URLPattern, re-sorted
+  at construction (see Client.__init__ and Client._transport_for_url in
+  httpx/_client.py, and URLPattern in httpx/_utils.py). Suppose two mount
+  patterns both match a request URL: "https://" and "https://example.com".
+  Neither pattern has a port. Which transport does _transport_for_url return?
+  Select one option.
+answer:
+  kind: choice
+  option: d
+choices:
+  - id: a
+    label: Whichever of the two was passed first in the mounts argument.
+  - id: b
+    label: The one for "https://", because its pattern is shorter and so is matched first.
+  - id: c
+    label: Whichever of the two was passed last in the mounts argument.
+  - id: d
+    label: The one for "https://example.com", because patterns with a longer host sort ahead of those with a shorter one.
+hints:
+  - Look at the priority property of URLPattern.
+solution: solutions/httpx-architecture-002.md
+tags: [transports, routing]
+authors: [agent-author-3]
+verified_by: [agent:blind-3]

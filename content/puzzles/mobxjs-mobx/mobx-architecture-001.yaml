@@ -1,0 +1,31 @@
+id: mobx-architecture-001
+snapshot: mobxjs-mobx@b05f0de
+type: architecture
+difficulty: hard
+title: Staleness through a computed value
+prompt: |
+  In packages/mobx/src, a reaction R reads one computed value C, and C reads
+  one observable X. All three have run and are `UP_TO_DATE_`. Then X is
+  written (outside any action) and `Atom.reportChanged` calls
+  `propagateChanged(X)`. Right after `propagateChanged(X)` returns, before
+  `endBatch` runs anything, what is the `dependenciesState_` of the reaction
+  R? Follow `propagateChanged`, `ComputedValue.onBecomeStale_` and
+  `propagateMaybeChanged`. Select one option.
+answer:
+  kind: choice
+  option: c
+choices:
+  - id: a
+    label: STALE_
+  - id: b
+    label: NOT_TRACKING_
+  - id: c
+    label: POSSIBLY_STALE_
+  - id: d
+    label: UP_TO_DATE_
+hints:
+  - propagateChanged only marks X's direct observers as STALE_. R is not a direct observer of X.
+solution: solutions/mobx-architecture-001.md
+tags: [reactivity, computed, dependency-tracking]
+authors: [agent-author-2]
+verified_by: [agent:blind-2]

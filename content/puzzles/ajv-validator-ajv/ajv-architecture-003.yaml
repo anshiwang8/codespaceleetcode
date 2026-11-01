@@ -1,0 +1,28 @@
+id: ajv-architecture-003
+snapshot: ajv-validator-ajv@f177fe3
+type: architecture
+difficulty: medium
+title: Compiling the same schema twice
+prompt: |
+  An `Ajv` instance is created with default options. The same schema object
+  (one reference, with no `$id`) is passed to `ajv.compile(schema)` twice in a
+  row. Following `compile` and `_addSchema` in lib/core.ts, what happens on the
+  second call? Select one option.
+answer:
+  kind: choice
+  option: d
+choices:
+  - id: a
+    label: compileSchema runs again, producing a second, separate validation function.
+  - id: b
+    label: compileSchema does not run again, but the second call wraps the cached function in a new function before returning it.
+  - id: c
+    label: The second call throws because a schema with that key already exists.
+  - id: d
+    label: compileSchema does not run again; the second call returns the validation function stored on the cached schema entry from the first call.
+hints:
+  - Look at what _addSchema returns when its cache already holds the schema, and what compile does with sch.validate.
+solution: solutions/ajv-architecture-003.md
+tags: [caching, compile]
+authors: [agent-author-2]
+verified_by: [agent:blind-2]

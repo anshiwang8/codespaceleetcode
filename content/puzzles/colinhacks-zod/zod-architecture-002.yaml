@@ -1,0 +1,21 @@
+id: zod-architecture-002
+snapshot: colinhacks-zod@2554b70
+type: architecture
+difficulty: easy
+title: The core base of the classic ZodType
+prompt: |
+  In packages/zod/src/v4/classic/schemas.ts, the initializer that `ZodType` passes to
+  `core.$constructor` calls `core.$ZodType.init(inst, def)`. Select the one file in
+  packages/zod/src/v4/core/ that defines the `$ZodType` constructor value that this call
+  refers to. Select a file.
+answer:
+  kind: file
+  path: packages/zod/src/v4/core/schemas.ts
+  accept: []
+  accept_reasons: []
+hints:
+  - "`core` is a namespace import of the core layer's index."
+solution: solutions/zod-architecture-002.md
+tags: [layering, classic, core]
+authors: [agent-author-1]
+verified_by: [agent:blind-1]

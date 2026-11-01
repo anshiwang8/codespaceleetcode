@@ -1,0 +1,22 @@
+id: fastapi-find-003
+snapshot: fastapi-fastapi@45cb225
+type: find
+difficulty: medium
+title: Swapping a dependency for its override
+prompt: |
+  In solve_dependencies in fastapi/dependencies/utils.py, for each sub-dependency
+  the function checks whether the application has registered dependency
+  overrides, and if so replaces the original callable by its override and builds a
+  new Dependant for it. Select the lines of that single `if` statement, from the
+  `if` line (including its multi-line condition) through its last body statement.
+answer:
+  kind: location
+  path: fastapi/dependencies/utils.py
+  anchor: [680, 695]
+  window: [676, 697]
+hints:
+  - The condition tests an attribute of the object passed as dependency_overrides_provider.
+solution: solutions/fastapi-find-003.md
+tags: [dependencies, testing]
+authors: [agent-author-3]
+verified_by: [agent:blind-3]

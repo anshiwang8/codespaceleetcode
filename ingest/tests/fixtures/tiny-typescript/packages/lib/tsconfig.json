@@ -1,0 +1,5 @@
+{
+  // Only this nested config knows the @lib alias. The root config can't resolve it.
+  "compilerOptions": { "baseUrl": ".", "paths": { "@lib/*": ["src/*"] } },
+  "include": ["src"]
+}

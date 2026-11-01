@@ -1,0 +1,22 @@
+id: rxjs-architecture-001
+snapshot: reactivex-rxjs@54796b3
+type: architecture
+difficulty: easy
+title: The errors the single operator raises itself
+prompt: |
+  Read `singleOperator` in packages/rxjs/src/single.ts. Besides forwarding errors from its
+  source, it constructs and sends its own errors to the subscriber, each as an instance of a
+  different error class. Select all 3 files in packages/rxjs/src/ that define those
+  error classes.
+answer:
+  kind: set
+  ids:
+    - packages/rxjs/src/empty-error.ts
+    - packages/rxjs/src/not-found-error.ts
+    - packages/rxjs/src/sequence-error.ts
+hints:
+  - Check the imports at the top of single.ts and where each imported class is constructed.
+solution: solutions/rxjs-architecture-001.md
+tags: [operators, errors]
+authors: [agent-author-1]
+verified_by: [agent:blind-1]

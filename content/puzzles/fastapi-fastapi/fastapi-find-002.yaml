@@ -1,0 +1,21 @@
+id: fastapi-find-002
+snapshot: fastapi-fastapi@45cb225
+type: find
+difficulty: medium
+title: The class behind Depends
+prompt: |
+  In the fastapi/ package, `Depends(...)` as users call it is a public function
+  whose job is to build and return an object. Select the file that defines the
+  class of that returned object (not the file that defines the public function).
+  Select a file.
+answer:
+  kind: file
+  path: fastapi/params.py
+  accept: []
+  accept_reasons: []
+hints:
+  - The function and the class it instantiates are deliberately in different modules.
+solution: solutions/fastapi-find-002.md
+tags: [dependencies, structure]
+authors: [agent-author-3]
+verified_by: [agent:blind-3]

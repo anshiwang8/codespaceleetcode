@@ -1,0 +1,21 @@
+id: widgets-architecture-001
+snapshot: acme-widgets@a1b2c3d
+type: architecture
+difficulty: easy
+title: Fixture widgets-architecture-001
+prompt: 'Select all 3 files that define more than four methods or classes. Select
+  files.
+
+  '
+answer:
+  kind: set
+  ids:
+  - src/app.js
+  - src/queue.js
+  - src/shapes.js
+solution: solutions/widgets-architecture-001.md
+authors:
+- fixture-author
+verified_by: []
+tags:
+- structure

@@ -1,0 +1,15 @@
+id: NotAnId
+snapshot: acme-widgets@a1b2c3d
+type: find
+difficulty: easy
+title: Fixture NotAnId
+prompt: 'Select the thing this fixture asks for.
+
+  '
+answer:
+  kind: symbol
+  id: src/config.js#loadConfig
+solution: solutions/NotAnId.md
+authors:
+- fixture-author
+verified_by: []

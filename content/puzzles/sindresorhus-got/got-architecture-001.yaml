@@ -1,0 +1,29 @@
+id: got-architecture-001
+snapshot: sindresorhus-got@6b5aafc
+type: architecture
+difficulty: medium
+title: Retry-After versus backoff
+prompt: |
+  A GET request made with default options (the default `retry` settings, no
+  `retry.maxRetryAfter`, no `timeout`) fails on its first attempt with an
+  HTTP 429 response that carries the header `Retry-After: 2`. Following
+  `calculateRetryDelay` in source/core/calculate-retry-delay.ts, what value
+  does it return for this first retry? Select one option.
+answer:
+  kind: choice
+  option: c
+choices:
+  - id: a
+    label: 1 ms, the minimum timer delay used for an immediate retry.
+  - id: b
+    label: A value of at least 1000 ms and below 1100 ms, the exponential backoff for attempt 1 plus noise, ignoring the header.
+  - id: c
+    label: 2000 ms, the delay from the Retry-After header.
+  - id: d
+    label: 0, because the Retry-After value is larger than the allowed maximum.
+hints:
+  - Work out what computedValue is when neither maxRetryAfter nor a request timeout is set.
+solution: solutions/got-architecture-001.md
+tags: [retry]
+authors: [agent-author-2]
+verified_by: [agent:blind-2]

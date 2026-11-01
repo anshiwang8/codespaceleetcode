@@ -1,0 +1,31 @@
+id: fastapi-trace-001
+snapshot: fastapi-fastapi@45cb225
+type: trace
+difficulty: hard
+title: How a route's parameters get analyzed
+prompt: |
+  Start at APIRoute.__init__ in fastapi/routing.py, for a route created with
+  default arguments (no custom APIRoute subclass). Select the chain of functions
+  and methods, in call order, where each one directly calls the next, ending at
+  the function in fastapi/dependencies/utils.py that classifies one parameter of
+  the endpoint's signature (given its name, annotation and default) as a path,
+  query, header, cookie, body or dependency parameter.
+  Direct calls only. Skip class constructors, standard-library and third-party
+  calls, and calls that are not on the chain (such as get_route_handler or
+  request_response).
+answer:
+  kind: sequence
+  ids:
+    - fastapi/routing.py#APIRoute.__init__
+    - fastapi/routing.py#_populate_api_route_state
+    - fastapi/routing.py#_build_dependant_with_parameterless_dependencies
+    - fastapi/dependencies/utils.py#get_dependant
+    - fastapi/dependencies/utils.py#analyze_param
+  accept_sequences: []
+  accept_reasons: []
+hints:
+  - The route's state, including its Dependant tree, is filled in by a helper that the constructor calls first.
+solution: solutions/fastapi-trace-001.md
+tags: [routing, dependencies]
+authors: [agent-author-3]
+verified_by: [agent:blind-3]

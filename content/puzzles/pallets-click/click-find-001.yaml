@@ -1,0 +1,22 @@
+id: click-find-001
+snapshot: pallets-click@2247b35
+type: find
+difficulty: medium
+title: Ordering parameters for processing
+prompt: |
+  In src/click/core.py, select the module-level function that decides the order
+  in which a command's declared parameters get processed. It sorts them so that
+  eager parameters come first, and within each group the parameters the user
+  actually passed come in the order they appeared on the command line, ahead of
+  those that were not passed. Select a function.
+answer:
+  kind: symbol
+  id: src/click/core.py#iter_params_for_processing
+  accept: []
+  accept_reasons: []
+hints:
+  - Command.parse_args calls it right after the parser has run.
+solution: solutions/click-find-001.md
+tags: [parameters, parsing]
+authors: [agent-author-3]
+verified_by: [agent:blind-3]

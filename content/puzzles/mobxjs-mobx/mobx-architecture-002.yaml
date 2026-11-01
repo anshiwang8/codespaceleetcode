@@ -1,0 +1,23 @@
+id: mobx-architecture-002
+snapshot: mobxjs-mobx@b05f0de
+type: architecture
+difficulty: easy
+title: Who constructs a Reaction
+prompt: |
+  In the packages/*/src/ directories (ignore tests, docs and examples),
+  exactly 4 functions contain a `new Reaction(...)` expression: two in the core
+  mobx package and one in each of the two React bindings, mobx-react and
+  mobx-react-lite. Select all 4 functions.
+answer:
+  kind: set
+  ids:
+    - packages/mobx/src/api/autorun.ts#autorun
+    - packages/mobx/src/api/autorun.ts#reaction
+    - packages/mobx-react/src/observerClass.ts#createReaction
+    - packages/mobx-react-lite/src/useObserver.ts#createReaction
+hints:
+  - Two of the four functions have the same name but live in different packages.
+solution: solutions/mobx-architecture-002.md
+tags: [reactions, react-bindings]
+authors: [agent-author-2]
+verified_by: [agent:blind-2]

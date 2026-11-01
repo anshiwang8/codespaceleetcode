@@ -1,0 +1,21 @@
+id: widgets-trace-001
+snapshot: acme-widgets@a1b2c3d
+type: trace
+difficulty: easy
+title: Fixture widgets-trace-001
+prompt: 'Starting at the job''s entry point, list the methods called, in order, until
+  the job completes. Direct calls only, skipping stdlib and third-party calls.
+
+  '
+answer:
+  kind: sequence
+  ids:
+  - src/jobs/job.js#Job.run
+  - src/jobs/job.js#Job.step
+  - src/jobs/job.js#Job.finish
+  accept_sequences: []
+solution: solutions/widgets-trace-001.md
+authors:
+- fixture-author
+verified_by:
+- agent:fixture-solver

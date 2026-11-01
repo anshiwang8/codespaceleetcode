@@ -1,0 +1,28 @@
+id: requests-trace-001
+snapshot: psf-requests@3c7baaa
+type: trace
+difficulty: easy
+title: From requests.get to a PreparedRequest
+prompt: |
+  Start at the function `get` in src/requests/api.py, called as `requests.get(url)`
+  with no extra keyword arguments. Select the chain of functions and methods, in
+  call order, where each one directly calls the next, ending at the Session method
+  that merges the Request's own headers, params, auth, cookies and hooks with the
+  session's defaults to produce a PreparedRequest.
+  Direct calls only. Do not include class constructors (such as Session or
+  Request), context-manager methods, standard-library calls or third-party calls.
+answer:
+  kind: sequence
+  ids:
+    - src/requests/api.py#get
+    - src/requests/api.py#request
+    - src/requests/sessions.py#Session.request
+    - src/requests/sessions.py#Session.prepare_request
+  accept_sequences: []
+  accept_reasons: []
+hints:
+  - The top-level helpers don't talk to the network themselves; they delegate to a Session.
+solution: solutions/requests-trace-001.md
+tags: [api, sessions]
+authors: [agent-author-3]
+verified_by: [agent:blind-3]

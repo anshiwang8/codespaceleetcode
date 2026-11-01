@@ -1,0 +1,21 @@
+{
+  "name": "codebase-puzzles",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "pnpm@12.6.0",
+  "scripts": {
+    "local": "node scripts/local.mjs",
+    "dev": "pnpm --filter web dev",
+    "test": "pnpm run test:ingest && pnpm run test:web",
+    "test:ingest": "cd ingest && uv run python -m pytest",
+    "test:web": "pnpm --filter web test",
+    "e2e": "node scripts/e2e.mjs",
+    "validate": "cd ingest && uv run python -m ingest validate",
+    "db": "node scripts/localdb.mjs start",
+    "db:reset": "node scripts/localdb.mjs reset"
+  },
+  "devDependencies": {
+    "embedded-postgres": "18.6.0-beta.19",
+    "pg": "^8.23.1"
+  }
+}

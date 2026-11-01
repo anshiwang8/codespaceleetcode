@@ -1,0 +1,21 @@
+id: click-find-002
+snapshot: pallets-click@2247b35
+type: find
+difficulty: medium
+title: Rejecting leftover arguments
+prompt: |
+  In Command.parse_args in src/click/core.py, once every parameter has been
+  processed, a check makes the command fail with a usage error if arguments
+  remain that no parameter consumed. Select the lines of that single `if`
+  statement, from the `if` line through the closing line of its body.
+answer:
+  kind: location
+  path: src/click/core.py
+  anchor: [1419, 1426]
+  window: [1415, 1430]
+hints:
+  - The condition also looks at two flags on the context.
+solution: solutions/click-find-002.md
+tags: [parsing, errors]
+authors: [agent-author-3]
+verified_by: [agent:blind-3]
