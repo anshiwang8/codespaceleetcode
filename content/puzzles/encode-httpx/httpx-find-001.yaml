@@ -17,4 +17,4 @@ hints:
 solution: solutions/httpx-find-001.md
 tags: [redirects, client]
 authors: [agent-author-3]
-verified_by: []
+verified_by: [agent:blind-3]

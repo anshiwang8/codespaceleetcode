@@ -18,4 +18,4 @@ hints:
 solution: solutions/click-architecture-002.md
 tags: [errors, control-flow]
 authors: [agent-author-3]
-verified_by: []
+verified_by: [agent:blind-3]

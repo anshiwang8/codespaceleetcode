@@ -16,4 +16,4 @@ hints:
 solution: solutions/nest-find-001.md
 tags: [modules, errors]
 authors: [agent-author-1]
-verified_by: []
+verified_by: [agent:blind-1]

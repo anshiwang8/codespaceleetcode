@@ -24,4 +24,4 @@ hints:
 solution: solutions/zod-trace-001.md
 tags: [json-schema, intersection]
 authors: [agent-author-1]
-verified_by: []
+verified_by: [agent:blind-1]

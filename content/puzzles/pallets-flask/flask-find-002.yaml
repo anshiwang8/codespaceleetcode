@@ -18,4 +18,4 @@ hints:
 solution: solutions/flask-find-002.md
 tags: [errors, request-lifecycle]
 authors: [agent-author-3]
-verified_by: []
+verified_by: [agent:blind-3]

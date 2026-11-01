@@ -26,4 +26,4 @@ hints:
 solution: solutions/click-architecture-001.md
 tags: [parameters, configuration]
 authors: [agent-author-3]
-verified_by: []
+verified_by: [agent:blind-3]

@@ -29,4 +29,4 @@ hints:
 solution: solutions/fastapi-architecture-001.md
 tags: [dependencies, lifecycle]
 authors: [agent-author-3]
-verified_by: []
+verified_by: [agent:blind-3]

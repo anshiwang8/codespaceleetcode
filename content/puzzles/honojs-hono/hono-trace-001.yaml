@@ -24,4 +24,4 @@ hints:
 solution: solutions/hono-trace-001.md
 tags: [request-lifecycle, middleware]
 authors: [agent-author-1]
-verified_by: []
+verified_by: [agent:blind-1]

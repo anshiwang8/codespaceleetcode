@@ -20,4 +20,4 @@ hints:
 solution: solutions/requests-find-002.md
 tags: [redirects, http]
 authors: [agent-author-3]
-verified_by: []
+verified_by: [agent:blind-3]

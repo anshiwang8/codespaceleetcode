@@ -18,4 +18,4 @@ hints:
 solution: solutions/rxjs-find-001.md
 tags: [operators, subscription]
 authors: [agent-author-1]
-verified_by: []
+verified_by: [agent:blind-1]

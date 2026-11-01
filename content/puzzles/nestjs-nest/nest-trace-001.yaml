@@ -26,4 +26,4 @@ hints:
 solution: solutions/nest-trace-001.md
 tags: [bootstrap, modules, providers]
 authors: [agent-author-1]
-verified_by: []
+verified_by: [agent:blind-1]

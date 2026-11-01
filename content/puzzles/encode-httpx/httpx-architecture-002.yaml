@@ -27,4 +27,4 @@ hints:
 solution: solutions/httpx-architecture-002.md
 tags: [transports, routing]
 authors: [agent-author-3]
-verified_by: []
+verified_by: [agent:blind-3]

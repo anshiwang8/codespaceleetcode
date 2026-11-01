@@ -19,4 +19,4 @@ hints:
 solution: solutions/flask-find-003.md
 tags: [json, configuration]
 authors: [agent-author-3]
-verified_by: []
+verified_by: [agent:blind-3]

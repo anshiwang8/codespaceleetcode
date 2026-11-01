@@ -25,4 +25,4 @@ hints:
 solution: solutions/rxjs-architecture-002.md
 tags: [multicasting, share]
 authors: [agent-author-1]
-verified_by: []
+verified_by: [agent:blind-1]

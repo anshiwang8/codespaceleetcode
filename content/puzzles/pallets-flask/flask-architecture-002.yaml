@@ -26,4 +26,4 @@ hints:
 solution: solutions/flask-architecture-002.md
 tags: [request-lifecycle, hooks, sessions]
 authors: [agent-author-3]
-verified_by: []
+verified_by: [agent:blind-3]

@@ -19,4 +19,4 @@ hints:
 solution: solutions/fastapi-find-003.md
 tags: [dependencies, testing]
 authors: [agent-author-3]
-verified_by: []
+verified_by: [agent:blind-3]

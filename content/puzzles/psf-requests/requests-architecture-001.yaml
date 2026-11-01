@@ -20,4 +20,4 @@ hints:
 solution: solutions/requests-architecture-001.md
 tags: [auth, extension-points]
 authors: [agent-author-3]
-verified_by: []
+verified_by: [agent:blind-3]

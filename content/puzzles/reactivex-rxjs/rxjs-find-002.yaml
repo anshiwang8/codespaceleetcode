@@ -18,4 +18,4 @@ hints:
 solution: solutions/rxjs-find-002.md
 tags: [operators, cancellation]
 authors: [agent-author-1]
-verified_by: []
+verified_by: [agent:blind-1]

@@ -19,4 +19,4 @@ hints:
 solution: solutions/requests-find-001.md
 tags: [sessions, configuration]
 authors: [agent-author-3]
-verified_by: []
+verified_by: [agent:blind-3]

@@ -18,4 +18,4 @@ hints:
 solution: solutions/click-find-002.md
 tags: [parsing, errors]
 authors: [agent-author-3]
-verified_by: []
+verified_by: [agent:blind-3]

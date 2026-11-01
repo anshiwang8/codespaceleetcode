@@ -23,4 +23,4 @@ hints:
 solution: solutions/rxjs-trace-002.md
 tags: [creation-operators]
 authors: [agent-author-1]
-verified_by: []
+verified_by: [agent:blind-1]

@@ -26,4 +26,4 @@ hints:
 solution: solutions/click-trace-001.md
 tags: [shell-completion]
 authors: [agent-author-3]
-verified_by: []
+verified_by: [agent:blind-3]

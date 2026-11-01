@@ -19,4 +19,4 @@ hints:
 solution: solutions/rxjs-architecture-001.md
 tags: [operators, errors]
 authors: [agent-author-1]
-verified_by: []
+verified_by: [agent:blind-1]

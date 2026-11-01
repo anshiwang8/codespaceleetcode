@@ -26,4 +26,4 @@ hints:
 solution: solutions/vue-architecture-002.md
 tags: [scheduler, design]
 authors: [agent-author-1]
-verified_by: []
+verified_by: [agent:blind-1]

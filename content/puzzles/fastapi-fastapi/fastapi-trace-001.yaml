@@ -28,4 +28,4 @@ hints:
 solution: solutions/fastapi-trace-001.md
 tags: [routing, dependencies]
 authors: [agent-author-3]
-verified_by: []
+verified_by: [agent:blind-3]
