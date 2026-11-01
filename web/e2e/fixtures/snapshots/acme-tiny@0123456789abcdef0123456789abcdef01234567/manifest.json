@@ -1,0 +1,58 @@
+{
+  "slug": "acme-tiny",
+  "url": "https://github.com/example/acme-tiny",
+  "sha": "0123456789abcdef0123456789abcdef01234567",
+  "language": "typescript",
+  "license": "MIT",
+  "indexer": {
+    "name": "hand-written fixture",
+    "version": "1"
+  },
+  "files": [
+    {
+      "path": "LICENSE",
+      "size": 60,
+      "language": "other"
+    },
+    {
+      "path": "README.md",
+      "size": 85,
+      "language": "markdown"
+    },
+    {
+      "path": "src/config.ts",
+      "size": 176,
+      "language": "typescript"
+    },
+    {
+      "path": "src/index.ts",
+      "size": 267,
+      "language": "typescript"
+    },
+    {
+      "path": "src/logging/logger.ts",
+      "size": 72,
+      "language": "typescript"
+    },
+    {
+      "path": "src/router.ts",
+      "size": 322,
+      "language": "typescript"
+    },
+    {
+      "path": "src/vault.ts",
+      "size": 62,
+      "language": "typescript"
+    },
+    {
+      "path": "src/views.ts",
+      "size": 141,
+      "language": "typescript"
+    },
+    {
+      "path": "src/windows.ts",
+      "size": 119,
+      "language": "typescript"
+    }
+  ]
+}

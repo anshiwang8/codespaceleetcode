@@ -1,0 +1,65 @@
+.page {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+.login {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.total {
+  margin: 4px 0 18px;
+  color: var(--text-muted);
+}
+
+.total strong {
+  color: var(--text);
+  font-size: 15px;
+}
+
+.tables {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table caption {
+  padding-bottom: 4px;
+  color: var(--text-faint);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.table thead th {
+  padding: 2px 8px;
+  border-bottom: 1px solid var(--line-strong);
+  color: var(--text-faint);
+  font-size: 11px;
+  font-weight: 500;
+  text-align: right;
+}
+
+.table tbody th {
+  padding: 4px 8px 4px 0;
+  border-bottom: 1px solid var(--line);
+  font-weight: 400;
+  text-align: left;
+}
+
+.table td {
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--line);
+  text-align: right;
+}
