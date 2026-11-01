@@ -1,0 +1,22 @@
+id: h3-find-001
+snapshot: h3js-h3@f0e1780
+type: find
+difficulty: medium
+title: HEAD falls back to GET
+prompt: |
+  In src/h3.ts, the router lookup for the H3 app class has a special case for
+  requests whose method is HEAD: when no route matches the HEAD request itself,
+  a second lookup is made for a different method. Select the lines of the
+  whole `if` block that implements this fallback, from the `if` line through
+  its closing brace.
+answer:
+  kind: location
+  path: src/h3.ts
+  anchor: [255, 259]
+  window: [253, 262]
+hints:
+  - The lookup is a method that H3 overrides from H3Core, and its name starts with a tilde.
+solution: solutions/h3-find-001.md
+tags: [routing, http]
+authors: [agent-author-2]
+verified_by: []

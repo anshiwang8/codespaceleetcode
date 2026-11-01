@@ -1,0 +1,21 @@
+id: h3-architecture-003
+snapshot: h3js-h3@f0e1780
+type: architecture
+difficulty: hard
+title: Callers of callMiddleware
+prompt: |
+  In src/, `callMiddleware` is defined in src/middleware.ts. Outside that file,
+  exactly 2 functions contain a call to it (the call may sit inside a nested
+  closure in the function; import statements and re-exports do not count).
+  Select all 2 functions.
+answer:
+  kind: set
+  ids:
+    - src/h3.ts#createDispatcher
+    - src/rules/middleware.ts#routeRules
+hints:
+  - Use Find All References on callMiddleware and ignore the imports.
+solution: solutions/h3-architecture-003.md
+tags: [middleware, call-graph]
+authors: [agent-author-2]
+verified_by: []
