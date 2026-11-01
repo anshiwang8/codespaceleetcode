@@ -1,0 +1,23 @@
+id: ajv-find-001
+snapshot: ajv-validator-ajv@f177fe3
+type: find
+difficulty: medium
+title: Per-type coercion rules
+prompt: |
+  In lib/compile/validate/, when the `coerceTypes` option is on and a value has
+  the wrong type, Ajv generates code that converts it, for example a string
+  "false" or the number 0 becoming the boolean false, or a number becoming a
+  string. Select the function whose body contains these per-target-type
+  conversion rules (not the function that merely decides whether to coerce
+  and calls it). Select a function.
+answer:
+  kind: symbol
+  id: lib/compile/validate/dataType.ts#coerceData
+  accept: []
+  accept_reasons: []
+hints:
+  - The conversion rules for each target type are written as a switch over the type name.
+solution: solutions/ajv-find-001.md
+tags: [coercion, code-generation]
+authors: [agent-author-2]
+verified_by: []

@@ -1,0 +1,34 @@
+id: ajv-trace-001
+snapshot: ajv-validator-ajv@f177fe3
+type: trace
+difficulty: medium
+title: From validate to code generation
+prompt: |
+  Starting at the `validate` method of the `Ajv` class in lib/core.ts, list the
+  functions called, in order, until the function exported from
+  lib/compile/validate/index.ts that begins generating the validation
+  function's code for the root schema is called. List direct calls only (each
+  function must be called literally in the body of the previous one), and skip
+  standard-library and third-party calls.
+
+  Assume default options, a schema object (not a string key) that has not been
+  compiled before and is not a meta-schema. Include the start function in your
+  sequence.
+answer:
+  kind: sequence
+  ids:
+    - lib/core.ts#Ajv.validate
+    - lib/core.ts#Ajv.compile
+    - lib/core.ts#Ajv._compileSchemaEnv
+    - lib/compile/index.ts#compileSchema
+    - lib/compile/validate/index.ts#validateFunctionCode
+  accept_sequences: []
+hints:
+  - The method that turns a schema into a validation function is on the same class and shares its name with an option you pass to it.
+validator_overrides:
+  - check: sequence-alternate-path
+    reason: The equal-length alternate paths all go through Ajv.getSchema, which is the branch of validate taken only when the first argument is a string key. The prompt fixes the runtime path to a schema object, so that branch is not taken.
+solution: solutions/ajv-trace-001.md
+tags: [compile, code-generation]
+authors: [agent-author-2]
+verified_by: []
