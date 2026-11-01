@@ -1,0 +1,22 @@
+id: httpx-architecture-001
+snapshot: encode-httpx@b5addb6
+type: architecture
+difficulty: easy
+title: Synchronous transport implementations
+prompt: |
+  httpx separates sync and async transports by two base classes in
+  httpx/_transports/base.py. Within the httpx/_transports/ directory, select all 3
+  concrete transport classes that have the synchronous base class BaseTransport
+  among their bases. Do not select stream or response helper classes.
+answer:
+  kind: set
+  ids:
+    - httpx/_transports/default.py#HTTPTransport
+    - httpx/_transports/wsgi.py#WSGITransport
+    - httpx/_transports/mock.py#MockTransport
+hints:
+  - One of them supports both the sync and the async interface.
+solution: solutions/httpx-architecture-001.md
+tags: [transports, extension-points]
+authors: [agent-author-3]
+verified_by: []

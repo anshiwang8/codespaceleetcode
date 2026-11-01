@@ -1,0 +1,20 @@
+id: httpx-find-001
+snapshot: encode-httpx@b5addb6
+type: find
+difficulty: easy
+title: Changing the method on redirect
+prompt: |
+  In httpx/_client.py, select the BaseClient method that decides which HTTP
+  method the follow-up request should use after a redirect response, for example
+  turning a POST into a GET for certain status codes. Select a method.
+answer:
+  kind: symbol
+  id: httpx/_client.py#BaseClient._redirect_method
+  accept: []
+  accept_reasons: []
+hints:
+  - It is one of several small helpers that _build_redirect_request combines.
+solution: solutions/httpx-find-001.md
+tags: [redirects, client]
+authors: [agent-author-3]
+verified_by: []
