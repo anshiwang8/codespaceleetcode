@@ -1,0 +1,22 @@
+id: flask-find-003
+snapshot: pallets-flask@49943b5
+type: find
+difficulty: medium
+title: Default JSON provider
+prompt: |
+  A Flask application exposes an attribute `json` whose value is an instance of a
+  provider class that the application creates itself unless a subclass overrides
+  the class used. Within src/flask/, select the file that defines that provider
+  class as it is used by default (the one implementing JSON dumps and loads with
+  the standard-library json module). Select a file.
+answer:
+  kind: file
+  path: src/flask/json/provider.py
+  accept: []
+  accept_reasons: []
+hints:
+  - Find where the app builds its json attribute, then follow the class it instantiates.
+solution: solutions/flask-find-003.md
+tags: [json, configuration]
+authors: [agent-author-3]
+verified_by: []
