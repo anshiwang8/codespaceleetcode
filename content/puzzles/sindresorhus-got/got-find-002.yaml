@@ -1,0 +1,21 @@
+id: got-find-002
+snapshot: sindresorhus-got@6b5aafc
+type: find
+difficulty: medium
+title: Default retryable status codes
+prompt: |
+  In source/core/options.ts, the default option values include a `retry`
+  object. Select the lines of the array literal that lists the HTTP status
+  codes for which got retries by default: from the line that opens the array
+  through the line that closes it.
+answer:
+  kind: location
+  path: source/core/options.ts
+  anchor: [1378, 1389]
+  window: [1372, 1401]
+hints:
+  - The defaults object is a constant near the middle of options.ts; look for the key that holds numbers rather than strings.
+solution: solutions/got-find-002.md
+tags: [retry, defaults]
+authors: [agent-author-2]
+verified_by: []
