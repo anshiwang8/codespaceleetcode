@@ -49,6 +49,14 @@ test.describe("code viewer", () => {
     await expectOpenFile(page, FILES.router);
   });
 
+  test("hovering a name shows its symbol from the index", async ({ page }) => {
+    await openPuzzle(page, "e2e-find-symbol");
+    await openFile(page, FILES.router);
+    const line = page.locator(".monaco-editor .view-line", { hasText: "this.match" }).first();
+    await line.locator("span", { hasText: /^match$/ }).last().hover();
+    await expect(page.locator(".monaco-hover")).toContainText("src/router.ts#Router.match");
+  });
+
   test("a local variable has no symbol, and nothing goes wrong", async ({ page }) => {
     const errors: string[] = [];
     page.on("pageerror", (error) => errors.push(error.message));

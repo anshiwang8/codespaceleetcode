@@ -7,13 +7,12 @@ import type { PuzzleDetail, PuzzleStatus, SubmitResponse } from "@/lib/api-types
 import { type Draft, type DraftAction, isReadyToSubmit, type SequenceItem } from "@/lib/client/answer";
 
 const INSTRUCTIONS: Record<Draft["kind"], string> = {
-  symbol:
-    "Put the cursor on a symbol in the editor, or find it in the outline, then choose Select as answer.",
-  file: "Choose Select as answer on a file in the tree, or below the editor for the open file.",
+  symbol: "Put the cursor on a symbol and choose Select as answer below the editor, or use + on an outline row.",
+  file: "Use + on a file in the tree, or Select as answer below the editor for the open file.",
   location: "Select lines in the editor, then choose Select as answer below the editor.",
   sequence:
-    "Put the cursor on a symbol, or find it in the outline, and choose Add to sequence. Add them in order.",
-  set: "Add symbols from the editor or outline, and files from the tree.",
+    "Add symbols in order: put the cursor on one and choose Add to sequence, or use + on an outline row. Drag or use the arrows to reorder.",
+  set: "Use + on files in the tree and symbols in the outline, or the buttons below the editor.",
   choice: "Pick one of the options.",
 };
 

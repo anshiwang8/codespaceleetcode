@@ -51,6 +51,8 @@ export function PuzzleWorkspace({ puzzle }: { puzzle: PuzzleDetail }) {
   const [leftWidth, setLeftWidth] = useState(290);
   const [rightWidth, setRightWidth] = useState(290);
 
+  // A result belongs to the person who submitted it, so signing out takes it away.
+  const shownResult = localProgress?.login === login ? result : null;
   const progress =
     localProgress && localProgress.login === login
       ? localProgress
@@ -215,7 +217,7 @@ export function PuzzleWorkspace({ puzzle }: { puzzle: PuzzleDetail }) {
           onSubmit={() => void submit()}
           submitting={submitting}
           submitError={submitError}
-          result={result}
+          result={shownResult}
           attempts={progress.attempts}
           status={progress.status}
           signInReason={signInReason}

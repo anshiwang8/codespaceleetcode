@@ -86,7 +86,10 @@ export function OutlineList({ snapshotId, path, onOpen, draft, pick }: OutlineLi
                     onClick={() => onOpen(symbol.file, symbol.startLine)}
                   >
                     <span className={styles.outlineKind}>{symbol.kind.slice(0, 2)}</span>
-                    <span className={styles.outlineLabel}>{symbol.name}</span>
+                    {/* The qualified name, since one file can have many an __init__. */}
+                    <span className={styles.outlineLabel}>
+                      {symbol.symbolId.slice(symbol.symbolId.indexOf("#") + 1)}
+                    </span>
                   </button>
                   {action ? (
                     <button
