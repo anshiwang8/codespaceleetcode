@@ -1,0 +1,6 @@
+{
+  // Hides everything but src/core, as a real repo's build config often does.
+  "compilerOptions": { "strict": true, "experimentalDecorators": true },
+  "include": ["src/core"],
+  "exclude": ["src/core/hidden.ts"]
+}

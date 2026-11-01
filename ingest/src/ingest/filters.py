@@ -76,6 +76,16 @@ def detect_language(rel_path: str) -> str:
     return rules.LANGUAGE_BY_EXTENSION.get(PurePosixPath(rel_path).suffix.lower(), "other")
 
 
+def is_non_test_source(rel_path: str, repo_language: str) -> bool:
+    """Whether a file counts toward a repo's size and index quality. See filter_config."""
+    pure = PurePosixPath(rel_path)
+    return (
+        detect_language(rel_path) in rules.SOURCE_LANGUAGES[repo_language]
+        and not any(part in rules.NON_SOURCE_DIRS for part in pure.parts[:-1])
+        and not rules.TEST_FILE_NAME_RE.search(pure.name)
+    )
+
+
 def _is_generated(pure: PurePosixPath, data: bytes) -> bool:
     if pure.name in rules.GENERATED_FILENAMES or rules.GENERATED_NAME_RE.search(pure.name):
         return True

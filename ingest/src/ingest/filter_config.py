@@ -43,6 +43,7 @@ MINIFIED_AVG_LINE_LENGTH = 300
 LANGUAGE_BY_EXTENSION = {
     ".cjs": "javascript",
     ".css": "css",
+    ".cts": "typescript",
     ".go": "go",
     ".html": "html",
     ".js": "javascript",
@@ -50,11 +51,34 @@ LANGUAGE_BY_EXTENSION = {
     ".jsx": "javascript",
     ".md": "markdown",
     ".mjs": "javascript",
+    ".mts": "typescript",
     ".py": "python",
+    ".pyi": "python",
     ".sh": "shell",
     ".toml": "toml",
     ".ts": "typescript",
     ".tsx": "typescript",
     ".yaml": "yaml",
     ".yml": "yaml",
+}
+
+# What counts as "non-test source" in spec section 5. These only measure a repo. They never drop a
+# file from a snapshot, since a puzzle may be about a test.
+NON_SOURCE_DIRS = frozenset(
+    {
+        "__fixtures__", "__mocks__", "__snapshots__", "__test__", "__tests__", "bench",
+        "benchmark", "benchmarks", "cypress", "demo", "demos", "doc", "docs", "docs_src", "e2e",
+        "example", "examples", "fixture", "fixtures", "integration", "mocks", "perf", "playground",
+        "playgrounds", "sample", "samples", "spec", "specs", "test", "test-d", "test-dts",
+        "test_data", "testdata", "testing", "tests", "website",
+    }
+)  # fmt: skip
+TEST_FILE_NAME_RE = re.compile(
+    r"(\.(test|spec|test-d|bench)\.[cm]?[jt]sx?$|^test_.*\.pyi?$|_test\.pyi?$|^conftest\.py$)"
+)
+# Other languages in a repo (a Python project's static JS, say) aren't what the indexer reads.
+SOURCE_LANGUAGES = {
+    "javascript": frozenset({"javascript", "typescript"}),
+    "python": frozenset({"python"}),
+    "typescript": frozenset({"javascript", "typescript"}),
 }

@@ -4,12 +4,17 @@ import json
 import os
 import shutil
 from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import asdict
 from pathlib import Path
 
 from ingest.convert import Conversion
 from ingest.fetch import remove_tree
 from ingest.filters import detect_language
+from ingest.indexer import IndexResult
 from ingest.repos import Repo
+from ingest.summary import SnapshotSummary
+
+SUMMARY_FILE = "summary.json"
 
 
 def write_snapshot(
@@ -17,7 +22,8 @@ def write_snapshot(
     checkout: Path,
     kept: Sequence[str],
     conversion: Conversion,
-    indexer_version: str,
+    indexer: IndexResult,
+    summary: SnapshotSummary,
     out_dir: Path,
 ) -> Path:
     """Write everything to a temp dir and rename it, so a failed run leaves no partial snapshot."""
@@ -30,7 +36,8 @@ def write_snapshot(
             destination = temp / "files" / rel_path
             destination.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(checkout / rel_path, destination)
-        _write_manifest(temp / "manifest.json", repo, checkout, kept, indexer_version)
+        _write_manifest(temp / "manifest.json", repo, checkout, kept, indexer)
+        _write_json(temp / SUMMARY_FILE, asdict(summary))
         _write_jsonl(
             temp / "symbols.jsonl",
             (
@@ -53,6 +60,7 @@ def write_snapshot(
                     "file": occurrence.file,
                     "line": occurrence.line,
                     "col": occurrence.col,
+                    "end_col": occurrence.end_col,
                     "role": occurrence.role,
                 }
                 for occurrence in conversion.occurrences
@@ -73,8 +81,16 @@ def write_snapshot(
     return target
 
 
+def read_summary(snapshot_dir: Path) -> SnapshotSummary | None:
+    """Return a finished snapshot's summary, or None if it has none."""
+    path = snapshot_dir / SUMMARY_FILE
+    if not path.is_file():
+        return None
+    return SnapshotSummary(**json.loads(path.read_text(encoding="utf-8")))
+
+
 def _write_manifest(
-    path: Path, repo: Repo, checkout: Path, kept: Sequence[str], indexer_version: str
+    path: Path, repo: Repo, checkout: Path, kept: Sequence[str], indexer: IndexResult
 ) -> None:
     manifest = {
         "slug": repo.slug,
@@ -82,7 +98,7 @@ def _write_manifest(
         "sha": repo.sha,
         "language": repo.language,
         "license": repo.license,
-        "indexer": {"name": "scip-typescript", "version": indexer_version},
+        "indexer": {"name": indexer.indexer_name, "version": indexer.indexer_version},
         "files": [
             {
                 "path": rel_path,
@@ -92,8 +108,12 @@ def _write_manifest(
             for rel_path in kept
         ],
     }
+    _write_json(path, manifest)
+
+
+def _write_json(path: Path, value: object) -> None:
     with path.open("w", encoding="utf-8", newline="\n") as handle:
-        json.dump(manifest, handle, ensure_ascii=False, indent=2)
+        json.dump(value, handle, ensure_ascii=False, indent=2)
         handle.write("\n")
 
 
