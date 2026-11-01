@@ -70,6 +70,13 @@ function runNode(script, args, env) {
   });
 }
 
+// Always a cold build. Restoring Turbopack's cache from a run on another port left every other run
+// stuck with the page reloading forever.
+const DIST_DIR = ".next-e2e";
+const removeBuild = () =>
+  rmSync(join(WEB, DIST_DIR), { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+removeBuild();
+
 const dataDir = mkdtempSync(join(tmpdir(), "cp-e2e-"));
 const [dbPort, webPort] = await Promise.all([freePort(), freePort()]);
 const server = new EmbeddedPostgres({
@@ -105,10 +112,12 @@ try {
       SNAPSHOT_DIR,
       NEXT_PUBLIC_SNAPSHOT_CDN_URL: "",
       NEXT_TELEMETRY_DISABLED: "1",
+      E2E_DIST_DIR: DIST_DIR,
     });
   }
 } finally {
   if (started) await server.stop().catch(() => {});
   rmSync(dataDir, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+  removeBuild();
 }
-process.exit(exitCode);
+process.exitCode = exitCode;
