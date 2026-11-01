@@ -1,0 +1,75 @@
+.header {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 20px;
+  height: var(--header-height);
+  padding: 0 12px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.brand:hover {
+  text-decoration: none;
+}
+
+.mark {
+  color: var(--accent-text);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.nav {
+  display: flex;
+  gap: 14px;
+}
+
+.nav a {
+  color: var(--text-muted);
+}
+
+.nav a:hover {
+  color: var(--text);
+}
+
+.auth {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.devLabel {
+  color: var(--text-faint);
+  font-size: 12px;
+}
+
+.authError {
+  color: var(--bad);
+  font-size: 12px;
+}
+
+@media (max-width: 640px) {
+  .devLabel {
+    display: none;
+  }
+
+  .brand {
+    font-size: 0;
+    gap: 0;
+  }
+
+  .mark {
+    font-size: 13px;
+  }
+}

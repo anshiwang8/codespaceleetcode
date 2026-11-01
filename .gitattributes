@@ -1,2 +1,4 @@
 # Fixture bytes must match the committed index.scip on every OS.
 ingest/tests/fixtures/** -text
+# The e2e fixture has a file with CRLF line endings on purpose.
+web/e2e/fixtures/** -text
