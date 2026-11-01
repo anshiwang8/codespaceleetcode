@@ -1,0 +1,23 @@
+id: fastapi-architecture-002
+snapshot: fastapi-fastapi@45cb225
+type: architecture
+difficulty: easy
+title: Kinds of request parameters
+prompt: |
+  In fastapi/params.py, parameters that are read from the URL path, query string,
+  headers and cookies share a common base class (a FieldInfo subclass), while body
+  parameters have a separate base class. Select all 4 classes in that file that
+  directly subclass that shared non-body base class.
+answer:
+  kind: set
+  ids:
+    - fastapi/params.py#Path
+    - fastapi/params.py#Query
+    - fastapi/params.py#Header
+    - fastapi/params.py#Cookie
+hints:
+  - The base class is named in the class headers; the body-side base is Body.
+solution: solutions/fastapi-architecture-002.md
+tags: [parameters, structure]
+authors: [agent-author-3]
+verified_by: []

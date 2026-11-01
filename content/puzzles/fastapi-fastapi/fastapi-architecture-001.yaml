@@ -1,0 +1,32 @@
+id: fastapi-architecture-001
+snapshot: fastapi-fastapi@45cb225
+type: architecture
+difficulty: hard
+title: When cleanup after yield runs
+prompt: |
+  A dependency can be a generator function with a `yield`, and Depends accepts a
+  `scope` of "function" or "request" (the default, scope None, takes the request
+  stack). Consider an ordinary APIRoute, whose app is built by request_response
+  in fastapi/routing.py around the handler from get_request_handler, together
+  with solve_dependencies and _solve_generator in fastapi/dependencies/utils.py.
+  Comparing a yield dependency declared with scope="function" to one declared
+  with the default scope, when does the code after each `yield` run?
+  Select one option.
+answer:
+  kind: choice
+  option: b
+choices:
+  - id: a
+    label: Both run after the response has been sent to the client.
+  - id: b
+    label: The function-scoped one runs once the endpoint function has returned and before the response is sent; the default-scoped one runs after the response has been sent.
+  - id: c
+    label: The default-scoped one runs once the endpoint function has returned and before the response is sent; the function-scoped one runs after the response has been sent.
+  - id: d
+    label: Both run before the endpoint function is called.
+hints:
+  - Find the two AsyncExitStack objects created in request_response and see where each is exited relative to the call that sends the response.
+solution: solutions/fastapi-architecture-001.md
+tags: [dependencies, lifecycle]
+authors: [agent-author-3]
+verified_by: []
