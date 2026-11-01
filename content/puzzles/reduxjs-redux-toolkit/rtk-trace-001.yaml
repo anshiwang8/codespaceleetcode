@@ -23,4 +23,4 @@ hints:
 solution: solutions/rtk-trace-001.md
 tags: [entity-adapter]
 authors: [agent-author-2]
-verified_by: []
+verified_by: [agent:blind-2]

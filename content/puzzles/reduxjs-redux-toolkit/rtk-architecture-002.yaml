@@ -26,4 +26,4 @@ hints:
 solution: solutions/rtk-architecture-002.md
 tags: [middleware, configureStore]
 authors: [agent-author-2]
-verified_by: []
+verified_by: [agent:blind-2]

@@ -20,4 +20,4 @@ hints:
 solution: solutions/rtk-architecture-001.md
 tags: [immer, module-structure]
 authors: [agent-author-2]
-verified_by: []
+verified_by: [agent:blind-2]

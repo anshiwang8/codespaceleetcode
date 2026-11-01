@@ -18,4 +18,4 @@ hints:
 solution: solutions/got-find-002.md
 tags: [retry, defaults]
 authors: [agent-author-2]
-verified_by: []
+verified_by: [agent:blind-2]

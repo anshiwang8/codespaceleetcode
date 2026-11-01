@@ -21,4 +21,4 @@ hints:
 solution: solutions/rtk-find-001.md
 tags: [middleware, immutability]
 authors: [agent-author-2]
-verified_by: []
+verified_by: [agent:blind-2]

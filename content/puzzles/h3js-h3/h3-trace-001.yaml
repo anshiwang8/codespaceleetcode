@@ -27,4 +27,4 @@ hints:
 solution: solutions/h3-trace-001.md
 tags: [response, request-lifecycle]
 authors: [agent-author-2]
-verified_by: []
+verified_by: [agent:blind-2]

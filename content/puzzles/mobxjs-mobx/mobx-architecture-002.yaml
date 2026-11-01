@@ -20,4 +20,4 @@ hints:
 solution: solutions/mobx-architecture-002.md
 tags: [reactions, react-bindings]
 authors: [agent-author-2]
-verified_by: []
+verified_by: [agent:blind-2]

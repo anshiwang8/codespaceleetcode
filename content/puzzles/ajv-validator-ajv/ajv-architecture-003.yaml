@@ -25,4 +25,4 @@ hints:
 solution: solutions/ajv-architecture-003.md
 tags: [caching, compile]
 authors: [agent-author-2]
-verified_by: []
+verified_by: [agent:blind-2]

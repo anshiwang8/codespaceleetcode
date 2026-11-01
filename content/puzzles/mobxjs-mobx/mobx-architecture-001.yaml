@@ -28,4 +28,4 @@ hints:
 solution: solutions/mobx-architecture-001.md
 tags: [reactivity, computed, dependency-tracking]
 authors: [agent-author-2]
-verified_by: []
+verified_by: [agent:blind-2]

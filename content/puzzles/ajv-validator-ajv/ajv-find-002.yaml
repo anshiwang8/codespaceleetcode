@@ -20,4 +20,4 @@ hints:
 solution: solutions/ajv-find-002.md
 tags: [code-generation, compile]
 authors: [agent-author-2]
-verified_by: []
+verified_by: [agent:blind-2]

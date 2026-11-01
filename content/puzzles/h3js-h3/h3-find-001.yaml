@@ -19,4 +19,4 @@ hints:
 solution: solutions/h3-find-001.md
 tags: [routing, http]
 authors: [agent-author-2]
-verified_by: []
+verified_by: [agent:blind-2]

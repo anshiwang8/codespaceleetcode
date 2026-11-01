@@ -18,4 +18,4 @@ hints:
 solution: solutions/h3-architecture-003.md
 tags: [middleware, call-graph]
 authors: [agent-author-2]
-verified_by: []
+verified_by: [agent:blind-2]
