@@ -22,6 +22,8 @@ interface AnswerTrayProps {
   pick: (action: DraftAction) => void;
   onSubmit: () => void;
   submitting: boolean;
+  /** True until the page knows who is signed in. A result is tied to that person. */
+  waitingForAuth: boolean;
   submitError: string | null;
   result: SubmitResponse | null;
   attempts: number;
@@ -35,6 +37,7 @@ export function AnswerTray({
   pick,
   onSubmit,
   submitting,
+  waitingForAuth,
   submitError,
   result,
   attempts,
@@ -54,7 +57,7 @@ export function AnswerTray({
         <button
           type="button"
           className="btn btn-primary"
-          disabled={!ready || submitting}
+          disabled={!ready || submitting || waitingForAuth}
           onClick={onSubmit}
           data-testid="submit"
         >

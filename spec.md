@@ -164,6 +164,8 @@ A snapshot is immutable. To move a repo to a newer commit, create a new snapshot
 
 `content/` changes run `pnpm validate` (calls `uv run ingest validate`). A puzzle merges only if all checks pass. It needs the snapshots in `ingest/out/`, which aren't committed, so CI has to build or restore them first. No CI workflow exists yet.
 
+A content folder with no puzzles fails, because seeding treats a puzzle missing from content as removed. Override reasons stay in the puzzle file and aren't printed, since they can name the answer.
+
 Only `symbol-unique`, `sequence-edges` and `sequence-alternate-path` can take a `validator_overrides` entry. `set-count`, `location-window` and `choice-options` can't, because each failure means the puzzle can't be solved or graded as written.
 
 **Schema**
@@ -173,7 +175,7 @@ Only `symbol-unique`, `sequence-edges` and `sequence-alternate-path` can take a 
 - Every answer ID (`id`, `ids`, `accept*`, `path`, `anchor`, `window`) resolves in the snapshot index.
 
 **Uniqueness heuristics** (failures need an explicit `validator_overrides` entry with a reason)
-- `symbol`: if another definition shares the answer's short name inside the prompt's stated scope, fail unless it is listed in `accept`. Naming the answer's file narrows the scope to that file, so a same-named definition inside it still fails. A stated scope is a prompt token exactly matching a manifest path that contains the answer. A directory needs a slash (`lib/`), and if several qualify the widest wins. With none, the scope is the whole snapshot.
+- `symbol`: if another definition shares the answer's short name inside the prompt's stated scope, fail unless it is listed in `accept`. Naming the answer's file narrows the scope to that file, so a same-named definition inside it still fails. A stated scope is a prompt token exactly matching a manifest path that contains the answer. A directory needs a slash (`lib/`), and if several qualify the widest wins, so naming a directory that contains the answer widens the scope past the answer's file even when the file is named too. With none, the scope is the whole snapshot.
 - `sequence`: each consecutive pair must be a real caller→callee edge in the SCIP reference graph. If the start symbol has another path to the end condition of equal or shorter length, warn.
 - `set`: each member exists. The count shown in the UI equals `len(ids)`.
 - `location`: `anchor` ⊆ `window`, and `window` ≤ 30 lines.
@@ -216,7 +218,7 @@ The site runs on localhost with no accounts or keys. Each hosted service has a l
 |---|---|
 | Supabase Postgres | Real Postgres from the `embedded-postgres` npm package, data in `.localdb/`, always UTF-8. `supabase/local/shim.sql` adds the roles and `auth` schema Supabase provides, so migrations run unchanged |
 | Supabase GitHub OAuth | A dev login that sets a cookie, refused unless the request is from localhost and `NODE_ENV` isn't `production` |
-| R2 behind a CDN | The route `/snapshots/<name>/...` serves `ingest/out/<name>/...`. `NEXT_PUBLIC_SNAPSHOT_CDN_URL` overrides it when set |
+| R2 behind a CDN | The route `/snapshots/<name>/...` serves `ingest/out/<name>/...` with an ETag and `Cache-Control: public, no-cache`, because a rebuilt snapshot keeps its name. `NEXT_PUBLIC_SNAPSHOT_CDN_URL` overrides it when set |
 
 GitHub OAuth, R2 upload and deployment aren't built yet. They're needed before a public launch.
 
@@ -307,7 +309,7 @@ Response shapes live in `web/lib/api-types.ts`. Submit validates that every subm
 
 - Signed-out requests to `/solution` and `/api/me/stats` get 401. A signed-in user who hasn't unlocked a solution gets 403.
 - Every graded submission counts as an attempt, including ones after solving. A rejected request doesn't.
-- `solved` is final: later submissions are graded and counted, but never change the status.
+- `solved` is final: later submissions are graded and counted, but never change the status. The one exception is a changed answer key: seeding then regrades that puzzle's submissions and recomputes each user's status, keeping each submission's recorded `correct`.
 - Search is case-insensitive. The Postgres planner chooses between the trigram index and the path index, because forcing trigram was only faster when nothing matched.
 
 ---

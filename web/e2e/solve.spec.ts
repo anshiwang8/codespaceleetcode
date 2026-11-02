@@ -208,6 +208,27 @@ test.describe("results", () => {
     await expect(visible(page, "puzzle-row-e2e-find-symbol")).toContainText("Solved");
   });
 
+  test("submitting waits until the page knows who is signed in, so the result always shows", async ({ page }) => {
+    await openPuzzle(page, "e2e-find-symbol");
+    await signIn(page);
+    // Hold back /api/me on the next load, as a slow network would.
+    let release = () => {};
+    const held = new Promise<void>((resolve) => (release = resolve));
+    await page.route("**/api/me", async (route) => {
+      await held;
+      await route.continue();
+    });
+    await page.reload();
+    await expect(page.getByTestId("file-tree")).toBeVisible();
+    await openFile(page, FILES.router);
+    await page.locator('[data-testid="outline-pick"][data-symbol="src/router.ts#Router.match"]').click();
+    await expect(page.getByTestId("submit")).toBeDisabled();
+
+    release();
+    await submitAndExpect(page, true);
+    await expect(page.getByTestId("puzzle-status")).toHaveText("Solved");
+  });
+
   test("signed out: you can read, but submitting prompts sign-in and keeps the answer", async ({ page }) => {
     await openPuzzle(page, "e2e-find-symbol");
     await expect(page.getByTestId("signed-in-as")).toHaveCount(0);

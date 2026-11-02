@@ -113,9 +113,10 @@ def validate_content(content_dir: Path, out_dir: Path) -> Report:
     if not content_dir.is_dir():
         raise IngestError(f"Content directory {content_dir} doesn't exist.")
     files = puzzle_files(content_dir)
-    report = Report()
     if not files:
-        return report
+        # Seeding treats a puzzle missing from content as deleted, so an empty run would remove all.
+        raise IngestError(f"No puzzles found under {content_dir / 'puzzles'}.")
+    report = Report()
 
     repos = _load_repos(content_dir)
     validator = puzzle_schema_validator()
@@ -148,7 +149,10 @@ def format_report(report: Report) -> list[str]:
         lines.append(f"{'FAIL' if result.errors else 'ok  '} {result.file}")
         lines += [f"  error [{f.check}] {f.message}" for f in result.errors]
         lines += [f"  warning [{f.check}] {f.message}" for f in result.warnings]
-        lines += [f"  override [{o.check}] {o.reason}" for o in result.overridden]
+        # Reasons are author prose that can name the answer, so only the check is printed.
+        lines += [
+            f"  override [{o.check}] applied, reason in the puzzle file" for o in result.overridden
+        ]
     passed = sum(result.passed for result in report.results)
     failed = len(report.results) - passed
     lines.append(f"Validated {len(report.results)} puzzles: {passed} passed, {failed} failed.")
@@ -357,16 +361,17 @@ def _collisions_in_scope(
     wording this can't read, like "excluding tests", never excuses a collision.
 
     Naming the answer's file rules out other files, as section 6 says, but it can't tell apart two
-    definitions inside that file, so those still count.
+    definitions inside that file, so those still count. A directory containing the answer is wider
+    than its file, so when the prompt names both, the directory is the scope.
     """
     files, directories = stated_paths(prompt, index)
+    scopes = sorted(d for d in directories if target.file.startswith(f"{d}/"))
+    if scopes:
+        inside = [s for s in others if any(s.file.startswith(f"{d}/") for d in scopes)]
+        return inside, f"the prompt's scope ({', '.join(f'{d}/' for d in scopes)})"
     if target.file in files:
         return [s for s in others if s.file == target.file], "the file the prompt names"
-    scopes = sorted(d for d in directories if target.file.startswith(f"{d}/"))
-    if not scopes:
-        return others, "the whole snapshot, as the prompt names no path containing the answer"
-    inside = [s for s in others if any(s.file.startswith(f"{d}/") for d in scopes)]
-    return inside, f"the prompt's scope ({', '.join(f'{d}/' for d in scopes)})"
+    return others, "the whole snapshot, as the prompt names no path containing the answer"
 
 
 def _describe_files(symbols: list[IndexedSymbol], answer_file: str) -> str:

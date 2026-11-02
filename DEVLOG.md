@@ -1,5 +1,27 @@
 # DEVLOG
 
+## Correctness fixes from the repo audit
+
+Type: Fix
+
+Goal: Fix the bugs a full audit of the repo found, each of which could give wrong data or hide something from the user without saying so.
+
+What should be done: Fix each one with a test that fails before the fix, without weakening any validator check.
+
+What was done (technical):
+
+- **Seeding could empty the site.** A content folder with no `puzzles/` passed validation with 0 puzzles, and seeding then treated every puzzle as removed: it deleted the untried ones and unpublished the rest. `validate_content` now fails when it finds no puzzles.
+- **symbol-unique switched itself off.** If a prompt mentioned the answer's own file anywhere, only that file was checked, even when the prompt also named a wider directory. Spec section 6 says the widest scope wins. The directory now takes precedence, with a must-fail fixture. All 85 puzzles still pass.
+- **Override reasons were printed.** They're author prose and can name the answer (`ajv-trace-001`'s does), so CI logs could carry it. Only the check name is printed now.
+- **Rebuilt snapshots kept a stale cache.** `/snapshots/...` sent `immutable` for a year, but a rebuilt snapshot keeps its name. It now sends `public, no-cache` with a SHA-256 ETag and answers a match with 304.
+- **Seeding missed changed file bytes.** The snapshot hash covered the manifest, which records only sizes, so an edit at the same size never reloaded without `--force`. The hash now covers every file's bytes. Re-seeding 15 snapshots takes about 3 seconds; the first run after this change reloads them all once.
+- **A result could vanish.** Submitting before `/api/me` answered stored the result under no login, so it was never shown. Submit stays disabled until the page knows who's signed in, with an e2e test that holds `/api/me` back.
+- **A changed key left stale progress.** When seeding changes a puzzle's answer key, it now regrades that puzzle's stored submissions with the Python grader and recomputes each user's status and solve time. Each submission keeps its recorded `correct`, which says how it was graded at the time. This closes the open "a user stays `solved` if a puzzle's key later changes".
+
+Still open:
+
+- Under heavy machine load, e2e tests waiting on `cursor-symbol` can time out at 15 seconds, and `agent-only-note` once matched two elements. All passed on a rerun, and with this change and without.
+
 ## Run on macOS, and remove giving up
 
 Type: Fix, Removal

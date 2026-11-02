@@ -103,7 +103,8 @@ export function PuzzleWorkspace({ puzzle }: { puzzle: PuzzleDetail }) {
 
   const submit = async () => {
     const submission = toSubmission(draft, elapsedMs(startedAt, Date.now()));
-    if (!submission || submitting) return;
+    // Until /api/me answers there's no login to tie the result to, and it would never be shown.
+    if (!submission || submitting || me === null) return;
     if (signedOut) {
       needSignIn("Sign in to submit. Your answer stays selected.");
       return;
@@ -195,6 +196,7 @@ export function PuzzleWorkspace({ puzzle }: { puzzle: PuzzleDetail }) {
           pick={pick}
           onSubmit={() => void submit()}
           submitting={submitting}
+          waitingForAuth={me === null}
           submitError={submitError}
           result={shownResult}
           attempts={progress.attempts}
