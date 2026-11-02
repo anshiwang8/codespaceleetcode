@@ -21,7 +21,7 @@ TYPESCRIPT_LANGUAGES = frozenset({"javascript", "typescript"})
 TYPESCRIPT_INSTALL_HELP = (
     "scip-typescript was not found on PATH. Install it with:\n"
     f"  npm install -g @sourcegraph/scip-typescript@{SCIP_TYPESCRIPT_VERSION}\n"
-    "It needs Node 22 or 24. Open a new terminal afterward, then run this command again."
+    "It needs Node 22 or newer. Open a new terminal afterward, then run this command again."
 )
 PYTHON_INSTALL_HELP = (
     "scip-python was not found on PATH. Install it with:\n"

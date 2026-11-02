@@ -76,18 +76,6 @@
   border-left: 2px solid var(--line-strong);
 }
 
-.confirm {
-  padding: 8px;
-  border: 1px solid var(--line-strong);
-  border-radius: var(--radius);
-}
-
-.confirmButtons {
-  display: flex;
-  gap: 6px;
-  margin-top: 6px;
-}
-
 .unverified {
   padding-left: 8px;
   border-left: 2px solid var(--line-strong);

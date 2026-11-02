@@ -94,7 +94,8 @@ async function start() {
   const stop = async () => {
     if (stopping) return;
     stopping = true;
-    await server.stop();
+    // On macOS and Linux, Ctrl+C reaches Postgres too, so it may already be shutting down.
+    await server.stop().catch(() => {});
     process.exit(0);
   };
   process.on("SIGINT", stop);

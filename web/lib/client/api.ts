@@ -1,6 +1,5 @@
 import type {
   ApiError,
-  GiveUpResponse,
   MeResponse,
   OutlineResponse,
   SearchResponse,
@@ -51,7 +50,6 @@ export const api = {
   devLogout: () => post<MeResponse>("/api/dev/logout"),
   submit: (slug: string, submission: Submission) =>
     post<SubmitResponse>(`${puzzlePath(slug)}/submit`, submission),
-  giveUp: (slug: string) => post<GiveUpResponse>(`${puzzlePath(slug)}/give-up`),
   solution: (slug: string) => request<SolutionResponse>(`${puzzlePath(slug)}/solution`),
   symbolAt: (snapshotId: number, file: string, line: number, col: number) => {
     const query = new URLSearchParams({ file, line: String(line), col: String(col) });

@@ -1,5 +1,28 @@
 # DEVLOG
 
+## Run on macOS, and remove giving up
+
+Type: Fix, Removal
+
+Goal: Make the project install, run and test on macOS, since it had only ever run on Windows. Then remove the give-up feature.
+
+What should be done: Fix whatever stops a fresh macOS clone from working, run every suite there, and take giving up out of the site, the API, the database and the docs.
+
+What was done (technical):
+
+- **`pnpm install` failed on macOS.** `pnpm-workspace.yaml`'s `allowBuilds` listed only the Windows `embedded-postgres` package, and pnpm refuses an unlisted build. The macOS and Linux packages are now `true`, because their install script links Postgres's libraries.
+- **`README.md` was UTF-16,** so git showed it as binary and plain `grep` found nothing in it. It's UTF-8 now, with macOS install steps for uv and pnpm. The install hints in `scripts/local.mjs` and `fetch.py` no longer give only `winget`. Node is documented as 22 or newer, with `engines` in `package.json`, since everything ran on Node 26.
+- **Ctrl+C.** `scripts/local.mjs` starts pnpm without a shell everywhere except Windows, so a signal reaches pnpm. `localdb.mjs` exits cleanly if Postgres already got the signal itself. `scripts/e2e.mjs` now cleans up on Ctrl+C; before, the temp database folder and `.next-e2e` were left behind. Sending Ctrl+C's signal to a running `pnpm local` and to an e2e run left no process, temp folder or build behind.
+- The go-to-definition tooltip and spec say cmd-click on macOS. The e2e test stays on Ctrl, with a comment saying why: Playwright's Desktop Chrome profile reports a Windows user agent.
+- `.DS_Store` is ignored at the root.
+- On macOS (Apple silicon, Node 26) all 15 snapshots built, all 85 puzzles pass `pnpm validate`, and the whole seed took under a minute. 421 ingest tests, 27 seed tests, 457 web tests against real Postgres, and 51 Playwright tests pass.
+- **Giving up is gone.** The button, `POST /api/puzzles/:slug/give-up`, `GiveUpResponse` and the `given_up` status are removed. A solution unlocks only after a correct answer. Migration `0003_remove_give_up.sql` turns earlier give-ups into `attempted`, limits `progress.status` to `attempted` and `solved`, and drops `progress.gave_up`. The e2e test that checked solution rendering through giving up now gets there by solving. New tests check that the route is gone and that the database rejects `given_up`.
+
+Still open:
+
+- Snapshots built on macOS weren't compared byte for byte with Windows builds. macOS and Windows both ignore filename case, so neither stands in for a Linux CI build.
+- Anyone who gave up earlier is now `attempted`, so they can still solve the puzzle after seeing its solution.
+
 ## Review fixes before merging the MVP
 
 Type: Fix

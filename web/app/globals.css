@@ -223,7 +223,6 @@ input {
   color: var(--accent-text);
 }
 
-.status-given_up,
 .status-unsolved {
   color: var(--text-muted);
 }

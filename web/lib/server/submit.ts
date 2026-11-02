@@ -135,8 +135,7 @@ export async function submitAnswer(
        values ($1, $2, $3::jsonb, $4, $5)`,
       [userId, puzzle.id, JSON.stringify(answer), correct, elapsedMs ?? null],
     );
-    // One statement, so concurrent submissions can't lose a count. `solved` and `given_up` are
-    // both final: giving up and then answering correctly must not count as a solve.
+    // One statement, so concurrent submissions can't lose a count. `solved` is final.
     const { rows } = await client.query<{ attempts: number }>(
       `insert into progress (user_id, puzzle_id, status, attempts, solved_at)
        values ($1, $2, case when $3::boolean then 'solved' else 'attempted' end, 1,
@@ -144,7 +143,7 @@ export async function submitAnswer(
        on conflict (user_id, puzzle_id) do update
          set attempts = progress.attempts + 1,
              status = case
-               when progress.status in ('solved', 'given_up') then progress.status
+               when progress.status = 'solved' then progress.status
                when $3::boolean then 'solved'
                else 'attempted'
              end,

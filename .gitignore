@@ -16,6 +16,9 @@ ingest/out/
 .localdb/
 .claude/worktrees/
 
+# macOS
+.DS_Store
+
 # Env files: only the examples are committed
 .env*
 !.env.example

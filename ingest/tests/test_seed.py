@@ -98,7 +98,7 @@ def _copy_content(tmp_path: Path) -> Path:
 
 
 def _add_user_activity(url: str, slug: str, submission: bool = True) -> None:
-    """Record a user who tried a puzzle: a submission and progress, or a bare give-up."""
+    """Record a user who tried a puzzle: a submission and progress, or progress alone."""
     with psycopg.connect(url) as connection:
         row = connection.execute(b"select id from puzzles where slug = %s", (slug,)).fetchone()
         assert row is not None

@@ -61,7 +61,7 @@ export function ActionBar({ activePath, cursor, selection, draft, pick, repoUrl,
         <button
           type="button"
           className="btn btn-small btn-quiet"
-          title="Go to definition (F12 or ctrl-click)"
+          title="Go to definition (F12, or ctrl-click; cmd-click on macOS)"
           disabled={!symbol}
           data-testid="go-to-definition"
           onClick={() => viewerRef.current?.goToDefinition()}

@@ -4,7 +4,7 @@
 export type PuzzleType = "find" | "trace" | "architecture";
 export type Difficulty = "easy" | "medium" | "hard";
 export type AnswerKind = "symbol" | "file" | "location" | "sequence" | "set" | "choice";
-export type PuzzleStatus = "unsolved" | "attempted" | "solved" | "given_up";
+export type PuzzleStatus = "unsolved" | "attempted" | "solved";
 
 export interface PuzzleSummary {
   slug: string;
@@ -72,11 +72,6 @@ export interface SubmitResponse {
 
 export interface SolutionResponse {
   bodyMd: string;
-}
-
-/** POST /api/puzzles/:slug/give-up. A puzzle already solved stays `solved`. */
-export interface GiveUpResponse {
-  status: PuzzleStatus;
 }
 
 export interface ManifestFile {

@@ -83,6 +83,8 @@ uv run python scripts/regen_fixture_index.py  # rebuild the test fixture's index
 
 Snapshots need the indexers on PATH: `npm install -g @sourcegraph/scip-typescript@0.6.0 @sourcegraph/scip-python@0.6.8`.
 
+Platforms: developed on Windows, and also run on macOS (Apple silicon, Node 26). Install pnpm with `npm install -g pnpm@12.6.0` when corepack isn't available. `pnpm-workspace.yaml`'s `allowBuilds` must set the `@embedded-postgres/<platform>` package to `true` on macOS and Linux, since its install script links Postgres's libraries; an unlisted package makes `pnpm install` fail. Windows runs with it set to `false`. Scripts that spawn `pnpm` need a shell only on Windows. Playwright's Desktop Chrome profile reports a Windows user agent, so Monaco uses Ctrl as its click modifier in e2e even on macOS.
+
 ## Environment
 
 Split per package and documented in each `.env.example`; never commit real values. R2 write credentials must never appear in `web/`.
@@ -114,7 +116,7 @@ SUPABASE_DB_URL=
 
 ## DEVLOG
 
-Keep `DEVLOG.md` updated whenever a feature or fix lands. Each entry:
+Keep `DEVLOG.md` updated whenever a feature or fix lands. In the same change, update `CLAUDE.md` (rules, layout, commands, env) and `spec.md` (design, API, data model, validator checks) if what you changed makes them stale, and close or add "Still open" items in the DEVLOG. Each entry:
 
 ```
 Type: Addition | Fix | Change | Removal

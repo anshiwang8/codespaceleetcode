@@ -91,6 +91,21 @@ const server = new EmbeddedPostgres({
 
 let started = false;
 let exitCode = 1;
+let cleanedUp = false;
+async function cleanUp() {
+  if (cleanedUp) return;
+  cleanedUp = true;
+  if (started) await server.stop().catch(() => {});
+  rmSync(dataDir, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
+  removeBuild();
+}
+// Ctrl+C would otherwise end the process before the finally block runs, leaving the temp database
+// folder and the build behind.
+for (const signal of ["SIGINT", "SIGTERM"]) {
+  process.on(signal, () => {
+    void cleanUp().finally(() => process.exit(130));
+  });
+}
 try {
   await server.initialise();
   await server.start();
@@ -116,8 +131,6 @@ try {
     });
   }
 } finally {
-  if (started) await server.stop().catch(() => {});
-  rmSync(dataDir, { recursive: true, force: true, maxRetries: 5, retryDelay: 200 });
-  removeBuild();
+  await cleanUp();
 }
 process.exitCode = exitCode;

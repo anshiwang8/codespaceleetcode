@@ -15,27 +15,12 @@ import {
 interface PromptPanelProps {
   puzzle: PuzzleDetail;
   status: PuzzleStatus;
-  attempts: number;
   unlocked: boolean;
-  /** Resolves to an error message, or null if it went through or needs a sign-in first. */
-  onGiveUp: () => Promise<string | null>;
 }
 
-export function PromptPanel({ puzzle, status, attempts, unlocked, onGiveUp }: PromptPanelProps) {
+export function PromptPanel({ puzzle, status, unlocked }: PromptPanelProps) {
   const [hintsShown, setHintsShown] = useState(0);
-  const [confirming, setConfirming] = useState(false);
-  const [givingUp, setGivingUp] = useState(false);
-  const [giveUpError, setGiveUpError] = useState<string | null>(null);
-
-  const finished = status === "solved" || status === "given_up";
   const noPersonChecked = puzzle.verifiedBy.every((name) => name.startsWith("agent:"));
-
-  const confirmGiveUp = async () => {
-    setGivingUp(true);
-    setGiveUpError(await onGiveUp());
-    setGivingUp(false);
-    setConfirming(false);
-  };
 
   return (
     <section className={styles.promptPanel} aria-label="Puzzle">
@@ -86,52 +71,9 @@ export function PromptPanel({ puzzle, status, attempts, unlocked, onGiveUp }: Pr
         </div>
       ) : null}
 
-      {finished ? null : (
-        <div className={styles.block}>
-          {confirming ? (
-            <div className={styles.confirm} role="group" aria-label="Confirm giving up">
-              <p>Give up and see the solution? This puzzle won&apos;t count as solved.</p>
-              <div className={styles.confirmButtons}>
-                <button
-                  type="button"
-                  className="btn"
-                  disabled={givingUp}
-                  onClick={() => void confirmGiveUp()}
-                >
-                  Yes, give up
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-quiet"
-                  disabled={givingUp}
-                  onClick={() => setConfirming(false)}
-                >
-                  Keep trying
-                </button>
-              </div>
-            </div>
-          ) : (
-            <button type="button" className="btn btn-small btn-quiet" onClick={() => setConfirming(true)}>
-              Give up
-            </button>
-          )}
-          {giveUpError ? (
-            <p className="notice notice-error" role="alert" style={{ marginTop: 6 }}>
-              {giveUpError}
-            </p>
-          ) : null}
-        </div>
-      )}
-
       {noPersonChecked ? (
         <p className={styles.unverified} data-testid="agent-only-note">
           No person has checked this puzzle yet. Its second solve was done by an automated agent.
-        </p>
-      ) : null}
-
-      {status === "given_up" && attempts > 0 ? (
-        <p className="muted" style={{ fontSize: 12 }}>
-          You gave up on this one, so later answers are graded but it stays unsolved.
         </p>
       ) : null}
 

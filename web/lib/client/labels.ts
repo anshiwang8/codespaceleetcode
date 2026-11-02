@@ -16,7 +16,6 @@ export const STATUS_LABELS: Record<PuzzleStatus, string> = {
   unsolved: "Not started",
   attempted: "Attempted",
   solved: "Solved",
-  given_up: "Gave up",
 };
 
 /** The required answer in plain words. `setCount` only applies to `set`. */

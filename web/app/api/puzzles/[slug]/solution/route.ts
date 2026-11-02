@@ -17,7 +17,7 @@ export const GET = route("puzzles.solution", async (request, { params }: Context
     case "not_found":
       return errorResponse(404, "Puzzle not found");
     case "locked":
-      return errorResponse(403, "Solve the puzzle or give up to see the solution");
+      return errorResponse(403, "Solve the puzzle to see the solution");
     case "ok":
       return jsonResponse<SolutionResponse>({ bodyMd: solution.bodyMd });
   }

@@ -399,8 +399,8 @@ def _upsert_puzzles(
 def _remove_absent_puzzles(connection: Connection, slugs: list[str], counts: PuzzleCounts) -> None:
     """Delete puzzles gone from content, except ones users have tried, which only get unpublished.
 
-    Give-ups count as tried: they have a progress row and no submission, and deleting the puzzle
-    would cascade to that row.
+    A progress row with no submission (the removed give-up feature left these) still counts as
+    tried, since deleting the puzzle would cascade to that row.
     """
     absent = connection.execute(
         """

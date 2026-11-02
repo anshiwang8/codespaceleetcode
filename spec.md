@@ -133,7 +133,7 @@ answer: { kind: choice, option: b }
 
 ### Solutions
 
-Each `solutions/<id>.md` contains: the answer, the navigation path a strong engineer would take (where to start, what to search for, which definitions to jump to), and why plausible wrong answers are wrong. Solutions are only visible after a correct submission or an explicit "give up".
+Each `solutions/<id>.md` contains: the answer, the navigation path a strong engineer would take (where to start, what to search for, which definitions to jump to), and why plausible wrong answers are wrong. Solutions are only visible after a correct submission. There is no "give up".
 
 ---
 
@@ -256,7 +256,7 @@ puzzle list → puzzle page
   → search → /api/search
   → "Select as answer" builds the submission from canonical IDs
   → POST /api/puzzles/:id/submit → server grades → { correct }
-  → on correct or give-up → GET solution
+  → on correct → GET solution
 ```
 
 ---
@@ -280,7 +280,7 @@ solutions    (puzzle_id, body_md)
 users        (id, github_login, created_at)                          -- via Supabase auth
 submissions  (id, user_id, puzzle_id, answer_json, correct, created_at,
               time_on_puzzle_ms)
-progress     (user_id, puzzle_id, status, attempts, solved_at, gave_up)
+progress     (user_id, puzzle_id, status, attempts, solved_at)        -- status: attempted | solved
 ```
 
 `answer_json` and `solutions` are only readable through server routes, using the service role on Supabase and `DATABASE_URL` on localhost. Row-level security denies client access.
@@ -294,8 +294,7 @@ progress     (user_id, puzzle_id, status, attempts, solved_at, gave_up)
 | `/api/puzzles` | GET | List with filters (type, difficulty, repo, tag) and the user's status |
 | `/api/puzzles/:slug` | GET | Prompt, metadata, answer kind, set count, snapshot info. **Never the key.** |
 | `/api/puzzles/:slug/submit` | POST | `{ correct, attempts }` |
-| `/api/puzzles/:slug/solution` | GET | Solution markdown, only if solved or given up |
-| `/api/puzzles/:slug/give-up` | POST | Marks given up, unlocks solution |
+| `/api/puzzles/:slug/solution` | GET | Solution markdown, only if solved |
 | `/api/snapshots/:id/symbols?file=&line=&col=` | GET | Definition + references at a position |
 | `/api/snapshots/:id/symbols/outline?file=` | GET | Symbols in a file |
 | `/api/snapshots/:id/search?q=` | GET | File/line matches, capped at 200 |
@@ -304,11 +303,11 @@ progress     (user_id, puzzle_id, status, attempts, solved_at, gave_up)
 | `/api/dev/login`, `/api/dev/logout` | POST | Localhost mode only: start or end a dev session |
 | `/snapshots/<name>/<path>` | GET | Localhost mode only: `manifest.json` or a raw file |
 
-Response shapes live in `web/lib/api-types.ts`. Submit validates that every submitted ID exists in the snapshot before grading. Submit and search are rate-limited, in memory and per process, so a real deployment needs a shared store. Reading a puzzle needs no sign-in; submitting and giving up do.
+Response shapes live in `web/lib/api-types.ts`. Submit validates that every submitted ID exists in the snapshot before grading. Submit and search are rate-limited, in memory and per process, so a real deployment needs a shared store. Reading a puzzle needs no sign-in; submitting does.
 
 - Signed-out requests to `/solution` and `/api/me/stats` get 401. A signed-in user who hasn't unlocked a solution gets 403.
 - Every graded submission counts as an attempt, including ones after solving. A rejected request doesn't.
-- A correct submission after giving up returns `correct: true`, but the status stays `given_up`, so stats stay honest. Giving up on a solved puzzle leaves it `solved`.
+- `solved` is final: later submissions are graded and counted, but never change the status.
 - Search is case-insensitive. The Postgres planner chooses between the trigram index and the path index, because forcing trigram was only faster when nothing matched.
 
 ---
@@ -318,9 +317,9 @@ Response shapes live in `web/lib/api-types.ts`. Submit validates that every subm
 - **Puzzle list:** filter by type, difficulty, repo; solved state per row.
 - **Puzzle page:** prompt panel (left), file tree + Monaco + search (center), answer tray (right).
   - The answer tray shows the required kind, the current selection, and for `set` the "n of N selected" count. For `sequence`, an ordered list with drag to reorder.
-  - Go-to-definition (F12 / ctrl-click), find references, and a breadcrumb trail of visited files.
+  - Go-to-definition (F12 / ctrl-click, cmd-click on macOS), find references, and a breadcrumb trail of visited files.
   - Repo name, SHA, license, and link back to GitHub at that SHA.
-- **Result:** correct / incorrect, attempt count. Solution unlocks on correct or give-up.
+- **Result:** correct / incorrect, attempt count. Solution unlocks on a correct answer.
 - **Profile:** solved counts by type and difficulty.
 
 ---

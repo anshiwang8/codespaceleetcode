@@ -23,6 +23,8 @@ test.describe("code viewer", () => {
     await expectOpenFile(page, FILES.router);
   });
 
+  // Playwright's Desktop Chrome profile reports a Windows user agent, so Monaco expects Ctrl even when
+  // the suite runs on macOS. A real Mac browser uses Cmd.
   test("ctrl-click jumps across files too", async ({ page }) => {
     await openPuzzle(page, "e2e-find-symbol");
     await openFile(page, FILES.index);
