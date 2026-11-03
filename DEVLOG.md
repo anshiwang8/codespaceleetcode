@@ -1,5 +1,45 @@
 # DEVLOG
 
+## 15 more puzzles, and written difficulty rules
+
+Type: Addition
+
+Goal: More puzzles, at difficulties that a written rule justifies rather than a gut call.
+
+What should be done: Add one puzzle per repo, 5 easy, 5 medium and 5 hard, 5 of each type, each with a reason for its difficulty, verified the same way as the first 85.
+
+What was done (technical):
+
+- **Difficulty rules.** `spec.md` section 4 now defines easy, medium and hard by how much navigation and reasoning an answer takes: how many hops, how much indirection, and how good the decoys are. There was no written rule before.
+- **15 puzzles**, one per repo, bringing the total to 100. Trace and hard puzzles were the scarcest (17 and 12 of 85), so the new set adds 5 of each. Answer kinds: 5 sequence, 2 each of symbol, file, location, set and choice.
+- Three author agents wrote them (`agent-author-4` to `-6`), and three solver agents (`agent:blind-6` to `-8`) solved them from the export only. All 15 passed on the first graded attempt, recorded in `content/blind-attempts.json`. I also checked every key against the source myself. After the export, the code sample in `rtk-architecture-004`'s prompt was wrapped in a Markdown fence so it renders with its line breaks. The wording is unchanged.
+- Two traces use a `sequence-alternate-path` override: `flask-trace-002` and `got-trace-002`. In each, the shorter paths only run on a failure the prompt rules out, and the reason is written in the file.
+- Why each is rated as it is:
+  - **Easy.**
+    - `mobx-find-003`: the prompt names the file and the caller, so it is one jump to definition, with one decoy the prompt excludes.
+    - `ajv-find-003`: one jump from the keyword file to the counting helper, with `useFunc` as the only decoy.
+    - `click-find-004`: one read of a short function, with one similar `return STRING` branch.
+    - `hono-trace-002`: 3 steps in one named file.
+    - `fastapi-architecture-003`: one hop from the constructor's `setdefault` calls to the module they import from.
+  - **Medium.**
+    - `zod-architecture-003`: 3 to 4 hops through the classic layer's renaming re-exports into core, and `.trim()` takes one hop more.
+    - `rxjs-find-003`: three `subscriber.complete()` sites in one long operator, and only one runs in the stated scenario.
+    - `nest-find-003`: the factory is reached through an interface-typed field, so you have to go back to the container's constructor to see which class is chosen.
+    - `httpx-trace-002`: 5 steps across 3 files, with no indirection but one branchy function to read carefully.
+    - `requests-architecture-003`: you list the raises in one long method, then check base classes in a second file. `ConnectTimeout` has two bases.
+  - **Hard.**
+    - `vue-trace-002`: 6 steps, and only the `endBatch` that brings batch depth back to zero runs the effect. The nested one in `Dep.notify` is a real call chain that looks right.
+    - `flask-trace-002`: 5 steps whose route depends on the exception type and the trap settings, and the last hop is in the base class in another file.
+    - `got-trace-002`: 5 steps starting in an event callback, on a path that only exists in stream mode, with several shorter error paths as decoys.
+    - `h3-architecture-004`: you must notice that `mount` copies routes once but wraps middleware for every request, and then follow a request to a 404.
+    - `rtk-architecture-004`: an object spread decides which of two case reducers survives, and then a matcher also runs. Each wrong option comes from one misreading.
+- `README.md` now says 100 puzzles.
+- All 100 puzzles validate. 485 ingest tests (1 Windows-only skip) and 482 web tests pass.
+
+Still open:
+
+- scip-python leaves `requests.exceptions.ConnectionError` out of the requests index, probably because the name shadows a Python builtin. It can't be an answer until that's understood. `requests-architecture-003` excludes it by name.
+
 ## Fix doc drift, and lock down client sequences
 
 Type: Fix, Change

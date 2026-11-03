@@ -1,0 +1,22 @@
+id: fastapi-architecture-003
+snapshot: fastapi-fastapi@45cb225
+type: architecture
+difficulty: easy
+title: Where the default error responses come from
+prompt: |
+  When a FastAPI application is created, it installs default exception handlers
+  for HTTPException and for request validation errors, unless the user supplied
+  handlers of their own for those exceptions. Within the fastapi/ package,
+  select the file that defines those default handler functions, the ones that
+  build the error responses. Select a file.
+answer:
+  kind: file
+  path: fastapi/exception_handlers.py
+  accept: []
+  accept_reasons: []
+hints:
+  - Find where the application's constructor fills in its exception_handlers dict, and follow the names it uses.
+solution: solutions/fastapi-architecture-003.md
+tags: [errors, extension-points]
+authors: [agent-author-6]
+verified_by: [agent:blind-8]

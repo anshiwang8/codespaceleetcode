@@ -1,0 +1,32 @@
+id: vue-trace-002
+snapshot: vuejs-core@24c9d0b
+type: trace
+difficulty: hard
+title: Which endBatch re-runs the effect
+prompt: |
+  In packages/reactivity/src/, `const state = reactive({ count: 0 })` has been created, and
+  `effect(() => state.count)` has run once with no options (no scheduler), outside any
+  component, effect scope or batch. Then `state.count = 1` runs, which enters
+  `MutableReactiveHandler.set` in baseHandlers.ts. List the named functions and methods on
+  the call stack at the moment the effect's function is invoked again, outermost first:
+  start at `MutableReactiveHandler.set` and end at the method that calls the effect's `fn`.
+  Include the start and the final method. Each entry must be called directly from the body
+  of the one before it. Skip anonymous arrow functions, constructors, and standard-library
+  calls.
+answer:
+  kind: sequence
+  ids:
+    - packages/reactivity/src/baseHandlers.ts#MutableReactiveHandler.set
+    - packages/reactivity/src/dep.ts#trigger
+    - packages/reactivity/src/effect.ts#endBatch
+    - packages/reactivity/src/effect.ts#ReactiveEffect.trigger
+    - packages/reactivity/src/effect.ts#ReactiveEffect.runIfDirty
+    - packages/reactivity/src/effect.ts#ReactiveEffect.run
+  accept_sequences: []
+  accept_reasons: []
+hints:
+  - Batches nest. Count `batchDepth` at every `startBatch` and `endBatch` call; only the call that brings it back to zero runs anything.
+solution: solutions/vue-trace-002.md
+tags: [reactivity, effects, batching]
+authors: [agent-author-4]
+verified_by: [agent:blind-6]

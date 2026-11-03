@@ -1,0 +1,39 @@
+id: h3-architecture-004
+snapshot: h3js-h3@f0e1780
+type: architecture
+difficulty: hard
+title: A route added after mount
+prompt: |
+  Two apps are built with the `H3` class from src/h3.ts and default config, in this order:
+
+  ```ts
+  const child = new H3();
+  child.use((event) => { console.log(event.url.pathname); });
+  child.get("/early", () => "early");
+  const parent = new H3();
+  parent.mount("/api", child);
+  child.get("/late", () => "late");
+  ```
+
+  Neither app has any other middleware, routes, plugins or hooks. A `GET` request for
+  `http://localhost/api/late` is sent to `parent.fetch`. Following `mount` and the
+  request path through src/h3.ts, src/middleware.ts and src/response.ts, what happens?
+  Select one option.
+answer:
+  kind: choice
+  option: a
+choices:
+  - id: a
+    label: The child's logging middleware runs, then the response is a 404, because the parent's router never received the `/late` route.
+  - id: b
+    label: The `/late` handler runs, because the parent forwards every request under `/api` to the child's `fetch`, and the child's router finds it.
+  - id: c
+    label: The response is a 404 without the child's logging middleware running, because mounted middleware only runs for a route the parent matched.
+  - id: d
+    label: The `/late` handler runs, because the parent's router reads the child's `~routes` array again on every request.
+hints:
+  - "`mount` has two branches. Check which one an `H3` instance takes, and when each piece of the child is read."
+solution: solutions/h3-architecture-004.md
+tags: [routing, middleware]
+authors: [agent-author-5]
+verified_by: [agent:blind-7]

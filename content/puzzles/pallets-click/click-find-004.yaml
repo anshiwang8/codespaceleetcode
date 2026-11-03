@@ -1,0 +1,22 @@
+id: click-find-004
+snapshot: pallets-click@2247b35
+type: find
+difficulty: easy
+title: Falling back to a string for an inferred type
+prompt: |
+  In src/click/types.py, the function convert_type picks a ParamType for a
+  parameter. When no type is given, the Python type may instead be inferred from
+  the default value. Select the lines (the `if` statement and its body) that
+  return the string type in the case where the type was inferred from the
+  default and is not one of the built-in types str, int, float or bool.
+answer:
+  kind: location
+  path: src/click/types.py
+  anchor: [1384, 1385]
+  window: [1383, 1386]
+hints:
+  - Look at how the function records whether the type it is working with was passed in or guessed.
+solution: solutions/click-find-004.md
+tags: [parameters, parsing]
+authors: [agent-author-6]
+verified_by: [agent:blind-8]

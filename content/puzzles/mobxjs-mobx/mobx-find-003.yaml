@@ -1,0 +1,22 @@
+id: mobx-find-003
+snapshot: mobxjs-mobx@b05f0de
+type: find
+difficulty: easy
+title: Deferring an observable's release
+prompt: |
+  In packages/mobx/src/core/observable.ts, `removeObserver` does not release an observable
+  as soon as its last observer leaves. Instead it calls a function in the same file that
+  flags the observable as pending and appends it to a global list, which is only processed
+  when the outermost batch ends. Select the function that flags and appends the observable
+  (not the one that later processes the list). Select a function.
+answer:
+  kind: symbol
+  id: packages/mobx/src/core/observable.ts#queueForUnobservation
+  accept: []
+  accept_reasons: []
+hints:
+  - Look at what `removeObserver` does once the observer set becomes empty.
+solution: solutions/mobx-find-003.md
+tags: [dependency-tracking, batching]
+authors: [agent-author-4]
+verified_by: [agent:blind-6]

@@ -1,0 +1,26 @@
+id: hono-trace-002
+snapshot: honojs-hono@17ad0e2
+type: trace
+difficulty: easy
+title: From c.redirect to the response builder
+prompt: |
+  In src/context.ts, start at `Context.redirect`, called with a location and no status.
+  List the chain of functions, in call order, where each one calls the next, until the
+  private method of `Context` that combines the prepared headers and the status into a new
+  `Response` is reached. Include the start and the final function. Direct calls only: each
+  entry must be called from the body of the one before it. Skip constructors, built-ins
+  and third-party or platform calls.
+answer:
+  kind: sequence
+  ids:
+    - src/context.ts#Context.redirect
+    - src/context.ts#Context.newResponse
+    - src/context.ts#Context.#newResponse
+  accept_sequences: []
+  accept_reasons: []
+hints:
+  - "`redirect` makes two calls on `this`. Only one of them builds the response it returns."
+solution: solutions/hono-trace-002.md
+tags: [redirects, responses]
+authors: [agent-author-5]
+verified_by: [agent:blind-7]

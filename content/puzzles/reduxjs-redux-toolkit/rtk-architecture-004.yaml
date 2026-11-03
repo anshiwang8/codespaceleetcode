@@ -1,0 +1,43 @@
+id: rtk-architecture-004
+snapshot: reduxjs-redux-toolkit@0fd611c
+type: architecture
+difficulty: hard
+title: A slice reducer and extraReducers on one type
+prompt: |
+  In packages/toolkit/src/, a slice is created with:
+
+  ```ts
+  createSlice({
+    name: 'counter',
+    initialState: { value: 0 },
+    reducers: { added(state) { state.value += 1 } },
+    extraReducers: (builder) => {
+      builder
+        .addCase('counter/added', (state) => { state.value += 10 })
+        .addMatcher((action) => action.type.endsWith('/added'), (state) => { state.value *= 2 })
+        .addDefaultCase((state) => { state.value = -1 })
+    },
+  })
+  ```
+
+  The slice's `reducer` is then called with the state `{ value: 0 }` and the action
+  `{ type: 'counter/added' }`. Following the code from `createSlice` in createSlice.ts,
+  what is `value` in the state it returns? Select one option.
+answer:
+  kind: choice
+  option: d
+choices:
+  - id: a
+    label: "20"
+  - id: b
+    label: "1"
+  - id: c
+    label: "22"
+  - id: d
+    label: "2"
+hints:
+  - "Look at how `buildReducer` in createSlice.ts combines the slice's own case reducers with the ones from `extraReducers` before calling `createReducer`."
+solution: solutions/rtk-architecture-004.md
+tags: [reducers, create-slice]
+authors: [agent-author-4]
+verified_by: [agent:blind-6]

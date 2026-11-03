@@ -1,0 +1,23 @@
+id: ajv-find-003
+snapshot: ajv-validator-ajv@f177fe3
+type: find
+difficulty: easy
+title: Counting characters for maxLength
+prompt: |
+  The `maxLength` and `minLength` keywords are implemented in
+  lib/vocabularies/validation/limitLength.ts. With default options (the `unicode` option is
+  not set to false), the generated code does not compare the string's `.length`. Instead it
+  calls a helper function at validation time that counts the string's characters. Select
+  that helper function, the one that does the counting (not the function that makes it
+  available to the generated code). Select a function.
+answer:
+  kind: symbol
+  id: lib/runtime/ucs2length.ts#ucs2length
+  accept: []
+  accept_reasons: []
+hints:
+  - Look at how the keyword's `code` builds the length expression when `unicode` is not false, and follow the import.
+solution: solutions/ajv-find-003.md
+tags: [code-generation, validation]
+authors: [agent-author-5]
+verified_by: [agent:blind-7]

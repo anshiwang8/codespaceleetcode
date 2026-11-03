@@ -1,0 +1,32 @@
+id: httpx-trace-002
+snapshot: encode-httpx@b5addb6
+type: trace
+difficulty: medium
+title: Sizing a multipart upload
+prompt: |
+  Start at Request.__init__ in httpx/_models.py, for a request built with a
+  `files=` argument (a dict of file uploads) and no other body argument (no
+  `content`, `data`, `json` or `stream`). Select the chain of functions and
+  methods, in call order, where each one directly calls the next, ending at the
+  method that adds up the encoded byte length of the whole multipart body (or
+  gives up and returns None when one part's length can't be known upfront).
+  Include it.
+  Direct calls only. Skip class constructors (such as URL, Headers or
+  MultipartStream), standard-library calls, and calls that are not on the chain
+  (such as get_multipart_boundary_from_content_type or _prepare).
+answer:
+  kind: sequence
+  ids:
+    - httpx/_models.py#Request.__init__
+    - httpx/_content.py#encode_request
+    - httpx/_content.py#encode_multipart_data
+    - httpx/_multipart.py#MultipartStream.get_headers
+    - httpx/_multipart.py#MultipartStream.get_content_length
+  accept_sequences: []
+  accept_reasons: []
+hints:
+  - The total length is needed to decide which header describes the body.
+solution: solutions/httpx-trace-002.md
+tags: [parsing, http]
+authors: [agent-author-6]
+verified_by: [agent:blind-8]

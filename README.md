@@ -1,6 +1,6 @@
 # Codebase Puzzles
 
-LeetCode-style puzzles set inside real open-source repos, each pinned to a commit. You read the code in a browser IDE and answer by clicking on it. Answers are graded on the server by exact ID. There are 85 puzzles across 15 TypeScript and Python repos.
+LeetCode-style puzzles set inside real open-source repos, each pinned to a commit. You read the code in a browser IDE and answer by clicking on it. Answers are graded on the server by exact ID. There are 100 puzzles across 15 TypeScript and Python repos.
 
 ## Run it on localhost
 

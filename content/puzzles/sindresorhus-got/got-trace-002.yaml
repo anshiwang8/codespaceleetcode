@@ -1,0 +1,37 @@
+id: got-trace-002
+snapshot: sindresorhus-got@6b5aafc
+type: trace
+difficulty: hard
+title: From a 503 in stream mode to the retry delay
+prompt: |
+  A request is made with `got.stream(url)` and default options (so `throwHttpErrors` is
+  true), with no cache and no HTTP/2, and the caller has attached a listener for the
+  stream's `retry` event. The request is sent without any error, and the server answers
+  the first attempt with status 503 and no `Location` header. No error is thrown or emitted
+  anywhere along the way other than the error that got itself creates for the 503 status.
+
+  Starting at `Request._onRequest` in source/core/index.ts, list the functions called, in
+  order, until `calculateRetryDelay` in source/core/calculate-retry-delay.ts is called for
+  this response. Direct calls only: each entry must be called from the body of the one
+  before it (a call inside an inline callback counts as part of its enclosing function).
+  Skip constructors, getters, and standard-library or third-party calls. Include the start
+  and the final function.
+answer:
+  kind: sequence
+  ids:
+    - source/core/index.ts#Request._onRequest
+    - source/core/index.ts#Request._onResponse
+    - source/core/index.ts#Request._onResponseBase
+    - source/core/index.ts#Request._beforeError
+    - source/core/calculate-retry-delay.ts#calculateRetryDelay
+  accept_sequences: []
+  accept_reasons: []
+hints:
+  - In stream mode there is no promise wrapper to turn a bad status into an error. Find where the stream code does it.
+validator_overrides:
+  - check: sequence-alternate-path
+    reason: Every other path of equal or shorter length reaches calculateRetryDelay through a call to Request._beforeError that runs only on a failure other than the 503 status, from the error and close listeners in Request._onRequest, from the body-sending methods (_sendBody, _onBodyError, _writeBodyInChunks), or from the catch block of Request._onResponse. The prompt fixes the runtime path so that no error is thrown or emitted except the HTTPError that _onResponseBase creates for the 503, so none of those calls runs.
+solution: solutions/got-trace-002.md
+tags: [retry, errors, request-lifecycle]
+authors: [agent-author-5]
+verified_by: [agent:blind-7]
