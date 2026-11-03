@@ -11,13 +11,13 @@ LeetCode-style puzzles set inside real open-source repos pinned to a commit. v1 
 - `web/` is the Next.js App Router app (TypeScript strict), deployed on Vercel.
 - `ingest/` is the Python pipeline (uv): clone, filter, SCIP index, upload to R2, seed, validate.
 - `content/` holds `repos.yaml`, `schema/`, `puzzles/<repo-slug>/<id>.yaml`, `solutions/<id>.md`, and `blind-attempts.json` (each blind solver's first graded result).
-- `supabase/migrations/` holds SQL migrations. Never edit an applied migration; add a new one.
+- `supabase/migrations/` holds SQL migrations. Never edit an applied migration; add a new one. Hosted Supabase gives clients every privilege on a new table or sequence, so a migration that adds one must enable RLS, revoke `anon` and `authenticated`, and grant back only what clients may read. `web/tests/rls.test.ts` checks this.
 - `supabase/local/shim.sql` adds what hosted Supabase provides, for the local database only.
 - `web/lib/api-types.ts` holds the API response shapes the routes and UI share.
 
 ## Non-negotiable rules
 
-1. **Answer keys never reach the client.** `answer_json` and solutions are read only in server routes through the server-side database connection (the service role on Supabase, `DATABASE_URL` on localhost). No answer data in props, page payloads, logs sent to the browser, or error messages. RLS denies client reads on `puzzles.answer_json` and `solutions`.
+1. **Answer keys never reach the client.** `answer_json` and solutions are read only in server routes through the server-side database connection (`pg` with `DATABASE_URL`, in every environment). No answer data in props, page payloads, logs sent to the browser, or error messages. RLS denies client reads on `puzzles.answer_json` and `solutions`.
 2. **Answers are canonical IDs.** Files are `path`, symbols are `path#Qualified.name[~N]`, locations are `path:Lstart-Lend`. The grader compares IDs. Never add fuzzy matching, string similarity, case-insensitive matching, or LLM grading.
 3. **Users select answers, never type them.** Every answer input in the UI is built from clicks on the tree, symbols, or lines.
 4. **Snapshots are immutable.** Never change the SHA of an existing snapshot. A newer commit means a new snapshot.

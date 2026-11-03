@@ -147,4 +147,57 @@ describe.skipIf(!hasDatabase)("row-level security", () => {
     const { rows } = await client.query("select answer_json from puzzles where slug = 'fx-hidden'");
     expect(rows).toHaveLength(1);
   });
+
+  // Hosted Supabase grants clients everything on a new table in public, and the shim does the same,
+  // so a migration that adds a table without locking it down fails here.
+  describe("every migration's tables", () => {
+    it("start out open to clients, as on hosted Supabase", async () => {
+      await client.query("create table rls_probe (id int)");
+      const { rows } = await client.query<{ open: boolean }>(
+        "select has_table_privilege('anon', 'rls_probe', 'select') as open",
+      );
+      expect(rows[0]?.open).toBe(true);
+    });
+
+    it("have row-level security on", async () => {
+      const { rows } = await client.query<{ relname: string }>(
+        `select relname from pg_class
+          where relnamespace = 'public'::regnamespace and relkind in ('r', 'p') and not relrowsecurity`,
+      );
+      expect(rows).toEqual([]);
+    });
+
+    it("give clients only the reads the migrations grant", async () => {
+      const codeIndex = ["call_edges", "files", "occurrences", "repos", "snapshots", "symbols"];
+      const { rows } = await client.query<{ grantee: string; table_name: string; privilege_type: string }>(
+        `select grantee, table_name, privilege_type from information_schema.role_table_grants
+          where table_schema = 'public' and grantee in ('anon', 'authenticated')
+          order by grantee, table_name, privilege_type`,
+      );
+      const expected = [
+        ...codeIndex.map((table) => ["anon", table]),
+        ...[...codeIndex, "progress", "submissions", "users"].sort().map((table) => ["authenticated", table]),
+      ].map(([grantee, table_name]) => ({ grantee, table_name, privilege_type: "SELECT" }));
+      expect(rows).toEqual(expected);
+      // puzzles is readable only column by column, which is what keeps answer_json out.
+      const columns = await client.query<{ privilege_type: string }>(
+        `select distinct privilege_type from information_schema.column_privileges
+          where table_schema = 'public' and grantee in ('anon', 'authenticated')`,
+      );
+      expect(columns.rows).toEqual([{ privilege_type: "SELECT" }]);
+    });
+
+    it("give clients no sequences to advance", async () => {
+      const { rows } = await client.query<{ sequence: string }>(
+        // Materialized, so has_sequence_privilege only ever sees sequences: the planner may otherwise
+        // test it on an index first, which is an error rather than false.
+        `with sequences as materialized (
+           select oid, relname from pg_class where relnamespace = 'public'::regnamespace and relkind = 'S'
+         )
+         select s.relname as sequence from sequences s, unnest(array['anon', 'authenticated']) as r(role)
+          where has_sequence_privilege(r.role, s.oid, 'usage') or has_sequence_privilege(r.role, s.oid, 'update')`,
+      );
+      expect(rows).toEqual([]);
+    });
+  });
 });

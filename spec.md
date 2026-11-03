@@ -164,7 +164,7 @@ A snapshot is immutable. To move a repo to a newer commit, create a new snapshot
 
 ## 6. Validation pipeline (CI)
 
-`content/` changes run `pnpm validate` (calls `uv run ingest validate`). A puzzle merges only if all checks pass. It needs the snapshots in `ingest/out/`, which aren't committed, so CI has to build or restore them first. No CI workflow exists yet.
+`content/` changes run `pnpm validate` (calls `uv run python -m ingest validate`). A puzzle merges only if all checks pass. It needs the snapshots in `ingest/out/`, which aren't committed, so CI has to build or restore them first. No CI workflow exists yet.
 
 A content folder with no puzzles fails, because seeding treats a puzzle missing from content as removed. Override reasons stay in the puzzle file and aren't printed, since they can name the answer.
 
@@ -258,10 +258,11 @@ puzzle list → puzzle page
   → GET puzzle (prompt, type, answer kind, count for sets; no answer key)
   → manifest.json from CDN → file tree
   → open file → raw file from CDN → Monaco
-  → hover / click symbol → /api/symbols (definition, references)
-  → search → /api/search
+  → open file → /api/snapshots/:id/symbols/outline (the file's symbols)
+  → hover / click symbol → /api/snapshots/:id/symbols (definition, references)
+  → search → /api/snapshots/:id/search
   → "Select as answer" builds the submission from canonical IDs
-  → POST /api/puzzles/:id/submit → server grades → { correct }
+  → POST /api/puzzles/:slug/submit → server grades → { correct, attempts }
   → on correct → GET solution
 ```
 
@@ -273,7 +274,8 @@ The source of truth is `supabase/migrations/`.
 
 ```sql
 repos        (id, slug, url, language, license)
-snapshots    (id, repo_id, sha, name, manifest_url, indexed_at)      -- name = <slug>@<sha>
+snapshots    (id, repo_id, sha, name, manifest_url, indexed_at,
+              content_hash)                                          -- name = <slug>@<sha>; hash of the built files
 files        (id, snapshot_id, path, size, language, content)        -- content: pg_trgm index
 symbols      (id, snapshot_id, file_id, symbol_id, name, kind,
               start_line, end_line)                                  -- symbol_id = canonical ID
@@ -289,7 +291,9 @@ submissions  (id, user_id, puzzle_id, answer_json, correct, created_at,
 progress     (user_id, puzzle_id, status, attempts, solved_at)        -- status: attempted | solved
 ```
 
-`answer_json` and `solutions` are only readable through server routes, using the service role on Supabase and `DATABASE_URL` on localhost. Row-level security denies client access.
+`answer_json` and `solutions` are only readable through server routes. The server connects with `pg` and `DATABASE_URL` in every environment, and refuses to run in production without it; nothing uses a Supabase client or the service role key. Row-level security and column grants deny client access.
+
+Hosted Supabase grants `anon` and `authenticated` everything on each new table, sequence and function in `public`, and `supabase/local/shim.sql` does the same locally. So a migration that adds a table must enable row-level security, revoke client privileges on it and its sequences, and grant back only what clients may read. `web/tests/rls.test.ts` fails if a table has no row-level security, if clients hold any grant beyond the expected reads, or if they can use a sequence. Migration 0004 revokes the sequence privileges 0001 missed.
 
 ---
 

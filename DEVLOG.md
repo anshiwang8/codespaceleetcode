@@ -1,5 +1,22 @@
 # DEVLOG
 
+## Fix doc drift, and lock down client sequences
+
+Type: Fix, Change
+
+Goal: Make `spec.md` and `CLAUDE.md` describe what the code does, and make the rule about locking down new tables something a test enforces, not just a note.
+
+What should be done: Correct the stale routes, commands, columns and connection details, and document what every new migration must do on hosted Supabase.
+
+What was done (technical):
+
+- **spec.md.** Section 6 runs `uv run python -m ingest validate`. Section 7's runtime flow names the real routes under `/api/snapshots/:id/`, plus the outline call, and submit returns `{ correct, attempts }` at `/api/puzzles/:slug/submit`. Section 8 lists `snapshots.content_hash`.
+- **The service role was never used.** `spec.md` section 8 and `CLAUDE.md` rule 1 said the server reads answer keys through the Supabase service role. Nothing uses a Supabase client or that key: the server uses `pg` with `DATABASE_URL` everywhere, and refuses to run in production without it. Both now say so. The rule itself is unchanged.
+- **New tables on hosted Supabase.** Supabase grants `anon` and `authenticated` everything on each new table, sequence and function in `public`. `supabase/local/shim.sql` now does the same, so the local database behaves like hosted. New tests in `web/tests/rls.test.ts` fail if a table has no row-level security, if clients hold any grant beyond the expected reads, or if they can use a sequence. A throwaway migration that created a table carelessly failed all three.
+- **That found a real gap.** 0001 revoked client access to all tables, but sequences aren't tables, so on hosted Supabase clients kept `USAGE` and `UPDATE` on every ID sequence. `UPDATE` allows `setval`, which could wind a sequence back onto existing rows. PostgREST doesn't expose sequences directly, so it was hard to reach, but clients never need it. Migration `0004_revoke_client_sequences.sql` revokes it.
+- `CLAUDE.md` says what a migration that adds a table must do. The macOS notes were already added with the macOS work.
+- 485 ingest tests (1 Windows-only skip), 482 web tests against real Postgres and 54 Playwright tests pass, e2e twice in a row. All 85 puzzles validate.
+
 ## Hardening from the repo audit
 
 Type: Fix, Removal
