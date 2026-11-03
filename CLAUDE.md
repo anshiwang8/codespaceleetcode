@@ -102,7 +102,7 @@ DEV_AUTH_TEST_HOST=
 TEST_DATABASE_URL=
 ```
 
-None of these are needed on localhost: `DATABASE_URL` and `SNAPSHOT_DIR` have local defaults outside production.
+None of these are needed on localhost: `DATABASE_URL` and `SNAPSHOT_DIR` have local defaults outside production. `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` are reserved for Supabase sign-in, which isn't built, so nothing reads them yet. The server reaches the database only through `DATABASE_URL`.
 
 `ingest/.env.example`:
 
