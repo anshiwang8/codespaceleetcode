@@ -1,7 +1,6 @@
 import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { POST as giveUpRoute } from "@/app/api/puzzles/[slug]/give-up/route";
 import { GET as detailRoute } from "@/app/api/puzzles/[slug]/route";
 import { GET as solutionRoute } from "@/app/api/puzzles/[slug]/solution/route";
 import { POST as submitRoute } from "@/app/api/puzzles/[slug]/submit/route";
@@ -9,7 +8,7 @@ import { GET as listRoute } from "@/app/api/puzzles/route";
 import type { PuzzleDetail, PuzzleListResponse, StatsResponse } from "@/lib/api-types";
 import { GET as statsRoute } from "@/app/api/me/stats/route";
 import { getPool } from "@/lib/server/db";
-import { HANDLE_SYMBOL, PUBLISHED_PUZZLE_COUNT, seedFixtures, type Fixtures } from "./fixtures";
+import { HANDLE_SYMBOL, PUBLISHED_PUZZLE_COUNT, ROUTER_FILE, seedFixtures, type Fixtures } from "./fixtures";
 import { expectNoAnswerData, hasDatabase, makeRequest, params, signIn } from "./helpers";
 
 async function getList(query = "", cookie?: string): Promise<PuzzleListResponse> {
@@ -20,6 +19,15 @@ async function getList(query = "", cookie?: string): Promise<PuzzleListResponse>
 
 async function getDetail(slug: string, cookie?: string): Promise<Response> {
   return detailRoute(makeRequest(`/api/puzzles/${slug}`, { cookie }), params({ slug }));
+}
+
+/** A graded wrong answer to `fx-file`, which leaves it `attempted`. */
+async function missFile(cookie: string): Promise<void> {
+  const response = await submitRoute(
+    makeRequest("/api/puzzles/fx-file/submit", { cookie, body: { kind: "file", path: ROUTER_FILE } }),
+    params({ slug: "fx-file" }),
+  );
+  expect(await response.json()).toMatchObject({ correct: false });
 }
 
 async function solve(slug: string, cookie: string): Promise<void> {
@@ -223,15 +231,12 @@ describe.skipIf(!hasDatabase)("puzzle reads", () => {
       expect(await response.json()).toEqual({ bodyMd: "SOLUTIONTOKEN for fx-symbol" });
     });
 
-    it("unlocks on giving up", async () => {
-      const cookie = await signIn("sol-gave-up");
-      await giveUpRoute(
-        makeRequest("/api/puzzles/fx-file/give-up", { cookie, method: "POST" }),
-        params({ slug: "fx-file" }),
-      );
+    it("stays locked after only wrong answers", async () => {
+      const cookie = await signIn("sol-attempted");
+      await missFile(cookie);
       const response = await getSolution("fx-file", cookie);
-      expect(response.status).toBe(200);
-      expect(await response.json()).toEqual({ bodyMd: "SOLUTIONTOKEN for fx-file" });
+      expect(response.status).toBe(403);
+      expectNoAnswerData(await response.text());
     });
 
     it("isn't unlocked by someone else's solve, or by solving a different puzzle", async () => {
@@ -267,10 +272,7 @@ describe.skipIf(!hasDatabase)("puzzle reads", () => {
     it("counts published puzzles, and only `solved` as solved", async () => {
       const cookie = await signIn("stats-user");
       await solve("fx-symbol", cookie);
-      await giveUpRoute(
-        makeRequest("/api/puzzles/fx-file/give-up", { cookie, method: "POST" }),
-        params({ slug: "fx-file" }),
-      );
+      await missFile(cookie);
       const response = await statsRoute(makeRequest("/api/me/stats", { cookie }), undefined);
       expect(await response.json()).toEqual({
         solved: 1,

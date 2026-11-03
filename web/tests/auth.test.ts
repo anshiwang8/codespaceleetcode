@@ -104,7 +104,20 @@ describe("isDevAuthAllowed", () => {
 describe("databaseUrl", () => {
   it("defaults to the local database outside production", () => {
     vi.stubEnv("DATABASE_URL", "");
+    vi.stubEnv("LOCALDB_PORT", "");
     expect(databaseUrl()).toBe("postgres://postgres:postgres@localhost:54329/codebase_puzzles");
+  });
+
+  it("follows LOCALDB_PORT, as pnpm db does", () => {
+    vi.stubEnv("DATABASE_URL", "");
+    vi.stubEnv("LOCALDB_PORT", "54400");
+    expect(databaseUrl()).toBe("postgres://postgres:postgres@localhost:54400/codebase_puzzles");
+  });
+
+  it.each(["0", "70000", "54400x", " "])("rejects LOCALDB_PORT=%j", (port) => {
+    vi.stubEnv("DATABASE_URL", "");
+    vi.stubEnv("LOCALDB_PORT", port);
+    expect(() => databaseUrl()).toThrow("LOCALDB_PORT");
   });
 
   it("is an error in production when unset", () => {

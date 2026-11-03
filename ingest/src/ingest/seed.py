@@ -1,6 +1,7 @@
 """Load repos, snapshots, puzzles and solutions into Postgres."""
 
 import hashlib
+import json
 import os
 import time
 from collections.abc import Callable
@@ -14,13 +15,12 @@ from psycopg.conninfo import conninfo_to_dict
 from psycopg.types.json import Jsonb
 
 from ingest.errors import IngestError
-from ingest.puzzles import Puzzle, resolve_snapshot
+from ingest.grading import is_correct
+from ingest.puzzles import Answer, Puzzle, resolve_snapshot
 from ingest.repos import Repo, load_repos
 from ingest.snapshot_index import read_jsonl, read_manifest
 from ingest.validate import Report, format_report, validate_content
 
-# Only used when SUPABASE_DB_URL is unset. Matches scripts/localdb.mjs's defaults.
-LOCAL_DB_URL = "postgres://postgres:postgres@localhost:54329/codebase_puzzles"
 # Without one, a stopped database hangs for minutes here. A connect_timeout in the URL wins.
 _DEFAULT_CONNECT_TIMEOUT_SECONDS = 10
 
@@ -45,12 +45,27 @@ class PuzzleCounts:
     published: int = 0
     deleted: int = 0
     unpublished_removed: int = 0
+    regraded: int = 0
+
+
+def _local_db_url() -> str:
+    """The `pnpm db` database, on LOCALDB_PORT like scripts/localdb.mjs."""
+    raw = os.environ.get("LOCALDB_PORT", "")
+    if raw == "":
+        port = 54329
+    elif raw.isascii() and raw.isdigit():
+        port = int(raw)
+    else:
+        port = 0
+    if not 1 <= port <= 65535:
+        raise IngestError("LOCALDB_PORT must be a port number.")
+    return f"postgres://postgres:postgres@localhost:{port}/codebase_puzzles"
 
 
 def database_url() -> str:
     url = os.environ.get("SUPABASE_DB_URL")
     if url is None:
-        return LOCAL_DB_URL
+        return _local_db_url()
     if not url.strip():
         raise IngestError("SUPABASE_DB_URL is set but empty. Unset it to use the local database.")
     return url
@@ -142,12 +157,24 @@ def _seed(
         f"{puzzle_counts.published} published. Removed from content: {puzzle_counts.deleted} "
         f"deleted, {puzzle_counts.unpublished_removed} unpublished because users have tried them."
     )
+    if puzzle_counts.regraded:
+        noun = "user's status" if puzzle_counts.regraded == 1 else "users' statuses"
+        echo(
+            f"Answer keys changed: regraded, and {puzzle_counts.regraded} {noun} changed "
+            "(solved or not, or when)."
+        )
 
 
 def _content_hash(directory: Path) -> str:
+    """Everything a load reads. The manifest holds only each file's size, so the bytes count too."""
     digest = hashlib.sha256()
     for name in ("manifest.json", "symbols.jsonl", "occurrences.jsonl", "call_edges.jsonl"):
         digest.update((directory / name).read_bytes())
+    for entry in sorted(read_manifest(directory)["files"], key=lambda file: str(file["path"])):
+        path = str(entry["path"])
+        data = (directory / "files" / path).read_bytes()
+        digest.update(f"\0{path}\0{len(data)}\0".encode())
+        digest.update(data)
     return digest.hexdigest()
 
 
@@ -307,7 +334,7 @@ def _copy_occurrences(
         except KeyError as error:
             raise IngestError(
                 f"{path} has a row with unknown or missing {error}. If that's end_col, the "
-                "snapshot predates it, so re-run `uv run ingest snapshot`."
+                "snapshot predates it, so re-run `uv run python -m ingest snapshot`."
             ) from error
     return count
 
@@ -338,6 +365,9 @@ def _upsert_puzzles(
         if repo is None or repo.snapshot_name not in snapshot_ids:
             raise IngestError(f"{puzzle.id}: its snapshot isn't in the database after loading.")
         published = bool(puzzle.verified_by)
+        previous = connection.execute(
+            "select answer_json from puzzles where slug = %s", (puzzle.id,)
+        ).fetchone()
         row = connection.execute(
             """
             insert into puzzles (
@@ -383,6 +413,8 @@ def _upsert_puzzles(
         puzzle_id, inserted = row
         counts.inserted += inserted
         counts.updated += not inserted
+        if previous is not None and previous[0] != json.loads(json.dumps(puzzle.answer_block)):
+            counts.regraded += _regrade(connection, puzzle_id, puzzle.answer)
         counts.published += published
         body = (content_dir / puzzle.solution).read_text(encoding="utf-8")
         connection.execute(
@@ -396,11 +428,46 @@ def _upsert_puzzles(
     return counts
 
 
+def _regrade(connection: Connection, puzzle_id: int, answer: Answer) -> int:
+    """After a key change, recompute each user's status from their submissions under the new key.
+
+    A user is solved if any submission is correct now, and their solve dates from the first such
+    one. Submissions keep their recorded `correct`, which says how they were graded at the time.
+    Returns how many users' status or solve time changed.
+    """
+    changed = 0
+    users = connection.execute(
+        "select user_id, status, solved_at from progress where puzzle_id = %s", (puzzle_id,)
+    ).fetchall()
+    for user_id, status, solved_at in users:
+        submissions = connection.execute(
+            """
+            select answer_json, created_at from submissions
+             where puzzle_id = %s and user_id = %s order by created_at, id
+            """,
+            (puzzle_id, user_id),
+        ).fetchall()
+        first_correct = next(
+            (created for body, created in submissions if is_correct(answer, body)), None
+        )
+        new_status = "solved" if first_correct is not None else "attempted"
+        if status == "solved" and new_status == "solved":
+            first_correct = solved_at  # Still solved: keep the date they solved it.
+        if (new_status, first_correct) == (status, solved_at):
+            continue
+        connection.execute(
+            "update progress set status = %s, solved_at = %s where puzzle_id = %s and user_id = %s",
+            (new_status, first_correct, puzzle_id, user_id),
+        )
+        changed += 1
+    return changed
+
+
 def _remove_absent_puzzles(connection: Connection, slugs: list[str], counts: PuzzleCounts) -> None:
     """Delete puzzles gone from content, except ones users have tried, which only get unpublished.
 
-    Give-ups count as tried: they have a progress row and no submission, and deleting the puzzle
-    would cascade to that row.
+    A progress row with no submission (the removed give-up feature left these) still counts as
+    tried, since deleting the puzzle would cascade to that row.
     """
     absent = connection.execute(
         """

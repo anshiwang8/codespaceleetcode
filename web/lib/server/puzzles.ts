@@ -164,7 +164,7 @@ export async function getSolution(userId: string, slug: string): Promise<Solutio
   );
   const row = puzzle.rows[0];
   if (!row) return { state: "not_found" };
-  if (row.status !== "solved" && row.status !== "given_up") return { state: "locked" };
+  if (row.status !== "solved") return { state: "locked" };
   const solution = await pool.query<{ body_md: string }>(
     "select body_md from solutions where puzzle_id = $1",
     [row.id],
@@ -173,24 +173,10 @@ export async function getSolution(userId: string, slug: string): Promise<Solutio
   return body === undefined ? { state: "not_found" } : { state: "ok", bodyMd: body };
 }
 
-/** Marks the puzzle given up, except that `solved` stays solved. Null if there's no such puzzle. */
-export async function giveUp(userId: string, slug: string): Promise<PuzzleStatus | null> {
-  const { rows } = await getPool().query<{ status: PuzzleStatus }>(
-    `insert into progress (user_id, puzzle_id, status, gave_up)
-     select $1::uuid, p.id, 'given_up', true from puzzles p where p.slug = $2 and p.published
-     on conflict (user_id, puzzle_id) do update
-       set status = case when progress.status = 'solved' then 'solved' else 'given_up' end,
-           gave_up = progress.gave_up or progress.status <> 'solved'
-     returning status`,
-    [userId, slug],
-  );
-  return rows[0]?.status ?? null;
-}
-
 const PUZZLE_TYPES: PuzzleType[] = ["find", "trace", "architecture"];
 const DIFFICULTIES: Difficulty[] = ["easy", "medium", "hard"];
 
-/** Only `solved` counts as solved: a correct answer after giving up stays out of these numbers. */
+/** Counts puzzles with status `solved`. */
 export async function getStats(userId: string): Promise<StatsResponse> {
   const { rows } = await getPool().query<{
     type: PuzzleType;

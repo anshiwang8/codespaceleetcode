@@ -27,3 +27,10 @@ create or replace function auth.uid() returns uuid
   as $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
 
 grant usage on schema auth to anon, authenticated, service_role;
+
+-- Hosted Supabase grants clients everything on each new table, sequence and function in public, so
+-- a migration that adds one has to lock it down itself. Doing the same here lets the tests catch a
+-- migration that forgets.
+alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
+alter default privileges in schema public grant all on sequences to anon, authenticated, service_role;
+alter default privileges in schema public grant all on functions to anon, authenticated, service_role;

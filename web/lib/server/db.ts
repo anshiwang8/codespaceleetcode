@@ -1,13 +1,20 @@
 import "server-only";
 import { Pool, type PoolClient } from "pg";
 
-const LOCAL_DATABASE_URL = "postgres://postgres:postgres@localhost:54329/codebase_puzzles";
+/** The `pnpm db` port, which scripts/localdb.mjs also reads from LOCALDB_PORT. */
+function localDatabasePort(): number {
+  const raw = process.env.LOCALDB_PORT;
+  if (raw === undefined || raw === "") return 54329;
+  const port = /^[0-9]+$/.test(raw) ? Number(raw) : NaN;
+  if (!(port >= 1 && port <= 65535)) throw new Error("LOCALDB_PORT must be a port number");
+  return port;
+}
 
 export function databaseUrl(): string {
   const url = process.env.DATABASE_URL;
   if (url) return url;
   if (process.env.NODE_ENV === "production") throw new Error("DATABASE_URL is not set");
-  return LOCAL_DATABASE_URL;
+  return `postgres://postgres:postgres@localhost:${localDatabasePort()}/codebase_puzzles`;
 }
 
 // Created on first use, because `next build` loads route modules with no database to talk to.
@@ -37,15 +44,22 @@ export async function closePool(): Promise<void> {
 
 export async function withTransaction<T>(work: (client: PoolClient) => Promise<T>): Promise<T> {
   const client = await getPool().connect();
+  // Set when the connection can't be trusted any more, so the pool destroys it instead of reusing it.
+  let broken: Error | undefined;
   try {
     await client.query("begin");
     const result = await work(client);
     await client.query("commit");
     return result;
   } catch (error) {
-    await client.query("rollback");
+    try {
+      await client.query("rollback");
+    } catch (rollbackError) {
+      // Keep the original error: it says what went wrong, and the rollback failing is a symptom.
+      broken = rollbackError instanceof Error ? rollbackError : new Error("rollback failed");
+    }
     throw error;
   } finally {
-    client.release();
+    client.release(broken);
   }
 }

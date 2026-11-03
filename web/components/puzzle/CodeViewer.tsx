@@ -396,7 +396,7 @@ export default function CodeViewer({
             ...base,
             symbol: result?.symbol ?? null,
             pending: false,
-            referencesCappedAt: result && result.references.length >= REFERENCE_CAP ? REFERENCE_CAP : null,
+            referencesCappedAt: result?.referencesTruncated ? REFERENCE_CAP : null,
           });
         });
       }, CURSOR_DEBOUNCE_MS);

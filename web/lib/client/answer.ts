@@ -23,7 +23,9 @@ export type DraftAction =
   | { type: "pick-location"; id: string }
   | { type: "pick-choice"; option: string }
   | { type: "move"; key: number; to: number }
-  | { type: "remove"; id: string; key?: number }
+  // A set holds each ID once, so it removes by ID. A sequence can hold an ID twice, so it removes by key.
+  | { type: "remove"; id: string }
+  | { type: "remove-item"; key: number }
   | { type: "clear" };
 
 export function emptyDraft(kind: AnswerKind): Draft {
@@ -78,11 +80,11 @@ export function draftReducer(draft: Draft, action: DraftAction): Draft {
       return { ...draft, items };
     }
     case "remove":
-      if (draft.kind === "sequence") {
-        return { ...draft, items: draft.items.filter((item) => item.key !== action.key) };
-      }
-      if (draft.kind === "set") return { ...draft, ids: draft.ids.filter((id) => id !== action.id) };
-      return draft;
+      return draft.kind === "set" ? { ...draft, ids: draft.ids.filter((id) => id !== action.id) } : draft;
+    case "remove-item":
+      return draft.kind === "sequence"
+        ? { ...draft, items: draft.items.filter((item) => item.key !== action.key) }
+        : draft;
     case "clear":
       return emptyDraft(draft.kind);
   }

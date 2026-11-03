@@ -12,6 +12,7 @@ from puzzle_fixtures import CASES, CONTENT, SNAPSHOTS, content_with_case, valida
 from typer.testing import CliRunner
 
 from ingest.cli import app
+from ingest.errors import IngestError
 from ingest.puzzles import SCHEMA_PATH
 from ingest.validate import OVERRIDABLE_CHECKS, Report, format_report, validate_content
 
@@ -32,6 +33,7 @@ FAILING_CHECKS = {
     "set-count",
     "location-window",
     "choice-options",
+    "verifier-not-author",
 }
 
 
@@ -105,6 +107,10 @@ def test_a_written_override_covers_a_heuristic(path: Path, tmp_path: Path) -> No
     report = validate_content(content_with_case(tmp_path / "c", text, path.stem), SNAPSHOTS)
     assert report.ok
     assert check in {o.check for result in report.results for o in result.overridden}
+    # The reason is author prose that can name the answer, so it stays in the file, out of logs.
+    output = "\n".join(format_report(report))
+    assert f"override [{check}]" in output
+    assert "A checked false positive." not in output
 
 
 @pytest.mark.parametrize(
@@ -185,10 +191,10 @@ def test_file_must_be_in_its_repo_directory(tmp_path: Path) -> None:
     assert _checks(validate_content(content, SNAPSHOTS)) == {"file-location"}
 
 
-def test_empty_content_dir_passes(tmp_path: Path) -> None:
-    report = validate_content(tmp_path, SNAPSHOTS)
-    assert report.ok
-    assert format_report(report) == ["Validated 0 puzzles: 0 passed, 0 failed."]
+def test_content_with_no_puzzles_is_an_error(tmp_path: Path) -> None:
+    # Passing would let `seed` treat every puzzle in the database as removed from content.
+    with pytest.raises(IngestError, match="No puzzles"):
+        validate_content(tmp_path, SNAPSHOTS)
 
 
 def test_unverified_puzzles_are_valid_and_reported_as_unpublished() -> None:

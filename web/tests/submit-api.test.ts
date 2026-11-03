@@ -1,5 +1,6 @@
+import { existsSync } from "node:fs";
+import path from "node:path";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { POST as giveUpRoute } from "@/app/api/puzzles/[slug]/give-up/route";
 import { GET as detailRoute } from "@/app/api/puzzles/[slug]/route";
 import { POST as submitRoute } from "@/app/api/puzzles/[slug]/submit/route";
 import type { PuzzleDetail } from "@/lib/api-types";
@@ -21,10 +22,6 @@ function submit(slug: string, cookie: string | undefined, body: unknown): Promis
   return submitRoute(makeRequest(`/api/puzzles/${slug}/submit`, { cookie, body }), params({ slug }));
 }
 
-function giveUp(slug: string, cookie?: string): Promise<Response> {
-  return giveUpRoute(makeRequest(`/api/puzzles/${slug}/give-up`, { cookie, method: "POST" }), params({ slug }));
-}
-
 async function detail(slug: string, cookie: string): Promise<PuzzleDetail> {
   const response = await detailRoute(makeRequest(`/api/puzzles/${slug}`, { cookie }), params({ slug }));
   return (await response.json()) as PuzzleDetail;
@@ -34,10 +31,9 @@ async function progressRow(login: string, slug: string) {
   const { rows } = await getPool().query<{
     status: string;
     attempts: number;
-    gave_up: boolean;
     solved_at: Date | null;
   }>(
-    `select pr.status, pr.attempts, pr.gave_up, pr.solved_at
+    `select pr.status, pr.attempts, pr.solved_at
        from progress pr
        join users u on u.id = pr.user_id
        join puzzles p on p.id = pr.puzzle_id
@@ -320,60 +316,25 @@ describe.skipIf(!hasDatabase)("POST /api/puzzles/:slug/submit", () => {
     });
   });
 
-  describe("giving up", () => {
-    it("needs sign-in", async () => {
-      const response = await giveUp("fx-file");
-      expect(response.status).toBe(401);
-      expectNoAnswerData(await response.text());
+  describe("giving up was removed", () => {
+    it("has no route", () => {
+      const route = path.resolve(import.meta.dirname, "../app/api/puzzles/[slug]/give-up");
+      expect(existsSync(route)).toBe(false);
     });
 
-    it.each(["fx-hidden", "no-such-puzzle", "a b"])("404s on %s", async (slug) => {
-      expect((await giveUp(slug, await signIn("giveup-404"))).status).toBe(404);
-    });
-
-    it("marks the puzzle given up, and does it only once", async () => {
-      const cookie = await signIn("giveup-basic");
-      expect(await (await giveUp("fx-file", cookie)).json()).toEqual({ status: "given_up" });
-      expect(await (await giveUp("fx-file", cookie)).json()).toEqual({ status: "given_up" });
-      expect(await progressRow("giveup-basic", "fx-file")).toMatchObject({
-        status: "given_up",
-        attempts: 0,
-        gave_up: true,
-        solved_at: null,
-      });
-    });
-
-    it("keeps attempts already made", async () => {
-      const cookie = await signIn("giveup-attempts");
+    it("the database no longer accepts a given_up status", async () => {
+      const cookie = await signIn("no-giveup-status");
       await submit("fx-file", cookie, { kind: "file", path: ROUTER_FILE });
-      await giveUp("fx-file", cookie);
-      expect(await progressRow("giveup-attempts", "fx-file")).toMatchObject({ status: "given_up", attempts: 1 });
-    });
-
-    it("says correct to a right answer afterward, but the status stays given_up", async () => {
-      const cookie = await signIn("giveup-then-right");
-      await giveUp("fx-file", cookie);
-      const response = await submit("fx-file", cookie, { kind: "file", path: CONFIG_FILE });
-      expect(await response.json()).toEqual({ correct: true, attempts: 1 });
-      expect(await progressRow("giveup-then-right", "fx-file")).toMatchObject({
-        status: "given_up",
-        gave_up: true,
-        solved_at: null,
-      });
-    });
-
-    it("stays given_up after a wrong answer, too", async () => {
-      const cookie = await signIn("giveup-then-wrong");
-      await giveUp("fx-file", cookie);
-      await submit("fx-file", cookie, { kind: "file", path: ROUTER_FILE });
-      expect(await progressRow("giveup-then-wrong", "fx-file")).toMatchObject({ status: "given_up" });
-    });
-
-    it("can't turn a solved puzzle into a given-up one", async () => {
-      const cookie = await signIn("solved-then-giveup");
-      await submit("fx-file", cookie, { kind: "file", path: CONFIG_FILE });
-      expect(await (await giveUp("fx-file", cookie)).json()).toEqual({ status: "solved" });
-      expect(await progressRow("solved-then-giveup", "fx-file")).toMatchObject({ status: "solved", gave_up: false });
+      const user = await getPool().query<{ id: string }>(
+        "select id from users where github_login = 'no-giveup-status'",
+      );
+      await expect(
+        getPool().query(
+          `update progress set status = 'given_up'
+            where user_id = $1 and puzzle_id = (select id from puzzles where slug = 'fx-file')`,
+          [user.rows[0]?.id],
+        ),
+      ).rejects.toThrow(/progress_status_check/);
     });
   });
 

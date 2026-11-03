@@ -10,14 +10,14 @@ LeetCode-style puzzles set inside real open-source repos pinned to a commit. v1 
 
 - `web/` is the Next.js App Router app (TypeScript strict), deployed on Vercel.
 - `ingest/` is the Python pipeline (uv): clone, filter, SCIP index, upload to R2, seed, validate.
-- `content/` holds `repos.yaml`, `schema/`, `puzzles/<repo-slug>/<id>.yaml`, `solutions/<id>.md`.
-- `supabase/migrations/` holds SQL migrations. Never edit an applied migration; add a new one.
+- `content/` holds `repos.yaml`, `schema/`, `puzzles/<repo-slug>/<id>.yaml`, `solutions/<id>.md`, and `blind-attempts.json` (each blind solver's first graded result).
+- `supabase/migrations/` holds SQL migrations. Never edit an applied migration; add a new one. Hosted Supabase gives clients every privilege on a new table or sequence, so a migration that adds one must enable RLS, revoke `anon` and `authenticated`, and grant back only what clients may read. `web/tests/rls.test.ts` checks this.
 - `supabase/local/shim.sql` adds what hosted Supabase provides, for the local database only.
 - `web/lib/api-types.ts` holds the API response shapes the routes and UI share.
 
 ## Non-negotiable rules
 
-1. **Answer keys never reach the client.** `answer_json` and solutions are read only in server routes through the server-side database connection (the service role on Supabase, `DATABASE_URL` on localhost). No answer data in props, page payloads, logs sent to the browser, or error messages. RLS denies client reads on `puzzles.answer_json` and `solutions`.
+1. **Answer keys never reach the client.** `answer_json` and solutions are read only in server routes through the server-side database connection (`pg` with `DATABASE_URL`, in every environment). No answer data in props, page payloads, logs sent to the browser, or error messages. RLS denies client reads on `puzzles.answer_json` and `solutions`.
 2. **Answers are canonical IDs.** Files are `path`, symbols are `path#Qualified.name[~N]`, locations are `path:Lstart-Lend`. The grader compares IDs. Never add fuzzy matching, string similarity, case-insensitive matching, or LLM grading.
 3. **Users select answers, never type them.** Every answer input in the UI is built from clicks on the tree, symbols, or lines.
 4. **Snapshots are immutable.** Never change the SHA of an existing snapshot. A newer commit means a new snapshot.
@@ -50,7 +50,7 @@ From the repo root:
 
 ```
 pnpm local               # database, seed, site at http://127.0.0.1:3000 (PORT changes the port). Needs snapshots: see README.md on a fresh clone
-pnpm db                  # start local Postgres, apply migrations (stays running)
+pnpm db                  # start local Postgres, apply migrations (stays running). LOCALDB_PORT changes its port, and pnpm dev, the tests and ingest seed follow it
 pnpm db:reset            # delete all local database data
 pnpm dev                 # web app, bound to 127.0.0.1 because dev login trusts the Host header
 pnpm test                # all unit tests: test:ingest, then test:web. Web tests fail without pnpm db running or TEST_DATABASE_URL; ALLOW_NO_DB=1 skips the database ones
@@ -68,7 +68,7 @@ uv run python -m ingest snapshot <slug>   # fetch, filter, index, write to inges
 uv run python -m ingest snapshot-all [--force]   # every repo in repos.yaml. --force after any pipeline change, since finished snapshots are skipped
 uv run python -m ingest seed [--force]    # validate, then load snapshots and puzzles into Postgres
 uv run python -m ingest blind-export --out <file> [--repo <slug>]   # puzzles with only what a solver may see
-uv run python -m ingest blind-check <answers.json> --solver <name> [--write]   # grade a blind solve; prints pass or fail, never the key
+uv run python -m ingest blind-check <answers.json> --solver <name> [--write]   # grade a blind solve; prints pass or fail, never the key. One graded attempt per solver per puzzle version
 uv run python -m pytest         # always `python -m`: Windows Application Control can block generated .exe launchers
 uv run ruff check .
 uv run ruff format --check .
@@ -82,6 +82,8 @@ uv run python scripts/regen_fixture_index.py  # rebuild the test fixture's index
 `content/schema/grading-cases.json` is run by both the web and Python test suites, so the two graders can't drift apart. Add new grading rules there.
 
 Snapshots need the indexers on PATH: `npm install -g @sourcegraph/scip-typescript@0.6.0 @sourcegraph/scip-python@0.6.8`.
+
+Platforms: developed on Windows, and also run on macOS (Apple silicon, Node 26). Install pnpm with `npm install -g pnpm@12.6.0` when corepack isn't available. `pnpm-workspace.yaml`'s `allowBuilds` must set the `@embedded-postgres/<platform>` package to `true` on macOS and Linux, since its install script links Postgres's libraries; an unlisted package makes `pnpm install` fail. Windows runs with it set to `false`. Scripts that spawn `pnpm` need a shell only on Windows. Playwright's Desktop Chrome profile reports a Windows user agent, so Monaco uses Ctrl as its click modifier in e2e even on macOS.
 
 ## Environment
 
@@ -100,7 +102,7 @@ DEV_AUTH_TEST_HOST=
 TEST_DATABASE_URL=
 ```
 
-None of these are needed on localhost: `DATABASE_URL` and `SNAPSHOT_DIR` have local defaults outside production.
+None of these are needed on localhost: `DATABASE_URL` and `SNAPSHOT_DIR` have local defaults outside production. `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` are reserved for Supabase sign-in, which isn't built, so nothing reads them yet. The server reaches the database only through `DATABASE_URL`.
 
 `ingest/.env.example`:
 
@@ -114,7 +116,7 @@ SUPABASE_DB_URL=
 
 ## DEVLOG
 
-Keep `DEVLOG.md` updated whenever a feature or fix lands. Each entry:
+Keep `DEVLOG.md` updated whenever a feature or fix lands. In the same change, update `CLAUDE.md` (rules, layout, commands, env) and `spec.md` (design, API, data model, validator checks) if what you changed makes them stale, and close or add "Still open" items in the DEVLOG. Each entry:
 
 ```
 Type: Addition | Fix | Change | Removal

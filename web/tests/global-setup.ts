@@ -12,7 +12,7 @@ declare module "vitest" {
 // Tests get their own database on the same server, so they never touch local dev data. It's
 // dropped and rebuilt from the migrations on every run, which also tests the migrations.
 const TEST_DATABASE = "codebase_puzzles_test";
-const DEFAULT_SERVER = "postgres://postgres:postgres@localhost:54329/postgres";
+const DEFAULT_SERVER = `postgres://postgres:postgres@localhost:${process.env.LOCALDB_PORT || 54329}/postgres`;
 const LOCAL_HOSTNAMES = new Set(["localhost", "127.0.0.1", "[::1]"]);
 const REPO_ROOT = path.resolve(import.meta.dirname, "../..");
 

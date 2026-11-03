@@ -7,7 +7,6 @@ const STATUS_GLYPHS: Record<PuzzleStatus, string> = {
   unsolved: "·",
   attempted: "○",
   solved: "✓",
-  given_up: "–",
 };
 
 export function PuzzleTable({ puzzles }: { puzzles: PuzzleSummary[] }) {

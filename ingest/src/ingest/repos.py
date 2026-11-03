@@ -11,6 +11,9 @@ from ingest.errors import IngestError
 
 _SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 _SLUG_RE = re.compile(r"^[a-z0-9][a-z0-9._-]*$")
+# git fetches this and the site links to it, so only a plain https URL: no credentials, no spaces,
+# and no other scheme. git's ext:: and file:// run or read locally, and javascript: runs in a link.
+_URL_RE = re.compile(r"^https://[A-Za-z0-9.-]+(?::[0-9]{1,5})?(?:/[A-Za-z0-9._~/-]*)?$")
 _REQUIRED_FIELDS = ("slug", "url", "sha", "language", "license")
 
 
@@ -31,7 +34,14 @@ def load_repos(path: Path) -> list[Repo]:
     raw = yaml.safe_load(path.read_text(encoding="utf-8"))
     if not isinstance(raw, list):
         raise IngestError(f"{path} must contain a list of repos.")
-    return [_parse_entry(entry, path) for entry in cast(list[object], raw)]
+    repos = [_parse_entry(entry, path) for entry in cast(list[object], raw)]
+    seen: set[str] = set()
+    for repo in repos:
+        # Everything finds its repo by slug, so a second entry would be silently ignored.
+        if repo.slug in seen:
+            raise IngestError(f"Slug '{repo.slug}' appears more than once in {path}.")
+        seen.add(repo.slug)
+    return repos
 
 
 def find_repo(path: Path, slug: str) -> Repo:
@@ -53,6 +63,9 @@ def _parse_entry(entry: object, path: Path) -> Repo:
     repo = Repo(**{name: cast(str, fields[name]) for name in _REQUIRED_FIELDS})
     if not _SLUG_RE.fullmatch(repo.slug):
         raise IngestError(f"Invalid slug '{repo.slug}' in {path}.")
+    if not _URL_RE.fullmatch(repo.url):
+        # Not echoed, since a URL with credentials in it would end up in logs.
+        raise IngestError(f"{repo.slug}: url must be a plain https:// URL in {path}.")
     if not _SHA_RE.fullmatch(repo.sha):
         raise IngestError(f"{repo.slug}: sha must be a full 40-char lowercase hex SHA.")
     return repo

@@ -185,16 +185,16 @@ test.describe("results", () => {
     await expect(page.getByTestId("result")).toHaveCount(0);
   });
 
-  test("giving up asks first, then unlocks the solution with raw HTML dropped", async ({ page }) => {
+  test("a correct answer unlocks the solution with raw HTML dropped, and there's no give-up", async ({ page }) => {
     await openPuzzle(page, "e2e-find-symbol");
     await signIn(page);
-    await page.getByRole("button", { name: "Give up" }).click();
-    await page.getByRole("button", { name: "Keep trying" }).click();
+    await expect(page.getByRole("button", { name: /give up/i })).toHaveCount(0);
     await expect(page.getByTestId("solution")).toHaveCount(0);
 
-    await page.getByRole("button", { name: "Give up" }).click();
-    await page.getByRole("button", { name: "Yes, give up" }).click();
-    await expect(page.getByTestId("puzzle-status")).toHaveText("Gave up");
+    await openFile(page, FILES.router);
+    await page.locator('[data-testid="outline-pick"][data-symbol="src/router.ts#Router.match"]').click();
+    await submitAndExpect(page, true);
+    await expect(page.getByTestId("puzzle-status")).toHaveText("Solved");
     const solution = page.getByTestId("solution");
     await expect(solution).toContainText("SOLUTIONTOKEN");
     await expect(solution.locator("li")).toHaveCount(2);
@@ -205,7 +205,28 @@ test.describe("results", () => {
     await page.reload();
     await expect(page.getByTestId("solution")).toContainText("SOLUTIONTOKEN");
     await page.goto("/");
-    await expect(visible(page, "puzzle-row-e2e-find-symbol")).toContainText("Gave up");
+    await expect(visible(page, "puzzle-row-e2e-find-symbol")).toContainText("Solved");
+  });
+
+  test("submitting waits until the page knows who is signed in, so the result always shows", async ({ page }) => {
+    await openPuzzle(page, "e2e-find-symbol");
+    await signIn(page);
+    // Hold back /api/me on the next load, as a slow network would.
+    let release = () => {};
+    const held = new Promise<void>((resolve) => (release = resolve));
+    await page.route("**/api/me", async (route) => {
+      await held;
+      await route.continue();
+    });
+    await page.reload();
+    await expect(page.getByTestId("file-tree")).toBeVisible();
+    await openFile(page, FILES.router);
+    await page.locator('[data-testid="outline-pick"][data-symbol="src/router.ts#Router.match"]').click();
+    await expect(page.getByTestId("submit")).toBeDisabled();
+
+    release();
+    await submitAndExpect(page, true);
+    await expect(page.getByTestId("puzzle-status")).toHaveText("Solved");
   });
 
   test("signed out: you can read, but submitting prompts sign-in and keeps the answer", async ({ page }) => {
@@ -226,13 +247,5 @@ test.describe("results", () => {
     await expect(page.getByTestId("selected-answer")).toHaveText("src/router.ts#Router.match");
     await expect(page.getByTestId("code-viewer")).toHaveAttribute("data-shown-path", FILES.router);
     await submitAndExpect(page, true);
-  });
-
-  test("signed out: giving up prompts sign-in instead of unlocking", async ({ page }) => {
-    await openPuzzle(page, "e2e-find-symbol");
-    await page.getByRole("button", { name: "Give up" }).click();
-    await page.getByRole("button", { name: "Yes, give up" }).click();
-    await expect(page.getByTestId("sign-in-prompt")).toContainText("Sign in to give up");
-    await expect(page.getByTestId("solution")).toHaveCount(0);
   });
 });

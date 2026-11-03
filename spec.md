@@ -133,7 +133,7 @@ answer: { kind: choice, option: b }
 
 ### Solutions
 
-Each `solutions/<id>.md` contains: the answer, the navigation path a strong engineer would take (where to start, what to search for, which definitions to jump to), and why plausible wrong answers are wrong. Solutions are only visible after a correct submission or an explicit "give up".
+Each `solutions/<id>.md` contains: the answer, the navigation path a strong engineer would take (where to start, what to search for, which definitions to jump to), and why plausible wrong answers are wrong. Solutions are only visible after a correct submission. There is no "give up".
 
 ---
 
@@ -149,6 +149,8 @@ Defined in `content/repos.yaml`:
   license: MIT
 ```
 
+Each slug appears once. `url` must be a plain `https://` URL with no credentials, since git fetches it and every puzzle page links to it.
+
 Selection criteria for v1:
 - Permissive or copyleft OSS license (MIT, Apache-2.0, BSD, GPL). Keep the license file in the snapshot and show attribution on every puzzle page.
 - 5k–100k lines of non-test source.
@@ -162,7 +164,9 @@ A snapshot is immutable. To move a repo to a newer commit, create a new snapshot
 
 ## 6. Validation pipeline (CI)
 
-`content/` changes run `pnpm validate` (calls `uv run ingest validate`). A puzzle merges only if all checks pass. It needs the snapshots in `ingest/out/`, which aren't committed, so CI has to build or restore them first. No CI workflow exists yet.
+`content/` changes run `pnpm validate` (calls `uv run python -m ingest validate`). A puzzle merges only if all checks pass. It needs the snapshots in `ingest/out/`, which aren't committed, so CI has to build or restore them first. No CI workflow exists yet.
+
+A content folder with no puzzles fails, because seeding treats a puzzle missing from content as removed. Override reasons stay in the puzzle file and aren't printed, since they can name the answer.
 
 Only `symbol-unique`, `sequence-edges` and `sequence-alternate-path` can take a `validator_overrides` entry. `set-count`, `location-window` and `choice-options` can't, because each failure means the puzzle can't be solved or graded as written.
 
@@ -173,7 +177,7 @@ Only `symbol-unique`, `sequence-edges` and `sequence-alternate-path` can take a 
 - Every answer ID (`id`, `ids`, `accept*`, `path`, `anchor`, `window`) resolves in the snapshot index.
 
 **Uniqueness heuristics** (failures need an explicit `validator_overrides` entry with a reason)
-- `symbol`: if another definition shares the answer's short name inside the prompt's stated scope, fail unless it is listed in `accept`. Naming the answer's file narrows the scope to that file, so a same-named definition inside it still fails. A stated scope is a prompt token exactly matching a manifest path that contains the answer. A directory needs a slash (`lib/`), and if several qualify the widest wins. With none, the scope is the whole snapshot.
+- `symbol`: if another definition shares the answer's short name inside the prompt's stated scope, fail unless it is listed in `accept`. Naming the answer's file narrows the scope to that file, so a same-named definition inside it still fails. A stated scope is a prompt token exactly matching a manifest path that contains the answer. A directory needs a slash (`lib/`), and if several qualify the widest wins, so naming a directory that contains the answer widens the scope past the answer's file even when the file is named too. With none, the scope is the whole snapshot.
 - `sequence`: each consecutive pair must be a real caller→callee edge in the SCIP reference graph. If the start symbol has another path to the end condition of equal or shorter length, warn.
 - `set`: each member exists. The count shown in the UI equals `len(ids)`.
 - `location`: `anchor` ⊆ `window`, and `window` ≤ 30 lines.
@@ -181,8 +185,9 @@ Only `symbol-unique`, `sequence-edges` and `sequence-alternate-path` can take a 
 
 **Blind second solve (human)**
 - A second person solves the puzzle without seeing the answer key, then adds their name to `verified_by`. If their answer differs from the key, either the key is wrong or the prompt is ambiguous. Fix the prompt. Never fix this by adding to `accept` unless the two answers are truly equivalent.
-- Publishing requires `verified_by` to be non-empty.
+- Publishing requires `verified_by` to be non-empty. The validator fails (`verifier-not-author`) when a `verified_by` name is also an author, comparing names without an `agent:` prefix and ignoring case.
 - For the localhost MVP, a separate agent that never sees the key may do this solve, recorded as `agent:<name>`. The puzzle page shows that no person has checked it. Replace these with human solves before a public launch.
+- `blind-check` gives each solver one graded attempt at each version of a puzzle. The first result is kept in `content/blind-attempts.json`, and a rerun repeats it instead of grading again, so a solver can't guess until it passes. A version is a hash of what `blind-export` shows, never of the key, so rewording a prompt allows a fresh solve. Unknown and malformed answers don't use the attempt. The ledger is committed with the content; if a key was wrong, delete that solver's entry for the puzzle by hand.
 
 ---
 
@@ -216,7 +221,7 @@ The site runs on localhost with no accounts or keys. Each hosted service has a l
 |---|---|
 | Supabase Postgres | Real Postgres from the `embedded-postgres` npm package, data in `.localdb/`, always UTF-8. `supabase/local/shim.sql` adds the roles and `auth` schema Supabase provides, so migrations run unchanged |
 | Supabase GitHub OAuth | A dev login that sets a cookie, refused unless the request is from localhost and `NODE_ENV` isn't `production` |
-| R2 behind a CDN | The route `/snapshots/<name>/...` serves `ingest/out/<name>/...`. `NEXT_PUBLIC_SNAPSHOT_CDN_URL` overrides it when set |
+| R2 behind a CDN | The route `/snapshots/<name>/...` serves `ingest/out/<name>/...` with an ETag and `Cache-Control: public, no-cache`, because a rebuilt snapshot keeps its name. `NEXT_PUBLIC_SNAPSHOT_CDN_URL` overrides it when set |
 
 GitHub OAuth, R2 upload and deployment aren't built yet. They're needed before a public launch.
 
@@ -229,6 +234,7 @@ GitHub OAuth, R2 upload and deployment aren't built yet. They're needed before a
   schema/puzzle.schema.json
   puzzles/<repo-slug>/<id>.yaml
   solutions/<id>.md
+  blind-attempts.json   each blind solver's first graded result per puzzle version
 /supabase/migrations SQL migrations
 spec.md
 CLAUDE.md
@@ -252,11 +258,12 @@ puzzle list → puzzle page
   → GET puzzle (prompt, type, answer kind, count for sets; no answer key)
   → manifest.json from CDN → file tree
   → open file → raw file from CDN → Monaco
-  → hover / click symbol → /api/symbols (definition, references)
-  → search → /api/search
+  → open file → /api/snapshots/:id/symbols/outline (the file's symbols)
+  → hover / click symbol → /api/snapshots/:id/symbols (definition, references)
+  → search → /api/snapshots/:id/search
   → "Select as answer" builds the submission from canonical IDs
-  → POST /api/puzzles/:id/submit → server grades → { correct }
-  → on correct or give-up → GET solution
+  → POST /api/puzzles/:slug/submit → server grades → { correct, attempts }
+  → on correct → GET solution
 ```
 
 ---
@@ -267,7 +274,8 @@ The source of truth is `supabase/migrations/`.
 
 ```sql
 repos        (id, slug, url, language, license)
-snapshots    (id, repo_id, sha, name, manifest_url, indexed_at)      -- name = <slug>@<sha>
+snapshots    (id, repo_id, sha, name, manifest_url, indexed_at,
+              content_hash)                                          -- name = <slug>@<sha>; hash of the built files
 files        (id, snapshot_id, path, size, language, content)        -- content: pg_trgm index
 symbols      (id, snapshot_id, file_id, symbol_id, name, kind,
               start_line, end_line)                                  -- symbol_id = canonical ID
@@ -280,10 +288,12 @@ solutions    (puzzle_id, body_md)
 users        (id, github_login, created_at)                          -- via Supabase auth
 submissions  (id, user_id, puzzle_id, answer_json, correct, created_at,
               time_on_puzzle_ms)
-progress     (user_id, puzzle_id, status, attempts, solved_at, gave_up)
+progress     (user_id, puzzle_id, status, attempts, solved_at)        -- status: attempted | solved
 ```
 
-`answer_json` and `solutions` are only readable through server routes, using the service role on Supabase and `DATABASE_URL` on localhost. Row-level security denies client access.
+`answer_json` and `solutions` are only readable through server routes. The server connects with `pg` and `DATABASE_URL` in every environment, and refuses to run in production without it; nothing uses a Supabase client or the service role key. Row-level security and column grants deny client access.
+
+Hosted Supabase grants `anon` and `authenticated` everything on each new table, sequence and function in `public`, and `supabase/local/shim.sql` does the same locally. So a migration that adds a table must enable row-level security, revoke client privileges on it and its sequences, and grant back only what clients may read. `web/tests/rls.test.ts` fails if a table has no row-level security, if clients hold any grant beyond the expected reads, or if they can use a sequence. Migration 0004 revokes the sequence privileges 0001 missed.
 
 ---
 
@@ -294,9 +304,8 @@ progress     (user_id, puzzle_id, status, attempts, solved_at, gave_up)
 | `/api/puzzles` | GET | List with filters (type, difficulty, repo, tag) and the user's status |
 | `/api/puzzles/:slug` | GET | Prompt, metadata, answer kind, set count, snapshot info. **Never the key.** |
 | `/api/puzzles/:slug/submit` | POST | `{ correct, attempts }` |
-| `/api/puzzles/:slug/solution` | GET | Solution markdown, only if solved or given up |
-| `/api/puzzles/:slug/give-up` | POST | Marks given up, unlocks solution |
-| `/api/snapshots/:id/symbols?file=&line=&col=` | GET | Definition + references at a position |
+| `/api/puzzles/:slug/solution` | GET | Solution markdown, only if solved |
+| `/api/snapshots/:id/symbols?file=&line=&col=` | GET | Definition + references at a position, capped at 500, with `referencesTruncated` when there are more |
 | `/api/snapshots/:id/symbols/outline?file=` | GET | Symbols in a file |
 | `/api/snapshots/:id/search?q=` | GET | File/line matches, capped at 200 |
 | `/api/me` | GET | The signed-in user, and whether dev login is available |
@@ -304,11 +313,13 @@ progress     (user_id, puzzle_id, status, attempts, solved_at, gave_up)
 | `/api/dev/login`, `/api/dev/logout` | POST | Localhost mode only: start or end a dev session |
 | `/snapshots/<name>/<path>` | GET | Localhost mode only: `manifest.json` or a raw file |
 
-Response shapes live in `web/lib/api-types.ts`. Submit validates that every submitted ID exists in the snapshot before grading. Submit and search are rate-limited, in memory and per process, so a real deployment needs a shared store. Reading a puzzle needs no sign-in; submitting and giving up do.
+Response shapes live in `web/lib/api-types.ts`. Submit validates that every submitted ID exists in the snapshot before grading. Submit and search are rate-limited, in memory and per process, so a real deployment needs a shared store. Reading a puzzle needs no sign-in; submitting does.
 
 - Signed-out requests to `/solution` and `/api/me/stats` get 401. A signed-in user who hasn't unlocked a solution gets 403.
 - Every graded submission counts as an attempt, including ones after solving. A rejected request doesn't.
-- A correct submission after giving up returns `correct: true`, but the status stays `given_up`, so stats stay honest. Giving up on a solved puzzle leaves it `solved`.
+- `solved` is final: later submissions are graded and counted, but never change the status. The one exception is a changed answer key: seeding then regrades that puzzle's submissions and recomputes each user's status, keeping each submission's recorded `correct`.
+- An unknown or malformed puzzle slug is a 404, from `/api/puzzles/:slug` and from the puzzle page. The page checks in `app/puzzles/[slug]/layout.tsx`, before its `loading.tsx` starts streaming, and the list page's `loading.tsx` sits in the `app/(list)` route group so it doesn't wrap puzzle pages.
+- Signed-out requests are limited by IP: the last `X-Forwarded-For` entry, which the nearest proxy added after anything the client sent. Vercel sends the client's address alone. Queries under 3 characters can't use the trigram index, so they also count against a tighter limit of 30 a minute.
 - Search is case-insensitive. The Postgres planner chooses between the trigram index and the path index, because forcing trigram was only faster when nothing matched.
 
 ---
@@ -318,9 +329,9 @@ Response shapes live in `web/lib/api-types.ts`. Submit validates that every subm
 - **Puzzle list:** filter by type, difficulty, repo; solved state per row.
 - **Puzzle page:** prompt panel (left), file tree + Monaco + search (center), answer tray (right).
   - The answer tray shows the required kind, the current selection, and for `set` the "n of N selected" count. For `sequence`, an ordered list with drag to reorder.
-  - Go-to-definition (F12 / ctrl-click), find references, and a breadcrumb trail of visited files.
+  - Go-to-definition (F12 / ctrl-click, cmd-click on macOS), find references, and a breadcrumb trail of visited files.
   - Repo name, SHA, license, and link back to GitHub at that SHA.
-- **Result:** correct / incorrect, attempt count. Solution unlocks on correct or give-up.
+- **Result:** correct / incorrect, attempt count. Solution unlocks on a correct answer.
 - **Profile:** solved counts by type and difficulty.
 
 ---

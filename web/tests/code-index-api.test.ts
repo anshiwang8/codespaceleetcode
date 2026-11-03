@@ -4,7 +4,7 @@ import { GET as outlineRoute } from "@/app/api/snapshots/[id]/symbols/outline/ro
 import { GET as symbolsRoute } from "@/app/api/snapshots/[id]/symbols/route";
 import type { OutlineResponse, SearchResponse, SymbolAtPositionResponse } from "@/lib/api-types";
 import { getPool } from "@/lib/server/db";
-import { resetRateLimits, SEARCH_LIMIT } from "@/lib/server/rate-limit";
+import { resetRateLimits, SEARCH_LIMIT, SHORT_SEARCH_LIMIT } from "@/lib/server/rate-limit";
 import { DECOY_RUN, DECOY_STOP, HANDLE_SYMBOL, ROUTER_FILE, seedFixtures, type Fixtures } from "./fixtures";
 import { hasDatabase, makeRequest, params, signIn } from "./helpers";
 
@@ -53,6 +53,7 @@ describe.skipIf(!hasDatabase)("snapshot code index", () => {
         },
         definition: { file: ROUTER_FILE, line: 1, col: 17, endCol: 32 },
         references: [{ file: ROUTER_FILE, line: 4, col: 31, endCol: 46 }],
+        referencesTruncated: false,
       });
     });
 
@@ -61,7 +62,7 @@ describe.skipIf(!hasDatabase)("snapshot code index", () => {
     });
 
     it("treats col as inclusive and end_col as exclusive", async () => {
-      const miss = { symbol: null, definition: null, references: [] };
+      const miss = { symbol: null, definition: null, references: [], referencesTruncated: false };
       expect(await at(ROUTER_FILE, 1, 16)).toEqual(miss);
       expect((await at(ROUTER_FILE, 1, 17)).symbol?.symbolId).toBe(HANDLE_SYMBOL);
       expect((await at(ROUTER_FILE, 1, 31)).symbol?.symbolId).toBe(HANDLE_SYMBOL);
@@ -69,7 +70,7 @@ describe.skipIf(!hasDatabase)("snapshot code index", () => {
     });
 
     it("is empty on a line with nothing on it", async () => {
-      expect(await at(ROUTER_FILE, 3, 1)).toEqual({ symbol: null, definition: null, references: [] });
+      expect(await at(ROUTER_FILE, 3, 1)).toEqual({ symbol: null, definition: null, references: [], referencesTruncated: false });
     });
 
     it("prefers the narrowest of overlapping occurrences", async () => {
@@ -81,24 +82,41 @@ describe.skipIf(!hasDatabase)("snapshot code index", () => {
       expect((await at("src/decoy.ts", 1, 8)).definition).toBeNull();
     });
 
-    it("caps references at 500", async () => {
+    // The fixture symbol has 1 reference of its own, so `extra` more makes 1 + extra in all.
+    async function withExtraReferences(extra: number, check: () => Promise<void>): Promise<void> {
       const pool = getPool();
       const file = await pool.query<{ file_id: string }>("select file_id from symbols where id = $1", [fixtures.handlePk]);
       await pool.query(
         `insert into occurrences (symbol_pk, file_id, line, col, end_col, role)
-         select $1, $2, 1000 + n, 1, 5, 'reference' from generate_series(1, 600) n`,
-        [fixtures.handlePk, file.rows[0]?.file_id],
+         select $1, $2, 1000 + n, 1, 5, 'reference' from generate_series(1, $3::int) n`,
+        [fixtures.handlePk, file.rows[0]?.file_id, extra],
       );
       try {
-        expect((await at(ROUTER_FILE, 1, 20)).references).toHaveLength(500);
+        await check();
       } finally {
         await pool.query("delete from occurrences where line > 1000");
       }
+    }
+
+    it("caps references at 500 and says so", async () => {
+      await withExtraReferences(600, async () => {
+        const result = await at(ROUTER_FILE, 1, 20);
+        expect(result.references).toHaveLength(500);
+        expect(result.referencesTruncated).toBe(true);
+      });
+    });
+
+    it("doesn't say truncated when exactly 500 fit", async () => {
+      await withExtraReferences(499, async () => {
+        const result = await at(ROUTER_FILE, 1, 20);
+        expect(result.references).toHaveLength(500);
+        expect(result.referencesTruncated).toBe(false);
+      });
     });
 
     it("doesn't cross into another snapshot with the same path", async () => {
       const response = await symbols(`file=${ROUTER_FILE}&line=1&col=20`, fixtures.otherSnapshotId);
-      expect(await response.json()).toEqual({ symbol: null, definition: null, references: [] });
+      expect(await response.json()).toEqual({ symbol: null, definition: null, references: [], referencesTruncated: false });
     });
 
     it.each(["file=src/nope.ts&line=1&col=1", "file=SRC/ROUTER.TS&line=1&col=1"])("404s on %s", async (query) => {
@@ -271,17 +289,33 @@ describe.skipIf(!hasDatabase)("snapshot code index", () => {
 
     describe("rate limit", () => {
       it("returns 429 past the limit, per client", async () => {
-        const from = (ip: string) =>
+        // The proxy appends the address it saw, so the client's own entries come first.
+        const from = (ip: string, spoofed = "192.0.2.1") =>
           searchRoute(
             makeRequest(`/api/snapshots/${fixtures.snapshotId}/search?q=a`, {
-              headers: { "x-forwarded-for": `${ip}, 10.0.0.1` },
+              headers: { "x-forwarded-for": `${spoofed}, ${ip}` },
             }),
             params({ id: String(fixtures.snapshotId) }),
           );
         // A one-character query is refused after counting, so this stays out of the database.
         for (let i = 0; i < SEARCH_LIMIT.limit; i++) expect((await from("198.51.100.1")).status).toBe(400);
         expect((await from("198.51.100.1")).status).toBe(429);
+        expect((await from("198.51.100.1", "192.0.2.99")).status).toBe(429);
         expect((await from("198.51.100.2")).status).toBe(400);
+      });
+
+      it("limits queries too short for the trigram index more tightly", async () => {
+        const search = (q: string) =>
+          searchRoute(
+            makeRequest(`/api/snapshots/${fixtures.snapshotId}/search?q=${q}`, {
+              headers: { "x-forwarded-for": "198.51.100.77" },
+            }),
+            params({ id: String(fixtures.snapshotId) }),
+          );
+        for (let i = 0; i < SHORT_SEARCH_LIMIT.limit; i++) expect((await search("zz")).status).toBe(200);
+        expect((await search("zz")).status).toBe(429);
+        // Longer queries still have room under the main limit.
+        expect((await search("zzz")).status).toBe(200);
       });
 
       it("counts by user when signed in, whatever the IP", async () => {

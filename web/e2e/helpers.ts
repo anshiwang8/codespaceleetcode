@@ -52,6 +52,35 @@ function editorLine(page: Page, text: string): Locator {
 }
 
 /**
+ * Where a token's text is on screen. Monaco replaces a line's elements when it re-renders it, for
+ * example once tokenizing colours it, so a line found a moment ago can be detached and measure as
+ * 0,0. That measurement is retried rather than clicked.
+ */
+async function measureToken(line: Locator, lineText: string, token: string): Promise<{ x: number; y: number }> {
+  const deadline = Date.now() + 15_000;
+  for (;;) {
+    const box = await line.evaluate((element, wanted) => {
+      if (!element.isConnected) return null;
+      const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+      for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+        const index = (node.textContent ?? "").indexOf(wanted);
+        if (index === -1) continue;
+        const range = document.createRange();
+        range.setStart(node, index);
+        range.setEnd(node, index + wanted.length);
+        const rect = range.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) return null;
+        return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
+      }
+      return null;
+    }, token);
+    if (box) return box;
+    if (Date.now() > deadline) throw new Error(`"${token}" isn't rendered on the line containing "${lineText}"`);
+    await line.page().waitForTimeout(50);
+  }
+}
+
+/**
  * Clicks a token in the editor. Monaco renders each token in its own span, and a click lands on the
  * middle of the element, so this measures where the text is inside the line.
  */
@@ -63,20 +92,7 @@ export async function clickToken(
 ): Promise<void> {
   const line = editorLine(page, lineText);
   await expect(line).toBeVisible();
-  const box = await line.evaluate((element, wanted) => {
-    const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
-    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-      const index = (node.textContent ?? "").indexOf(wanted);
-      if (index === -1) continue;
-      const range = document.createRange();
-      range.setStart(node, index);
-      range.setEnd(node, index + wanted.length);
-      const rect = range.getBoundingClientRect();
-      return { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
-    }
-    return null;
-  }, token);
-  if (!box) throw new Error(`"${token}" isn't rendered on the line containing "${lineText}"`);
+  const box = await measureToken(line, lineText, token);
   if (options.modifiers) for (const key of options.modifiers) await page.keyboard.down(key);
   await page.mouse.move(box.x, box.y);
   await page.mouse.click(box.x, box.y);

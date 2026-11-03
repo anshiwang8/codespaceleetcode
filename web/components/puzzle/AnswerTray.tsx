@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { SignInPrompt } from "@/components/auth/SignInPrompt";
 import styles from "@/components/puzzle/puzzle.module.css";
-import type { PuzzleDetail, PuzzleStatus, SubmitResponse } from "@/lib/api-types";
+import type { PuzzleDetail, SubmitResponse } from "@/lib/api-types";
 import { type Draft, type DraftAction, isReadyToSubmit, type SequenceItem } from "@/lib/client/answer";
 
 const INSTRUCTIONS: Record<Draft["kind"], string> = {
@@ -22,10 +22,11 @@ interface AnswerTrayProps {
   pick: (action: DraftAction) => void;
   onSubmit: () => void;
   submitting: boolean;
+  /** True until the page knows who is signed in. A result is tied to that person. */
+  waitingForAuth: boolean;
   submitError: string | null;
   result: SubmitResponse | null;
   attempts: number;
-  status: PuzzleStatus;
   signInReason: string | null;
   signedIn: boolean;
 }
@@ -36,10 +37,10 @@ export function AnswerTray({
   pick,
   onSubmit,
   submitting,
+  waitingForAuth,
   submitError,
   result,
   attempts,
-  status,
   signInReason,
   signedIn,
 }: AnswerTrayProps) {
@@ -56,7 +57,7 @@ export function AnswerTray({
         <button
           type="button"
           className="btn btn-primary"
-          disabled={!ready || submitting}
+          disabled={!ready || submitting || waitingForAuth}
           onClick={onSubmit}
           data-testid="submit"
         >
@@ -85,10 +86,7 @@ export function AnswerTray({
             <strong>{result.correct ? "Correct" : "Incorrect"}</strong>
             <span>
               {result.attempts === 1 ? "Attempt 1" : `Attempt ${result.attempts}`}
-              {result.correct && status !== "given_up" ? ". The solution is in the left panel." : null}
-              {result.correct && status === "given_up"
-                ? ". You gave up earlier, so this stays unsolved."
-                : null}
+              {result.correct ? ". The solution is in the left panel." : null}
               {result.correct ? null : ". Change your answer and try again."}
             </span>
           </div>
@@ -283,7 +281,7 @@ function SequenceList({ items, pick }: { items: SequenceItem[]; pick: (action: D
                 type="button"
                 className="btn btn-small btn-quiet"
                 aria-label={`Remove ${item.id}`}
-                onClick={() => pick({ type: "remove", id: item.id, key: item.key })}
+                onClick={() => pick({ type: "remove-item", key: item.key })}
               >
                 ×
               </button>

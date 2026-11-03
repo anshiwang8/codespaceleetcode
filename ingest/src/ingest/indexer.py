@@ -21,7 +21,7 @@ TYPESCRIPT_LANGUAGES = frozenset({"javascript", "typescript"})
 TYPESCRIPT_INSTALL_HELP = (
     "scip-typescript was not found on PATH. Install it with:\n"
     f"  npm install -g @sourcegraph/scip-typescript@{SCIP_TYPESCRIPT_VERSION}\n"
-    "It needs Node 22 or 24. Open a new terminal afterward, then run this command again."
+    "It needs Node 22 or newer. Open a new terminal afterward, then run this command again."
 )
 PYTHON_INSTALL_HELP = (
     "scip-python was not found on PATH. Install it with:\n"
@@ -259,15 +259,25 @@ def _write_json(path: Path, value: object) -> None:
     path.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
 
 
+def _absolute_path_entries(value: str) -> str:
+    """PATH without relative entries. An empty entry or `.` means the current directory."""
+    return os.pathsep.join(entry for entry in value.split(os.pathsep) if os.path.isabs(entry))
+
+
 def run_tool(
     tool: str, executable: str, *args: str, cwd: Path, env: Mapping[str, str] | None = None
 ) -> str:
+    # Indexers run in the stage dir, which holds untrusted repo files. The npm .cmd shims run a
+    # bare `node`, and cmd.exe would look for it in the current directory first. Elsewhere, npm's
+    # `#!/usr/bin/env node` would too if PATH had a relative entry. Staged files also aren't
+    # executable there, since stage_files doesn't copy permissions.
+    base = {**os.environ, "NoDefaultCurrentDirectoryInExePath": "1"}
+    if sys.platform != "win32" and "PATH" in base:
+        base["PATH"] = _absolute_path_entries(base["PATH"])
     result = subprocess.run(
         [executable, *args],
         cwd=cwd,
-        # The npm .cmd shims run a bare `node`, and cmd.exe would look for it in the current
-        # directory first: the stage dir, which holds untrusted repo files.
-        env={**os.environ, "NoDefaultCurrentDirectoryInExePath": "1", **(env or {})},
+        env={**base, **(env or {})},
         capture_output=True,
         encoding="utf-8",
         errors="replace",

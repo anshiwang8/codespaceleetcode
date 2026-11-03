@@ -4,7 +4,7 @@
 export type PuzzleType = "find" | "trace" | "architecture";
 export type Difficulty = "easy" | "medium" | "hard";
 export type AnswerKind = "symbol" | "file" | "location" | "sequence" | "set" | "choice";
-export type PuzzleStatus = "unsolved" | "attempted" | "solved" | "given_up";
+export type PuzzleStatus = "unsolved" | "attempted" | "solved";
 
 export interface PuzzleSummary {
   slug: string;
@@ -74,11 +74,6 @@ export interface SolutionResponse {
   bodyMd: string;
 }
 
-/** POST /api/puzzles/:slug/give-up. A puzzle already solved stays `solved`. */
-export interface GiveUpResponse {
-  status: PuzzleStatus;
-}
-
 export interface ManifestFile {
   path: string;
   size: number;
@@ -112,7 +107,7 @@ export interface SourcePosition {
   endCol: number;
 }
 
-/** The most references one response carries. A full list means there may be more. */
+/** The most references one response carries. */
 export const REFERENCE_CAP = 500;
 
 /** GET /api/snapshots/:id/symbols?file=&line=&col= */
@@ -120,6 +115,8 @@ export interface SymbolAtPositionResponse {
   symbol: SymbolInfo | null;
   definition: SourcePosition | null;
   references: SourcePosition[];
+  /** True when the symbol has more than REFERENCE_CAP references and only the first are listed. */
+  referencesTruncated: boolean;
 }
 
 /** GET /api/snapshots/:id/symbols/outline?file= */

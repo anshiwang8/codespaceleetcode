@@ -8,9 +8,9 @@ import { makeRequest, params } from "./helpers";
 const NAME = `acme-router@${"a".repeat(40)}`;
 const SECRET = "OUTSIDE_THE_SNAPSHOT";
 
-function get(name: string, segments: string[]): Promise<Response> {
+function get(name: string, segments: string[], headers?: Record<string, string>): Promise<Response> {
   return GET(
-    makeRequest(`/snapshots/x/${segments.length}`),
+    makeRequest(`/snapshots/x/${segments.length}`, { headers }),
     params({ name, path: segments }),
   );
 }
@@ -81,11 +81,30 @@ describe("/snapshots/<name>/<path>", () => {
       expect(response.headers.get("x-content-type-options")).toBe("nosniff");
     });
 
-    it("marks responses immutable, and nosniff", async () => {
+    it("makes caches revalidate, since a rebuilt snapshot keeps its name, and sends nosniff", async () => {
       for (const segments of [["manifest.json"], ["files", "src", "app.ts"]]) {
         const response = await get(NAME, segments);
-        expect(response.headers.get("cache-control")).toBe("public, max-age=31536000, immutable");
+        expect(response.headers.get("cache-control")).toBe("public, no-cache");
+        expect(response.headers.get("etag")).toMatch(/^"[0-9a-f]{64}"$/);
         expect(response.headers.get("x-content-type-options")).toBe("nosniff");
+      }
+    });
+
+    it("answers 304 to a matching ETag, and the full file once the bytes change", async () => {
+      const segments = ["files", "src", "app.ts"];
+      const etag = (await get(NAME, segments)).headers.get("etag") ?? "";
+      const unchanged = await get(NAME, segments, { "if-none-match": etag });
+      expect(unchanged.status).toBe(304);
+      expect(await unchanged.text()).toBe("");
+
+      const file = path.join(root, NAME, "files", "src", "app.ts");
+      writeFileSync(file, "export const app = 2;\n");
+      try {
+        const changed = await get(NAME, segments, { "if-none-match": etag });
+        expect(changed.status).toBe(200);
+        expect(await changed.text()).toBe("export const app = 2;\n");
+      } finally {
+        writeFileSync(file, "export const app = 1;\n");
       }
     });
   });

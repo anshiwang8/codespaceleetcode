@@ -13,7 +13,7 @@ import EmbeddedPostgres from "embedded-postgres";
 import pg from "pg";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const PORT = Number(process.env.LOCALDB_PORT ?? 54329);
+const PORT = Number(process.env.LOCALDB_PORT || 54329);
 const DATA_DIR = resolve(process.env.LOCALDB_DIR ?? join(ROOT, ".localdb"));
 const DATABASE = "codebase_puzzles";
 const PASSWORD = "postgres";
@@ -94,7 +94,8 @@ async function start() {
   const stop = async () => {
     if (stopping) return;
     stopping = true;
-    await server.stop();
+    // On macOS and Linux, Ctrl+C reaches Postgres too, so it may already be shutting down.
+    await server.stop().catch(() => {});
     process.exit(0);
   };
   process.on("SIGINT", stop);

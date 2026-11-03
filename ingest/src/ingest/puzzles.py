@@ -26,6 +26,11 @@ _RULES_SHOWN_WITH_VALUE = frozenset(
 _RULES_SHOWN_WITH_MESSAGE = frozenset({"additionalProperties", "required"})
 
 
+def solver_name(name: str) -> str:
+    """A name as a solver, so `agent:Ann` and `ann` are one. Rule 2 is about answers, not names."""
+    return name.removeprefix("agent:").casefold()
+
+
 @dataclass(frozen=True)
 class SymbolAnswer:
     kind: ClassVar[str] = "symbol"

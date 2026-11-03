@@ -16,13 +16,14 @@ import psycopg
 import pytest
 from psycopg import sql
 from psycopg.conninfo import conninfo_to_dict, make_conninfo
+from psycopg.types.json import Jsonb
 from puzzle_fixtures import CONTENT, SHA, SNAPSHOT_NAME, SNAPSHOTS
 from typer.testing import CliRunner
 
 from ingest.cli import app
 from ingest.errors import IngestError
 from ingest.paths import REPO_ROOT
-from ingest.seed import LOCAL_DB_URL, database_url, seed_content
+from ingest.seed import database_url, seed_content
 
 ADMIN_URL = os.environ.get("INGEST_TEST_DB_URL")
 SKIP_REASON = (
@@ -98,7 +99,7 @@ def _copy_content(tmp_path: Path) -> Path:
 
 
 def _add_user_activity(url: str, slug: str, submission: bool = True) -> None:
-    """Record a user who tried a puzzle: a submission and progress, or a bare give-up."""
+    """Record a user who tried a puzzle: a submission and progress, or progress alone."""
     with psycopg.connect(url) as connection:
         row = connection.execute(b"select id from puzzles where slug = %s", (slug,)).fetchone()
         assert row is not None
@@ -344,15 +345,13 @@ def test_force_reloads_the_snapshot_without_touching_puzzles_or_progress(
 
     out = tmp_path / "out"
     shutil.copytree(SNAPSHOTS, out)
-    (out / SNAPSHOT_NAME / "files" / "src" / "app.js").write_bytes(b"changed\n")
     without_force = _seed(db_url, out=out)
     assert any("1 already loaded and skipped" in line for line in without_force)
-    assert "changed" not in _one(db_url, b"select content from files where path = 'src/app.js'")
 
+    # Nothing changed, so only --force reloads it.
     forced = _seed(db_url, out=out, force=True)
 
     assert any("1 loaded" in line for line in forced)
-    assert _one(db_url, b"select content from files where path = 'src/app.js'") == "changed\n"
     assert _one(db_url, b"select id from snapshots") == snapshot_id
     assert _rows(db_url, b"select id from files order by id") != old_file_ids
     assert _one(db_url, b"select count(*) from files") == 12
@@ -462,7 +461,14 @@ def test_output_never_shows_the_password(db_url: str) -> None:
 
 def test_database_url_defaults_only_when_unset(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("SUPABASE_DB_URL", raising=False)
-    assert database_url() == LOCAL_DB_URL
+    monkeypatch.delenv("LOCALDB_PORT", raising=False)
+    assert database_url() == "postgres://postgres:postgres@localhost:54329/codebase_puzzles"
+    monkeypatch.setenv("LOCALDB_PORT", "54400")
+    assert database_url() == "postgres://postgres:postgres@localhost:54400/codebase_puzzles"
+    monkeypatch.setenv("LOCALDB_PORT", "nope")
+    with pytest.raises(IngestError, match="LOCALDB_PORT"):
+        database_url()
+    monkeypatch.delenv("LOCALDB_PORT")
     monkeypatch.setenv("SUPABASE_DB_URL", "postgres://elsewhere/db")
     assert database_url() == "postgres://elsewhere/db"
     monkeypatch.setenv("SUPABASE_DB_URL", "")
@@ -497,3 +503,102 @@ def test_a_rebuilt_snapshot_reloads_without_force(db_url: str, tmp_path: Path) -
         _one(db_url, b"select end_line from symbols where symbol_id = %s", first["symbol_id"])
         == first["end_line"]
     )
+
+
+def test_a_file_whose_bytes_change_at_the_same_size_reloads(db_url: str, tmp_path: Path) -> None:
+    out = tmp_path / "out"
+    shutil.copytree(SNAPSHOTS, out)
+    _seed(db_url, out=out)
+
+    # The manifest records only path, size and language, so this change is invisible to it.
+    source = next(path for path in out.glob("*/files/src/config.js"))
+    original = source.read_bytes()
+    changed = original.replace(b"a", b"b", 1)
+    assert changed != original and len(changed) == len(original)
+    source.write_bytes(changed)
+
+    _seed(db_url, out=out)
+    stored = _one(db_url, b"select content from files where path = 'src/config.js'")
+    assert stored == changed.decode("utf-8")
+
+
+ALTERNATE = "src/app.js#App.handle"
+
+
+def _content_accepting_alternate(tmp_path: Path) -> Path:
+    """widgets-find-001 with ALTERNATE added to `accept`, which changes its key."""
+    content = _copy_content(tmp_path)
+    path = content / "puzzles" / "acme-widgets" / "widgets-find-001.yaml"
+    text = path.read_text(encoding="utf-8")
+    path.write_text(
+        text.replace(
+            "  accept: []\n  accept_reasons: []\n",
+            f"  accept: [{ALTERNATE}]\n  accept_reasons: [A test equivalence.]\n",
+        ),
+        encoding="utf-8",
+    )
+    return content
+
+
+def _submit(url: str, slug: str, symbol_id: str, correct: bool) -> None:
+    """Record what the site would after a symbol submission, as the dev user."""
+    with psycopg.connect(url) as connection:
+        row = connection.execute(b"select id from puzzles where slug = %s", (slug,)).fetchone()
+        assert row is not None
+        connection.execute(
+            b"insert into auth.users (id) values (%s) on conflict do nothing", (AUTH_USER,)
+        )
+        connection.execute(
+            b"insert into users (id, github_login) values (%s, 'dev') on conflict do nothing",
+            (AUTH_USER,),
+        )
+        connection.execute(
+            b"insert into submissions (user_id, puzzle_id, answer_json, correct) "
+            b"values (%s, %s, %s, %s)",
+            (AUTH_USER, row[0], Jsonb({"kind": "symbol", "id": symbol_id}), correct),
+        )
+        connection.execute(
+            b"insert into progress (user_id, puzzle_id, status, attempts, solved_at) "
+            b"values (%s, %s, %s, 1, case when %s then now() end)",
+            (AUTH_USER, row[0], "solved" if correct else "attempted", correct),
+        )
+
+
+def _status(url: str, slug: str) -> tuple[Any, ...]:
+    rows = _rows(
+        url,
+        b"select pr.status, pr.solved_at is not null from progress pr "
+        b"join puzzles p on p.id = pr.puzzle_id where p.slug = %s",
+        slug,
+    )
+    assert len(rows) == 1
+    return rows[0]
+
+
+def test_a_changed_key_takes_away_a_solve_it_no_longer_accepts(db_url: str, tmp_path: Path) -> None:
+    _seed(db_url, _content_accepting_alternate(tmp_path))
+    _submit(db_url, "widgets-find-001", ALTERNATE, correct=True)
+
+    lines = _seed(db_url)
+
+    assert _status(db_url, "widgets-find-001") == ("attempted", False)
+    assert any("1 user's status changed" in line for line in lines)
+
+
+def test_a_changed_key_grants_a_solve_it_now_accepts(db_url: str, tmp_path: Path) -> None:
+    _seed(db_url)
+    _submit(db_url, "widgets-find-001", ALTERNATE, correct=False)
+
+    _seed(db_url, _content_accepting_alternate(tmp_path))
+
+    assert _status(db_url, "widgets-find-001") == ("solved", True)
+
+
+def test_an_unchanged_key_leaves_progress_alone(db_url: str) -> None:
+    _seed(db_url)
+    # Inconsistent on purpose: only a key change may regrade.
+    _submit(db_url, "widgets-find-001", ALTERNATE, correct=True)
+
+    _seed(db_url)
+
+    assert _status(db_url, "widgets-find-001") == ("solved", True)

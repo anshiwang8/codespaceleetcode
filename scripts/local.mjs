@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 import pg from "pg";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const PORT = Number(process.env.LOCALDB_PORT ?? 54329);
+const PORT = Number(process.env.LOCALDB_PORT || 54329);
 const DATABASE_URL = `postgres://postgres:postgres@localhost:${PORT}/codebase_puzzles`;
 const SITE_PORT = Number(process.env.PORT ?? 3000);
 const SITE_URL = `http://127.0.0.1:${SITE_PORT}`;
@@ -87,7 +87,8 @@ function seed() {
   if (result.error) {
     fail(
       "Couldn't run uv. Install it, then open a new terminal:\n" +
-        "  winget install --id=astral-sh.uv -e",
+        "  macOS or Linux: curl -LsSf https://astral.sh/uv/install.sh | sh\n" +
+        "  Windows: winget install --id=astral-sh.uv -e",
     );
   }
   if (result.status !== 0) fail("Loading content failed. See the message above.");
@@ -95,14 +96,15 @@ function seed() {
 
 function serve() {
   console.log(`\nStarting the site at ${SITE_URL}\n`);
-  // pnpm is a .cmd file on Windows, which only a shell can start.
   // An explicit port fails if it's taken, where the default would quietly move to another one.
-  const web = spawn(`pnpm --filter web exec next dev -H 127.0.0.1 -p ${SITE_PORT}`, {
-    cwd: ROOT,
-    stdio: "inherit",
-    shell: true,
-    env: { ...process.env, DATABASE_URL },
-  });
+  const args = ["--filter", "web", "exec", "next", "dev", "-H", "127.0.0.1", "-p", String(SITE_PORT)];
+  const options = { cwd: ROOT, stdio: "inherit", env: { ...process.env, DATABASE_URL } };
+  // pnpm is a .cmd file on Windows, which only a shell can start. Elsewhere, start it directly so
+  // a signal reaches pnpm itself rather than a shell in between.
+  const web =
+    process.platform === "win32"
+      ? spawn(`pnpm ${args.join(" ")}`, { ...options, shell: true })
+      : spawn("pnpm", args, options);
   children.push(web);
   web.on("exit", (code) => {
     stopAll();

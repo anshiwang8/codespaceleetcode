@@ -71,7 +71,9 @@ def _verify_head(checkout: Path, sha: str) -> None:
 def _git(cwd: Path, *args: str) -> str:
     git = shutil.which("git")
     if git is None:
-        raise IngestError("git was not found on PATH. Install it with: winget install Git.Git")
+        raise IngestError(
+            "git was not found on PATH. Install it from https://git-scm.com/downloads"
+        )
     result = subprocess.run(
         [git, *_GIT_CONFIG, *args], cwd=cwd, capture_output=True, encoding="utf-8", check=False
     )

@@ -11,6 +11,13 @@ export interface RateLimit {
 
 export const SUBMIT_LIMIT: RateLimit = { limit: 60, windowMs: 60_000 };
 export const SEARCH_LIMIT: RateLimit = { limit: 240, windowMs: 60_000 };
+/**
+ * Queries under 3 characters can't use the trigram index, so a rare one scans every file in the
+ * snapshot: about 400 ms on the largest (20 MB), against about 15 ms for a rare 4-letter query.
+ * Search is debounced as you type, so a person sends about one per word.
+ */
+export const SHORT_SEARCH_LIMIT: RateLimit = { limit: 30, windowMs: 60_000 };
+export const SHORT_SEARCH_CHARS = 3;
 
 const MAX_TRACKED_KEYS = 50_000;
 
@@ -44,10 +51,15 @@ export function isRateLimited(key: string, { limit, windowMs }: RateLimit, now =
   return current.count > limit;
 }
 
-/** The signed-in user, or else the client IP. */
+/**
+ * The signed-in user, or else the client IP. A proxy appends the address it saw to
+ * X-Forwarded-For, after anything the client sent, so only the last entry can be trusted. Vercel
+ * replaces the header with the client's address alone, which is also the last entry. With no
+ * proxy, as on localhost, there's no header and every signed-out client shares one bucket.
+ */
 export function rateLimitKey(user: CurrentUser | null, headers: HeaderReader): string {
   if (user) return `user:${user.id}`;
-  const ip = headers.get("x-forwarded-for")?.split(",")[0]?.trim().slice(0, 64);
+  const ip = headers.get("x-forwarded-for")?.split(",").at(-1)?.trim().slice(0, 64);
   return `ip:${ip || "unknown"}`;
 }
 

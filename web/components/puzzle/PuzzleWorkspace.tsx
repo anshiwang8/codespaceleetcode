@@ -20,8 +20,8 @@ type ManifestState =
   | { state: "ready"; manifest: Manifest };
 
 function nextStatus(current: PuzzleStatus, correct: boolean): PuzzleStatus {
-  // Mirrors what the server records: solved and given_up are final. See spec section 9.
-  if (current === "solved" || current === "given_up") return current;
+  // Mirrors what the server records: solved is final. See spec section 9.
+  if (current === "solved") return current;
   return correct ? "solved" : "attempted";
 }
 
@@ -57,7 +57,7 @@ export function PuzzleWorkspace({ puzzle }: { puzzle: PuzzleDetail }) {
     localProgress && localProgress.login === login
       ? localProgress
       : { status: puzzle.status, attempts: puzzle.attempts };
-  const unlocked = login !== null && (progress.status === "solved" || progress.status === "given_up");
+  const unlocked = login !== null && progress.status === "solved";
 
   const manifestUrl = puzzle.snapshot.manifestUrl;
   useEffect(() => {
@@ -103,7 +103,8 @@ export function PuzzleWorkspace({ puzzle }: { puzzle: PuzzleDetail }) {
 
   const submit = async () => {
     const submission = toSubmission(draft, elapsedMs(startedAt, Date.now()));
-    if (!submission || submitting) return;
+    // Until /api/me answers there's no login to tie the result to, and it would never be shown.
+    if (!submission || submitting || me === null) return;
     if (signedOut) {
       needSignIn("Sign in to submit. Your answer stays selected.");
       return;
@@ -132,25 +133,6 @@ export function PuzzleWorkspace({ puzzle }: { puzzle: PuzzleDetail }) {
     }
   };
 
-  /** Resolves to whether giving up went through, so the panel can leave its confirmation open. */
-  const giveUp = async (): Promise<string | null> => {
-    if (signedOut) {
-      needSignIn("Sign in to give up and see the solution.");
-      return null;
-    }
-    try {
-      const { status } = await api.giveUp(puzzle.slug);
-      if (login) setLocalProgress({ login, status, attempts: progress.attempts });
-      return null;
-    } catch (error) {
-      if (error instanceof ApiRequestError && error.status === 401) {
-        needSignIn("Sign in to give up and see the solution.");
-        return null;
-      }
-      return error instanceof ApiRequestError ? error.message : "Giving up failed.";
-    }
-  };
-
   const openFile = useCallback((path: string, line?: number, col?: number) => {
     navigate({ type: "open", path, line, col });
   }, []);
@@ -176,9 +158,7 @@ export function PuzzleWorkspace({ puzzle }: { puzzle: PuzzleDetail }) {
         <PromptPanel
           puzzle={puzzle}
           status={progress.status}
-          attempts={progress.attempts}
           unlocked={unlocked}
-          onGiveUp={giveUp}
         />
         <Splitter
           label="Resize the prompt panel"
@@ -216,10 +196,10 @@ export function PuzzleWorkspace({ puzzle }: { puzzle: PuzzleDetail }) {
           pick={pick}
           onSubmit={() => void submit()}
           submitting={submitting}
+          waitingForAuth={me === null}
           submitError={submitError}
           result={shownResult}
           attempts={progress.attempts}
-          status={progress.status}
           signInReason={signInReason}
           signedIn={login !== null}
         />

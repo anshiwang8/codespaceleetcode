@@ -1,5 +1,118 @@
 # DEVLOG
 
+## Fix doc drift, and lock down client sequences
+
+Type: Fix, Change
+
+Goal: Make `spec.md` and `CLAUDE.md` describe what the code does, and make the rule about locking down new tables something a test enforces, not just a note.
+
+What should be done: Correct the stale routes, commands, columns and connection details, and document what every new migration must do on hosted Supabase.
+
+What was done (technical):
+
+- **spec.md.** Section 6 runs `uv run python -m ingest validate`. Section 7's runtime flow names the real routes under `/api/snapshots/:id/`, plus the outline call, and submit returns `{ correct, attempts }` at `/api/puzzles/:slug/submit`. Section 8 lists `snapshots.content_hash`.
+- **The service role was never used.** `spec.md` section 8 and `CLAUDE.md` rule 1 said the server reads answer keys through the Supabase service role. Nothing uses a Supabase client or that key: the server uses `pg` with `DATABASE_URL` everywhere, and refuses to run in production without it. Both now say so. The rule itself is unchanged.
+- **New tables on hosted Supabase.** Supabase grants `anon` and `authenticated` everything on each new table, sequence and function in `public`. `supabase/local/shim.sql` now does the same, so the local database behaves like hosted. New tests in `web/tests/rls.test.ts` fail if a table has no row-level security, if clients hold any grant beyond the expected reads, or if they can use a sequence. A throwaway migration that created a table carelessly failed all three. The sequence check picks out sequences in a materialized CTE first, because `has_sequence_privilege` raises an error rather than returning false when the planner tries it on an index.
+- **That found a real gap.** 0001 revoked client access to all tables, but sequences aren't tables, so on hosted Supabase clients kept `USAGE` and `UPDATE` on every ID sequence. `UPDATE` allows `setval`, which could wind a sequence back onto existing rows. PostgREST doesn't expose sequences directly, so it was hard to reach, but clients never need it. Migration `0004_revoke_client_sequences.sql` revokes it.
+- `CLAUDE.md` says what a migration that adds a table must do. The macOS notes were already added with the macOS work.
+- 485 ingest tests (1 Windows-only skip), 482 web tests against real Postgres and 54 Playwright tests pass, e2e twice in a row. All 85 puzzles validate.
+
+## Hardening from the repo audit
+
+Type: Fix, Removal
+
+Goal: Fix the low-severity findings from the repo audit: rate-limit gaps, error handling, blind-solve integrity, input checks on `repos.yaml`, and missing tests.
+
+What should be done: Fix each one with a test that fails before the fix, and measure before changing anything on cost grounds.
+
+What was done (technical):
+
+- **Rate limits.** Signed-out search was keyed on the first `X-Forwarded-For` entry, which the client writes, so each request could pick a fresh bucket. It now uses the last entry, which the nearest proxy appends; Vercel sends one entry, so it's the same there. A rare two-letter query took about 400 ms on fastapi's 20 MB snapshot, since the trigram index needs 3 characters, against about 15 ms for a rare 4-letter one. Queries under 3 characters now also count against a limit of 30 a minute. Search is debounced, so a person sends about one per word.
+- **`withTransaction`.** A failed rollback replaced the real error and returned a broken connection to the pool. The real error is now rethrown and the connection destroyed, tested with a fake pool.
+- **`readJson`.** A chunked body has no `Content-Length`, so the whole body was read before the size check, and the check counted UTF-16 characters, not bytes. It now counts bytes as they arrive and stops past 256 KB.
+- **Sequence removal.** The audit said a `remove` without a `key` removed every item; it actually removed none. No caller did it, but the type allowed it. `remove` (by ID, for sets) and `remove-item` (by key, for sequences) are now separate actions, so it can't be written.
+- **Blind solves.** `blind-check` printed pass or fail on every run, so a solver could guess until it passed, and a choice puzzle has 3 to 5 options. Each solver now gets one graded attempt per puzzle version, kept in `content/blind-attempts.json`. A rerun repeats the first result, so `--write` still works after a check without it. The version is a hash of the exported puzzle, not the key, since a hash of a choice ID could be reversed by trying each one. The validator has a new check, `verifier-not-author`, and `blind-check` uses the same name rule: `agent:` stripped and case ignored.
+- **`repos.yaml`.** Duplicate slugs and anything but a plain `https://` URL are refused. The URL goes to `git fetch`, where `ext::` and `file://` run or read locally, and into the attribution link on every puzzle page, where `javascript:` would run.
+- **Indexer safety on macOS and Linux.** `stage_files` doesn't copy permissions, so staged files are never executable; a test now locks that in. As a second layer, `run_tool` drops relative `PATH` entries, since an empty entry or `.` means the stage dir, where npm's `#!/usr/bin/env node` would find a repo's `node`. The test shows the attack working without the protection. Rebuilt `psf-requests` and `h3js-h3` snapshots are byte-identical.
+- **Tests.** The R2 leak scan now reads `.env`, `.env.local` and the like, which it skipped because their suffix isn't a code suffix. Grading cases for a wrong file, a different symbol, an extra sequence element and a repeated one are in `grading-cases.json`; both graders already passed them.
+- **Removed** the unused `ingest/validate.py`. Error hints now say `uv run python -m ingest` or `pnpm validate`.
+- The `agent-only-note` e2e flake read the note straight after a navigation without `visible()`, which `helpers.ts` says to use there. It passed 24 times in 24 after the change.
+- 485 ingest tests (1 Windows-only skip), 478 web tests against real Postgres and 54 Playwright tests pass, e2e twice in a row. All 85 puzzles validate.
+
+Still open:
+
+- Earlier blind solves weren't recorded in the ledger, so it starts empty.
+- With no proxy in front, as on localhost, every signed-out client shares the `ip:unknown` bucket. Production needs a proxy that sets `X-Forwarded-For`, which Vercel does.
+
+## Close three open items: the reference cap, unknown puzzles, LOCALDB_PORT
+
+Type: Fix
+
+Goal: Close three "Still open" items from the MVP review: find references could be cut short without saying so, unknown puzzle URLs returned HTTP 200, and `pnpm dev` ignored `LOCALDB_PORT`.
+
+What should be done: Fix each one with a test that fails before the fix, and update the spec's API section.
+
+What was done (technical):
+
+- **The reference cap is explicit.** `/api/snapshots/:id/symbols` asks for 501 references, returns at most 500, and sets `referencesTruncated` when there were more, the way search does. The UI used to guess from the list length, so a symbol with exactly 500 references showed "first 500". Unit tests cover 501+ and exactly 500, and two e2e tests check the label both ways.
+- **Unknown puzzles are a 404.** The root `loading.tsx` wrapped every page, so streaming began before the puzzle page could call `notFound()`. The list page and its `loading.tsx` moved into the `app/(list)` route group, and the new `app/puzzles/[slug]/layout.tsx` looks the puzzle up before the puzzle's own `loading.tsx` streams. The layout, metadata and page share one lookup through `web/lib/server/puzzle-page.ts`, which uses React's `cache`. The e2e test now asserts 404 for a missing slug and a malformed one, and 200 for a real puzzle.
+- **`LOCALDB_PORT` is honoured everywhere.** `web/lib/server/db.ts`, `web/tests/global-setup.ts` and `ingest seed` now use it as `scripts/localdb.mjs` does, and reject a value that isn't a port. An empty value means the default in the scripts too, rather than port 0.
+- **Two e2e races were exposed, both in the tests.** They showed up because the route change shifted page timing. Running the same tests on the commit before this change, and on that commit plus only the route move, showed the move was the trigger.
+  - `clickToken` measured a line Monaco had just replaced, because re-rendering detaches a line's elements. The rectangle came back as 0,0, so the test clicked the header. It now measures again when the line is detached or has no size. The F12 test went from 10 failures in 48 to 32 passes in 32.
+  - The file-retry test failed exactly one request. When the viewer mounted just as the file was clicked, development's strict mode loaded the file twice: the first load got the 500 and was thrown away, and the second succeeded, so no error showed. The test now fails every request until it clicks "Try again", like the manifest test beside it. Production mounts once, so this was never visible to users. 48 passes in 48, from 3 failures in 24.
+- 452 ingest tests (1 Windows-only skip), 464 web tests against real Postgres and 54 Playwright tests pass, twice in a row for e2e. All 85 puzzles validate.
+
+This closes "`LOCALDB_PORT` is only honoured by the scripts", "The `/symbols` route caps references at 500 with no `truncated` flag" and "Unknown puzzle URLs return HTTP 200". The detached-line race in `clickToken` probably also explains the `cursor-symbol` timeouts in the entry below, though those runs weren't traced.
+
+Still open:
+
+- "creates one user from concurrent first logins" timed out at 5 seconds twice in five full web runs right after a restart, while the 15-minute load average was above 20. It passed 10 times in 10 once the load dropped. This change doesn't touch dev login.
+
+## Correctness fixes from the repo audit
+
+Type: Fix
+
+Goal: Fix the bugs a full audit of the repo found, each of which could give wrong data or hide something from the user without saying so.
+
+What should be done: Fix each one with a test that fails before the fix, without weakening any validator check.
+
+What was done (technical):
+
+- **Seeding could empty the site.** A content folder with no `puzzles/` passed validation with 0 puzzles, and seeding then treated every puzzle as removed: it deleted the untried ones and unpublished the rest. `validate_content` now fails when it finds no puzzles.
+- **symbol-unique switched itself off.** If a prompt mentioned the answer's own file anywhere, only that file was checked, even when the prompt also named a wider directory. Spec section 6 says the widest scope wins. The directory now takes precedence, with a must-fail fixture. All 85 puzzles still pass.
+- **Override reasons were printed.** They're author prose and can name the answer (`ajv-trace-001`'s does), so CI logs could carry it. Only the check name is printed now.
+- **Rebuilt snapshots kept a stale cache.** `/snapshots/...` sent `immutable` for a year, but a rebuilt snapshot keeps its name. It now sends `public, no-cache` with a SHA-256 ETag and answers a match with 304.
+- **Seeding missed changed file bytes.** The snapshot hash covered the manifest, which records only sizes, so an edit at the same size never reloaded without `--force`. The hash now covers every file's bytes. Re-seeding 15 snapshots takes about 3 seconds; the first run after this change reloads them all once.
+- **A result could vanish.** Submitting before `/api/me` answered stored the result under no login, so it was never shown. Submit stays disabled until the page knows who's signed in, with an e2e test that holds `/api/me` back.
+- **A changed key left stale progress.** When seeding changes a puzzle's answer key, it now regrades that puzzle's stored submissions with the Python grader and recomputes each user's status and solve time. Each submission keeps its recorded `correct`, which says how it was graded at the time. This closes the open "a user stays `solved` if a puzzle's key later changes".
+
+Still open:
+
+- Under heavy machine load, e2e tests waiting on `cursor-symbol` can time out at 15 seconds, and `agent-only-note` once matched two elements. All passed on a rerun, and with this change and without.
+
+## Run on macOS, and remove giving up
+
+Type: Fix, Removal
+
+Goal: Make the project install, run and test on macOS, since it had only ever run on Windows. Then remove the give-up feature.
+
+What should be done: Fix whatever stops a fresh macOS clone from working, run every suite there, and take giving up out of the site, the API, the database and the docs.
+
+What was done (technical):
+
+- **`pnpm install` failed on macOS.** `pnpm-workspace.yaml`'s `allowBuilds` listed only the Windows `embedded-postgres` package, and pnpm refuses an unlisted build. The macOS and Linux packages are now `true`, because their install script links Postgres's libraries.
+- **`README.md` was UTF-16,** so git showed it as binary and plain `grep` found nothing in it. It's UTF-8 now, with macOS install steps for uv and pnpm. The install hints in `scripts/local.mjs` and `fetch.py` no longer give only `winget`. Node is documented as 22 or newer, with `engines` in `package.json`, since everything ran on Node 26.
+- **Ctrl+C.** `scripts/local.mjs` starts pnpm without a shell everywhere except Windows, so a signal reaches pnpm. `localdb.mjs` exits cleanly if Postgres already got the signal itself. `scripts/e2e.mjs` now cleans up on Ctrl+C; before, the temp database folder and `.next-e2e` were left behind. Sending Ctrl+C's signal to a running `pnpm local` and to an e2e run left no process, temp folder or build behind.
+- The go-to-definition tooltip and spec say cmd-click on macOS. The e2e test stays on Ctrl, with a comment saying why: Playwright's Desktop Chrome profile reports a Windows user agent.
+- `.DS_Store` is ignored at the root.
+- On macOS (Apple silicon, Node 26) all 15 snapshots built, all 85 puzzles pass `pnpm validate`, and the whole seed took under a minute. 421 ingest tests, 27 seed tests, 457 web tests against real Postgres, and 51 Playwright tests pass.
+- **Giving up is gone.** The button, `POST /api/puzzles/:slug/give-up`, `GiveUpResponse` and the `given_up` status are removed. A solution unlocks only after a correct answer. Migration `0003_remove_give_up.sql` turns earlier give-ups into `attempted`, limits `progress.status` to `attempted` and `solved`, and drops `progress.gave_up`. The e2e test that checked solution rendering through giving up now gets there by solving. New tests check that the route is gone and that the database rejects `given_up`.
+
+Still open:
+
+- Snapshots built on macOS weren't compared byte for byte with Windows builds. macOS and Windows both ignore filename case, so neither stands in for a Linux CI build.
+- Anyone who gave up earlier is now `attempted`, so they can still solve the puzzle after seeing its solution.
+
 ## Review fixes before merging the MVP
 
 Type: Fix
