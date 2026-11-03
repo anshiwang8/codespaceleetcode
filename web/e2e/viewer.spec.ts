@@ -75,25 +75,32 @@ test.describe("code viewer", () => {
     expect(errors).toEqual([]);
   });
 
-  test("a symbol at the reference cap says the list is cut short", async ({ page }) => {
-    await page.route("**/api/snapshots/*/symbols?*", async (route) => {
-      const response = await route.fetch();
-      const body = (await response.json()) as { symbol: unknown; references: unknown[] };
-      if (body.symbol) {
-        body.references = Array.from({ length: 500 }, (_, index) => ({
-          file: FILES.views,
-          line: 1,
-          col: index + 1,
-          endCol: index + 2,
-        }));
-      }
-      await route.fulfill({ response, json: body });
+  // The server says when it cut the list short. A full list of exactly 500 isn't cut short.
+  for (const [truncated, label] of [
+    [true, "References (first 500)"],
+    [false, "References"],
+  ] as const) {
+    test(`500 references with referencesTruncated ${truncated} show "${label}"`, async ({ page }) => {
+      await page.route("**/api/snapshots/*/symbols?*", async (route) => {
+        const response = await route.fetch();
+        const body = (await response.json()) as { symbol: unknown; references: unknown[]; referencesTruncated: boolean };
+        if (body.symbol) {
+          body.references = Array.from({ length: 500 }, (_, index) => ({
+            file: FILES.views,
+            line: 1,
+            col: index + 1,
+            endCol: index + 2,
+          }));
+          body.referencesTruncated = truncated;
+        }
+        await route.fulfill({ response, json: body });
+      });
+      await openPuzzle(page, "e2e-find-symbol");
+      await openFile(page, FILES.views);
+      await cursorOnSymbol(page, "export function renderNotFound", "renderNotFound", "src/views.ts#renderNotFound");
+      await expect(page.getByTestId("find-references")).toHaveText(label);
     });
-    await openPuzzle(page, "e2e-find-symbol");
-    await openFile(page, FILES.views);
-    await cursorOnSymbol(page, "export function renderNotFound", "renderNotFound", "src/views.ts#renderNotFound");
-    await expect(page.getByTestId("find-references")).toHaveText("References (first 500)");
-  });
+  }
 
   test("hovering a name shows its symbol from the index", async ({ page }) => {
     await openPuzzle(page, "e2e-find-symbol");
@@ -179,20 +186,19 @@ test.describe("code viewer", () => {
   });
 
   test("a file that fails to load offers a retry that works", async ({ page }) => {
-    let failures = 1;
+    // Not a count of failures: if the viewer mounts just as the file is clicked, React's strict mode
+    // runs its load twice in development, and the second, successful fetch would hide the error.
+    let broken = true;
     await page.route("**/snapshots/**/files/src/views.ts", async (route) => {
-      if (failures > 0) {
-        failures -= 1;
-        await route.fulfill({ status: 500, body: "nope" });
-      } else {
-        await route.continue();
-      }
+      if (broken) await route.fulfill({ status: 500, body: "nope" });
+      else await route.continue();
     });
     await openPuzzle(page, "e2e-find-symbol");
     await page.locator('[data-testid="tree-dir"][data-path="src"]').click();
     await page.locator(`[data-testid="tree-file"][data-path="${FILES.views}"]`).click();
     const error = page.getByTestId("file-error");
     await expect(error).toContainText("couldn't be loaded");
+    broken = false;
     await error.getByRole("button", { name: "Try again" }).click();
     await expectOpenFile(page, FILES.views);
   });
@@ -320,9 +326,16 @@ test.describe("puzzle page furniture", () => {
     await expect(page.getByTestId("answer-tray").locator('input:not([type="radio"]), textarea, [contenteditable]')).toHaveCount(0);
   });
 
-  test("an unknown puzzle says so", async ({ page }) => {
-    // The status is 200, because loading.tsx starts streaming before the page knows it's missing.
-    await page.goto("/puzzles/no-such-puzzle");
-    await expect(page.getByRole("heading", { name: "Not found" })).toBeVisible();
+  test("an unknown puzzle says so, with a 404", async ({ page }) => {
+    for (const slug of ["no-such-puzzle", "Not%20A%20Slug"]) {
+      const response = await page.goto(`/puzzles/${slug}`);
+      expect(response?.status()).toBe(404);
+      await expect(page.getByRole("heading", { name: "Not found" })).toBeVisible();
+    }
+  });
+
+  test("a real puzzle is a 200", async ({ page }) => {
+    const response = await page.goto("/puzzles/e2e-find-symbol");
+    expect(response?.status()).toBe(200);
   });
 });

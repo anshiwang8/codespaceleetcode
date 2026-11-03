@@ -21,8 +21,6 @@ from ingest.repos import Repo, load_repos
 from ingest.snapshot_index import read_jsonl, read_manifest
 from ingest.validate import Report, format_report, validate_content
 
-# Only used when SUPABASE_DB_URL is unset. Matches scripts/localdb.mjs's defaults.
-LOCAL_DB_URL = "postgres://postgres:postgres@localhost:54329/codebase_puzzles"
 # Without one, a stopped database hangs for minutes here. A connect_timeout in the URL wins.
 _DEFAULT_CONNECT_TIMEOUT_SECONDS = 10
 
@@ -50,10 +48,24 @@ class PuzzleCounts:
     regraded: int = 0
 
 
+def _local_db_url() -> str:
+    """The `pnpm db` database, on LOCALDB_PORT like scripts/localdb.mjs."""
+    raw = os.environ.get("LOCALDB_PORT", "")
+    if raw == "":
+        port = 54329
+    elif raw.isascii() and raw.isdigit():
+        port = int(raw)
+    else:
+        port = 0
+    if not 1 <= port <= 65535:
+        raise IngestError("LOCALDB_PORT must be a port number.")
+    return f"postgres://postgres:postgres@localhost:{port}/codebase_puzzles"
+
+
 def database_url() -> str:
     url = os.environ.get("SUPABASE_DB_URL")
     if url is None:
-        return LOCAL_DB_URL
+        return _local_db_url()
     if not url.strip():
         raise IngestError("SUPABASE_DB_URL is set but empty. Unset it to use the local database.")
     return url

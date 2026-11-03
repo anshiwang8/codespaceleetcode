@@ -50,7 +50,7 @@ From the repo root:
 
 ```
 pnpm local               # database, seed, site at http://127.0.0.1:3000 (PORT changes the port). Needs snapshots: see README.md on a fresh clone
-pnpm db                  # start local Postgres, apply migrations (stays running)
+pnpm db                  # start local Postgres, apply migrations (stays running). LOCALDB_PORT changes its port, and pnpm dev, the tests and ingest seed follow it
 pnpm db:reset            # delete all local database data
 pnpm dev                 # web app, bound to 127.0.0.1 because dev login trusts the Host header
 pnpm test                # all unit tests: test:ingest, then test:web. Web tests fail without pnpm db running or TEST_DATABASE_URL; ALLOW_NO_DB=1 skips the database ones

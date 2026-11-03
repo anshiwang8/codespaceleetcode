@@ -107,7 +107,7 @@ export interface SourcePosition {
   endCol: number;
 }
 
-/** The most references one response carries. A full list means there may be more. */
+/** The most references one response carries. */
 export const REFERENCE_CAP = 500;
 
 /** GET /api/snapshots/:id/symbols?file=&line=&col= */
@@ -115,6 +115,8 @@ export interface SymbolAtPositionResponse {
   symbol: SymbolInfo | null;
   definition: SourcePosition | null;
   references: SourcePosition[];
+  /** True when the symbol has more than REFERENCE_CAP references and only the first are listed. */
+  referencesTruncated: boolean;
 }
 
 /** GET /api/snapshots/:id/symbols/outline?file= */

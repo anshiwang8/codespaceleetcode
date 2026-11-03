@@ -1,5 +1,29 @@
 # DEVLOG
 
+## Close three open items: the reference cap, unknown puzzles, LOCALDB_PORT
+
+Type: Fix
+
+Goal: Close three "Still open" items from the MVP review: find references could be cut short without saying so, unknown puzzle URLs returned HTTP 200, and `pnpm dev` ignored `LOCALDB_PORT`.
+
+What should be done: Fix each one with a test that fails before the fix, and update the spec's API section.
+
+What was done (technical):
+
+- **The reference cap is explicit.** `/api/snapshots/:id/symbols` asks for 501 references, returns at most 500, and sets `referencesTruncated` when there were more, the way search does. The UI used to guess from the list length, so a symbol with exactly 500 references showed "first 500". Unit tests cover 501+ and exactly 500, and two e2e tests check the label both ways.
+- **Unknown puzzles are a 404.** The root `loading.tsx` wrapped every page, so streaming began before the puzzle page could call `notFound()`. The list page and its `loading.tsx` moved into the `app/(list)` route group, and the new `app/puzzles/[slug]/layout.tsx` looks the puzzle up before the puzzle's own `loading.tsx` streams. The layout, metadata and page share one lookup through `web/lib/server/puzzle-page.ts`, which uses React's `cache`. The e2e test now asserts 404 for a missing slug and a malformed one, and 200 for a real puzzle.
+- **`LOCALDB_PORT` is honoured everywhere.** `web/lib/server/db.ts`, `web/tests/global-setup.ts` and `ingest seed` now use it as `scripts/localdb.mjs` does, and reject a value that isn't a port. An empty value means the default in the scripts too, rather than port 0.
+- **Two e2e races were exposed, both in the tests.** They showed up because the route change shifted page timing. A run of the same tests on the Phase 2 commit, and on that commit plus only the route move, showed the move was the trigger.
+  - `clickToken` measured a line Monaco had just replaced, because re-rendering detaches a line's elements. The rectangle came back as 0,0, so the test clicked the header. It now measures again when the line is detached or has no size. The F12 test went from 10 failures in 48 to 32 passes in 32.
+  - The file-retry test failed exactly one request. When the viewer mounted just as the file was clicked, development's strict mode loaded the file twice: the first load got the 500 and was thrown away, and the second succeeded, so no error showed. The test now fails every request until it clicks "Try again", like the manifest test beside it. Production mounts once, so this was never visible to users. 48 passes in 48, from 3 failures in 24.
+- 452 ingest tests (1 Windows-only skip), 464 web tests against real Postgres and 54 Playwright tests pass, twice in a row for e2e. All 85 puzzles validate.
+
+This closes "`LOCALDB_PORT` is only honoured by the scripts", "The `/symbols` route caps references at 500 with no `truncated` flag" and "Unknown puzzle URLs return HTTP 200". The detached-line race in `clickToken` probably also explains the `cursor-symbol` timeouts in the entry below, though those runs weren't traced.
+
+Still open:
+
+- "creates one user from concurrent first logins" timed out at 5 seconds twice in five full web runs right after a restart, while the 15-minute load average was above 20. It passed 10 times in 10 once the load dropped. This change doesn't touch dev login.
+
 ## Correctness fixes from the repo audit
 
 Type: Fix

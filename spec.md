@@ -297,7 +297,7 @@ progress     (user_id, puzzle_id, status, attempts, solved_at)        -- status:
 | `/api/puzzles/:slug` | GET | Prompt, metadata, answer kind, set count, snapshot info. **Never the key.** |
 | `/api/puzzles/:slug/submit` | POST | `{ correct, attempts }` |
 | `/api/puzzles/:slug/solution` | GET | Solution markdown, only if solved |
-| `/api/snapshots/:id/symbols?file=&line=&col=` | GET | Definition + references at a position |
+| `/api/snapshots/:id/symbols?file=&line=&col=` | GET | Definition + references at a position, capped at 500, with `referencesTruncated` when there are more |
 | `/api/snapshots/:id/symbols/outline?file=` | GET | Symbols in a file |
 | `/api/snapshots/:id/search?q=` | GET | File/line matches, capped at 200 |
 | `/api/me` | GET | The signed-in user, and whether dev login is available |
@@ -310,6 +310,7 @@ Response shapes live in `web/lib/api-types.ts`. Submit validates that every subm
 - Signed-out requests to `/solution` and `/api/me/stats` get 401. A signed-in user who hasn't unlocked a solution gets 403.
 - Every graded submission counts as an attempt, including ones after solving. A rejected request doesn't.
 - `solved` is final: later submissions are graded and counted, but never change the status. The one exception is a changed answer key: seeding then regrades that puzzle's submissions and recomputes each user's status, keeping each submission's recorded `correct`.
+- An unknown or malformed puzzle slug is a 404, from `/api/puzzles/:slug` and from the puzzle page. The page checks in `app/puzzles/[slug]/layout.tsx`, before its `loading.tsx` starts streaming, and the list page's `loading.tsx` sits in the `app/(list)` route group so it doesn't wrap puzzle pages.
 - Search is case-insensitive. The Postgres planner chooses between the trigram index and the path index, because forcing trigram was only faster when nothing matched.
 
 ---

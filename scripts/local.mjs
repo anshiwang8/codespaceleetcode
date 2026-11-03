@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 import pg from "pg";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const PORT = Number(process.env.LOCALDB_PORT ?? 54329);
+const PORT = Number(process.env.LOCALDB_PORT || 54329);
 const DATABASE_URL = `postgres://postgres:postgres@localhost:${PORT}/codebase_puzzles`;
 const SITE_PORT = Number(process.env.PORT ?? 3000);
 const SITE_URL = `http://127.0.0.1:${SITE_PORT}`;

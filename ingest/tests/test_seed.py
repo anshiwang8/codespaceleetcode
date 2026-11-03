@@ -23,7 +23,7 @@ from typer.testing import CliRunner
 from ingest.cli import app
 from ingest.errors import IngestError
 from ingest.paths import REPO_ROOT
-from ingest.seed import LOCAL_DB_URL, database_url, seed_content
+from ingest.seed import database_url, seed_content
 
 ADMIN_URL = os.environ.get("INGEST_TEST_DB_URL")
 SKIP_REASON = (
@@ -461,7 +461,14 @@ def test_output_never_shows_the_password(db_url: str) -> None:
 
 def test_database_url_defaults_only_when_unset(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("SUPABASE_DB_URL", raising=False)
-    assert database_url() == LOCAL_DB_URL
+    monkeypatch.delenv("LOCALDB_PORT", raising=False)
+    assert database_url() == "postgres://postgres:postgres@localhost:54329/codebase_puzzles"
+    monkeypatch.setenv("LOCALDB_PORT", "54400")
+    assert database_url() == "postgres://postgres:postgres@localhost:54400/codebase_puzzles"
+    monkeypatch.setenv("LOCALDB_PORT", "nope")
+    with pytest.raises(IngestError, match="LOCALDB_PORT"):
+        database_url()
+    monkeypatch.delenv("LOCALDB_PORT")
     monkeypatch.setenv("SUPABASE_DB_URL", "postgres://elsewhere/db")
     assert database_url() == "postgres://elsewhere/db"
     monkeypatch.setenv("SUPABASE_DB_URL", "")

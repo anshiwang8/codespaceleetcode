@@ -92,12 +92,18 @@ export async function symbolAtPosition(
     [fileId, line, col],
   );
   const symbol = rows[0];
-  if (!symbol) return { symbol: null, definition: null, references: [] };
+  if (!symbol) return { symbol: null, definition: null, references: [], referencesTruncated: false };
+  // One past the cap tells whether there are more, as search does.
   const [definitions, references] = await Promise.all([
     occurrencePositions(symbol.id, "definition", 1),
-    occurrencePositions(symbol.id, "reference", REFERENCE_CAP),
+    occurrencePositions(symbol.id, "reference", REFERENCE_CAP + 1),
   ]);
-  return { symbol: toSymbolInfo(symbol), definition: definitions[0] ?? null, references };
+  return {
+    symbol: toSymbolInfo(symbol),
+    definition: definitions[0] ?? null,
+    references: references.slice(0, REFERENCE_CAP),
+    referencesTruncated: references.length > REFERENCE_CAP,
+  };
 }
 
 /** Null when the snapshot has no such file. */
