@@ -4,8 +4,26 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 WEB = REPO_ROOT / "web"
-SKIPPED_DIRS = frozenset({"node_modules", ".next"})
-TEXT_SUFFIXES = frozenset({".example", ".js", ".json", ".mjs", ".ts", ".tsx"})
+SKIPPED_DIRS = frozenset({"node_modules", ".next", ".next-e2e"})
+TEXT_SUFFIXES = frozenset(
+    {".example", ".js", ".cjs", ".mjs", ".jsx", ".json", ".ts", ".mts", ".cts", ".tsx"}
+)
+
+
+def _is_scanned(path: Path) -> bool:
+    # .env and .env.local have no useful suffix, and they're where a copied credential would land.
+    return path.suffix in TEXT_SUFFIXES or path.name == ".env" or path.name.startswith(".env.")
+
+
+def _r2_offenders(root: Path) -> list[Path]:
+    return [
+        path
+        for path in root.rglob("*")
+        if path.is_file()
+        and not SKIPPED_DIRS.intersection(path.relative_to(root).parts)
+        and _is_scanned(path)
+        and "R2_" in path.read_text(encoding="utf-8", errors="replace")
+    ]
 
 
 def _env_keys(path: Path) -> set[str]:
@@ -14,15 +32,15 @@ def _env_keys(path: Path) -> set[str]:
 
 
 def test_no_r2_references_in_web() -> None:
-    offenders = [
-        path
-        for path in WEB.rglob("*")
-        if path.is_file()
-        and not SKIPPED_DIRS.intersection(path.relative_to(WEB).parts)
-        and path.suffix in TEXT_SUFFIXES
-        and "R2_" in path.read_text(encoding="utf-8")
-    ]
-    assert offenders == []
+    assert _r2_offenders(WEB) == []
+
+
+def test_the_scan_reads_env_files(tmp_path: Path) -> None:
+    for name in (".env", ".env.local", ".env.production.local"):
+        (tmp_path / name).write_text("R2_SECRET_ACCESS_KEY=x\n", encoding="utf-8")
+    (tmp_path / "notes.txt").write_text("R2_ in prose isn't code\n", encoding="utf-8")
+    found = {path.name for path in _r2_offenders(tmp_path)}
+    assert found == {".env", ".env.local", ".env.production.local"}
 
 
 def test_env_examples_match_the_split() -> None:

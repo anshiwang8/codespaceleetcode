@@ -1,5 +1,32 @@
 # DEVLOG
 
+## Hardening from the repo audit
+
+Type: Fix, Removal
+
+Goal: Fix the low-severity findings from the repo audit: rate-limit gaps, error handling, blind-solve integrity, input checks on `repos.yaml`, and missing tests.
+
+What should be done: Fix each one with a test that fails before the fix, and measure before changing anything on cost grounds.
+
+What was done (technical):
+
+- **Rate limits.** Signed-out search was keyed on the first `X-Forwarded-For` entry, which the client writes, so each request could pick a fresh bucket. It now uses the last entry, which the nearest proxy appends; Vercel sends one entry, so it's the same there. A rare two-letter query took about 400 ms on fastapi's 20 MB snapshot, since the trigram index needs 3 characters, against about 15 ms for a rare 4-letter one. Queries under 3 characters now also count against a limit of 30 a minute. Search is debounced, so a person sends about one per word.
+- **`withTransaction`.** A failed rollback replaced the real error and returned a broken connection to the pool. The real error is now rethrown and the connection destroyed, tested with a fake pool.
+- **`readJson`.** A chunked body has no `Content-Length`, so the whole body was read before the size check, and the check counted UTF-16 characters, not bytes. It now counts bytes as they arrive and stops past 256 KB.
+- **Sequence removal.** The audit said a `remove` without a `key` removed every item; it actually removed none. No caller did it, but the type allowed it. `remove` (by ID, for sets) and `remove-item` (by key, for sequences) are now separate actions, so it can't be written.
+- **Blind solves.** `blind-check` printed pass or fail on every run, so a solver could guess until it passed, and a choice puzzle has 3 to 5 options. Each solver now gets one graded attempt per puzzle version, kept in `content/blind-attempts.json`. A rerun repeats the first result, so `--write` still works after a check without it. The version is a hash of the exported puzzle, not the key, since a hash of a choice ID could be reversed by trying each one. The validator has a new check, `verifier-not-author`, and `blind-check` uses the same name rule: `agent:` stripped and case ignored.
+- **`repos.yaml`.** Duplicate slugs and anything but a plain `https://` URL are refused. The URL goes to `git fetch`, where `ext::` and `file://` run or read locally, and into the attribution link on every puzzle page, where `javascript:` would run.
+- **Indexer safety on macOS and Linux.** `stage_files` doesn't copy permissions, so staged files are never executable; a test now locks that in. As a second layer, `run_tool` drops relative `PATH` entries, since an empty entry or `.` means the stage dir, where npm's `#!/usr/bin/env node` would find a repo's `node`. The test shows the attack working without the protection. Rebuilt `psf-requests` and `h3js-h3` snapshots are byte-identical.
+- **Tests.** The R2 leak scan now reads `.env`, `.env.local` and the like, which it skipped because their suffix isn't a code suffix. Grading cases for a wrong file, a different symbol, an extra sequence element and a repeated one are in `grading-cases.json`; both graders already passed them.
+- **Removed** the unused `ingest/validate.py`. Error hints now say `uv run python -m ingest` or `pnpm validate`.
+- The `agent-only-note` e2e flake read the note straight after a navigation without `visible()`, which `helpers.ts` says to use there. It passed 24 times in 24 after the change.
+- 485 ingest tests (1 Windows-only skip), 478 web tests against real Postgres and 54 Playwright tests pass, e2e twice in a row. All 85 puzzles validate.
+
+Still open:
+
+- Earlier blind solves weren't recorded in the ledger, so it starts empty.
+- With no proxy in front, as on localhost, every signed-out client shares the `ip:unknown` bucket. Production needs a proxy that sets `X-Forwarded-For`, which Vercel does.
+
 ## Close three open items: the reference cap, unknown puzzles, LOCALDB_PORT
 
 Type: Fix

@@ -27,6 +27,7 @@ from ingest.puzzles import (
     puzzle_files,
     puzzle_schema_validator,
     resolve_snapshot,
+    solver_name,
 )
 from ingest.repos import Repo, load_repos
 from ingest.snapshot_index import IndexedSymbol, SnapshotIndex
@@ -202,6 +203,7 @@ def _check_puzzle(
 ) -> None:
     _check_file_layout(result, puzzle)
     _check_solution(result, puzzle, content_dir)
+    _check_verifiers(result, puzzle)
     _check_accept_reasons(result, puzzle.answer)
 
     repo = resolve_snapshot(puzzle.snapshot, repos)
@@ -213,7 +215,8 @@ def _check_puzzle(
 
     index = _snapshot_index(repo, out_dir, indexes)
     if isinstance(index, IngestError):
-        result.fail("snapshot-index", f"{index} Run `uv run ingest snapshot {repo.slug}`.")
+        hint = f"Run `uv run python -m ingest snapshot {repo.slug}`."
+        result.fail("snapshot-index", f"{index} {hint}")
         return
 
     unresolved = _existence_problems(puzzle.answer, index)
@@ -227,6 +230,13 @@ def _check_file_layout(result: PuzzleResult, puzzle: Puzzle) -> None:
         result.fail("file-location", "the file must be named <id>.yaml")
     if puzzle.id.rsplit("-", 2)[1] != puzzle.type:
         result.fail("id-type", "the id's type segment must match the puzzle's type")
+
+
+def _check_verifiers(result: PuzzleResult, puzzle: Puzzle) -> None:
+    # The second solve has to be blind, and an author has seen the key.
+    authors = {solver_name(author) for author in puzzle.authors}
+    if any(solver_name(verifier) in authors for verifier in puzzle.verified_by):
+        result.fail("verifier-not-author", "a verified_by entry is also an author")
 
 
 def _check_solution(result: PuzzleResult, puzzle: Puzzle, content_dir: Path) -> None:

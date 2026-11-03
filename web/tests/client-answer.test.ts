@@ -68,8 +68,20 @@ describe("draftReducer", () => {
     expect(toSubmission(moved)).toEqual({ kind: "sequence", ids: ["a#1", "a#1", "a#2"] });
 
     // Only the item with this key goes, not its twin with the same ID.
-    const removed = draftReducer(draft, { type: "remove", id: "a#1", key: lastKey });
+    const removed = draftReducer(draft, { type: "remove-item", key: lastKey });
     expect(toSubmission(removed)).toEqual({ kind: "sequence", ids: ["a#1", "a#2"] });
+  });
+
+  it("removes from a set by ID and from a sequence only by key", () => {
+    let set = emptyDraft("set");
+    for (const id of ["a#1", "a#2"]) set = draftReducer(set, { type: "pick-symbol", id });
+    expect(toSubmission(draftReducer(set, { type: "remove", id: "a#1" }))).toEqual({ kind: "set", ids: ["a#2"] });
+    expect(draftReducer(set, { type: "remove-item", key: 1 })).toBe(set);
+
+    let sequence = emptyDraft("sequence");
+    for (const id of ["a#1", "a#1"]) sequence = draftReducer(sequence, { type: "pick-symbol", id });
+    // By ID it can't tell the two apart, so it removes neither.
+    expect(draftReducer(sequence, { type: "remove", id: "a#1" })).toBe(sequence);
   });
 
   it("doesn't move past either end of a sequence", () => {

@@ -10,7 +10,7 @@ LeetCode-style puzzles set inside real open-source repos pinned to a commit. v1 
 
 - `web/` is the Next.js App Router app (TypeScript strict), deployed on Vercel.
 - `ingest/` is the Python pipeline (uv): clone, filter, SCIP index, upload to R2, seed, validate.
-- `content/` holds `repos.yaml`, `schema/`, `puzzles/<repo-slug>/<id>.yaml`, `solutions/<id>.md`.
+- `content/` holds `repos.yaml`, `schema/`, `puzzles/<repo-slug>/<id>.yaml`, `solutions/<id>.md`, and `blind-attempts.json` (each blind solver's first graded result).
 - `supabase/migrations/` holds SQL migrations. Never edit an applied migration; add a new one.
 - `supabase/local/shim.sql` adds what hosted Supabase provides, for the local database only.
 - `web/lib/api-types.ts` holds the API response shapes the routes and UI share.
@@ -68,7 +68,7 @@ uv run python -m ingest snapshot <slug>   # fetch, filter, index, write to inges
 uv run python -m ingest snapshot-all [--force]   # every repo in repos.yaml. --force after any pipeline change, since finished snapshots are skipped
 uv run python -m ingest seed [--force]    # validate, then load snapshots and puzzles into Postgres
 uv run python -m ingest blind-export --out <file> [--repo <slug>]   # puzzles with only what a solver may see
-uv run python -m ingest blind-check <answers.json> --solver <name> [--write]   # grade a blind solve; prints pass or fail, never the key
+uv run python -m ingest blind-check <answers.json> --solver <name> [--write]   # grade a blind solve; prints pass or fail, never the key. One graded attempt per solver per puzzle version
 uv run python -m pytest         # always `python -m`: Windows Application Control can block generated .exe launchers
 uv run ruff check .
 uv run ruff format --check .

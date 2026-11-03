@@ -9,7 +9,13 @@ import {
   route,
   textValue,
 } from "@/lib/server/http";
-import { isRateLimited, rateLimitKey, SEARCH_LIMIT } from "@/lib/server/rate-limit";
+import {
+  isRateLimited,
+  rateLimitKey,
+  SEARCH_LIMIT,
+  SHORT_SEARCH_CHARS,
+  SHORT_SEARCH_LIMIT,
+} from "@/lib/server/rate-limit";
 
 interface Context {
   params: Promise<{ id: string }>;
@@ -17,15 +23,19 @@ interface Context {
 
 const querySchema = z.object({ q: textValue(200).refine((q) => q.length >= 2) });
 
+const TOO_MANY = "Too many searches. Try again in a minute.";
+
 export const GET = route("snapshots.search", async (request, { params }: Context) => {
   const user = await getCurrentUser(request.headers);
-  if (isRateLimited(`search:${rateLimitKey(user, request.headers)}`, SEARCH_LIMIT)) {
-    return errorResponse(429, "Too many searches. Try again in a minute.");
-  }
+  const client = rateLimitKey(user, request.headers);
+  if (isRateLimited(`search:${client}`, SEARCH_LIMIT)) return errorResponse(429, TOO_MANY);
   const snapshotId = parseSnapshotId((await params).id);
   if (snapshotId === null) return errorResponse(404, "Snapshot not found");
   const query = querySchema.safeParse(queryParams(request));
   if (!query.success) return errorResponse(400, "q must be 2 to 200 characters");
+  if (query.data.q.length < SHORT_SEARCH_CHARS && isRateLimited(`search-short:${client}`, SHORT_SEARCH_LIMIT)) {
+    return errorResponse(429, TOO_MANY);
+  }
   const results = await searchSnapshot(snapshotId, query.data.q);
   return results ? jsonResponse(results) : errorResponse(404, "Snapshot not found");
 });

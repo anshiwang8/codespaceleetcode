@@ -4,7 +4,7 @@ import { GET as outlineRoute } from "@/app/api/snapshots/[id]/symbols/outline/ro
 import { GET as symbolsRoute } from "@/app/api/snapshots/[id]/symbols/route";
 import type { OutlineResponse, SearchResponse, SymbolAtPositionResponse } from "@/lib/api-types";
 import { getPool } from "@/lib/server/db";
-import { resetRateLimits, SEARCH_LIMIT } from "@/lib/server/rate-limit";
+import { resetRateLimits, SEARCH_LIMIT, SHORT_SEARCH_LIMIT } from "@/lib/server/rate-limit";
 import { DECOY_RUN, DECOY_STOP, HANDLE_SYMBOL, ROUTER_FILE, seedFixtures, type Fixtures } from "./fixtures";
 import { hasDatabase, makeRequest, params, signIn } from "./helpers";
 
@@ -289,17 +289,33 @@ describe.skipIf(!hasDatabase)("snapshot code index", () => {
 
     describe("rate limit", () => {
       it("returns 429 past the limit, per client", async () => {
-        const from = (ip: string) =>
+        // The proxy appends the address it saw, so the client's own entries come first.
+        const from = (ip: string, spoofed = "192.0.2.1") =>
           searchRoute(
             makeRequest(`/api/snapshots/${fixtures.snapshotId}/search?q=a`, {
-              headers: { "x-forwarded-for": `${ip}, 10.0.0.1` },
+              headers: { "x-forwarded-for": `${spoofed}, ${ip}` },
             }),
             params({ id: String(fixtures.snapshotId) }),
           );
         // A one-character query is refused after counting, so this stays out of the database.
         for (let i = 0; i < SEARCH_LIMIT.limit; i++) expect((await from("198.51.100.1")).status).toBe(400);
         expect((await from("198.51.100.1")).status).toBe(429);
+        expect((await from("198.51.100.1", "192.0.2.99")).status).toBe(429);
         expect((await from("198.51.100.2")).status).toBe(400);
+      });
+
+      it("limits queries too short for the trigram index more tightly", async () => {
+        const search = (q: string) =>
+          searchRoute(
+            makeRequest(`/api/snapshots/${fixtures.snapshotId}/search?q=${q}`, {
+              headers: { "x-forwarded-for": "198.51.100.77" },
+            }),
+            params({ id: String(fixtures.snapshotId) }),
+          );
+        for (let i = 0; i < SHORT_SEARCH_LIMIT.limit; i++) expect((await search("zz")).status).toBe(200);
+        expect((await search("zz")).status).toBe(429);
+        // Longer queries still have room under the main limit.
+        expect((await search("zzz")).status).toBe(200);
       });
 
       it("counts by user when signed in, whatever the IP", async () => {

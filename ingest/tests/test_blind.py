@@ -138,17 +138,26 @@ def test_export_filters_by_repo() -> None:
         export_puzzles(CONTENT, "no-such-repo")
 
 
-def _check(content: Path, tmp_path: Path, answers: object, *extra: str) -> Any:
+def _check(
+    content: Path, tmp_path: Path, answers: object, *extra: str, solver: str = "solver-a"
+) -> Any:
     path = tmp_path / "answers.json"
     path.write_text(json.dumps(answers), encoding="utf-8")
     return CliRunner().invoke(
         app,
-        ["blind-check", str(path), "--solver", "solver-a", "--content-dir", str(content), *extra],
+        ["blind-check", str(path), "--solver", solver, "--content-dir", str(content), *extra],
     )
 
 
+def _content(tmp_path: Path) -> Path:
+    """A copy of the content fixture, since checking records attempts in the content folder."""
+    content = tmp_path / "content"
+    shutil.copytree(CONTENT, content)
+    return content
+
+
 def test_check_passes_every_correct_answer(tmp_path: Path) -> None:
-    result = _check(CONTENT, tmp_path, CORRECT)
+    result = _check(_content(tmp_path), tmp_path, CORRECT)
     assert result.exit_code == 0
     for puzzle_id in CORRECT:
         assert f"PASS {puzzle_id}" in result.output
@@ -166,7 +175,7 @@ def test_check_never_reveals_the_key_on_failure(tmp_path: Path) -> None:
         "widgets-architecture-002": {"kind": "choice", "option": "a"},
         "widgets-architecture-003": "not a submission",
     }
-    result = _check(CONTENT, tmp_path, wrong)
+    result = _check(_content(tmp_path), tmp_path, wrong)
     assert result.exit_code == 1
     for puzzle_id in wrong:
         assert f"FAIL {puzzle_id}" in result.output
@@ -177,7 +186,7 @@ def test_check_never_reveals_the_key_on_failure(tmp_path: Path) -> None:
 
 def test_check_flags_malformed_and_unknown_answers(tmp_path: Path) -> None:
     result = _check(
-        CONTENT,
+        _content(tmp_path),
         tmp_path,
         {
             "widgets-architecture-002": {"kind": "symbol", "id": "x"},
@@ -189,7 +198,7 @@ def test_check_flags_malformed_and_unknown_answers(tmp_path: Path) -> None:
     assert "FAIL no-such-puzzle (no such puzzle)" in result.output
 
 
-def test_check_without_write_changes_nothing(tmp_path: Path) -> None:
+def test_check_without_write_changes_no_puzzle(tmp_path: Path) -> None:
     content = tmp_path / "content"
     shutil.copytree(CONTENT, content)
     before = {path: path.read_bytes() for path in puzzle_files(content)}
@@ -309,3 +318,96 @@ def test_add_verifier_refuses_what_it_cant_edit_safely(tmp_path: Path) -> None:
     with pytest.raises(IngestError):
         add_verifier(path, "agent:s")
     assert path.read_text(encoding="utf-8") == original
+
+
+LEDGER = "blind-attempts.json"
+
+
+def test_a_retry_gets_the_first_attempts_result(tmp_path: Path) -> None:
+    content = _content(tmp_path)
+    assert (
+        _check(
+            content, tmp_path, {"widgets-architecture-002": {"kind": "choice", "option": "a"}}
+        ).exit_code
+        == 1
+    )
+    retry = _check(
+        content,
+        tmp_path,
+        {"widgets-architecture-002": CORRECT["widgets-architecture-002"]},
+        "--write",
+    )
+    assert retry.exit_code == 1
+    assert "FAIL widgets-architecture-002 (first attempt's result" in retry.output
+    path = content / "puzzles" / "acme-widgets" / "widgets-architecture-002.yaml"
+    assert "agent:solver-a" not in path.read_text(encoding="utf-8")
+
+
+def test_a_first_attempt_pass_can_be_recorded_later(tmp_path: Path) -> None:
+    content = _content(tmp_path)
+    answers = {"widgets-find-003": CORRECT["widgets-find-003"]}
+    assert _check(content, tmp_path, answers).exit_code == 0
+    # Even a different answer now only repeats the first result, so this can't be gamed either way.
+    later = _check(
+        content, tmp_path, {"widgets-find-003": {"kind": "file", "path": "src/app.js"}}, "--write"
+    )
+    assert later.exit_code == 0
+    assert "PASS widgets-find-003 (first attempt's result" in later.output
+    path = content / "puzzles" / "acme-widgets" / "widgets-find-003.yaml"
+    assert "agent:solver-a" in path.read_text(encoding="utf-8")
+
+
+def test_a_changed_prompt_gets_a_fresh_attempt(tmp_path: Path) -> None:
+    content = _content(tmp_path)
+    _check(content, tmp_path, {"widgets-architecture-002": {"kind": "choice", "option": "a"}})
+    path = content / "puzzles" / "acme-widgets" / "widgets-architecture-002.yaml"
+    document = path.read_text(encoding="utf-8")
+    prompt = cast(dict[str, Any], yaml.safe_load(document))["prompt"]
+    path.write_text(document.replace(prompt.split()[0], "Reworded:", 1), encoding="utf-8")
+    assert yaml.safe_load(path.read_text(encoding="utf-8"))["prompt"] != prompt
+    result = _check(
+        content, tmp_path, {"widgets-architecture-002": CORRECT["widgets-architecture-002"]}
+    )
+    assert "PASS widgets-architecture-002" in result.output
+    assert "first attempt" not in result.output
+
+
+def test_malformed_and_unknown_answers_dont_use_the_attempt(tmp_path: Path) -> None:
+    content = _content(tmp_path)
+    _check(
+        content,
+        tmp_path,
+        {"widgets-find-003": {"kind": "symbol", "id": "x"}, "no-such-puzzle": "x"},
+    )
+    result = _check(content, tmp_path, {"widgets-find-003": CORRECT["widgets-find-003"]})
+    assert result.exit_code == 0
+    assert "first attempt" not in result.output
+
+
+def test_each_solver_gets_its_own_attempt(tmp_path: Path) -> None:
+    content = _content(tmp_path)
+    _check(content, tmp_path, {"widgets-architecture-002": {"kind": "choice", "option": "a"}})
+    other = _check(
+        content,
+        tmp_path,
+        {"widgets-architecture-002": CORRECT["widgets-architecture-002"]},
+        solver="solver-b",
+    )
+    assert other.exit_code == 0
+
+
+def test_the_attempt_ledger_never_holds_an_answer(tmp_path: Path) -> None:
+    content = _content(tmp_path)
+    _check(content, tmp_path, CORRECT)
+    ledger = (content / LEDGER).read_text(encoding="utf-8")
+    for document in _documents():
+        for value in _answer_values(document["answer"]):
+            assert value not in ledger
+
+
+def test_a_broken_ledger_is_an_error_not_a_reset(tmp_path: Path) -> None:
+    content = _content(tmp_path)
+    (content / LEDGER).write_text("{not json", encoding="utf-8")
+    result = _check(content, tmp_path, CORRECT)
+    assert result.exit_code == 1
+    assert "PASS" not in result.output

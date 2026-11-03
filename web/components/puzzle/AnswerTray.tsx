@@ -281,7 +281,7 @@ function SequenceList({ items, pick }: { items: SequenceItem[]; pick: (action: D
                 type="button"
                 className="btn btn-small btn-quiet"
                 aria-label={`Remove ${item.id}`}
-                onClick={() => pick({ type: "remove", id: item.id, key: item.key })}
+                onClick={() => pick({ type: "remove-item", key: item.key })}
               >
                 ×
               </button>

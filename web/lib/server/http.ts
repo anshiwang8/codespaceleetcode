@@ -29,11 +29,39 @@ export function route<C = unknown>(
   };
 }
 
+/**
+ * The body as text, or undefined once it passes `max` bytes. A chunked body has no Content-Length,
+ * so this counts bytes as they arrive rather than reading the whole body first.
+ */
+async function readCapped(request: Request, max: number): Promise<string | undefined> {
+  if (!request.body) return "";
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let size = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    size += value.byteLength;
+    if (size > max) {
+      await reader.cancel();
+      return undefined;
+    }
+    chunks.push(value);
+  }
+  const bytes = new Uint8Array(size);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return new TextDecoder().decode(bytes);
+}
+
 /** Returns undefined for a body that's too large or isn't JSON. */
 export async function readJson(request: Request): Promise<unknown> {
   if (Number(request.headers.get("content-length") ?? 0) > MAX_BODY_BYTES) return undefined;
-  const text = await request.text();
-  if (text.length > MAX_BODY_BYTES) return undefined;
+  const text = await readCapped(request, MAX_BODY_BYTES);
+  if (text === undefined) return undefined;
   try {
     return JSON.parse(text) as unknown;
   } catch {

@@ -334,7 +334,7 @@ def _copy_occurrences(
         except KeyError as error:
             raise IngestError(
                 f"{path} has a row with unknown or missing {error}. If that's end_col, the "
-                "snapshot predates it, so re-run `uv run ingest snapshot`."
+                "snapshot predates it, so re-run `uv run python -m ingest snapshot`."
             ) from error
     return count
 

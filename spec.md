@@ -149,6 +149,8 @@ Defined in `content/repos.yaml`:
   license: MIT
 ```
 
+Each slug appears once. `url` must be a plain `https://` URL with no credentials, since git fetches it and every puzzle page links to it.
+
 Selection criteria for v1:
 - Permissive or copyleft OSS license (MIT, Apache-2.0, BSD, GPL). Keep the license file in the snapshot and show attribution on every puzzle page.
 - 5k–100k lines of non-test source.
@@ -183,8 +185,9 @@ Only `symbol-unique`, `sequence-edges` and `sequence-alternate-path` can take a 
 
 **Blind second solve (human)**
 - A second person solves the puzzle without seeing the answer key, then adds their name to `verified_by`. If their answer differs from the key, either the key is wrong or the prompt is ambiguous. Fix the prompt. Never fix this by adding to `accept` unless the two answers are truly equivalent.
-- Publishing requires `verified_by` to be non-empty.
+- Publishing requires `verified_by` to be non-empty. The validator fails (`verifier-not-author`) when a `verified_by` name is also an author, comparing names without an `agent:` prefix and ignoring case.
 - For the localhost MVP, a separate agent that never sees the key may do this solve, recorded as `agent:<name>`. The puzzle page shows that no person has checked it. Replace these with human solves before a public launch.
+- `blind-check` gives each solver one graded attempt at each version of a puzzle. The first result is kept in `content/blind-attempts.json`, and a rerun repeats it instead of grading again, so a solver can't guess until it passes. A version is a hash of what `blind-export` shows, never of the key, so rewording a prompt allows a fresh solve. Unknown and malformed answers don't use the attempt. The ledger is committed with the content; if a key was wrong, delete that solver's entry for the puzzle by hand.
 
 ---
 
@@ -231,6 +234,7 @@ GitHub OAuth, R2 upload and deployment aren't built yet. They're needed before a
   schema/puzzle.schema.json
   puzzles/<repo-slug>/<id>.yaml
   solutions/<id>.md
+  blind-attempts.json   each blind solver's first graded result per puzzle version
 /supabase/migrations SQL migrations
 spec.md
 CLAUDE.md
@@ -311,6 +315,7 @@ Response shapes live in `web/lib/api-types.ts`. Submit validates that every subm
 - Every graded submission counts as an attempt, including ones after solving. A rejected request doesn't.
 - `solved` is final: later submissions are graded and counted, but never change the status. The one exception is a changed answer key: seeding then regrades that puzzle's submissions and recomputes each user's status, keeping each submission's recorded `correct`.
 - An unknown or malformed puzzle slug is a 404, from `/api/puzzles/:slug` and from the puzzle page. The page checks in `app/puzzles/[slug]/layout.tsx`, before its `loading.tsx` starts streaming, and the list page's `loading.tsx` sits in the `app/(list)` route group so it doesn't wrap puzzle pages.
+- Signed-out requests are limited by IP: the last `X-Forwarded-For` entry, which the nearest proxy added after anything the client sent. Vercel sends the client's address alone. Queries under 3 characters can't use the trigram index, so they also count against a tighter limit of 30 a minute.
 - Search is case-insensitive. The Postgres planner chooses between the trigram index and the path index, because forcing trigram was only faster when nothing matched.
 
 ---

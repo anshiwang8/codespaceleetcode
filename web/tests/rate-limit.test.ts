@@ -41,8 +41,17 @@ describe("rateLimitKey", () => {
     expect(rateLimitKey(user, new Headers({ "x-forwarded-for": "198.51.100.1" }))).toBe("user:u1");
   });
 
-  it("falls back to the first forwarded IP", () => {
-    expect(rateLimitKey(null, new Headers({ "x-forwarded-for": "198.51.100.1, 10.0.0.1" }))).toBe("ip:198.51.100.1");
+  it("falls back to the IP the nearest proxy added, which is the last one", () => {
+    expect(rateLimitKey(null, new Headers({ "x-forwarded-for": "198.51.100.1" }))).toBe("ip:198.51.100.1");
+    expect(rateLimitKey(null, new Headers({ "x-forwarded-for": "198.51.100.1, 203.0.113.7" }))).toBe("ip:203.0.113.7");
+  });
+
+  it("can't be steered by entries the client wrote first", () => {
+    const real = "203.0.113.7";
+    const keys = ["1.1.1.1", "2.2.2.2", "unknown", ""].map((fake) =>
+      rateLimitKey(null, new Headers({ "x-forwarded-for": `${fake}, ${real}` })),
+    );
+    expect(new Set(keys)).toEqual(new Set([`ip:${real}`]));
   });
 
   it("shares one bucket when there's no IP to go on", () => {

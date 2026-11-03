@@ -33,6 +33,7 @@ FAILING_CHECKS = {
     "set-count",
     "location-window",
     "choice-options",
+    "verifier-not-author",
 }
 
 

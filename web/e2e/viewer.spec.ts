@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { clickToken, cursorOnSymbol, expectOpenFile, FILES, openFile, openPuzzle } from "./helpers";
+import { clickToken, cursorOnSymbol, expectOpenFile, FILES, openFile, openPuzzle, visible } from "./helpers";
 
 test.describe("code viewer", () => {
   test("F12 jumps across files, and the tree, tabs and trail follow", async ({ page }) => {
@@ -272,7 +272,8 @@ test.describe("puzzle page furniture", () => {
 
   test("the unverified note follows verifiedBy", async ({ page }) => {
     await openPuzzle(page, "e2e-find-symbol");
-    await expect(page.getByTestId("agent-only-note")).toContainText("No person has checked");
+    // Read straight after navigating, while hydration can briefly leave a hidden second copy.
+    await expect(visible(page, "agent-only-note")).toContainText("No person has checked");
     await openPuzzle(page, "e2e-find-file");
     await expect(page.getByTestId("agent-only-note")).toHaveCount(0);
   });
