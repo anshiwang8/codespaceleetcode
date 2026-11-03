@@ -19,6 +19,6 @@ answer:
 hints:
   - The `checks` that `_ZodString`'s methods call is the classic checks module, which only renames functions from the core layer.
 solution: solutions/zod-architecture-003.md
-tags: [validation, classic, core]
+tags: [validation, code-structure]
 authors: [agent-author-4]
 verified_by: [agent:blind-6]

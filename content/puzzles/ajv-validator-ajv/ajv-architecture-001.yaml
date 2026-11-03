@@ -18,6 +18,6 @@ answer:
 hints:
   - Ajv._addVocabularies in lib/ajv.ts imports a draft-07 list of vocabularies, which in turn imports each vocabulary's index.
 solution: solutions/ajv-architecture-001.md
-tags: [vocabularies, extension-points]
+tags: [extension-points, validation]
 authors: [agent-author-2]
 verified_by: [agent:blind-2]

@@ -27,6 +27,6 @@ answer:
 hints:
   - The total length is needed to decide which header describes the body.
 solution: solutions/httpx-trace-002.md
-tags: [parsing, http]
+tags: [http-clients]
 authors: [agent-author-6]
 verified_by: [agent:blind-8]

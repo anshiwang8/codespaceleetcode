@@ -17,6 +17,6 @@ answer:
 hints:
   - The callback's result is awaited first if it is a promise.
 solution: solutions/rtk-find-002.md
-tags: [async-thunk]
+tags: [state-management]
 authors: [agent-author-2]
 verified_by: [agent:blind-2]

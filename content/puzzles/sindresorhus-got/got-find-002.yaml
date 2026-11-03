@@ -16,6 +16,6 @@ answer:
 hints:
   - The defaults object is a constant near the middle of options.ts; look for the key that holds numbers rather than strings.
 solution: solutions/got-find-002.md
-tags: [retry, defaults]
+tags: [retries-and-timeouts, configuration]
 authors: [agent-author-2]
 verified_by: [agent:blind-2]

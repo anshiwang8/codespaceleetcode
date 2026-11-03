@@ -17,6 +17,6 @@ answer:
 hints:
   - The lookup is a method that H3 overrides from H3Core, and its name starts with a tilde.
 solution: solutions/h3-find-001.md
-tags: [routing, http]
+tags: [routing]
 authors: [agent-author-2]
 verified_by: [agent:blind-2]

@@ -16,6 +16,6 @@ answer:
 hints:
   - It's called from the method that wraps both dispatching and error handling.
 solution: solutions/flask-find-001.md
-tags: [request-lifecycle, hooks]
+tags: [request-lifecycle, middleware]
 authors: [agent-author-3]
 verified_by: [agent:blind-3]

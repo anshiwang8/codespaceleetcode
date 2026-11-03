@@ -16,6 +16,6 @@ answer:
 hints:
   - Each runtime entry point's `serve` calls one shared helper before starting the server.
 solution: solutions/h3-architecture-001.md
-tags: [architecture, runtime-entries]
+tags: [routing, code-structure]
 authors: [agent-author-2]
 verified_by: [agent:blind-2]

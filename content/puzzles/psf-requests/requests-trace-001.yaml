@@ -23,6 +23,6 @@ answer:
 hints:
   - The top-level helpers don't talk to the network themselves; they delegate to a Session.
 solution: solutions/requests-trace-001.md
-tags: [api, sessions]
+tags: [http-clients]
 authors: [agent-author-3]
 verified_by: [agent:blind-3]

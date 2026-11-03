@@ -17,6 +17,6 @@ answer:
 hints:
   - One of them supports both the sync and the async interface.
 solution: solutions/httpx-architecture-001.md
-tags: [transports, extension-points]
+tags: [http-clients, extension-points]
 authors: [agent-author-3]
 verified_by: [agent:blind-3]

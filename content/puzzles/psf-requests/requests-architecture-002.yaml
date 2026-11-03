@@ -24,6 +24,6 @@ choices:
 hints:
   - Look at what mount does to the other entries after inserting one.
 solution: solutions/requests-architecture-002.md
-tags: [adapters, sessions]
+tags: [http-clients]
 authors: [agent-author-3]
 verified_by: [agent:blind-3]

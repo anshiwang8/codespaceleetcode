@@ -17,6 +17,6 @@ answer:
 hints:
   - The statement is nested inside the origin comparison.
 solution: solutions/httpx-find-002.md
-tags: [redirects, security]
+tags: [http-clients, auth-and-security]
 authors: [agent-author-3]
 verified_by: [agent:blind-3]

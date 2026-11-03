@@ -17,6 +17,6 @@ answer:
 hints:
   - The record is the second element of the returned array. Follow each value's import.
 solution: solutions/vue-architecture-001.md
-tags: [compiler, directives]
+tags: [compilers]
 authors: [agent-author-1]
 verified_by: [agent:blind-1]

@@ -32,6 +32,6 @@ validator_overrides:
   - check: sequence-alternate-path
     reason: Every other path of equal or shorter length reaches calculateRetryDelay through a call to Request._beforeError that runs only on a failure other than the 503 status, from the error and close listeners in Request._onRequest, from the body-sending methods (_sendBody, _onBodyError, _writeBodyInChunks), or from the catch block of Request._onResponse. The prompt fixes the runtime path so that no error is thrown or emitted except the HTTPError that _onResponseBase creates for the 503, so none of those calls runs.
 solution: solutions/got-trace-002.md
-tags: [retry, errors, request-lifecycle]
+tags: [retries-and-timeouts, errors]
 authors: [agent-author-5]
 verified_by: [agent:blind-7]

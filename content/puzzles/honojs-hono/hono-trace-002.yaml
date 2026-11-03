@@ -21,6 +21,6 @@ answer:
 hints:
   - "`redirect` makes two calls on `this`. Only one of them builds the response it returns."
 solution: solutions/hono-trace-002.md
-tags: [redirects, responses]
+tags: [request-lifecycle]
 authors: [agent-author-5]
 verified_by: [agent:blind-7]

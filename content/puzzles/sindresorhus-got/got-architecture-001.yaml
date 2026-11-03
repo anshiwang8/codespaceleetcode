@@ -24,6 +24,6 @@ choices:
 hints:
   - Work out what computedValue is when neither maxRetryAfter nor a request timeout is set.
 solution: solutions/got-architecture-001.md
-tags: [retry]
+tags: [retries-and-timeouts]
 authors: [agent-author-2]
 verified_by: [agent:blind-2]

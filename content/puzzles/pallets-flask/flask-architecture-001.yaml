@@ -18,6 +18,6 @@ answer:
 hints:
   - Look for the methods that Flask calls at the start and at the end of a request.
 solution: solutions/flask-architecture-001.md
-tags: [sessions, extension-points]
+tags: [auth-and-security, extension-points]
 authors: [agent-author-3]
 verified_by: [agent:blind-3]

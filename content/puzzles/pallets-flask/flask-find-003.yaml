@@ -17,6 +17,6 @@ answer:
 hints:
   - Find where the app builds its json attribute, then follow the class it instantiates.
 solution: solutions/flask-find-003.md
-tags: [json, configuration]
+tags: [configuration, extension-points]
 authors: [agent-author-3]
 verified_by: [agent:blind-3]

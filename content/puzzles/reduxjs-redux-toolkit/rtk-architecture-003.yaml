@@ -16,6 +16,6 @@ answer:
 hints:
   - Most of the toolkit is written as functions, so a search for the `class` keyword narrows this down quickly.
 solution: solutions/rtk-architecture-003.md
-tags: [classes]
+tags: [state-management, code-structure]
 authors: [agent-author-2]
 verified_by: [agent:blind-2]

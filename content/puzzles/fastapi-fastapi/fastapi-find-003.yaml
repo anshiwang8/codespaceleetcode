@@ -17,6 +17,6 @@ answer:
 hints:
   - The condition tests an attribute of the object passed as dependency_overrides_provider.
 solution: solutions/fastapi-find-003.md
-tags: [dependencies, testing]
+tags: [dependency-injection]
 authors: [agent-author-3]
 verified_by: [agent:blind-3]

@@ -30,6 +30,6 @@ validator_overrides:
   - check: sequence-alternate-path
     reason: The equal-length alternate paths all go through Ajv.getSchema, which is the branch of validate taken only when the first argument is a string key. The prompt fixes the runtime path to a schema object, so that branch is not taken.
 solution: solutions/ajv-trace-001.md
-tags: [compile, code-generation]
+tags: [compilers]
 authors: [agent-author-2]
 verified_by: [agent:blind-2, agent:blind-4]

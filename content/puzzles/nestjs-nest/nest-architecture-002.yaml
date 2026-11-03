@@ -25,6 +25,6 @@ choices:
 hints:
   - The scope is read from the class when the provider is inserted, and recorded for later.
 solution: solutions/nest-architecture-002.md
-tags: [enhancers, scopes]
+tags: [middleware, dependency-injection]
 authors: [agent-author-1]
 verified_by: [agent:blind-1]

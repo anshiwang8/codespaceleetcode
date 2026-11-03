@@ -16,6 +16,6 @@ answer:
 hints:
   - Some of the calls sit inside closures that these functions return.
 solution: solutions/h3-architecture-003.md
-tags: [middleware, call-graph]
+tags: [middleware]
 authors: [agent-author-2]
 verified_by: [agent:blind-2]

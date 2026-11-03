@@ -24,6 +24,6 @@ answer:
 hints:
   - The "complete" instruction branch is the second one in shell_complete.
 solution: solutions/click-trace-001.md
-tags: [shell-completion]
+tags: [command-line]
 authors: [agent-author-3]
 verified_by: [agent:blind-3]

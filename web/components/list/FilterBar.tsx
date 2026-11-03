@@ -4,29 +4,23 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
 import styles from "@/components/list/list.module.css";
-import type { Difficulty, PuzzleType } from "@/lib/api-types";
-import { DIFFICULTY_LABELS, TYPE_LABELS } from "@/lib/client/labels";
-
-interface Filters {
-  type?: PuzzleType;
-  difficulty?: Difficulty;
-  repo?: string;
-  tag?: string;
-}
+import { browseHref, type BrowseFilters, type BrowseState } from "@/lib/browse";
+import { TYPE_LABELS } from "@/lib/client/labels";
 
 interface FilterBarProps {
-  filters: Filters;
+  state: BrowseState;
   repos: string[];
-  tags: string[];
 }
 
-export function FilterBar({ filters, repos, tags }: FilterBarProps) {
+/** The filters that don't have their own control above: type and repo, plus clearing all of them. */
+export function FilterBar({ state, repos }: FilterBarProps) {
+  const { filters } = state;
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [pending, startTransition] = useTransition();
 
-  const setFilter = (name: keyof Filters, value: string) => {
+  const setFilter = (name: keyof BrowseFilters, value: string) => {
     const next = new URLSearchParams(searchParams);
     if (value) next.set(name, value);
     else next.delete(name);
@@ -35,7 +29,7 @@ export function FilterBar({ filters, repos, tags }: FilterBarProps) {
   };
 
   const select = (
-    name: keyof Filters,
+    name: "type" | "repo",
     label: string,
     options: { value: string; label: string }[],
   ) => (
@@ -60,11 +54,9 @@ export function FilterBar({ filters, repos, tags }: FilterBarProps) {
   return (
     <div className={styles.filters} aria-busy={pending}>
       {select("type", "Type", entries(TYPE_LABELS))}
-      {select("difficulty", "Difficulty", entries(DIFFICULTY_LABELS))}
       {select("repo", "Repo", plain(repos))}
-      {select("tag", "Tag", plain(tags))}
       {active ? (
-        <Link href={pathname} className={styles.clear}>
+        <Link href={browseHref({ filters: {}, group: state.group })} className={styles.clear}>
           Clear filters
         </Link>
       ) : null}

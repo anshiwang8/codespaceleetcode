@@ -25,6 +25,6 @@ answer:
 hints:
   - The connection lookup is where the proxy decision is made.
 solution: solutions/requests-trace-002.md
-tags: [proxies, adapters, auth]
+tags: [http-clients, auth-and-security]
 authors: [agent-author-3]
 verified_by: [agent:blind-3]

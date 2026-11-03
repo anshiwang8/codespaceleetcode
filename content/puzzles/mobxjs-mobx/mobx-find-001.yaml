@@ -19,6 +19,6 @@ answer:
 hints:
   - The function that runs the derivation's function and collects what it reads calls this one right after the run.
 solution: solutions/mobx-find-001.md
-tags: [reactivity, dependency-tracking]
+tags: [reactivity]
 authors: [agent-author-2]
 verified_by: [agent:blind-2]

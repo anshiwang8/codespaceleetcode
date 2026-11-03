@@ -17,6 +17,6 @@ answer:
 hints:
   - The classes that look up which enhancers apply are separate from the ones that run them.
 solution: solutions/nest-architecture-001.md
-tags: [request-pipeline, guards, interceptors, pipes]
+tags: [middleware, request-lifecycle]
 authors: [agent-author-1]
 verified_by: [agent:blind-1]

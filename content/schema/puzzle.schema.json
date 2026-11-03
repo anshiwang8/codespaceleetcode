@@ -52,7 +52,34 @@
       "type": "string",
       "pattern": "^solutions/[^/\\\\]+\\.md$"
     },
-    "tags": { "type": "array", "items": { "$ref": "#/$defs/text" }, "uniqueItems": true },
+    "tags": {
+      "description": "1 to 3 topics from the fixed list. The site shows each with the label and description in web/lib/topics.ts, and a web test keeps the two lists equal.",
+      "type": "array",
+      "items": {
+        "enum": [
+          "routing",
+          "middleware",
+          "request-lifecycle",
+          "errors",
+          "http-clients",
+          "retries-and-timeouts",
+          "reactivity",
+          "compilers",
+          "validation",
+          "dependency-injection",
+          "extension-points",
+          "configuration",
+          "state-management",
+          "observables",
+          "auth-and-security",
+          "code-structure",
+          "command-line"
+        ]
+      },
+      "minItems": 1,
+      "maxItems": 3,
+      "uniqueItems": true
+    },
     "authors": {
       "type": "array",
       "items": { "$ref": "#/$defs/text" },

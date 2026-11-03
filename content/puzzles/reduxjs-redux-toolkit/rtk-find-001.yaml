@@ -19,6 +19,6 @@ answer:
 hints:
   - The snapshot builder and the comparer are two separate top-level functions in the same file.
 solution: solutions/rtk-find-001.md
-tags: [middleware, immutability]
+tags: [state-management, middleware]
 authors: [agent-author-2]
 verified_by: [agent:blind-2]

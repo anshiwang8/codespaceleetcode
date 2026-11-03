@@ -1,15 +1,30 @@
 import { z } from "zod";
+import { DifficultyStrip } from "@/components/list/DifficultyStrip";
 import { FilterBar } from "@/components/list/FilterBar";
+import { GroupBy } from "@/components/list/GroupBy";
+import { PuzzleGroupSection } from "@/components/list/PuzzleGroupSection";
 import { PuzzleTable } from "@/components/list/PuzzleTable";
+import { TopicChips } from "@/components/list/TopicChips";
 import styles from "@/components/list/list.module.css";
+import {
+  DEFAULT_GROUPING,
+  difficultyTallies,
+  filterPuzzles,
+  groupPuzzles,
+  GROUPINGS,
+  topicTallies,
+  type BrowseFilters,
+  type BrowseState,
+  type Grouping,
+} from "@/lib/browse";
 import { getCurrentUser } from "@/lib/server/auth";
 import { textValue } from "@/lib/server/http";
-import { listPuzzles, type PuzzleFilters } from "@/lib/server/puzzles";
+import { listPuzzles } from "@/lib/server/puzzles";
 
 const textFilter = textValue(200);
 
 // A bad or repeated value in the URL is ignored rather than failing the whole page.
-function parseFilters(params: Record<string, string | string[] | undefined>): PuzzleFilters {
+function parseFilters(params: Record<string, string | string[] | undefined>): BrowseFilters {
   const type = z.enum(["find", "trace", "architecture"]).safeParse(params.type);
   const difficulty = z.enum(["easy", "medium", "hard"]).safeParse(params.difficulty);
   const repo = textFilter.safeParse(params.repo);
@@ -22,10 +37,17 @@ function parseFilters(params: Record<string, string | string[] | undefined>): Pu
   };
 }
 
+function parseGrouping(value: string | string[] | undefined): Grouping {
+  const parsed = z.enum(GROUPINGS).safeParse(value);
+  return parsed.success ? parsed.data : DEFAULT_GROUPING;
+}
+
 export default async function PuzzleListPage({ searchParams }: PageProps<"/">) {
-  const filters = parseFilters(await searchParams);
+  const params = await searchParams;
+  const state: BrowseState = { filters: parseFilters(params), group: parseGrouping(params.group) };
   const user = await getCurrentUser();
-  const { puzzles, repos, tags } = await listPuzzles(user?.id ?? null, filters);
+  // Every published puzzle, filtered here, so each control can count what it would show.
+  const { puzzles: all, repos } = await listPuzzles(user?.id ?? null, {});
 
   // `repos` ignores the filters, so empty means nothing is published at all.
   if (repos.length === 0) {
@@ -40,21 +62,51 @@ export default async function PuzzleListPage({ searchParams }: PageProps<"/">) {
     );
   }
 
+  const shown = filterPuzzles(all, state.filters);
+  const groups = groupPuzzles(shown, state.group, state.filters);
+  const showProgress = user !== null;
+  const solved = shown.filter((puzzle) => puzzle.status === "solved").length;
+
   return (
     <main className={styles.page}>
       <div className={styles.heading}>
         <h1>Puzzles</h1>
-        <p className="muted">
-          {puzzles.length} {puzzles.length === 1 ? "puzzle" : "puzzles"}
+        <p className="muted" data-testid="puzzle-count">
+          {shown.length === all.length
+            ? `${all.length} ${all.length === 1 ? "puzzle" : "puzzles"}`
+            : `${shown.length} of ${all.length} puzzles`}
+          {showProgress ? `, ${solved} solved` : null}
         </p>
       </div>
-      <FilterBar filters={filters} repos={repos} tags={tags} />
-      {puzzles.length === 0 ? (
+
+      <DifficultyStrip
+        state={state}
+        tallies={difficultyTallies(all, state.filters)}
+        showProgress={showProgress}
+      />
+      <TopicChips state={state} tallies={topicTallies(all, state.filters)} />
+
+      <div className={styles.toolbar}>
+        <FilterBar state={state} repos={repos} />
+        <GroupBy state={state} />
+      </div>
+
+      {groups.length === 0 ? (
         <p className="notice" data-testid="no-matches">
           No puzzles match these filters.
         </p>
+      ) : state.group === "none" ? (
+        <PuzzleTable puzzles={shown} />
       ) : (
-        <PuzzleTable puzzles={puzzles} />
+        groups.map((group) => (
+          <PuzzleGroupSection
+            key={group.key}
+            group={group}
+            difficulty={state.group === "difficulty" ? group.key : undefined}
+            omit={state.group === "difficulty" ? "difficulty" : state.group === "repo" ? "repo" : undefined}
+            showProgress={showProgress}
+          />
+        ))
       )}
     </main>
   );

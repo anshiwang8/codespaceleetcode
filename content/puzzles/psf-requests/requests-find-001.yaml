@@ -17,6 +17,6 @@ answer:
 hints:
   - Session.prepare_request calls this helper several times, once per setting it merges.
 solution: solutions/requests-find-001.md
-tags: [sessions, configuration]
+tags: [http-clients, configuration]
 authors: [agent-author-3]
 verified_by: [agent:blind-3]

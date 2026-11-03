@@ -23,6 +23,6 @@ choices:
 hints:
   - Look at what the `complete` handler passed to `source.subscribe` does with `resetOnComplete`.
 solution: solutions/rxjs-architecture-002.md
-tags: [multicasting, share]
+tags: [observables]
 authors: [agent-author-1]
 verified_by: [agent:blind-1]

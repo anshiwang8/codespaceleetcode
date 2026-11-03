@@ -17,6 +17,6 @@ answer:
 hints:
   - The check is a single `if` whose other branch collects constraints from the members.
 solution: solutions/zod-find-002.md
-tags: [json-schema, intersection]
+tags: [validation, compilers]
 authors: [agent-author-1]
 verified_by: [agent:blind-1]

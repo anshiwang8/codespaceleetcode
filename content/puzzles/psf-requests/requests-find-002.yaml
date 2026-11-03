@@ -18,6 +18,6 @@ answer:
 hints:
   - Look for the Content-Length header being popped.
 solution: solutions/requests-find-002.md
-tags: [redirects, http]
+tags: [http-clients]
 authors: [agent-author-3]
 verified_by: [agent:blind-3]

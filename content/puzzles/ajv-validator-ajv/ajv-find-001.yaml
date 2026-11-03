@@ -18,6 +18,6 @@ answer:
 hints:
   - The conversion rules for each target type are written as a switch over the type name.
 solution: solutions/ajv-find-001.md
-tags: [coercion, code-generation]
+tags: [validation, compilers]
 authors: [agent-author-2]
 verified_by: [agent:blind-2, agent:blind-4]

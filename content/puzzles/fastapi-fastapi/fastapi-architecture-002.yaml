@@ -17,6 +17,6 @@ answer:
 hints:
   - The base class is named in the class headers; the body-side base is Body.
 solution: solutions/fastapi-architecture-002.md
-tags: [parameters, structure]
+tags: [validation, code-structure]
 authors: [agent-author-3]
 verified_by: [agent:blind-3, agent:blind-4]

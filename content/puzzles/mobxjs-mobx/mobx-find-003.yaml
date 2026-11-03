@@ -17,6 +17,6 @@ answer:
 hints:
   - Look at what `removeObserver` does once the observer set becomes empty.
 solution: solutions/mobx-find-003.md
-tags: [dependency-tracking, batching]
+tags: [reactivity]
 authors: [agent-author-4]
 verified_by: [agent:blind-6]

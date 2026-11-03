@@ -21,6 +21,6 @@ answer:
 hints:
   - The sorted adapter reuses a few operations from the other kind of adapter instead of redefining them.
 solution: solutions/rtk-trace-001.md
-tags: [entity-adapter]
+tags: [state-management]
 authors: [agent-author-2]
 verified_by: [agent:blind-2]

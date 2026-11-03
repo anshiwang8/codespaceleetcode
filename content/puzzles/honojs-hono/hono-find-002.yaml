@@ -15,6 +15,6 @@ answer:
 hints:
   - The fast path is an `if` that appears before the call to `compose` in the same method.
 solution: solutions/hono-find-002.md
-tags: [routing, middleware, performance]
+tags: [routing, middleware]
 authors: [agent-author-1]
 verified_by: [agent:blind-1]

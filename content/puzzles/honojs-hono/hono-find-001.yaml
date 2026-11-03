@@ -15,6 +15,6 @@ answer:
 hints:
   - Look at how the Hono class constructor in src/hono-base.ts chooses `this.getPath`.
 solution: solutions/hono-find-001.md
-tags: [routing, options]
+tags: [routing, configuration]
 authors: [agent-author-1]
 verified_by: [agent:blind-1, agent:blind-4]
