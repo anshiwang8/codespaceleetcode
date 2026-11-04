@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import ReactMarkdown from "react-markdown";
+import { type KeyboardEvent, type RefObject, useId, useRef, useState } from "react";
+import { Markdown } from "@/components/puzzle/Markdown";
 import { SolutionView } from "@/components/puzzle/SolutionView";
 import styles from "@/components/puzzle/puzzle.module.css";
 import type { PuzzleDetail, PuzzleStatus } from "@/lib/api-types";
@@ -13,18 +13,134 @@ import {
 } from "@/lib/client/labels";
 import { topicLabel } from "@/lib/topics";
 
+export type PromptTab = "description" | "solution";
+
+const TABS: readonly PromptTab[] = ["description", "solution"];
+const TAB_LABELS: Record<PromptTab, string> = { description: "Description", solution: "Solution" };
+
 interface PromptPanelProps {
   puzzle: PuzzleDetail;
   status: PuzzleStatus;
   unlocked: boolean;
+  /** Known to be signed out, as opposed to still finding out. */
+  signedOut: boolean;
+  tab: PromptTab;
+  onTabChange: (tab: PromptTab) => void;
+  /** Lets the answer tray's "View solution" move focus onto the Solution tab. */
+  solutionTabRef: RefObject<HTMLButtonElement | null>;
 }
 
-export function PromptPanel({ puzzle, status, unlocked }: PromptPanelProps) {
+export function PromptPanel({
+  puzzle,
+  status,
+  unlocked,
+  signedOut,
+  tab,
+  onTabChange,
+  solutionTabRef,
+}: PromptPanelProps) {
+  const baseId = useId();
+  const descriptionTabRef = useRef<HTMLButtonElement>(null);
+  const tabRefs: Record<PromptTab, RefObject<HTMLButtonElement | null>> = {
+    description: descriptionTabRef,
+    solution: solutionTabRef,
+  };
+  const tabId = (name: PromptTab) => `${baseId}-tab-${name}`;
+  const panelId = (name: PromptTab) => `${baseId}-panel-${name}`;
+
+  // The solution is fetched the first time its tab is open while unlocked, and then stays mounted
+  // (hidden on the other tab) so it isn't fetched again. Never while locked: the server would refuse,
+  // and there is nothing to show. Losing the unlock, by signing out, drops it.
+  const [solutionOpened, setSolutionOpened] = useState(false);
+  if (unlocked && tab === "solution" && !solutionOpened) setSolutionOpened(true);
+  if (!unlocked && solutionOpened) setSolutionOpened(false);
+  const solutionIsNew = unlocked && !solutionOpened;
+
+  const onTabKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    const index = TABS.indexOf(tab);
+    let next: PromptTab | undefined;
+    if (event.key === "ArrowRight") next = TABS[(index + 1) % TABS.length];
+    else if (event.key === "ArrowLeft") next = TABS[(index - 1 + TABS.length) % TABS.length];
+    else if (event.key === "Home") next = TABS[0];
+    else if (event.key === "End") next = TABS[TABS.length - 1];
+    if (!next) return;
+    event.preventDefault();
+    onTabChange(next);
+    tabRefs[next].current?.focus();
+  };
+
+  return (
+    <section className={styles.promptPanel} aria-label="Puzzle">
+      <div
+        className={styles.promptTabs}
+        role="tablist"
+        aria-label="Puzzle panel"
+        onKeyDown={onTabKeyDown}
+        data-testid="prompt-tabs"
+      >
+        {TABS.map((name) => (
+          <button
+            key={name}
+            ref={tabRefs[name]}
+            type="button"
+            role="tab"
+            id={tabId(name)}
+            aria-selected={tab === name}
+            aria-controls={panelId(name)}
+            tabIndex={tab === name ? 0 : -1}
+            className={styles.promptTab}
+            data-testid={`prompt-tab-${name}`}
+            onClick={() => onTabChange(name)}
+          >
+            {name === "solution" && !unlocked ? <LockIcon /> : null}
+            {TAB_LABELS[name]}
+            {name === "solution" && !unlocked ? <span className="visually-hidden"> (locked)</span> : null}
+            {name === "solution" && solutionIsNew ? (
+              <span className={styles.tabBadge} data-testid="solution-tab-badge">
+                Unlocked
+              </span>
+            ) : null}
+          </button>
+        ))}
+      </div>
+
+      <div
+        role="tabpanel"
+        id={panelId("description")}
+        aria-labelledby={tabId("description")}
+        hidden={tab !== "description"}
+        className={styles.tabPanel}
+        data-testid="prompt-panel-description"
+      >
+        <DescriptionTab puzzle={puzzle} status={status} />
+      </div>
+
+      <div
+        role="tabpanel"
+        id={panelId("solution")}
+        aria-labelledby={tabId("solution")}
+        hidden={tab !== "solution"}
+        className={styles.tabPanel}
+        // Focusable so keyboard users can scroll a long explanation straight from the tab.
+        tabIndex={0}
+        data-testid="prompt-panel-solution"
+      >
+        {unlocked ? (
+          solutionOpened ? <SolutionView slug={puzzle.slug} /> : null
+        ) : (
+          <SolutionLocked signedOut={signedOut} />
+        )}
+      </div>
+    </section>
+  );
+}
+
+function DescriptionTab({ puzzle, status }: { puzzle: PuzzleDetail; status: PuzzleStatus }) {
   const [hintsShown, setHintsShown] = useState(0);
   const noPersonChecked = puzzle.verifiedBy.every((name) => name.startsWith("agent:"));
 
   return (
-    <section className={styles.promptPanel} aria-label="Puzzle">
+    <>
       <h1 className={styles.puzzleTitle}>{puzzle.title}</h1>
       <div className={styles.metaRow}>
         <span className="chip">{TYPE_LABELS[puzzle.type]}</span>
@@ -41,9 +157,7 @@ export function PromptPanel({ puzzle, status, unlocked }: PromptPanelProps) {
         ))}
       </div>
 
-      <div className={styles.markdown} data-testid="prompt">
-        <ReactMarkdown skipHtml>{puzzle.prompt}</ReactMarkdown>
-      </div>
+      <Markdown source={puzzle.prompt} testId="prompt" />
 
       <div className={styles.block}>
         <h2>Your answer</h2>
@@ -58,8 +172,8 @@ export function PromptPanel({ puzzle, status, unlocked }: PromptPanelProps) {
           {hintsShown > 0 ? (
             <ol className={styles.hints}>
               {puzzle.hints.slice(0, hintsShown).map((hint, index) => (
-                <li key={index} className={styles.markdown} data-testid="hint">
-                  <ReactMarkdown skipHtml>{hint}</ReactMarkdown>
+                <li key={index} data-testid="hint">
+                  <Markdown source={hint} />
                 </li>
               ))}
             </ol>
@@ -77,8 +191,33 @@ export function PromptPanel({ puzzle, status, unlocked }: PromptPanelProps) {
           No person has checked this puzzle yet. Its second solve was done by an automated agent.
         </p>
       ) : null}
+    </>
+  );
+}
 
-      {unlocked ? <SolutionView slug={puzzle.slug} /> : null}
-    </section>
+function SolutionLocked({ signedOut }: { signedOut: boolean }) {
+  return (
+    <div className={styles.solutionLocked} data-testid="solution-locked">
+      <LockIcon large />
+      <p>Solve this puzzle to see the solution and a full explanation.</p>
+      {signedOut ? <p className="muted">Sign in to submit an answer.</p> : null}
+    </div>
+  );
+}
+
+function LockIcon({ large = false }: { large?: boolean }) {
+  const size = large ? 22 : 12;
+  return (
+    <svg
+      className={large ? styles.lockIconLarge : styles.lockIcon}
+      width={size}
+      height={size}
+      viewBox="0 0 16 16"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <rect x="3" y="7" width="10" height="7" rx="1.5" fill="none" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" fill="none" stroke="currentColor" strokeWidth="1.5" />
+    </svg>
   );
 }

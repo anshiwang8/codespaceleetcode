@@ -220,6 +220,30 @@ export const PUZZLES = [
   }),
 ];
 
+/**
+ * One solution uses the richer formats: a GFM table, a mermaid diagram, and a mermaid block that
+ * doesn't parse, which should fall back to its source.
+ */
+const RICH_SOLUTION = [
+  "",
+  "### Where each module stands",
+  "",
+  "| Module | Owns |",
+  "|---|---|",
+  "| `src/config.ts` | RICHTABLECELL limits |",
+  "| `src/router.ts` | matching |",
+  "",
+  "```mermaid",
+  "flowchart LR",
+  "  start[start] --> handle[Router.handle]",
+  "  handle --> limits[LIMITS]",
+  "```",
+  "",
+  "```mermaid",
+  "this is not a diagram",
+  "```",
+];
+
 function solutionFor(puzzle) {
   return [
     `## Solution for ${puzzle.title}`,
@@ -230,6 +254,7 @@ function solutionFor(puzzle) {
     "",
     "- Start at `src/index.ts`",
     "- Jump to the definition",
+    ...(puzzle.slug === "e2e-find-file" ? RICH_SOLUTION : []),
   ].join("\n");
 }
 

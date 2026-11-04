@@ -1,13 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import ReactMarkdown from "react-markdown";
+import { Markdown } from "@/components/puzzle/Markdown";
 import styles from "@/components/puzzle/puzzle.module.css";
 import { ApiRequestError, api } from "@/lib/client/api";
 
 type SolutionState = { state: "loading" } | { state: "ready"; body: string } | { state: "error"; message: string };
 
-/** Mounted only once the puzzle is solved or given up. The server checks that again. */
+/**
+ * Mounted only once the puzzle is solved and the Solution tab has been opened, then kept for the
+ * page's life, so the solution is fetched once. The server checks the unlock again.
+ */
 export function SolutionView({ slug }: { slug: string }) {
   const [solution, setSolution] = useState<SolutionState>({ state: "loading" });
   const [attempt, setAttempt] = useState(0);
@@ -32,8 +35,7 @@ export function SolutionView({ slug }: { slug: string }) {
   }, [slug, attempt]);
 
   return (
-    <div className={styles.solution} data-testid="solution">
-      <h2>Solution</h2>
+    <div className={styles.solution} data-testid="solution" data-state={solution.state}>
       {solution.state === "loading" ? <p className="muted">Loading the solution…</p> : null}
       {solution.state === "error" ? (
         <div className="notice notice-error" role="alert">
@@ -51,12 +53,8 @@ export function SolutionView({ slug }: { slug: string }) {
           </button>
         </div>
       ) : null}
-      {solution.state === "ready" ? (
-        <div className={styles.markdown}>
-          {/* skipHtml drops raw HTML in the markdown entirely, on top of react-markdown's default. */}
-          <ReactMarkdown skipHtml>{solution.body}</ReactMarkdown>
-        </div>
-      ) : null}
+      {/* The renderer keeps skipHtml, which drops raw HTML in the markdown entirely. */}
+      {solution.state === "ready" ? <Markdown source={solution.body} /> : null}
     </div>
   );
 }

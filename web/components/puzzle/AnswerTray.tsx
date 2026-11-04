@@ -29,6 +29,8 @@ interface AnswerTrayProps {
   attempts: number;
   signInReason: string | null;
   signedIn: boolean;
+  /** Opens the prompt panel's Solution tab. Null while the solution is locked. */
+  onViewSolution: (() => void) | null;
 }
 
 export function AnswerTray({
@@ -43,6 +45,7 @@ export function AnswerTray({
   attempts,
   signInReason,
   signedIn,
+  onViewSolution,
 }: AnswerTrayProps) {
   const ready = isReadyToSubmit(draft, puzzle.setCount);
   return (
@@ -86,9 +89,19 @@ export function AnswerTray({
             <strong>{result.correct ? "Correct" : "Incorrect"}</strong>
             <span>
               {result.attempts === 1 ? "Attempt 1" : `Attempt ${result.attempts}`}
-              {result.correct ? ". The solution is in the left panel." : null}
+              {result.correct ? ". The solution and its explanation are unlocked." : null}
               {result.correct ? null : ". Change your answer and try again."}
             </span>
+            {result.correct && onViewSolution ? (
+              <button
+                type="button"
+                className={`btn btn-small btn-primary ${styles.viewSolution}`}
+                data-testid="view-solution"
+                onClick={onViewSolution}
+              >
+                View solution
+              </button>
+            ) : null}
           </div>
         ) : null}
       </div>
