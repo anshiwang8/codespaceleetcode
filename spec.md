@@ -340,12 +340,12 @@ Response shapes live in `web/lib/api-types.ts`. Submit validates that every subm
 
 ## 10. UI
 
-- **Puzzle list:** solved state per row. Everything below lives in the URL (`type`, `difficulty`, `repo`, `tag`, `group`), and the defaults are left out, so the plain list stays at `/`.
+- **Puzzle list:** solved state per row. Everything below lives in the URL (`type`, `difficulty`, `repo`, `tag`, `group`, `sort`), and the defaults are left out, so the plain list stays at `/`.
   - A difficulty strip: one bar split by difficulty, each segment's width its share of the puzzles and its filled part the share solved. Clicking a segment filters to that difficulty, and clicking it again clears the filter.
-  - Topic chips with counts. The selected topic's description shows under them.
-  - Each count is taken under every other filter, so it says what clicking would show.
-  - Type and repo are drop-downs.
-  - Group by difficulty (the default), topic, repo, or none. Each group is a collapsible section headed with its solved count. A puzzle with two topics is listed under both. A column the heading already gives (difficulty or repo) is left out of that section's rows.
+  - The strip's counts are taken under the other filters, so each says what clicking would show.
+  - Type, topic and repo are drop-downs. Topics show by label.
+  - Group by difficulty (the default), topic, repo, or none. Each group is a collapsible section headed with its solved count. A puzzle with two topics is listed under both. A column the heading already gives (difficulty or repo) is left out of that section's rows. Grouped by topic, each section shows the topic's description.
+  - Clicking a column header sorts every section by that column, A to Z, except difficulty, which goes easiest first. Clicking it again reverses the order. Ties keep the default order, by puzzle ID.
   - Signed out, counts say how many puzzles there are instead of how many are solved.
 - **Puzzle page:** prompt panel (left), file tree + Monaco + search (center), answer tray (right).
   - The answer tray shows the required kind, the current selection, and for `set` the "n of N selected" count. For `sequence`, an ordered list with drag to reorder.

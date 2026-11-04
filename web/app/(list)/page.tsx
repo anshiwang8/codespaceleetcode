@@ -4,7 +4,6 @@ import { FilterBar } from "@/components/list/FilterBar";
 import { GroupBy } from "@/components/list/GroupBy";
 import { PuzzleGroupSection } from "@/components/list/PuzzleGroupSection";
 import { PuzzleTable } from "@/components/list/PuzzleTable";
-import { TopicChips } from "@/components/list/TopicChips";
 import styles from "@/components/list/list.module.css";
 import {
   DEFAULT_GROUPING,
@@ -12,7 +11,8 @@ import {
   filterPuzzles,
   groupPuzzles,
   GROUPINGS,
-  topicTallies,
+  parseSort,
+  sortPuzzles,
   type BrowseFilters,
   type BrowseState,
   type Grouping,
@@ -44,10 +44,15 @@ function parseGrouping(value: string | string[] | undefined): Grouping {
 
 export default async function PuzzleListPage({ searchParams }: PageProps<"/">) {
   const params = await searchParams;
-  const state: BrowseState = { filters: parseFilters(params), group: parseGrouping(params.group) };
+  const sort = parseSort(params.sort);
+  const state: BrowseState = {
+    filters: parseFilters(params),
+    group: parseGrouping(params.group),
+    ...(sort ? { sort } : {}),
+  };
   const user = await getCurrentUser();
   // Every published puzzle, filtered here, so each control can count what it would show.
-  const { puzzles: all, repos } = await listPuzzles(user?.id ?? null, {});
+  const { puzzles: all, repos, tags } = await listPuzzles(user?.id ?? null, {});
 
   // `repos` ignores the filters, so empty means nothing is published at all.
   if (repos.length === 0) {
@@ -62,7 +67,8 @@ export default async function PuzzleListPage({ searchParams }: PageProps<"/">) {
     );
   }
 
-  const shown = filterPuzzles(all, state.filters);
+  // Sorted before grouping, so every section keeps the chosen order.
+  const shown = sortPuzzles(filterPuzzles(all, state.filters), state.sort);
   const groups = groupPuzzles(shown, state.group, state.filters);
   const showProgress = user !== null;
   const solved = shown.filter((puzzle) => puzzle.status === "solved").length;
@@ -84,10 +90,9 @@ export default async function PuzzleListPage({ searchParams }: PageProps<"/">) {
         tallies={difficultyTallies(all, state.filters)}
         showProgress={showProgress}
       />
-      <TopicChips state={state} tallies={topicTallies(all, state.filters)} />
 
       <div className={styles.toolbar}>
-        <FilterBar state={state} repos={repos} />
+        <FilterBar state={state} repos={repos} tags={tags} />
         <GroupBy state={state} />
       </div>
 
@@ -96,12 +101,13 @@ export default async function PuzzleListPage({ searchParams }: PageProps<"/">) {
           No puzzles match these filters.
         </p>
       ) : state.group === "none" ? (
-        <PuzzleTable puzzles={shown} />
+        <PuzzleTable puzzles={shown} state={state} />
       ) : (
         groups.map((group) => (
           <PuzzleGroupSection
             key={group.key}
             group={group}
+            state={state}
             difficulty={state.group === "difficulty" ? group.key : undefined}
             omit={state.group === "difficulty" ? "difficulty" : state.group === "repo" ? "repo" : undefined}
             showProgress={showProgress}

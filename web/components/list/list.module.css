@@ -133,59 +133,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Topics */
-
-.topics {
-  margin-bottom: 14px;
-}
-
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.topicChip {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 6px;
-  padding: 2px 9px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  color: var(--text-muted);
-  font-size: 12px;
-  white-space: nowrap;
-}
-
-.topicChip:hover {
-  border-color: var(--line-strong);
-  color: var(--text);
-  text-decoration: none;
-}
-
-.topicChip[aria-current="true"] {
-  border-color: var(--accent);
-  background: var(--accent-soft);
-  color: var(--text);
-}
-
-.chipCount {
-  color: var(--text-faint);
-  font-size: 11px;
-  font-variant-numeric: tabular-nums;
-}
-
-.topicChip[aria-current="true"] .chipCount {
-  color: var(--accent-text);
-}
-
-.topicDescription {
-  margin-top: 8px;
-  color: var(--text-muted);
-  font-size: 12px;
-}
-
-/* Type and repo on the left, grouping on the right. */
+/* Type, topic and repo on the left, grouping on the right. */
 
 .toolbar {
   display: flex;
@@ -342,6 +290,28 @@ details[open] > .groupSummary::before {
 
 .table tbody tr:hover {
   background: var(--hover);
+}
+
+/* Each header is a link that sorts by its column. */
+.sortable a {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  color: inherit;
+}
+
+.sortable a:hover {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.sortable[aria-sort] a {
+  color: var(--text);
+}
+
+.sortMark {
+  color: var(--accent-text);
+  font-size: 9px;
 }
 
 .status {

@@ -1,9 +1,10 @@
 import { PuzzleTable, type OmittedColumn } from "@/components/list/PuzzleTable";
 import styles from "@/components/list/list.module.css";
-import type { PuzzleGroup } from "@/lib/browse";
+import type { BrowseState, PuzzleGroup } from "@/lib/browse";
 
 interface PuzzleGroupSectionProps {
   group: PuzzleGroup;
+  state: BrowseState;
   /** Set when grouping by difficulty, so the heading takes that difficulty's colour. */
   difficulty?: string;
   omit?: OmittedColumn;
@@ -11,7 +12,7 @@ interface PuzzleGroupSectionProps {
 }
 
 /** A collapsible section of the list. Its heading says how much of it is solved. */
-export function PuzzleGroupSection({ group, difficulty, omit, showProgress }: PuzzleGroupSectionProps) {
+export function PuzzleGroupSection({ group, state, difficulty, omit, showProgress }: PuzzleGroupSectionProps) {
   const headingId = `group-heading-${group.key}`;
   const share = group.total === 0 ? 0 : Math.round((group.solved / group.total) * 100);
   return (
@@ -33,7 +34,7 @@ export function PuzzleGroupSection({ group, difficulty, omit, showProgress }: Pu
           ) : null}
         </summary>
         {group.description ? <p className={styles.groupDescription}>{group.description}</p> : null}
-        <PuzzleTable puzzles={group.puzzles} omit={omit} />
+        <PuzzleTable puzzles={group.puzzles} state={state} omit={omit} />
       </details>
     </section>
   );

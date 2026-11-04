@@ -35,7 +35,7 @@ test.describe("puzzle list", () => {
     await page.goto("/?tag=configuration");
     await expect(visible(page, "puzzle-row-e2e-find-file")).toBeVisible();
     await expect(visible(page, "puzzle-row-e2e-arch-set")).toHaveCount(0);
-    await expect(visible(page, "topic-configuration")).toHaveAttribute("aria-current", "true");
+    await expect(page.getByRole("combobox", { name: "Topic" })).toHaveValue("configuration");
 
     await page.goto("/?repo=acme-tiny&type=find&difficulty=medium");
     await expect(visible(page, "puzzle-row-e2e-find-location")).toBeVisible();
@@ -65,24 +65,60 @@ test.describe("puzzle list", () => {
     await expect(page).toHaveURL(/type=find/);
   });
 
-  test("topics show counts and a description, and a second click clears the topic", async ({ page }) => {
+  test("the topic drop-down filters by topic, by its label", async ({ page }) => {
     await page.goto("/");
-    await expect(visible(page, "topic-all")).toHaveAttribute("aria-current", "true");
-    await expect(visible(page, "topic-routing")).toHaveText("Routing 2");
-    await expect(visible(page, "topic-auth-and-security")).toHaveText("Auth and security 1");
+    const topic = page.getByRole("combobox", { name: "Topic" });
+    await expect(topic.locator("option")).toHaveText(["All", "Routing", "Configuration and defaults", "Auth and security", "Code structure"]);
 
-    await visible(page, "topic-code-structure").click();
+    await topic.selectOption({ label: "Code structure" });
     await expect(page).toHaveURL(/tag=code-structure/);
-    await expect(visible(page, "topic-description")).toHaveText(
-      "How a codebase is split into modules, layers and class hierarchies.",
-    );
     await expect(visible(page, "puzzle-row-e2e-arch-set")).toBeVisible();
     await expect(visible(page, "puzzle-row-e2e-arch-choice")).toBeVisible();
     await expect(visible(page, "puzzle-row-e2e-find-file")).toHaveCount(0);
 
-    await visible(page, "topic-code-structure").click();
+    await topic.selectOption("");
     await expect(page).not.toHaveURL(/tag=/);
     await expect(visible(page, "puzzle-row-e2e-find-file")).toBeVisible();
+  });
+
+  test("clicking a column header sorts every group, and clicking it again reverses", async ({ page }) => {
+    const titles = (testId: string) => visible(page, testId).locator("tbody tr td:nth-child(2)");
+    await page.goto("/?group=none");
+    await visible(page, "sort-title").click();
+    await expect(page).toHaveURL(/sort=title/);
+    await expect(page.getByRole("columnheader", { name: "Puzzle" })).toHaveAttribute("aria-sort", "ascending");
+    const ascending = [
+      "A puzzle whose answer nobody should see",
+      "From start to match",
+      "The byte limits",
+      "What the router needs",
+      "Where a path is matched",
+      "Where limits live",
+      "Who owns the port",
+    ];
+    await expect(page.locator("tbody tr td:nth-child(2)")).toHaveText(ascending);
+
+    await visible(page, "sort-title").click();
+    await expect(page).toHaveURL(/sort=-title/);
+    await expect(page.getByRole("columnheader", { name: "Puzzle" })).toHaveAttribute("aria-sort", "descending");
+    await expect(page.locator("tbody tr td:nth-child(2)")).toHaveText([...ascending].reverse());
+
+    // Difficulty goes easiest first, not alphabetically.
+    await visible(page, "sort-difficulty").click();
+    await expect(page.locator("tbody tr td:nth-child(4)")).toHaveText([
+      "Easy", "Easy", "Easy", "Medium", "Medium", "Hard", "Hard",
+    ]);
+
+    // In groups, each section is sorted, and changing the grouping keeps the sort.
+    await page.goto("/?sort=title");
+    await visible(page, "group-by-topic").click();
+    await expect(page).toHaveURL(/group=topic/);
+    await expect(page).toHaveURL(/sort=title/);
+    await expect(titles("group-code-structure")).toHaveText(["What the router needs", "Who owns the port"]);
+    await visible(page, "group-code-structure").getByTestId("sort-title").click();
+    await expect(page).toHaveURL(/sort=-title/);
+    await expect(titles("group-code-structure")).toHaveText(["Who owns the port", "What the router needs"]);
+    await expect(titles("group-routing")).toHaveText(["Where a path is matched", "From start to match"]);
   });
 
   test("groups by difficulty, topic, repo or not at all", async ({ page }) => {
@@ -104,7 +140,7 @@ test.describe("puzzle list", () => {
     await expect(visible(page, "group-configuration").getByTestId("puzzle-row-e2e-find-file")).toBeVisible();
 
     // A topic filter keeps the grouping, and shows only that topic's section.
-    await visible(page, "topic-routing").click();
+    await page.getByRole("combobox", { name: "Topic" }).selectOption("routing");
     await expect(page).toHaveURL(/tag=routing/);
     await expect(page).toHaveURL(/group=topic/);
     await expect(page.locator("section[data-testid^='group-']").filter({ visible: true })).toHaveCount(1);

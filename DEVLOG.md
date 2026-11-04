@@ -12,15 +12,16 @@ What was done (technical):
 
 - **Topics.** The 100 puzzles had about 90 different tags, and most were used once, so filtering by tag mostly found one puzzle. There are now 17 topics, defined in `spec.md` section 4, and the `tags` enum in `content/schema/puzzle.schema.json` rejects anything else, with 1 to 3 per puzzle. Every puzzle was retagged, and each topic covers 5 to 13 puzzles. Tags aren't part of what a blind solver sees, so no blind solve needed redoing. `web/lib/topics.ts` has each topic's label and description, and a test checks that it matches the schema. Two new must-fail fixtures cover an unknown topic and a fourth topic.
 - **Difficulty strip.** One bar split by difficulty, each segment's width its share of the puzzles and its filled part the share you've solved. Clicking a segment filters, and clicking it again clears the filter. It replaces the difficulty drop-down.
-- **Topic chips** with counts replace the tag drop-down. The selected topic shows its description underneath.
-- Each count is taken under every other filter, so it says what clicking would show.
+- **Topic drop-down.** The tag drop-down became a Topic drop-down that lists topics by label. A first version had a row of clickable topic chips with counts, but with 17 topics they took up three rows above the list, so they were removed.
+- The strip's counts are taken under the other filters, so each says what clicking would show.
+- **Sortable columns.** Clicking a column header sorts every section by that column, A to Z, except difficulty, which goes Easy, Medium, Hard. A second click reverses it. The sort is `sort=title` or `sort=-title` in the URL, and changing the filters or grouping keeps it. Ties keep the default order. Sorting is in `sortPuzzles` in `web/lib/browse.ts`, which compares text with `Intl.Collator`, ignoring case and reading numbers as numbers.
 - **Group by** difficulty (the default), topic, repo or none. Each group is a collapsible `<details>` section headed with its solved count and a small progress bar. A puzzle with two topics shows under both. A column the heading already gives is left out of that section's rows.
 - Signed out, the counts say how many puzzles there are rather than "0 solved".
 - Every control is a link, so the state lives in the URL and works before scripts load. Defaults are left out, so the plain list is still `/`, and old `?tag=` links still work.
 - The page now loads every published puzzle once and filters it with the pure functions in `web/lib/browse.ts`. `/api/puzzles` still filters in SQL and is unchanged.
 - Tag chips on rows and on the puzzle page show topic labels. A tag outside the list, which only a hand-seeded test database can have, shows as itself.
-- New unit tests in `web/tests/browse.test.ts` cover filtering, counting, grouping and URLs. The e2e tests cover the strip, the topic chips, every grouping, folding a section, and solved counts after a solve. The e2e fixture puzzles use real topics.
-- 487 ingest tests (1 Windows-only skip), 495 web tests against real Postgres and 57 Playwright tests pass. All 100 puzzles validate. Lint, typecheck and build are clean.
+- New unit tests in `web/tests/browse.test.ts` cover filtering, counting, sorting, grouping and URLs. The e2e tests cover the strip, the topic drop-down, sorting in a flat list and inside groups, every grouping, folding a section, and solved counts after a solve. The e2e fixture puzzles use real topics.
+- 487 ingest tests (1 Windows-only skip), 503 web tests against real Postgres and 58 Playwright tests pass, e2e twice in a row. All 100 puzzles validate. Lint, typecheck and build are clean.
 
 ## 15 more puzzles, and written difficulty rules
 
