@@ -1,11 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { AnswerTray } from "@/components/puzzle/AnswerTray";
 import { Attribution } from "@/components/puzzle/Attribution";
 import { CodePanel } from "@/components/puzzle/CodePanel";
-import { PromptPanel } from "@/components/puzzle/PromptPanel";
+import { PromptPanel, type PromptTab } from "@/components/puzzle/PromptPanel";
 import { Splitter } from "@/components/puzzle/Splitter";
 import styles from "@/components/puzzle/puzzle.module.css";
 import type { Manifest, PuzzleDetail, PuzzleStatus, SubmitResponse } from "@/lib/api-types";
@@ -47,6 +47,10 @@ export function PuzzleWorkspace({ puzzle }: { puzzle: PuzzleDetail }) {
     attempts: number;
   } | null>(null);
   const [startedAt] = useState(() => Date.now());
+
+  // Which tab the prompt panel shows. Lifted here so the answer tray's "View solution" can switch it.
+  const [promptTab, setPromptTab] = useState<PromptTab>("description");
+  const solutionTabRef = useRef<HTMLButtonElement>(null);
 
   const [leftWidth, setLeftWidth] = useState(290);
   const [rightWidth, setRightWidth] = useState(290);
@@ -133,6 +137,11 @@ export function PuzzleWorkspace({ puzzle }: { puzzle: PuzzleDetail }) {
     }
   };
 
+  const viewSolution = useCallback(() => {
+    setPromptTab("solution");
+    solutionTabRef.current?.focus();
+  }, []);
+
   const openFile = useCallback((path: string, line?: number, col?: number) => {
     navigate({ type: "open", path, line, col });
   }, []);
@@ -159,6 +168,10 @@ export function PuzzleWorkspace({ puzzle }: { puzzle: PuzzleDetail }) {
           puzzle={puzzle}
           status={progress.status}
           unlocked={unlocked}
+          signedOut={signedOut}
+          tab={promptTab}
+          onTabChange={setPromptTab}
+          solutionTabRef={solutionTabRef}
         />
         <Splitter
           label="Resize the prompt panel"
@@ -202,6 +215,7 @@ export function PuzzleWorkspace({ puzzle }: { puzzle: PuzzleDetail }) {
           attempts={progress.attempts}
           signInReason={signInReason}
           signedIn={login !== null}
+          onViewSolution={unlocked ? viewSolution : null}
         />
       </div>
       <Attribution snapshot={puzzle.snapshot} />

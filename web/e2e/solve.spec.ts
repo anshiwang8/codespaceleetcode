@@ -27,6 +27,7 @@ test.describe("solving", () => {
     await submitAndExpect(page, true);
     await expect(page.getByTestId("result")).toContainText("Attempt 1");
     await expect(page.getByTestId("puzzle-status")).toHaveText("Solved");
+    await page.getByTestId("view-solution").click();
     await expect(page.getByTestId("solution")).toContainText("SOLUTIONTOKEN");
   });
 
@@ -195,6 +196,7 @@ test.describe("results", () => {
     await page.locator('[data-testid="outline-pick"][data-symbol="src/router.ts#Router.match"]').click();
     await submitAndExpect(page, true);
     await expect(page.getByTestId("puzzle-status")).toHaveText("Solved");
+    await page.getByTestId("view-solution").click();
     const solution = page.getByTestId("solution");
     await expect(solution).toContainText("SOLUTIONTOKEN");
     await expect(solution.locator("li")).toHaveCount(2);
@@ -203,6 +205,8 @@ test.describe("results", () => {
 
     // It stays unlocked on a fresh visit, and the list shows it.
     await page.reload();
+    await expect(page.getByTestId("file-tree")).toBeVisible();
+    await visible(page, "prompt-tab-solution").click();
     await expect(page.getByTestId("solution")).toContainText("SOLUTIONTOKEN");
     await page.goto("/puzzles");
     await expect(visible(page, "puzzle-row-e2e-find-symbol")).toContainText("Solved");

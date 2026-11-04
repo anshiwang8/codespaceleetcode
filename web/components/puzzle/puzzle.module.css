@@ -36,11 +36,91 @@
 .promptPanel {
   display: flex;
   flex-direction: column;
-  gap: 12px;
   min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--panel);
+}
+
+/* Description and Solution tabs, compact like an IDE's. */
+.promptTabs {
+  display: flex;
+  flex: none;
+  gap: 2px;
+  padding: 0 8px;
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.promptTab {
+  display: inline-flex;
+  position: relative;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: -1px;
+  padding: 8px 10px 7px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.promptTab:hover {
+  color: var(--text);
+}
+
+.promptTab[aria-selected="true"] {
+  border-bottom-color: var(--accent);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.promptTab:focus-visible {
+  border-radius: 4px 4px 0 0;
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+
+.tabBadge {
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.lockIcon {
+  flex: none;
+  color: var(--text-faint);
+}
+
+.lockIconLarge {
+  flex: none;
+  color: var(--text-muted);
+}
+
+.tabPanel {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
   padding: 12px;
   overflow-y: auto;
-  background: var(--panel);
+}
+
+.tabPanel[hidden] {
+  display: none;
+}
+
+.tabPanel:focus-visible {
+  outline-offset: -2px;
 }
 
 .puzzleTitle {
@@ -55,8 +135,7 @@
   gap: 4px;
 }
 
-.block h2,
-.solution h2 {
+.block h2 {
   margin-bottom: 3px;
   color: var(--text-faint);
   font-size: 11px;
@@ -84,60 +163,23 @@
 }
 
 .solution {
-  padding-top: 10px;
-  border-top: 1px solid var(--line-strong);
+  min-width: 0;
 }
 
-.markdown {
-  overflow-wrap: anywhere;
-}
-
-.markdown > * + * {
-  margin-top: 8px;
-}
-
-.markdown h1,
-.markdown h2,
-.markdown h3,
-.markdown h4 {
-  margin-top: 12px;
-  color: var(--text);
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: normal;
-  text-transform: none;
-}
-
-.markdown ul,
-.markdown ol {
-  padding-left: 18px;
-}
-
-.markdown ul {
-  list-style: disc;
-}
-
-.markdown ol {
-  list-style: decimal;
-}
-
-.markdown code {
-  padding: 1px 3px;
-  border-radius: 3px;
-  background: var(--panel-raised);
-  font-size: 12px;
-}
-
-.markdown pre {
-  padding: 8px;
-  overflow-x: auto;
+.solutionLocked {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  margin-top: 24px;
+  padding: 20px 14px;
+  border: 1px dashed var(--line-strong);
   border-radius: var(--radius);
-  background: var(--editor-bg);
+  color: var(--text-muted);
+  text-align: center;
 }
 
-.markdown pre code {
-  padding: 0;
-  background: none;
+.solutionLocked p {
+  max-width: 34ch;
 }
 
 /* Code panel */
@@ -762,6 +804,11 @@
 
 .resultCorrect strong {
   color: var(--ok);
+}
+
+.viewSolution {
+  justify-self: start;
+  margin-top: 4px;
 }
 
 .resultIncorrect {
