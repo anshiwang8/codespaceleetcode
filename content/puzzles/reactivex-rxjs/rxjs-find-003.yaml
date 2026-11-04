@@ -1,0 +1,23 @@
+id: rxjs-find-003
+snapshot: reactivex-rxjs@54796b3
+type: find
+difficulty: medium
+title: Completing a throttle after its trailing value
+prompt: |
+  In packages/rxjs/src/throttle.ts, the throttle operator is used with a numeric `delay`
+  and the config `{ trailing: true }` (other options keep their defaults). The source
+  emits a value, emits a second value while the throttle window is still open, and then
+  completes before the window ends. Select the lines of the `if` statement that completes
+  the output subscriber in this scenario: from the `if` line through its closing brace.
+  Select the lines.
+answer:
+  kind: location
+  path: packages/rxjs/src/throttle.ts
+  anchor: [41, 43]
+  window: [38, 44]
+hints:
+  - Check whether the source's `complete` handler completes the subscriber itself in this scenario, and what runs when the timer fires.
+solution: solutions/rxjs-find-003.md
+tags: [operators, throttling]
+authors: [agent-author-4]
+verified_by: [agent:blind-6]

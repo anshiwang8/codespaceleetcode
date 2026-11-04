@@ -81,6 +81,14 @@ A prompt must pin down everything that could otherwise produce a second valid an
 - **No reliance on comments or docs** as the only evidence. The answer must be derivable from the code.
 - **One concept per puzzle.** If a prompt needs "and", split it into two puzzles.
 
+### Difficulty
+
+Difficulty measures how much navigation and reasoning the answer takes, not how obscure the code is.
+
+- **easy:** one hop. The prompt names the file, or a directory with few candidates. One search or one jump to a definition finds the answer, with at most one plausible decoy. A trace has 2–3 steps.
+- **medium:** 2–4 hops across files, or a careful read of one long function where several candidates look plausible. A trace has 3–5 steps across files.
+- **hard:** the answer depends on indirection (dynamic dispatch, registries, callbacks passed as values, configuration-dependent paths) across several files, or on runtime ordering or state. Decoys look right on a quick read. A trace has 5 or more steps, or a tempting shortcut that the prompt's runtime conditions rule out.
+
 ### Puzzle file format
 
 One YAML file per puzzle at `content/puzzles/<repo-slug>/<puzzle-id>.yaml`, validated against `content/schema/puzzle.schema.json`.

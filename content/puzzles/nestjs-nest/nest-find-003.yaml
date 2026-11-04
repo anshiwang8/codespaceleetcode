@@ -1,0 +1,23 @@
+id: nest-find-003
+snapshot: nestjs-nest@8d9dd9d
+type: find
+difficulty: medium
+title: Who makes the module token
+prompt: |
+  An application is created with `NestFactory.create(AppModule)` and no options. When
+  `NestContainer.addModule` in packages/core/injector/container.ts registers a module, the
+  token that keys the module in the container comes from a method call on a factory object.
+  Select the file that defines the class of the factory object used in this configuration:
+  the class whose method builds the token string, not a class that only asks for the
+  token, and not the interface it implements. Select a file.
+answer:
+  kind: file
+  path: packages/core/injector/opaque-key-factory/by-reference-module-opaque-key-factory.ts
+  accept: []
+  accept_reasons: []
+hints:
+  - The object that computes the token is chosen once, when the container itself is constructed.
+solution: solutions/nest-find-003.md
+tags: [modules, configuration]
+authors: [agent-author-5]
+verified_by: [agent:blind-7]

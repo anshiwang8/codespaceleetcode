@@ -1,0 +1,37 @@
+id: flask-trace-002
+snapshot: pallets-flask@49943b5
+type: trace
+difficulty: hard
+title: Finding the handler for an aborted request
+prompt: |
+  Start at Flask.wsgi_app in src/flask/app.py. A request matches a URL rule, no
+  before_request callback returns a value, and the view function calls
+  abort(404), which raises werkzeug's NotFound. The application uses the default
+  configuration (TRAP_HTTP_EXCEPTIONS and TRAP_BAD_REQUEST_ERRORS unset, debug
+  and testing off) and has an error handler registered for 404. Select the chain
+  of methods, in call order, where each one directly calls the next, ending at
+  the method that searches the registered error-handler maps (by status code and
+  by exception class, blueprints before the app) and returns the handler it
+  finds. Include it.
+  Direct calls only. Skip standard-library and third-party calls, signal sends,
+  property reads, and helper calls that are not part of the chain (such as
+  ensure_sync).
+answer:
+  kind: sequence
+  ids:
+    - src/flask/app.py#Flask.wsgi_app
+    - src/flask/app.py#Flask.full_dispatch_request
+    - src/flask/app.py#Flask.handle_user_exception
+    - src/flask/app.py#Flask.handle_http_exception
+    - src/flask/sansio/app.py#App._find_error_handler
+  accept_sequences: []
+  accept_reasons: []
+hints:
+  - Three different Flask methods call the handler lookup. Work out which of them actually sees this exception, and through which branch.
+validator_overrides:
+  - check: sequence-alternate-path
+    reason: The shorter paths go through Flask.handle_exception (called by wsgi_app only when an exception escapes full_dispatch_request, which does not happen here because full_dispatch_request catches it) or call _find_error_handler directly from handle_user_exception (the branch for exceptions that are not HTTPExceptions, or that trap_http_exception traps, which the default configuration does not). The prompt fixes the exception type and configuration, so neither runs.
+solution: solutions/flask-trace-002.md
+tags: [errors, request-lifecycle]
+authors: [agent-author-6]
+verified_by: [agent:blind-8]

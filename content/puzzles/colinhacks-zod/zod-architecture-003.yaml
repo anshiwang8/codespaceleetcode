@@ -1,0 +1,24 @@
+id: zod-architecture-003
+snapshot: colinhacks-zod@2554b70
+type: architecture
+difficulty: medium
+title: The checks behind a string chain
+prompt: |
+  An application builds `z.string().min(3).trim().lowercase()` with the classic API in
+  packages/zod/src/v4/classic/. Each of the three chained method calls creates a single
+  check object with a `new` expression somewhere in packages/zod/src/v4/core/. Select all
+  3 check constructors, all defined in packages/zod/src/v4/core/checks.ts, that those `new`
+  expressions instantiate. Select the `$constructor` constants, not the interfaces of the
+  same name, and not base checks that are only initialized from inside another check.
+answer:
+  kind: set
+  ids:
+    - packages/zod/src/v4/core/checks.ts#$ZodCheckMinLength~2
+    - packages/zod/src/v4/core/checks.ts#$ZodCheckOverwrite~2
+    - packages/zod/src/v4/core/checks.ts#$ZodCheckLowerCase~2
+hints:
+  - The `checks` that `_ZodString`'s methods call is the classic checks module, which only renames functions from the core layer.
+solution: solutions/zod-architecture-003.md
+tags: [validation, classic, core]
+authors: [agent-author-4]
+verified_by: [agent:blind-6]

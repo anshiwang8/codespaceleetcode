@@ -1,0 +1,68 @@
+{
+  "agent:blind-6": {
+    "mobx-find-003": {
+      "passed": true,
+      "version": "4a17bf730ce4ea2415cb2057f6f7af67b39040e0d260a0ec6fdc21532495a65c"
+    },
+    "rtk-architecture-004": {
+      "passed": true,
+      "version": "174d8a3c6a256ee4949af66cc3286b87de61c6c1806f79bfaa9ca621cbed28fc"
+    },
+    "rxjs-find-003": {
+      "passed": true,
+      "version": "8d6ff826fc35807e63178c7265072f0bd8cb488df3ab27d9a4e72009c6af7037"
+    },
+    "vue-trace-002": {
+      "passed": true,
+      "version": "7e48e5f3e1e301ed1d6a9691510cb018a65b67658757da2fcf1515a379caec5e"
+    },
+    "zod-architecture-003": {
+      "passed": true,
+      "version": "d35adee141a13e37923c771a2dd8d7e39dca6ade8b148fc90d6373f673cd72a6"
+    }
+  },
+  "agent:blind-7": {
+    "ajv-find-003": {
+      "passed": true,
+      "version": "1cdfb8fc7d2f69010b13ed88af15865a7b72fa5dfa821868a511a199518d60ae"
+    },
+    "got-trace-002": {
+      "passed": true,
+      "version": "65c29a089c85f3c2b0f6e437add60231ae10a7d4295220165ac0aa0a8f31f777"
+    },
+    "h3-architecture-004": {
+      "passed": true,
+      "version": "468fb19f35e41a015d6e9839e78996fb59990c2e620be686af768796dada5ba2"
+    },
+    "hono-trace-002": {
+      "passed": true,
+      "version": "e2eec57dc14a6ed669da2e325b8eabd12c8b029597006594f0e3952cc2e78e2f"
+    },
+    "nest-find-003": {
+      "passed": true,
+      "version": "ecfee9dfdf3ba9f1da4d47bfe2305c36ec87871affdbefd96358dfd0c7e57d8f"
+    }
+  },
+  "agent:blind-8": {
+    "click-find-004": {
+      "passed": true,
+      "version": "dcf0aea5cd11378962414353e9b776c276eb00fa201eadc3c7e1afc1b7e92858"
+    },
+    "fastapi-architecture-003": {
+      "passed": true,
+      "version": "84ac6100ba74271619d5b42f2ced10e4e1e17a59ad98d5770fbade94a7f13f1b"
+    },
+    "flask-trace-002": {
+      "passed": true,
+      "version": "8dbf91cfe9178515ee2f53d0c5d7afdc513b5b53a7f66940fc6dfec2058cc12f"
+    },
+    "httpx-trace-002": {
+      "passed": true,
+      "version": "3d4dc44e321f3cc6123683f0ec531c63f0a1f665fcc35c6aa117a252e212fdde"
+    },
+    "requests-architecture-003": {
+      "passed": true,
+      "version": "40010c3b905a9cfa3c10f44cf4b3f84cc5e6503b2951a04e03ecc93f18f72a8b"
+    }
+  }
+}
