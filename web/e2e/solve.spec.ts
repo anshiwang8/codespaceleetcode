@@ -204,7 +204,7 @@ test.describe("results", () => {
     // It stays unlocked on a fresh visit, and the list shows it.
     await page.reload();
     await expect(page.getByTestId("solution")).toContainText("SOLUTIONTOKEN");
-    await page.goto("/");
+    await page.goto("/puzzles");
     await expect(visible(page, "puzzle-row-e2e-find-symbol")).toContainText("Solved");
   });
 

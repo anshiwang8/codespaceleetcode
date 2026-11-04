@@ -1,29 +1,22 @@
 import type { Metadata, Viewport } from "next";
-import { AuthProvider } from "@/components/auth/AuthProvider";
-import { SiteHeader } from "@/components/site/SiteHeader";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: { default: "Codebase Puzzles", template: "%s · Codebase Puzzles" },
-  description: "Read real open-source code in a browser IDE and answer by clicking on it.",
+  title: { default: "codebases", template: "%s · codebases" },
+  description:
+    "Practice reading real code. Find where behavior lives, trace calls through the layers, and map module boundaries in real open-source repos, in a browser IDE.",
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: dark)", color: "#0c0e10" },
-    { media: "(prefers-color-scheme: light)", color: "#f2f0eb" },
-  ],
+  themeColor: "#ffffff",
+  colorScheme: "light",
 };
 
+// The app's header and sign-in live in app/(app)/layout.tsx, so the landing page stays static.
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en">
-      <body>
-        <AuthProvider>
-          <SiteHeader />
-          {children}
-        </AuthProvider>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

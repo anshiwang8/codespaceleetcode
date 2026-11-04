@@ -177,7 +177,10 @@ export function parseSort(value: string | string[] | undefined): Sort | undefine
     : undefined;
 }
 
-/** The list page's URL for a state. Defaults are left out, so the plain list stays at `/`. */
+/** Where the puzzle list lives. `/` is the landing page. */
+export const PUZZLES_PATH = "/puzzles";
+
+/** The list page's URL for a state. Defaults are left out, so the plain list stays at `/puzzles`. */
 export function browseHref(state: BrowseState): string {
   const params = new URLSearchParams();
   const { type, difficulty, repo, tag } = state.filters;
@@ -188,5 +191,5 @@ export function browseHref(state: BrowseState): string {
   if (state.group !== DEFAULT_GROUPING) params.set("group", state.group);
   if (state.sort) params.set("sort", `${state.sort.descending ? "-" : ""}${state.sort.column}`);
   const query = params.toString();
-  return query ? `/?${query}` : "/";
+  return query ? `${PUZZLES_PATH}?${query}` : PUZZLES_PATH;
 }

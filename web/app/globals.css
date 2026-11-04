@@ -1,63 +1,43 @@
-/* Dark is the default. Light takes over only when the system asks for it. */
+/* One light theme. Every component reads these, so this is the only place colours are set. */
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
-  --bg: #0c0e10;
-  --panel: #13161a;
-  --panel-raised: #1a1e23;
-  --editor-bg: #101316;
-  --line: #2a3036;
-  --line-strong: #3b434b;
-  --text: #d7dbe0;
-  --text-muted: #949ca5;
-  --text-faint: #848c95;
-  --accent: #e5b567;
-  --accent-text: #e5b567;
-  --accent-ink: #1b1508;
-  --accent-soft: rgb(229 181 103 / 14%);
-  --hover: rgb(255 255 255 / 5%);
-  --focus: #f0ca8a;
-  --ok: #86c98a;
-  --ok-soft: rgb(134 201 138 / 12%);
-  --bad: #ec8b80;
-  --bad-soft: rgb(236 139 128 / 12%);
-  --easy: #86c98a;
-  --medium: #e5b567;
-  --hard: #ec8b80;
+  --bg: #ffffff;
+  --panel: #ffffff;
+  --panel-raised: #f6f8fa;
+  --editor-bg: #ffffff;
+  --line: #e5e7eb;
+  --line-strong: #d1d5db;
+  --text: #111827;
+  --text-muted: #4b5563;
+  --text-faint: #6b7280;
+  --accent: #2563eb;
+  --accent-hover: #1d4ed8;
+  --accent-text: #1d4ed8;
+  --accent-ink: #ffffff;
+  --accent-soft: rgb(37 99 235 / 10%);
+  --hover: #f3f4f6;
+  --focus: #2563eb;
+  --ok: #15803d;
+  --ok-soft: rgb(21 128 61 / 10%);
+  --bad: #b91c1c;
+  --bad-soft: rgb(185 28 28 / 8%);
+  --easy: #15803d;
+  --medium: #b45309;
+  --hard: #b91c1c;
+  --shadow: rgb(17 24 39 / 12%);
+  --shadow-soft: rgb(17 24 39 / 4%);
+  /* Syntax colours for code drawn in HTML. lib/client/monaco.ts uses the same ones. */
+  --syntax-keyword: #cf222e;
+  --syntax-function: #8250df;
+  --syntax-type: #953800;
+  --syntax-string: #0a3069;
 
   --font-ui: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --font-logo: Arial, Helvetica, sans-serif;
   --radius: 4px;
   --header-height: 38px;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color-scheme: light;
-
-    --bg: #f2f0eb;
-    --panel: #faf9f6;
-    --panel-raised: #eeece6;
-    --editor-bg: #fdfcfa;
-    --line: #dcd9d1;
-    --line-strong: #bdb9ae;
-    --text: #24272b;
-    --text-muted: #595e65;
-    --text-faint: #666a71;
-    --accent: #8a5a00;
-    --accent-text: #7a4f00;
-    --accent-ink: #fffaf0;
-    --accent-soft: rgb(138 90 0 / 11%);
-    --hover: rgb(0 0 0 / 5%);
-    --focus: #8a5a00;
-    --ok: #27702f;
-    --ok-soft: rgb(39 112 47 / 10%);
-    --bad: #b03a2e;
-    --bad-soft: rgb(176 58 46 / 9%);
-    --easy: #27702f;
-    --medium: #7a4f00;
-    --hard: #b03a2e;
-  }
 }
 
 *,
@@ -154,9 +134,8 @@ input {
 }
 
 .btn-primary:hover:not(:disabled) {
-  border-color: var(--accent);
-  background: var(--accent);
-  filter: brightness(1.08);
+  border-color: var(--accent-hover);
+  background: var(--accent-hover);
 }
 
 .btn-quiet {

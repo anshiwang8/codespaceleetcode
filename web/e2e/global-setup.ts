@@ -8,6 +8,7 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
   try {
     const page = await browser.newPage({ baseURL });
     await page.goto("/", { timeout: 180_000 });
+    await page.goto("/puzzles", { timeout: 180_000 });
     await page.goto("/puzzles/e2e-find-symbol", { timeout: 180_000 });
     await page.locator(".monaco-editor .view-line").first().waitFor({ timeout: 180_000 });
     await page.goto("/profile", { timeout: 180_000 });

@@ -12,20 +12,12 @@
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  color: var(--text);
-  font-weight: 600;
+  border-radius: var(--radius);
   white-space: nowrap;
 }
 
 .brand:hover {
   text-decoration: none;
-}
-
-.mark {
-  color: var(--accent-text);
-  font-family: var(--font-mono);
-  font-size: 12px;
 }
 
 .nav {
@@ -60,16 +52,11 @@
 }
 
 @media (max-width: 640px) {
+  .header {
+    gap: 14px;
+  }
+
   .devLabel {
     display: none;
-  }
-
-  .brand {
-    font-size: 0;
-    gap: 0;
-  }
-
-  .mark {
-    font-size: 13px;
   }
 }

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import styles from "@/components/list/list.module.css";
 import type { PuzzleStatus, PuzzleSummary } from "@/lib/api-types";
-import { browseHref, nextSort, type BrowseState, type SortColumn } from "@/lib/browse";
+import { browseHref, DEFAULT_GROUPING, nextSort, type BrowseState, type SortColumn } from "@/lib/browse";
 import { DIFFICULTY_LABELS, STATUS_LABELS, TYPE_LABELS } from "@/lib/client/labels";
 import { topicLabel } from "@/lib/topics";
 
@@ -82,7 +82,7 @@ export function PuzzleTable({ puzzles, state, omit }: PuzzleTableProps) {
             )}
             <td className={styles.tags}>
               {puzzle.tags.map((tag) => (
-                <Link key={tag} href={`/?tag=${encodeURIComponent(tag)}`} className="chip">
+                <Link key={tag} href={browseHref({ filters: { tag }, group: DEFAULT_GROUPING })} className="chip">
                   {topicLabel(tag)}
                 </Link>
               ))}

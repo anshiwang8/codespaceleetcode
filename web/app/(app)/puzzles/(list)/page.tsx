@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { z } from "zod";
 import { DifficultyStrip } from "@/components/list/DifficultyStrip";
 import { FilterBar } from "@/components/list/FilterBar";
@@ -42,7 +43,9 @@ function parseGrouping(value: string | string[] | undefined): Grouping {
   return parsed.success ? parsed.data : DEFAULT_GROUPING;
 }
 
-export default async function PuzzleListPage({ searchParams }: PageProps<"/">) {
+export const metadata: Metadata = { title: "Puzzles" };
+
+export default async function PuzzleListPage({ searchParams }: PageProps<"/puzzles">) {
   const params = await searchParams;
   const sort = parseSort(params.sort);
   const state: BrowseState = {

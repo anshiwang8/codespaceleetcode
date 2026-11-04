@@ -56,65 +56,48 @@ export function monacoLanguage(manifestLanguage: string | undefined): string {
 }
 
 // Editor colours mirror the CSS variables in app/globals.css. Monaco needs literal hex values.
-export const DARK_THEME = "cp-dark";
-export const LIGHT_THEME = "cp-light";
+// The site has one light theme, so the editor is light whatever the system asks for.
+export const LIGHT_THEME = "cb-light";
+/** Kept for callers that still pick a theme by the system setting. It's the light theme too. */
+export const DARK_THEME = LIGHT_THEME;
 
 export function defineThemes(api: Pick<typeof monaco, "editor">): void {
-  api.editor.defineTheme(DARK_THEME, {
-    base: "vs-dark",
-    inherit: true,
-    rules: [
-      { token: "comment", foreground: "7d858e", fontStyle: "italic" },
-      { token: "keyword", foreground: "c9a0dc" },
-      { token: "string", foreground: "9ccc9c" },
-      { token: "number", foreground: "e0b080" },
-      { token: "type", foreground: "8fc7d8" },
-      { token: "type.identifier", foreground: "8fc7d8" },
-      { token: "delimiter", foreground: "a8b0b8" },
-    ],
-    colors: {
-      "editor.background": "#101316",
-      "editor.foreground": "#d7dbe0",
-      "editorLineNumber.foreground": "#59616a",
-      "editorLineNumber.activeForeground": "#aeb5bc",
-      "editor.lineHighlightBackground": "#171b1f",
-      "editor.lineHighlightBorder": "#00000000",
-      "editor.selectionBackground": "#e5b56740",
-      "editor.inactiveSelectionBackground": "#e5b56726",
-      "editorCursor.foreground": "#e5b567",
-      "editorWidget.background": "#181c20",
-      "editorWidget.border": "#2c3238",
-      "editorHoverWidget.background": "#181c20",
-      "editorHoverWidget.border": "#2c3238",
-      "peekView.border": "#e5b567",
-      "peekViewResult.background": "#14171a",
-      "peekViewEditor.background": "#101316",
-      "scrollbarSlider.background": "#ffffff14",
-      "scrollbarSlider.hoverBackground": "#ffffff24",
-    },
-  });
   api.editor.defineTheme(LIGHT_THEME, {
     base: "vs",
     inherit: true,
     rules: [
-      { token: "comment", foreground: "6b7078", fontStyle: "italic" },
-      { token: "keyword", foreground: "7a3e9d" },
-      { token: "string", foreground: "2e6e3e" },
-      { token: "number", foreground: "a0522d" },
-      { token: "type", foreground: "1f6b82" },
-      { token: "type.identifier", foreground: "1f6b82" },
+      { token: "comment", foreground: "6a737d", fontStyle: "italic" },
+      { token: "keyword", foreground: "cf222e" },
+      { token: "string", foreground: "0a3069" },
+      { token: "number", foreground: "0550ae" },
+      { token: "regexp", foreground: "116329" },
+      { token: "type", foreground: "953800" },
+      { token: "type.identifier", foreground: "953800" },
+      { token: "delimiter", foreground: "4b5563" },
     ],
     colors: {
-      "editor.background": "#fdfcfa",
-      "editor.foreground": "#24272b",
-      "editorLineNumber.foreground": "#a3a6aa",
-      "editorLineNumber.activeForeground": "#4f5358",
-      "editor.lineHighlightBackground": "#f3f1ec",
+      "editor.background": "#ffffff",
+      "editor.foreground": "#111827",
+      "editorGutter.background": "#ffffff",
+      "editorLineNumber.foreground": "#9ca3af",
+      "editorLineNumber.activeForeground": "#374151",
+      "editor.lineHighlightBackground": "#f6f8fa",
       "editor.lineHighlightBorder": "#00000000",
-      "editor.selectionBackground": "#c98f2a40",
-      "editor.inactiveSelectionBackground": "#c98f2a26",
-      "editorCursor.foreground": "#8a5a00",
-      "peekView.border": "#8a5a00",
+      "editor.selectionBackground": "#2563eb33",
+      "editor.inactiveSelectionBackground": "#2563eb1f",
+      "editorCursor.foreground": "#2563eb",
+      "editorWidget.background": "#ffffff",
+      "editorWidget.border": "#d1d5db",
+      "editorHoverWidget.background": "#ffffff",
+      "editorHoverWidget.border": "#d1d5db",
+      "peekView.border": "#2563eb",
+      "peekViewTitle.background": "#f6f8fa",
+      "peekViewResult.background": "#f6f8fa",
+      "peekViewResult.selectionBackground": "#2563eb1f",
+      "peekViewEditor.background": "#ffffff",
+      "peekViewEditorGutter.background": "#ffffff",
+      "scrollbarSlider.background": "#11182714",
+      "scrollbarSlider.hoverBackground": "#11182724",
     },
   });
 }

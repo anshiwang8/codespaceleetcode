@@ -190,24 +190,24 @@ describe("groupPuzzles", () => {
 });
 
 describe("browseHref", () => {
-  it("leaves defaults out, so the plain list stays at /", () => {
-    expect(browseHref({ filters: {}, group: "difficulty" })).toBe("/");
-    expect(browseHref({ filters: {}, group: "topic" })).toBe("/?group=topic");
+  it("leaves defaults out, so the plain list stays at /puzzles", () => {
+    expect(browseHref({ filters: {}, group: "difficulty" })).toBe("/puzzles");
+    expect(browseHref({ filters: {}, group: "topic" })).toBe("/puzzles?group=topic");
     expect(browseHref({ filters: { difficulty: "hard", tag: "auth-and-security" }, group: "repo" })).toBe(
-      "/?difficulty=hard&tag=auth-and-security&group=repo",
+      "/puzzles?difficulty=hard&tag=auth-and-security&group=repo",
     );
   });
 
   it("keeps the sort, with a minus sign for descending", () => {
     expect(browseHref({ filters: {}, group: "difficulty", sort: { column: "title", descending: false } })).toBe(
-      "/?sort=title",
+      "/puzzles?sort=title",
     );
     expect(browseHref({ filters: { tag: "errors" }, group: "topic", sort: { column: "repo", descending: true } })).toBe(
-      "/?tag=errors&group=topic&sort=-repo",
+      "/puzzles?tag=errors&group=topic&sort=-repo",
     );
   });
 
   it("encodes values", () => {
-    expect(browseHref({ filters: { repo: "a&b" }, group: "difficulty" })).toBe("/?repo=a%26b");
+    expect(browseHref({ filters: { repo: "a&b" }, group: "difficulty" })).toBe("/puzzles?repo=a%26b");
   });
 });

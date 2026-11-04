@@ -1,13 +1,12 @@
-import Link from "next/link";
+import { AppShell } from "@/components/site/AppShell";
+import { NotFoundMessage } from "@/components/site/NotFoundMessage";
 
+// An unknown URL lands here, inside the root layout only, so this brings the app's header itself.
+// A missing puzzle is caught first by app/(app)/not-found.tsx, which already has the header.
 export default function NotFound() {
   return (
-    <main className="page-message">
-      <h1>Not found</h1>
-      <p className="muted">There&apos;s no such page or puzzle.</p>
-      <p>
-        <Link href="/">Back to the puzzle list</Link>
-      </p>
-    </main>
+    <AppShell>
+      <NotFoundMessage />
+    </AppShell>
   );
 }

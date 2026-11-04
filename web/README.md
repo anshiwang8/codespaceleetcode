@@ -1,4 +1,4 @@
-# Codebase Puzzles: web app
+# codebases: web app
 
 The Next.js app. See `spec.md` and `CLAUDE.md` at the repo root for what it does and the rules it follows.
 

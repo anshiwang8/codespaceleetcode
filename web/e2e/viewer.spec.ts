@@ -288,18 +288,20 @@ test.describe("puzzle page furniture", () => {
     await expect(page.getByRole("button", { name: /hint/ })).toHaveCount(0);
   });
 
-  test("the page and Monaco follow the system's light or dark setting", async ({ page }) => {
+  test("the page and Monaco are white, whatever the system's light or dark setting", async ({ page }) => {
     const colors = () =>
       page.evaluate(() => ({
         body: getComputedStyle(document.body).backgroundColor,
         editor: getComputedStyle(document.querySelector(".monaco-editor .monaco-editor-background") as Element)
           .backgroundColor,
       }));
+    const white = { body: "rgb(255, 255, 255)", editor: "rgb(255, 255, 255)" };
+    await page.emulateMedia({ colorScheme: "dark" });
     await openPuzzle(page, "e2e-find-symbol");
     await page.locator(".monaco-editor .view-line").first().waitFor();
-    await expect.poll(colors).toEqual({ body: "rgb(12, 14, 16)", editor: "rgb(16, 19, 22)" });
+    await expect.poll(colors).toEqual(white);
     await page.emulateMedia({ colorScheme: "light" });
-    await expect.poll(colors).toEqual({ body: "rgb(242, 240, 235)", editor: "rgb(253, 252, 250)" });
+    await expect.poll(colors).toEqual(white);
   });
 
   test("panels resize by dragging and by keyboard", async ({ page }) => {

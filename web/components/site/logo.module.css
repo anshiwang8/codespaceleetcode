@@ -1,0 +1,41 @@
+.logo {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-logo);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.word {
+  display: inline-flex;
+  align-items: center;
+}
+
+.code {
+  color: var(--text);
+}
+
+.bases {
+  margin-left: 0.05em;
+  padding: 0.06em 0.14em 0.1em;
+  border-radius: 0.14em;
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.small {
+  font-size: 15px;
+}
+
+.medium {
+  font-size: 22px;
+}
+
+.large {
+  font-size: clamp(40px, 11vw, 72px);
+  letter-spacing: -0.02em;
+}
