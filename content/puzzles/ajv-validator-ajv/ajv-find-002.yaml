@@ -18,6 +18,6 @@ answer:
 hints:
   - The text is built from the code generator's output just before this point, and handed to a function constructor.
 solution: solutions/ajv-find-002.md
-tags: [code-generation, compile]
+tags: [compilers]
 authors: [agent-author-2]
 verified_by: [agent:blind-2]

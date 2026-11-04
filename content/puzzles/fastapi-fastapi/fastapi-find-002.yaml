@@ -16,6 +16,6 @@ answer:
 hints:
   - The function and the class it instantiates are deliberately in different modules.
 solution: solutions/fastapi-find-002.md
-tags: [dependencies, structure]
+tags: [dependency-injection, code-structure]
 authors: [agent-author-3]
 verified_by: [agent:blind-3]

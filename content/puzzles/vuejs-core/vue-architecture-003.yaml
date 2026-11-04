@@ -16,6 +16,6 @@ answer:
 hints:
   - Look at the argument `compile` passes to `baseCompile` under the `directiveTransforms` key.
 solution: solutions/vue-architecture-003.md
-tags: [compiler, extension-points]
+tags: [compilers, extension-points]
 authors: [agent-author-1]
 verified_by: [agent:blind-1]

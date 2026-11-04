@@ -154,7 +154,7 @@ export const PUZZLES = [
     prompt: "Select the file that defines the request limits. Select a file.",
     kind: "file",
     key: { kind: "file", path: "src/config.ts", accept: [], accept_reasons: [] },
-    tags: ["config"],
+    tags: ["configuration"],
     verifiedBy: ["anshi"],
   }),
   puzzle({
@@ -165,7 +165,7 @@ export const PUZZLES = [
     prompt: "In `src/config.ts`, select the lines that set the two byte limits. Select the lines.",
     kind: "location",
     key: { kind: "location", path: "src/config.ts", anchor: [4, 5], window: [3, 8] },
-    tags: ["config"],
+    tags: ["configuration"],
   }),
   puzzle({
     slug: "e2e-trace-sequence",
@@ -192,7 +192,7 @@ export const PUZZLES = [
     kind: "set",
     key: { kind: "set", ids: ["src/views.ts", "src/router.ts#Router.handle"] },
     setCount: 2,
-    tags: ["structure"],
+    tags: ["code-structure"],
   }),
   puzzle({
     slug: "e2e-arch-choice",
@@ -206,7 +206,7 @@ export const PUZZLES = [
       { id: "config", label: "The config module" },
       { id: "views", label: "The views module" },
     ],
-    tags: ["structure"],
+    tags: ["code-structure"],
   }),
   puzzle({
     slug: "e2e-sentinel",
@@ -216,7 +216,7 @@ export const PUZZLES = [
     prompt: "Used to prove the key stays on the server. Select a function.",
     kind: "symbol",
     key: { kind: "symbol", id: `src/vault.ts#${KEY_SENTINEL}_unlock`, accept: [], accept_reasons: [] },
-    tags: ["security"],
+    tags: ["auth-and-security"],
   }),
 ];
 

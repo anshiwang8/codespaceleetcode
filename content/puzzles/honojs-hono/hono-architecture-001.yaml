@@ -26,6 +26,6 @@ choices:
 hints:
   - Look for where a path pattern can make a router throw during `add`, and what `SmartRouter.match` does about it.
 solution: solutions/hono-architecture-001.md
-tags: [routing, design]
+tags: [routing]
 authors: [agent-author-1]
 verified_by: [agent:blind-1]

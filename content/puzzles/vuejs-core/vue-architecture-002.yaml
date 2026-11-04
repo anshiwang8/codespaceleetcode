@@ -24,6 +24,6 @@ choices:
 hints:
   - Check which branch of `queueJob` a PRE job takes, then trace the binary search in `findInsertionIndex`.
 solution: solutions/vue-architecture-002.md
-tags: [scheduler, design]
+tags: [reactivity]
 authors: [agent-author-1]
 verified_by: [agent:blind-1]

@@ -24,6 +24,6 @@ choices:
 hints:
   - Read the method top to bottom.
 solution: solutions/flask-architecture-002.md
-tags: [request-lifecycle, hooks, sessions]
+tags: [request-lifecycle, middleware]
 authors: [agent-author-3]
 verified_by: [agent:blind-3]

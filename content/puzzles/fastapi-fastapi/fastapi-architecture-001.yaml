@@ -27,6 +27,6 @@ choices:
 hints:
   - Find the two AsyncExitStack objects created in request_response and see where each is exited relative to the call that sends the response.
 solution: solutions/fastapi-architecture-001.md
-tags: [dependencies, lifecycle]
+tags: [dependency-injection, request-lifecycle]
 authors: [agent-author-3]
 verified_by: [agent:blind-3]

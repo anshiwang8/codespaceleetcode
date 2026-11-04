@@ -11,6 +11,7 @@ import {
   STATUS_LABELS,
   TYPE_LABELS,
 } from "@/lib/client/labels";
+import { topicLabel } from "@/lib/topics";
 
 interface PromptPanelProps {
   puzzle: PuzzleDetail;
@@ -35,7 +36,7 @@ export function PromptPanel({ puzzle, status, unlocked }: PromptPanelProps) {
         </span>
         {puzzle.tags.map((tag) => (
           <span key={tag} className="chip">
-            {tag}
+            {topicLabel(tag)}
           </span>
         ))}
       </div>

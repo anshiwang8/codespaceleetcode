@@ -16,6 +16,6 @@ answer:
 hints:
   - "`core` is a namespace import of the core layer's index."
 solution: solutions/zod-architecture-002.md
-tags: [layering, classic, core]
+tags: [code-structure, validation]
 authors: [agent-author-1]
 verified_by: [agent:blind-1]

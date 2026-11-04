@@ -17,6 +17,6 @@ answer:
 hints:
   - Look at how the function records whether the type it is working with was passed in or guessed.
 solution: solutions/click-find-004.md
-tags: [parameters, parsing]
+tags: [command-line]
 authors: [agent-author-6]
 verified_by: [agent:blind-8]

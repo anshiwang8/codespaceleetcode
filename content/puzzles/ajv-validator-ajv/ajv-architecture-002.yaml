@@ -22,6 +22,6 @@ answer:
 hints:
   - Look at how the node classes in this file relate to each other.
 solution: solutions/ajv-architecture-002.md
-tags: [code-generation, class-hierarchy]
+tags: [compilers, code-structure]
 authors: [agent-author-2]
 verified_by: [agent:blind-2]

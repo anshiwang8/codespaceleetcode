@@ -15,6 +15,6 @@ answer:
 hints:
   - It is one of several small helpers that _build_redirect_request combines.
 solution: solutions/httpx-find-001.md
-tags: [redirects, client]
+tags: [http-clients]
 authors: [agent-author-3]
 verified_by: [agent:blind-3]

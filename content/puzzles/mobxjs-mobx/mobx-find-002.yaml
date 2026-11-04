@@ -18,6 +18,6 @@ answer:
 hints:
   - A module-level constant above the helper defines the iteration limit.
 solution: solutions/mobx-find-002.md
-tags: [reactions, safety]
+tags: [reactivity]
 authors: [agent-author-2]
 verified_by: [agent:blind-2]

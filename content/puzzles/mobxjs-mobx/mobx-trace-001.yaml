@@ -25,6 +25,6 @@ answer:
 hints:
   - ObservableValue extends Atom, and the method that announces a change lives on the base class.
 solution: solutions/mobx-trace-001.md
-tags: [reactivity, batching]
+tags: [reactivity]
 authors: [agent-author-2]
 verified_by: [agent:blind-2, agent:blind-4]

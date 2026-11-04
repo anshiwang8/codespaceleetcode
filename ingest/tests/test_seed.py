@@ -238,7 +238,7 @@ def test_puzzle_fields(db_url: str) -> None:
             "symbol",
             None,
             ["FIXTURE-HINT Routes are matched layer by layer."],
-            ["routing", "http"],
+            ["routing", "http-clients"],
             ["anshi"],
             True,
         )

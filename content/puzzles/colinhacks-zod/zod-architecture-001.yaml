@@ -25,6 +25,6 @@ choices:
 hints:
   - The check on whether every member has `additionalProperties === false` comes first. Work out whether it is true here.
 solution: solutions/zod-architecture-001.md
-tags: [json-schema, intersection]
+tags: [validation, compilers]
 authors: [agent-author-1]
 verified_by: [agent:blind-1]

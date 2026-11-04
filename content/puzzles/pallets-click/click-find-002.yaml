@@ -16,6 +16,6 @@ answer:
 hints:
   - The condition also looks at two flags on the context.
 solution: solutions/click-find-002.md
-tags: [parsing, errors]
+tags: [command-line, errors]
 authors: [agent-author-3]
 verified_by: [agent:blind-3]

@@ -18,6 +18,6 @@ answer:
 hints:
   - Look at how the keyword's `code` builds the length expression when `unicode` is not false, and follow the import.
 solution: solutions/ajv-find-003.md
-tags: [code-generation, validation]
+tags: [compilers, validation]
 authors: [agent-author-5]
 verified_by: [agent:blind-7]

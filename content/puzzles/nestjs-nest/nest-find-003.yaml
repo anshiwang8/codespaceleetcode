@@ -18,6 +18,6 @@ answer:
 hints:
   - The object that computes the token is chosen once, when the container itself is constructed.
 solution: solutions/nest-find-003.md
-tags: [modules, configuration]
+tags: [dependency-injection, configuration]
 authors: [agent-author-5]
 verified_by: [agent:blind-7]

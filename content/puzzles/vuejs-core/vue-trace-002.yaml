@@ -27,6 +27,6 @@ answer:
 hints:
   - Batches nest. Count `batchDepth` at every `startBatch` and `endBatch` call; only the call that brings it back to zero runs anything.
 solution: solutions/vue-trace-002.md
-tags: [reactivity, effects, batching]
+tags: [reactivity]
 authors: [agent-author-4]
 verified_by: [agent:blind-6]

@@ -24,6 +24,6 @@ choices:
 hints:
   - Pay attention to whether each one is added with push or unshift.
 solution: solutions/rtk-architecture-002.md
-tags: [middleware, configureStore]
+tags: [state-management, middleware]
 authors: [agent-author-2]
 verified_by: [agent:blind-2]

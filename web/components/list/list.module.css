@@ -49,6 +49,223 @@
   font-size: 12px;
 }
 
+/* Difficulty strip: the whole catalogue as one bar, each difficulty's width its share of puzzles. */
+
+.strip {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.segment {
+  --tone: var(--text-muted);
+
+  display: grid;
+  flex-basis: 0;
+  min-width: 96px;
+  gap: 2px;
+  padding-bottom: 2px;
+  color: var(--text-muted);
+  transition: opacity 120ms ease;
+}
+
+.segment[data-difficulty="easy"] {
+  --tone: var(--easy);
+}
+
+.segment[data-difficulty="medium"] {
+  --tone: var(--medium);
+}
+
+.segment[data-difficulty="hard"] {
+  --tone: var(--hard);
+}
+
+.segment:hover {
+  text-decoration: none;
+}
+
+.segmentBar {
+  position: relative;
+  height: 10px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--tone) 30%, transparent);
+  transition: height 120ms ease, background-color 120ms ease;
+}
+
+.segment:hover .segmentBar {
+  background: color-mix(in srgb, var(--tone) 42%, transparent);
+}
+
+/* The selected difficulty's bar grows, so it reads as pressed. */
+.segment[aria-current="true"] .segmentBar {
+  height: 14px;
+}
+
+.segment[data-dimmed="true"] {
+  opacity: 0.45;
+}
+
+.segment[data-dimmed="true"]:hover {
+  opacity: 0.8;
+}
+
+.segmentSolved {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: var(--tone);
+}
+
+.segmentLabel {
+  color: var(--tone);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.segment[aria-current="true"] .segmentLabel {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.segmentCount {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Type, topic and repo on the left, grouping on the right. */
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-bottom: 6px;
+}
+
+.toolbar .filters {
+  margin-bottom: 0;
+}
+
+.groupBy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.groupByLabel {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.segmented {
+  display: inline-flex;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.segmented li + li {
+  border-left: 1px solid var(--line-strong);
+}
+
+.segmented a {
+  display: block;
+  padding: 3px 10px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.segmented a:hover {
+  background: var(--hover);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.segmented a[aria-current="true"] {
+  background: var(--panel-raised);
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* Grouped sections */
+
+.group {
+  margin-top: 18px;
+}
+
+.groupSummary {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 4px 0 6px;
+  border-bottom: 1px solid var(--line-strong);
+  cursor: pointer;
+  list-style: none;
+}
+
+.groupSummary::-webkit-details-marker {
+  display: none;
+}
+
+/* A caret that turns when the section opens. */
+.groupSummary::before {
+  content: "";
+  align-self: center;
+  width: 0;
+  height: 0;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  border-left: 5px solid var(--text-faint);
+  transition: transform 120ms ease;
+}
+
+details[open] > .groupSummary::before {
+  transform: rotate(90deg);
+}
+
+.groupSummary h2 {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.groupMeta {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.groupBar {
+  align-self: center;
+  width: 120px;
+  height: 4px;
+  margin-left: auto;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--line);
+}
+
+.groupBar > span {
+  display: block;
+  height: 100%;
+  background: var(--ok);
+}
+
+.groupDescription {
+  margin: 6px 0 2px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .segment,
+  .segmentBar,
+  .groupSummary::before {
+    transition: none;
+  }
+}
+
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -73,6 +290,28 @@
 
 .table tbody tr:hover {
   background: var(--hover);
+}
+
+/* Each header is a link that sorts by its column. */
+.sortable a {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  color: inherit;
+}
+
+.sortable a:hover {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.sortable[aria-sort] a {
+  color: var(--text);
+}
+
+.sortMark {
+  color: var(--accent-text);
+  font-size: 9px;
 }
 
 .status {

@@ -18,6 +18,6 @@ answer:
 hints:
   - Check where createReducer.ts imports createNextState from.
 solution: solutions/rtk-architecture-001.md
-tags: [immer, module-structure]
+tags: [state-management, code-structure]
 authors: [agent-author-2]
 verified_by: [agent:blind-2]

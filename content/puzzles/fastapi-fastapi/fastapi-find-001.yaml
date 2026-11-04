@@ -17,6 +17,6 @@ answer:
 hints:
   - It is called from the inner request-handling function built by get_request_handler.
 solution: solutions/fastapi-find-001.md
-tags: [responses, validation]
+tags: [validation, request-lifecycle]
 authors: [agent-author-3]
 verified_by: [agent:blind-3]

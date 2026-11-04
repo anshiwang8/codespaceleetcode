@@ -22,6 +22,6 @@ answer:
 hints:
   - The transform stage works on the AST that the parser produced. Find the entry point of that stage first.
 solution: solutions/vue-trace-001.md
-tags: [compiler, ast]
+tags: [compilers]
 authors: [agent-author-1]
 verified_by: [agent:blind-1]

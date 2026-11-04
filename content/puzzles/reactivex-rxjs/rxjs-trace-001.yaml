@@ -20,6 +20,6 @@ answer:
 hints:
   - "`BehaviorSubject._subscribe` emits the current value and then defers to its base class."
 solution: solutions/rxjs-trace-001.md
-tags: [subjects]
+tags: [observables]
 authors: [agent-author-1]
 verified_by: [agent:blind-1]

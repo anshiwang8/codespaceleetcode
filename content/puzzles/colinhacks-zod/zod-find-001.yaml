@@ -16,6 +16,6 @@ answer:
 hints:
   - Look at the last line of the inner function that `_safeParse` returns.
 solution: solutions/zod-find-001.md
-tags: [parsing, errors]
+tags: [validation, errors]
 authors: [agent-author-1]
 verified_by: [agent:blind-1]

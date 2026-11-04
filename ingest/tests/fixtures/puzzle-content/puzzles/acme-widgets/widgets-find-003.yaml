@@ -9,6 +9,6 @@ prompt: |
   Select a file.
 answer: { kind: file, path: src/config.js, accept: [], accept_reasons: [] }
 solution: solutions/widgets-find-003.md
-tags: [config]
+tags: [configuration]
 authors: [fixture-author]
 verified_by: []   # filled in by the blind second solver

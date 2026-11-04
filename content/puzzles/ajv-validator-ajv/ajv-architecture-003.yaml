@@ -23,6 +23,6 @@ choices:
 hints:
   - Look at what _addSchema returns when its cache already holds the schema, and what compile does with sch.validate.
 solution: solutions/ajv-architecture-003.md
-tags: [caching, compile]
+tags: [compilers]
 authors: [agent-author-2]
 verified_by: [agent:blind-2]

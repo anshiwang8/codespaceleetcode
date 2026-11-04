@@ -24,6 +24,6 @@ answer:
 hints:
   - flush first prepares the body and then calls a method that issues the actual HTTP request.
 solution: solutions/got-trace-001.md
-tags: [request-lifecycle, timeouts]
+tags: [retries-and-timeouts, request-lifecycle]
 authors: [agent-author-2]
 verified_by: [agent:blind-2]

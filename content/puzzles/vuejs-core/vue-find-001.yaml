@@ -16,6 +16,6 @@ answer:
 hints:
   - Read the last statement of `ReactiveEffect.notify`.
 solution: solutions/vue-find-001.md
-tags: [reactivity, effects]
+tags: [reactivity]
 authors: [agent-author-1]
 verified_by: [agent:blind-1]

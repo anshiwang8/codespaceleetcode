@@ -24,6 +24,6 @@ answer:
 hints:
   - Scanning first finds the modules, then reads each module's metadata in a separate pass.
 solution: solutions/nest-trace-001.md
-tags: [bootstrap, modules, providers]
+tags: [dependency-injection]
 authors: [agent-author-1]
 verified_by: [agent:blind-1]

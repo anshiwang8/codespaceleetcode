@@ -89,6 +89,12 @@ Difficulty measures how much navigation and reasoning the answer takes, not how 
 - **medium:** 2–4 hops across files, or a careful read of one long function where several candidates look plausible. A trace has 3–5 steps across files.
 - **hard:** the answer depends on indirection (dynamic dispatch, registries, callbacks passed as values, configuration-dependent paths) across several files, or on runtime ordering or state. Decoys look right on a quick read. A trace has 5 or more steps, or a tempting shortcut that the prompt's runtime conditions rule out.
 
+### Topics
+
+`tags` holds 1 to 3 topics from a fixed list, and the schema rejects anything else. The site groups and filters by topic, so a tag used on one puzzle would be a filter with one result. Each topic's label and description are in `web/lib/topics.ts`, and a web test checks that list against the schema's enum. To add a topic, add it to both and retag the puzzles it covers.
+
+`routing`, `middleware`, `request-lifecycle`, `errors`, `http-clients`, `retries-and-timeouts`, `reactivity`, `compilers`, `validation`, `dependency-injection`, `extension-points`, `configuration`, `state-management`, `observables`, `auth-and-security`, `code-structure`, `command-line`.
+
 ### Puzzle file format
 
 One YAML file per puzzle at `content/puzzles/<repo-slug>/<puzzle-id>.yaml`, validated against `content/schema/puzzle.schema.json`.
@@ -110,7 +116,7 @@ answer:
 hints:
   - Routes are matched layer by layer.
 solution: solutions/hono-find-003.md          # relative to content/
-tags: [routing, http]
+tags: [routing, http-clients]                 # 1 to 3 topics, see Topics below
 authors: [anshi]
 verified_by: []                               # filled in by the blind second solver
 ```
@@ -334,7 +340,13 @@ Response shapes live in `web/lib/api-types.ts`. Submit validates that every subm
 
 ## 10. UI
 
-- **Puzzle list:** filter by type, difficulty, repo; solved state per row.
+- **Puzzle list:** solved state per row. Everything below lives in the URL (`type`, `difficulty`, `repo`, `tag`, `group`, `sort`), and the defaults are left out, so the plain list stays at `/`.
+  - A difficulty strip: one bar split by difficulty, each segment's width its share of the puzzles and its filled part the share solved. Clicking a segment filters to that difficulty, and clicking it again clears the filter.
+  - The strip's counts are taken under the other filters, so each says what clicking would show.
+  - Type, topic and repo are drop-downs. Topics show by label.
+  - Group by difficulty (the default), topic, repo, or none. Each group is a collapsible section headed with its solved count. A puzzle with two topics is listed under both. A column the heading already gives (difficulty or repo) is left out of that section's rows. Grouped by topic, each section shows the topic's description.
+  - Clicking a column header sorts every section by that column, A to Z, except difficulty, which goes easiest first. Clicking it again reverses the order. Ties keep the default order, by puzzle ID.
+  - Signed out, counts say how many puzzles there are instead of how many are solved.
 - **Puzzle page:** prompt panel (left), file tree + Monaco + search (center), answer tray (right).
   - The answer tray shows the required kind, the current selection, and for `set` the "n of N selected" count. For `sequence`, an ordered list with drag to reorder.
   - Go-to-definition (F12 / ctrl-click, cmd-click on macOS), find references, and a breadcrumb trail of visited files.

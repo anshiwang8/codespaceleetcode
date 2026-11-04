@@ -38,6 +38,6 @@ choices:
 hints:
   - "Look at how `buildReducer` in createSlice.ts combines the slice's own case reducers with the ones from `extraReducers` before calling `createReducer`."
 solution: solutions/rtk-architecture-004.md
-tags: [reducers, create-slice]
+tags: [state-management]
 authors: [agent-author-4]
 verified_by: [agent:blind-6]

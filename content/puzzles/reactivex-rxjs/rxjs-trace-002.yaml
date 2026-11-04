@@ -21,6 +21,6 @@ answer:
 hints:
   - "`forkJoinImpl` splits its arguments into keys and sources before it subscribes to anything."
 solution: solutions/rxjs-trace-002.md
-tags: [creation-operators]
+tags: [observables]
 authors: [agent-author-1]
 verified_by: [agent:blind-1]

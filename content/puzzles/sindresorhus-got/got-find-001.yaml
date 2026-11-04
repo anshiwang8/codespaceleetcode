@@ -16,6 +16,6 @@ answer:
 hints:
   - The retry logic in the Request class calls it and passes its result on to the user-supplied `calculateDelay` option.
 solution: solutions/got-find-001.md
-tags: [retry]
+tags: [retries-and-timeouts]
 authors: [agent-author-2]
 verified_by: [agent:blind-2]

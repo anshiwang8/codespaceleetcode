@@ -18,6 +18,6 @@ answer:
 hints:
   - Two of the four functions have the same name but live in different packages.
 solution: solutions/mobx-architecture-002.md
-tags: [reactions, react-bindings]
+tags: [reactivity]
 authors: [agent-author-2]
 verified_by: [agent:blind-2]

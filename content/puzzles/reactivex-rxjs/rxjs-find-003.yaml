@@ -18,6 +18,6 @@ answer:
 hints:
   - Check whether the source's `complete` handler completes the subscriber itself in this scenario, and what runs when the timer fires.
 solution: solutions/rxjs-find-003.md
-tags: [operators, throttling]
+tags: [observables]
 authors: [agent-author-4]
 verified_by: [agent:blind-6]

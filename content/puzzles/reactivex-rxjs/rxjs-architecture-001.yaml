@@ -17,6 +17,6 @@ answer:
 hints:
   - Check the imports at the top of single.ts and where each imported class is constructed.
 solution: solutions/rxjs-architecture-001.md
-tags: [operators, errors]
+tags: [observables, errors]
 authors: [agent-author-1]
 verified_by: [agent:blind-1]

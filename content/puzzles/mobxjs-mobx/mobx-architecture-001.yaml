@@ -26,6 +26,6 @@ choices:
 hints:
   - propagateChanged only marks X's direct observers as STALE_. R is not a direct observer of X.
 solution: solutions/mobx-architecture-001.md
-tags: [reactivity, computed, dependency-tracking]
+tags: [reactivity]
 authors: [agent-author-2]
 verified_by: [agent:blind-2]

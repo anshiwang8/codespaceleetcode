@@ -16,6 +16,6 @@ answer:
 hints:
   - The line is inside the argument list of the `source.subscribe` call.
 solution: solutions/rxjs-find-002.md
-tags: [operators, cancellation]
+tags: [observables]
 authors: [agent-author-1]
 verified_by: [agent:blind-1]

@@ -16,6 +16,6 @@ answer:
 hints:
   - Open the operator implementation for `filter` and look at what its callback calls first.
 solution: solutions/rxjs-find-001.md
-tags: [operators, subscription]
+tags: [observables]
 authors: [agent-author-1]
 verified_by: [agent:blind-1]

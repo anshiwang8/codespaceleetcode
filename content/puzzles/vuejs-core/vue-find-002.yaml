@@ -16,6 +16,6 @@ answer:
 hints:
   - Both removals are calls to two small helper functions in the same file.
 solution: solutions/vue-find-002.md
-tags: [reactivity, effects]
+tags: [reactivity]
 authors: [agent-author-1]
 verified_by: [agent:blind-1]

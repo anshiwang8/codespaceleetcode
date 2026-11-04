@@ -18,6 +18,6 @@ answer:
 hints:
   - One of them derives from another one rather than from the base class.
 solution: solutions/requests-architecture-001.md
-tags: [auth, extension-points]
+tags: [auth-and-security, extension-points]
 authors: [agent-author-3]
 verified_by: [agent:blind-3]

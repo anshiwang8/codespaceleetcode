@@ -14,6 +14,7 @@ LeetCode-style puzzles set inside real open-source repos pinned to a commit. v1 
 - `supabase/migrations/` holds SQL migrations. Never edit an applied migration; add a new one. Hosted Supabase gives clients every privilege on a new table or sequence, so a migration that adds one must enable RLS, revoke `anon` and `authenticated`, and grant back only what clients may read. `web/tests/rls.test.ts` checks this.
 - `supabase/local/shim.sql` adds what hosted Supabase provides, for the local database only.
 - `web/lib/api-types.ts` holds the API response shapes the routes and UI share.
+- `web/lib/topics.ts` holds the topic list's labels and descriptions. Its slugs must match the `tags` enum in `content/schema/puzzle.schema.json`, and a web test checks this.
 
 ## Non-negotiable rules
 
@@ -33,6 +34,7 @@ LeetCode-style puzzles set inside real open-source repos pinned to a commit. v1 
 - Python: type hints, `ruff` + `pyright` clean. Run with `uv run`.
 - Puzzle IDs: `<repo-short>-<type>-<nnn>`, e.g. `hono-trace-002`.
 - One concept per puzzle. If the prompt needs "and", split it.
+- Rate difficulty by the rules in spec section 4, and tag each puzzle with 1 to 3 topics from the fixed list there.
 
 ## Testing
 

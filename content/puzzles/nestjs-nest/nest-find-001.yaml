@@ -15,6 +15,6 @@ answer:
 hints:
   - The module scanner registers a module's `imports` entries one by one.
 solution: solutions/nest-find-001.md
-tags: [modules, errors]
+tags: [dependency-injection, errors]
 authors: [agent-author-1]
 verified_by: [agent:blind-1, agent:blind-5]

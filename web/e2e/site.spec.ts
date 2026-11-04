@@ -4,7 +4,12 @@ import { FILES, openFile, openPuzzle, signIn, submitAndExpect, visible } from ".
 
 test.describe("puzzle list", () => {
   test("shows every puzzle with its repo and language", async ({ page }) => {
+    // Grouped by difficulty, the section heading gives the difficulty instead of each row.
     await page.goto("/");
+    await expect(visible(page, "group-medium").getByTestId("puzzle-row-e2e-trace-sequence")).toBeVisible();
+    await expect(visible(page, "group-medium").getByRole("columnheader", { name: "Difficulty" })).toHaveCount(0);
+
+    await page.goto("/?group=none");
     const row = visible(page, "puzzle-row-e2e-trace-sequence");
     await expect(row).toContainText("From start to match");
     await expect(row).toContainText("Trace");
@@ -27,19 +32,128 @@ test.describe("puzzle list", () => {
     await expect(page).not.toHaveURL(/type=/);
     await expect(visible(page, "puzzle-row-e2e-find-file")).toBeVisible();
 
-    await page.getByRole("combobox", { name: "Difficulty" }).selectOption("hard");
-    await expect(page).toHaveURL(/difficulty=hard/);
-    await expect(visible(page, "puzzle-row-e2e-arch-set")).toBeVisible();
-    await expect(visible(page, "puzzle-row-e2e-find-symbol")).toHaveCount(0);
-
-    await page.goto("/?tag=config");
+    await page.goto("/?tag=configuration");
     await expect(visible(page, "puzzle-row-e2e-find-file")).toBeVisible();
     await expect(visible(page, "puzzle-row-e2e-arch-set")).toHaveCount(0);
-    await expect(page.getByRole("combobox", { name: "Tag" })).toHaveValue("config");
+    await expect(page.getByRole("combobox", { name: "Topic" })).toHaveValue("configuration");
 
     await page.goto("/?repo=acme-tiny&type=find&difficulty=medium");
     await expect(visible(page, "puzzle-row-e2e-find-location")).toBeVisible();
     await expect(page.getByRole("row")).toHaveCount(2);
+  });
+
+  test("the difficulty strip filters, counts, and clears when clicked again", async ({ page }) => {
+    await page.goto("/");
+    const hard = visible(page, "difficulty-hard");
+    await expect(visible(page, "difficulty-easy")).toContainText("3 puzzles");
+    await expect(hard).toContainText("2 puzzles");
+
+    await hard.click();
+    await expect(page).toHaveURL(/difficulty=hard/);
+    await expect(visible(page, "difficulty-hard")).toHaveAttribute("aria-current", "true");
+    await expect(visible(page, "puzzle-row-e2e-arch-set")).toBeVisible();
+    await expect(visible(page, "puzzle-row-e2e-find-symbol")).toHaveCount(0);
+    await expect(visible(page, "puzzle-count")).toHaveText("2 of 7 puzzles");
+
+    // The other filters narrow the strip's counts, so each says what clicking it would show.
+    await page.goto("/?difficulty=hard&type=find");
+    await expect(visible(page, "difficulty-easy")).toContainText("2 puzzles");
+    await expect(visible(page, "difficulty-hard")).toContainText("1 puzzle");
+
+    await visible(page, "difficulty-hard").click();
+    await expect(page).not.toHaveURL(/difficulty=/);
+    await expect(page).toHaveURL(/type=find/);
+  });
+
+  test("the topic drop-down filters by topic, by its label", async ({ page }) => {
+    await page.goto("/");
+    const topic = page.getByRole("combobox", { name: "Topic" });
+    await expect(topic.locator("option")).toHaveText(["All", "Routing", "Configuration and defaults", "Auth and security", "Code structure"]);
+
+    await topic.selectOption({ label: "Code structure" });
+    await expect(page).toHaveURL(/tag=code-structure/);
+    await expect(visible(page, "puzzle-row-e2e-arch-set")).toBeVisible();
+    await expect(visible(page, "puzzle-row-e2e-arch-choice")).toBeVisible();
+    await expect(visible(page, "puzzle-row-e2e-find-file")).toHaveCount(0);
+
+    await topic.selectOption("");
+    await expect(page).not.toHaveURL(/tag=/);
+    await expect(visible(page, "puzzle-row-e2e-find-file")).toBeVisible();
+  });
+
+  test("clicking a column header sorts every group, and clicking it again reverses", async ({ page }) => {
+    const titles = (testId: string) => visible(page, testId).locator("tbody tr td:nth-child(2)");
+    await page.goto("/?group=none");
+    await visible(page, "sort-title").click();
+    await expect(page).toHaveURL(/sort=title/);
+    await expect(page.getByRole("columnheader", { name: "Puzzle" })).toHaveAttribute("aria-sort", "ascending");
+    const ascending = [
+      "A puzzle whose answer nobody should see",
+      "From start to match",
+      "The byte limits",
+      "What the router needs",
+      "Where a path is matched",
+      "Where limits live",
+      "Who owns the port",
+    ];
+    await expect(page.locator("tbody tr td:nth-child(2)")).toHaveText(ascending);
+
+    await visible(page, "sort-title").click();
+    await expect(page).toHaveURL(/sort=-title/);
+    await expect(page.getByRole("columnheader", { name: "Puzzle" })).toHaveAttribute("aria-sort", "descending");
+    await expect(page.locator("tbody tr td:nth-child(2)")).toHaveText([...ascending].reverse());
+
+    // Difficulty goes easiest first, not alphabetically.
+    await visible(page, "sort-difficulty").click();
+    await expect(page.locator("tbody tr td:nth-child(4)")).toHaveText([
+      "Easy", "Easy", "Easy", "Medium", "Medium", "Hard", "Hard",
+    ]);
+
+    // In groups, each section is sorted, and changing the grouping keeps the sort.
+    await page.goto("/?sort=title");
+    await visible(page, "group-by-topic").click();
+    await expect(page).toHaveURL(/group=topic/);
+    await expect(page).toHaveURL(/sort=title/);
+    await expect(titles("group-code-structure")).toHaveText(["What the router needs", "Who owns the port"]);
+    await visible(page, "group-code-structure").getByTestId("sort-title").click();
+    await expect(page).toHaveURL(/sort=-title/);
+    await expect(titles("group-code-structure")).toHaveText(["Who owns the port", "What the router needs"]);
+    await expect(titles("group-routing")).toHaveText(["Where a path is matched", "From start to match"]);
+  });
+
+  test("groups by difficulty, topic, repo or not at all", async ({ page }) => {
+    await page.goto("/");
+    await expect(visible(page, "group-by-difficulty")).toHaveAttribute("aria-current", "true");
+    await expect(visible(page, "group-easy")).toContainText("3 puzzles");
+    await expect(visible(page, "group-easy").getByTestId("puzzle-row-e2e-arch-choice")).toBeVisible();
+    await expect(visible(page, "group-hard").getByTestId("puzzle-row-e2e-arch-set")).toBeVisible();
+
+    // Folding a section hides its rows and leaves the others.
+    await visible(page, "group-easy").locator("summary").click();
+    await expect(visible(page, "group-easy").getByTestId("puzzle-row-e2e-arch-choice")).toBeHidden();
+    await expect(visible(page, "group-hard").getByTestId("puzzle-row-e2e-arch-set")).toBeVisible();
+
+    await visible(page, "group-by-topic").click();
+    await expect(page).toHaveURL(/group=topic/);
+    await expect(visible(page, "group-routing")).toContainText("Matching a request to the code that handles it.");
+    await expect(visible(page, "group-routing").getByTestId("puzzle-row-e2e-trace-sequence")).toBeVisible();
+    await expect(visible(page, "group-configuration").getByTestId("puzzle-row-e2e-find-file")).toBeVisible();
+
+    // A topic filter keeps the grouping, and shows only that topic's section.
+    await page.getByRole("combobox", { name: "Topic" }).selectOption("routing");
+    await expect(page).toHaveURL(/tag=routing/);
+    await expect(page).toHaveURL(/group=topic/);
+    await expect(page.locator("section[data-testid^='group-']").filter({ visible: true })).toHaveCount(1);
+
+    await page.goto("/?group=repo");
+    await expect(visible(page, "group-acme-tiny")).toContainText("typescript");
+
+    await page.goto("/?group=none");
+    await expect(page.locator("section[data-testid^='group-']")).toHaveCount(0);
+    await expect(page.getByRole("row")).toHaveCount(8); // Header and seven puzzles.
+
+    await page.goto("/?group=bogus");
+    await expect(visible(page, "group-by-difficulty")).toHaveAttribute("aria-current", "true");
   });
 
   test("a filter matching nothing, or a bad filter value, doesn't break the page", async ({ page }) => {
@@ -57,6 +171,9 @@ test.describe("puzzle list", () => {
     await page.goto("/");
     await expect(visible(page, "puzzle-row-e2e-arch-choice")).toContainText("Solved");
     await expect(visible(page, "puzzle-row-e2e-find-file")).toContainText("Not started");
+    await expect(visible(page, "puzzle-count")).toHaveText("7 puzzles, 1 solved");
+    await expect(visible(page, "difficulty-easy")).toContainText("1 of 3 solved");
+    await expect(visible(page, "group-easy")).toContainText("1 of 3 solved");
   });
 
   test("works on a phone with no sideways scrolling", async ({ browser }) => {

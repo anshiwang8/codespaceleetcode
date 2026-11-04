@@ -19,6 +19,6 @@ answer:
 hints:
   - Check every base class in each class header, not just the first one.
 solution: solutions/requests-architecture-003.md
-tags: [errors, adapters]
+tags: [http-clients, errors]
 authors: [agent-author-6]
 verified_by: [agent:blind-8]

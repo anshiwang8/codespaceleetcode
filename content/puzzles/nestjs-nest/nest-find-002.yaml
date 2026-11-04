@@ -16,6 +16,6 @@ answer:
 hints:
   - The early return is the first statement in the method body.
 solution: solutions/nest-find-002.md
-tags: [modules, global-modules]
+tags: [dependency-injection]
 authors: [agent-author-1]
 verified_by: [agent:blind-1]

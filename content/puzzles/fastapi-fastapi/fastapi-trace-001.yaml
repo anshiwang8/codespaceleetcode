@@ -26,6 +26,6 @@ answer:
 hints:
   - The route's state, including its Dependant tree, is filled in by a helper that the constructor calls first.
 solution: solutions/fastapi-trace-001.md
-tags: [routing, dependencies]
+tags: [dependency-injection, routing]
 authors: [agent-author-3]
 verified_by: [agent:blind-3]

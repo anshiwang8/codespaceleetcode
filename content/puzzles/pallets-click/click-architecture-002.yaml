@@ -16,6 +16,6 @@ answer:
 hints:
   - Command.main has separate except clauses for these two, apart from the one for ClickException.
 solution: solutions/click-architecture-002.md
-tags: [errors, control-flow]
+tags: [command-line, errors]
 authors: [agent-author-3]
 verified_by: [agent:blind-3]

@@ -21,4 +21,4 @@ hints:
 - FIXTURE-HINT Routes are matched layer by layer.
 tags:
 - routing
-- http
+- http-clients
