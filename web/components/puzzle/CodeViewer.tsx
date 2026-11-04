@@ -1,13 +1,12 @@
 "use client";
 
 import Editor, { loader, type OnMount } from "@monaco-editor/react";
-import { type RefObject, useCallback, useEffect, useImperativeHandle, useRef, useState, useSyncExternalStore } from "react";
+import { type RefObject, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import styles from "@/components/puzzle/puzzle.module.css";
 import { type ManifestFile, REFERENCE_CAP, type SymbolAtPositionResponse, type SymbolInfo } from "@/lib/api-types";
 import { type LineRange, selectionToLines } from "@/lib/client/answer";
 import { api } from "@/lib/client/api";
 import {
-  DARK_THEME,
   defineThemes,
   LIGHT_THEME,
   monaco,
@@ -132,21 +131,6 @@ class ModelStore {
   }
 }
 
-function darkModeSubscribe(onChange: () => void): () => void {
-  const query = window.matchMedia("(prefers-color-scheme: light)");
-  query.addEventListener("change", onChange);
-  return () => query.removeEventListener("change", onChange);
-}
-
-function usePreferredTheme(): string {
-  const light = useSyncExternalStore(
-    darkModeSubscribe,
-    () => window.matchMedia("(prefers-color-scheme: light)").matches,
-    () => false,
-  );
-  return light ? LIGHT_THEME : DARK_THEME;
-}
-
 const EDITOR_OPTIONS: monaco.editor.IStandaloneEditorConstructionOptions = {
   readOnly: true,
   domReadOnly: true,
@@ -202,7 +186,7 @@ export default function CodeViewer({
   onCursor,
   onSelection,
 }: CodeViewerProps) {
-  const theme = usePreferredTheme();
+  const theme = LIGHT_THEME;
   const storeRef = useRef<ModelStore | null>(null);
   const editorRef = useRef<CodeEditor | null>(null);
   const [editorReady, setEditorReady] = useState(false);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Markdown } from "@/components/puzzle/Markdown";
 import styles from "@/components/puzzle/puzzle.module.css";
 import { ApiRequestError, api } from "@/lib/client/api";
@@ -14,10 +14,16 @@ type SolutionState = { state: "loading" } | { state: "ready"; body: string } | {
 export function SolutionView({ slug }: { slug: string }) {
   const [solution, setSolution] = useState<SolutionState>({ state: "loading" });
   const [attempt, setAttempt] = useState(0);
+  // React's development double-run unmounts and reruns the effect on the same instance. Reusing the
+  // request for the same slug and attempt keeps that to one fetch.
+  const request = useRef<{ key: string; promise: ReturnType<typeof api.solution> } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    api.solution(slug).then(
+    const key = `${slug}
+${attempt}`;
+    if (request.current?.key !== key) request.current = { key, promise: api.solution(slug) };
+    request.current.promise.then(
       (response) => {
         if (!cancelled) setSolution({ state: "ready", body: response.bodyMd });
       },

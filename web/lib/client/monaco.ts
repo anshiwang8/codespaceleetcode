@@ -58,8 +58,6 @@ export function monacoLanguage(manifestLanguage: string | undefined): string {
 // Editor colours mirror the CSS variables in app/globals.css. Monaco needs literal hex values.
 // The site has one light theme, so the editor is light whatever the system asks for.
 export const LIGHT_THEME = "cb-light";
-/** Kept for callers that still pick a theme by the system setting. It's the light theme too. */
-export const DARK_THEME = LIGHT_THEME;
 
 export function defineThemes(api: Pick<typeof monaco, "editor">): void {
   api.editor.defineTheme(LIGHT_THEME, {
