@@ -191,7 +191,12 @@
   text-align: right;
 }
 
-/* Mermaid diagrams: scaled down to the panel's width, and scrolled if they still don't fit. */
+/* Mermaid diagrams keep their natural size and scroll sideways inside their own box. */
+.diagramBox {
+  position: relative;
+  min-width: 0;
+}
+
 .diagram {
   max-width: 100%;
   padding: 10px;
@@ -203,8 +208,67 @@
 }
 
 .diagram svg {
+  max-width: none;
+  height: auto;
+}
+
+.diagramExpand {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 1;
+  padding: 2px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: var(--accent-text);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.diagramExpand:hover {
+  background: var(--panel-raised);
+}
+
+.diagramExpand:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+
+.diagramDialog {
+  width: min(1100px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  margin: auto;
+  padding: 12px 16px 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: 0 20px 50px rgb(15 23 42 / 25%);
+}
+
+.diagramDialog::backdrop {
+  background: rgb(15 23 42 / 45%);
+}
+
+.diagramDialogBar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.diagramDialogBody {
+  overflow: auto;
+  max-height: calc(100vh - 110px);
+  text-align: center;
+}
+
+.diagramDialogBody svg {
+  width: 100%;
   max-width: 100%;
   height: auto;
+  max-height: calc(100vh - 120px);
 }
 
 .diagramFallback {

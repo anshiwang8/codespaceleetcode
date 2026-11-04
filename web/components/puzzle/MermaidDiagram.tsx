@@ -16,6 +16,21 @@ function loadMermaid(): Promise<Mermaid> {
     mermaid.initialize({
       startOnLoad: false,
       securityLevel: "strict",
+      // Keys a diagram's own %%{init}%% block may not override. Without the theme and CSS keys, a
+      // diagram could inject CSS, including url() requests to another host, or restyle itself.
+      secure: [
+        "secure",
+        "securityLevel",
+        "startOnLoad",
+        "maxTextSize",
+        "maxEdges",
+        "suppressErrorRendering",
+        "theme",
+        "themeCSS",
+        "themeVariables",
+        "fontFamily",
+        "altFontFamily",
+      ],
       // Mermaid can't read CSS variables, since it works its colours out from these, so they're
       // written out: a light theme for a white page with the site's blue accent.
       theme: "base",
@@ -38,8 +53,12 @@ function loadMermaid(): Promise<Mermaid> {
       },
       // Without this, a diagram that doesn't parse leaves mermaid's own error graphic in the page.
       suppressErrorRendering: true,
-      flowchart: { useMaxWidth: true },
-      sequence: { useMaxWidth: true },
+      // Diagrams keep their natural size. The prompt panel is narrow, so scaling them to fit made the
+      // text unreadable. They scroll sideways instead, and Expand shows them large.
+      flowchart: { useMaxWidth: false },
+      sequence: { useMaxWidth: false },
+      class: { useMaxWidth: false },
+      state: { useMaxWidth: false },
     });
     return mermaid;
   });
@@ -91,15 +110,7 @@ export function MermaidDiagram({ source }: { source: string }) {
   }, [source]);
 
   if (diagram.state === "ready") {
-    return (
-      <div
-        className={styles.diagram}
-        data-testid="mermaid-diagram"
-        data-state="ready"
-        // The SVG comes from mermaid with securityLevel "strict", which sanitizes every label.
-        dangerouslySetInnerHTML={{ __html: diagram.svg }}
-      />
-    );
+    return <ReadyDiagram svg={diagram.svg} />;
   }
 
   if (diagram.state === "loading") {
@@ -118,6 +129,52 @@ export function MermaidDiagram({ source }: { source: string }) {
       <pre>
         <code>{source}</code>
       </pre>
+    </div>
+  );
+}
+
+/** A drawn diagram at its natural size, scrolling sideways in the panel, with a full-size view. */
+function ReadyDiagram({ svg }: { svg: string }) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  const [expanded, setExpanded] = useState(false);
+
+  const open = () => {
+    setExpanded(true);
+    dialog.current?.showModal();
+  };
+  const close = () => dialog.current?.close();
+
+  return (
+    <div className={styles.diagramBox}>
+      <button type="button" className={styles.diagramExpand} onClick={open} data-testid="mermaid-expand">
+        Expand
+      </button>
+      <div
+        className={styles.diagram}
+        data-testid="mermaid-diagram"
+        data-state="ready"
+        // The SVG comes from mermaid with securityLevel "strict", which sanitizes every label.
+        dangerouslySetInnerHTML={{ __html: svg }}
+      />
+      <dialog
+        ref={dialog}
+        className={styles.diagramDialog}
+        aria-label="Diagram"
+        data-testid="mermaid-dialog"
+        onClose={() => setExpanded(false)}
+        // A click on the backdrop lands on the dialog itself, outside its content.
+        onClick={(event) => {
+          if (event.target === event.currentTarget) close();
+        }}
+      >
+        <div className={styles.diagramDialogBar}>
+          <button type="button" className="btn btn-small" onClick={close} autoFocus>
+            Close
+          </button>
+        </div>
+        {/* Only drawn while open, so the page doesn't carry a second copy of every diagram. */}
+        {expanded ? <div className={styles.diagramDialogBody} dangerouslySetInnerHTML={{ __html: svg }} /> : null}
+      </dialog>
     </div>
   );
 }

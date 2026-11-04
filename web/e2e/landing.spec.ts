@@ -56,4 +56,9 @@ test.describe("landing page", () => {
       await context.close();
     }
   });
+
+  test("an old list link with filters goes to /puzzles and keeps them", async ({ page }) => {
+    await page.goto("/?difficulty=easy");
+    await expect(page).toHaveURL(/\/puzzles\?difficulty=easy$/);
+  });
 });

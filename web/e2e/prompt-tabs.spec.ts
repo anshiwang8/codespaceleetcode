@@ -119,12 +119,21 @@ test.describe("prompt panel tabs", () => {
     await expect(drawn.locator("svg")).toHaveCount(1);
     await expect(drawn.locator("svg")).toBeVisible();
     await expect(drawn).toContainText("Router.handle");
-    // The diagram fits the panel instead of widening it.
+    // The diagram scrolls inside its own box instead of widening the panel.
     const fits = await drawn.evaluate((element) => {
-      const svg = element.querySelector("svg");
-      return svg !== null && svg.getBoundingClientRect().width <= element.getBoundingClientRect().width + 1;
+      const panel = element.closest('[data-testid="solution"]');
+      return panel !== null && element.getBoundingClientRect().width <= panel.getBoundingClientRect().width + 1;
     });
     expect(fits).toBe(true);
+
+    // Expand shows it large in a dialog, and Escape closes it.
+    await solution.getByTestId("mermaid-expand").click();
+    const dialog = page.getByTestId("mermaid-dialog");
+    await expect(dialog).toBeVisible();
+    await expect(dialog.locator("svg")).toBeVisible();
+    await expect(dialog).toContainText("Router.handle");
+    await page.keyboard.press("Escape");
+    await expect(dialog).toBeHidden();
 
     const failed = solution.locator('[data-testid="mermaid-diagram"][data-state="error"]');
     await expect(failed).toHaveCount(1);
