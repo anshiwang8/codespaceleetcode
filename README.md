@@ -54,7 +54,7 @@ cd ingest && uv run python -m ingest snapshot-all
 
 ## What isn't here yet
 
-R2 uploads and deployment aren't built. Puzzles have had a blind second solve by an agent, not a person, and each puzzle page says so. See [spec.md](spec.md) for the design and [DEVLOG.md](DEVLOG.md) for what was done and what's known to be weak.
+R2 uploads and deployment aren't built. [spec.md section 14](spec.md#14-launch-checklist) is the launch checklist: what's left, who can do it, and the exact steps for everything that needs a person with account access. Puzzles have had a blind second solve by an agent, not a person, and each puzzle page says so. See [spec.md](spec.md) for the design and [DEVLOG.md](DEVLOG.md) for what was done and what's known to be weak.
 
 ## Developing
 

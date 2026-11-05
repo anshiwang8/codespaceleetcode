@@ -240,7 +240,7 @@ The site runs on localhost with no accounts or keys. Each hosted service has a l
 | GitHub sign-in | Works on localhost too, given a GitHub OAuth app whose callback is `http://127.0.0.1:3000/api/auth/callback/github`. Without one, a dev login that sets a cookie stands in. The dev login is refused unless the request is from localhost and `NODE_ENV` isn't `production` |
 | R2 behind a CDN | The route `/snapshots/<name>/...` serves `ingest/out/<name>/...` with an ETag and `Cache-Control: public, no-cache`, because a rebuilt snapshot keeps its name. `NEXT_PUBLIC_SNAPSHOT_CDN_URL` overrides it when set |
 
-R2 upload and deployment aren't built yet. They're needed before a public launch.
+R2 upload and deployment aren't built yet. They're needed before a public launch; section 14 lists the steps.
 
 ### Repository layout
 ```
@@ -401,3 +401,56 @@ The site is named **codebases**. The logo is the word in Arial, with "bases" in 
 - Should `location` answers be dropped entirely in favour of `symbol` + `choice`? Decide after authoring the first 30 puzzles.
 - Show set counts on every `set` puzzle, or only on easy and medium?
 - Time-based scoring, or solved/unsolved only?
+
+---
+
+## 14. Launch checklist
+
+What's left before a public launch, as of 2026-11-05. When an item lands, mark it done here and add a DEVLOG entry. Items are numbered so PRs and DEVLOG entries can refer to them.
+
+**Manual** items need a person with access to an account, a payment method, or a decision. A Claude session can't do them. When a task depends on one, Claude should tell the user exactly what to do, using the steps below, and stop rather than work around it. **Code** items are open for anyone to pick up.
+
+### Critical path
+
+1. M1 domain → M2 database and M5 R2 bucket → C2 snapshot upload → M3 production OAuth app → M4 Vercel → first deploy.
+2. C1 CI and C3 shared rate limiting before real users arrive.
+3. M6 human second solves before the site is announced publicly (section 6).
+
+### Manual: needs a person
+
+| # | Task | Steps | Unblocks |
+|---|---|---|---|
+| M1 | **Register the production domain** | Pick and buy it. Every URL below says `<domain>`. | M3, M4, M5's custom domain |
+| M2 | **Create the hosted database** | 1. Create a Supabase project. 2. Apply `supabase/migrations/0001` to `0005` in order, in the SQL editor or with `psql`. Don't apply `supabase/local/shim.sql`: hosted Supabase already has those roles and the `auth` schema. There's no hosted migration runner yet (C7), so record which files you applied. 3. Get two connection strings from Project Settings → Database. The **direct or session** one is for seeding and migrations, and goes in `ingest/.env` as `SUPABASE_DB_URL`. The **transaction pooler** one (port 6543) is for the app, and goes in Vercel as `DATABASE_URL`. 4. Seed with `cd ingest && uv run python -m ingest seed`, with `SUPABASE_DB_URL` set and the snapshots built (`snapshot-all`). The loaded content is about 340 MB, so the 500 MB free tier fits for now. | Deploy |
+| M3 | **Create the production GitHub OAuth app** | GitHub → Settings → Developer settings → OAuth Apps → New. Homepage `https://<domain>`, callback `https://<domain>/api/auth/callback/github`. Use an org account if the team has one, so it isn't tied to one person. Generate a client secret and put it straight into Vercel (M4). Never put it in git, a chat, or a terminal prompt. | Sign-in in production |
+| M4 | **Create the Vercel project** | Import the GitHub repo. Root directory `web`, framework Next.js; pnpm is picked up from `packageManager`. Set these environment variables for Production: `DATABASE_URL` (M2's pooler URL); `BETTER_AUTH_SECRET`, a new one rather than the local one, made with `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`; `BETTER_AUTH_URL=https://<domain>`; `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` (M3); and `NEXT_PUBLIC_SNAPSHOT_CDN_URL` (M5). `NEXT_PUBLIC_*` values are baked in at build time, so redeploy after changing one. Then add the domain. | Deploy |
+| M5 | **Create the R2 bucket** | In Cloudflare, create an R2 bucket and give it public read access through a custom domain such as `cdn.<domain>` (`r2.dev` is fine for testing). Add a CORS rule allowing `GET` from `https://<domain>`, because the browser fetches the files directly. Create an API token with write access to that bucket only. Its values go in `ingest/.env` as `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` and `R2_BUCKET`, and never anywhere under `web/`. The public bucket URL becomes `NEXT_PUBLIC_SNAPSHOT_CDN_URL`. | C2's first real upload, M4 |
+| M6 | **Human blind second solves** | Every puzzle needs a person in `verified_by` (section 6). **Don't solve a puzzle you wrote, or one whose YAML or solution you've read.** 1. `cd ingest && uv run python -m ingest blind-export --out ../blind.json --repo <slug>` exports only what a solver may see. 2. Solve each puzzle in the local site or from the export, and write your answers as a JSON map of puzzle id to submission, such as `{"<puzzle-id>": {"kind": "symbol", "id": "src/app.ts#App.handle"}}`. The other kinds are `{"kind": "file", "path": ...}`, `{"kind": "location", "id": "path:L10-L14"}`, `{"kind": "sequence" or "set", "ids": [...]}` and `{"kind": "choice", "option": "b"}`. 3. `uv run python -m ingest blind-check <answers.json> --solver <your-name> --write` grades it, printing pass or fail only, and adds you to `verified_by` for each pass. You get one graded attempt per puzzle version. 4. A fail means the key is wrong or the prompt allows another answer. Report it to the author; don't retry. 5. Commit the YAML changes and `content/blind-attempts.json`. Don't commit `blind.json` or your answers. | Public launch |
+| M7 | **Review the legal pages** | Once C6 drafts them, someone accountable reads and approves the privacy policy and terms. | Public launch |
+| M8 | **Protect `main`** | Once C1 exists, in GitHub → Settings → Branches, require the CI checks and a pull request before merging to `main`. | Safe collaboration |
+| M9 | **Pick an error-monitoring service** | For C8. Create the account, for example Sentry, and get its DSN. | C8 |
+
+**Per-developer setup (manual, each teammate once).** Follow `README.md`: Node 22 or 24, pnpm, uv, the SCIP indexers, then `snapshot-all`. To use GitHub sign-in locally, each developer creates their **own** OAuth app with the callback `http://127.0.0.1:3000/api/auth/callback/github`, and puts the four values in their own `web/.env.local` (README, "GitHub sign-in"). Don't share one secret between developers. Without that file, GitHub sign-in is off and the localhost dev login still works.
+
+**Handling secrets.** Secrets go only in `web/.env.local`, `ingest/.env`, or the Vercel and Cloudflare dashboards, and git ignores `.env*` except `.env.example`. Never paste one into a terminal prompt, a chat, an issue or a PR. If one leaks, regenerate it at the source first, then update where it's stored.
+
+### Code: open for anyone
+
+| # | Task | Done when | Needs |
+|---|---|---|---|
+| C1 | **CI on GitHub Actions** | Every PR runs web lint, typecheck and tests (against a Postgres service container via `TEST_DATABASE_URL`), ingest tests (`INGEST_TEST_DB_URL`), `ruff` and `pyright`, `pnpm validate`, and `pnpm e2e`. `validate` needs the snapshots, so CI builds them with the pinned indexers or restores them from a cache keyed on `content/repos.yaml` and the pipeline's source. | None |
+| C2 | **Snapshot upload to R2** | `uv run python -m ingest upload <slug>` (and an `upload-all`) puts `manifest.json` and `files/...` at `snapshots/<slug>@<sha>/` in the bucket, matching what `web/lib/client/snapshot-urls.ts` fetches. It sets content types, skips files already there with the same hash, and never deletes. Unit-tested with a fake S3 client. Credentials come from `ingest/.env` only (`ingest/tests/test_env_split.py` keeps them out of `web/`). | M5 for a real upload |
+| C3 | **Shared rate limiting** | Submit and search limits are kept in Postgres (or Redis), not process memory, so they hold across serverless instances. A new table follows the RLS rule in section 8. Better Auth's own limiter is pointed at the same store (`rateLimit.storage`). | None |
+| C4 | **Security headers** | `next.config.ts` sends a Content Security Policy, HSTS, `X-Content-Type-Options`, `Referrer-Policy` and `frame-ancestors`. The CSP allows Monaco's workers, mermaid's inline SVG styles, and the snapshot CDN origin in `connect-src`. The e2e suite still passes with it on. | None |
+| C5 | **Search and sharing metadata** | `robots.txt`, a sitemap of `/`, `/puzzles` and the puzzle pages, and a social preview image for the landing page. | M1 for absolute URLs |
+| C6 | **Privacy policy, terms, account deletion** | Static pages linked from the footer, and a way for a user to delete their account. Deleting an `auth_users` row cascades to `users`, submissions and progress. Better Auth's `/delete-user` is in `disabledPaths`, so this needs either a carefully re-enabled route or our own. | M7 to publish |
+| C7 | **Hosted migration runner** | A script that applies `supabase/migrations` to `SUPABASE_DB_URL` in order, with a tracking table, like `scripts/localdb.mjs migrate` does locally. This makes M2 repeatable. | None |
+| C8 | **Error monitoring** | Server and client errors reach the service, with no answer data or secrets in the payloads (rule 1). | M9 |
+| C9 | **Production smoke test** | A Playwright run against `next build && next start`, checking the landing page, the puzzle list, a puzzle page with code loaded from the CDN, and that `/api/dev/*` returns 404. The dev login is refused in production, so signed-in flows stay in the dev e2e suite. | None |
+
+### Known issues (DEVLOG has the details)
+
+- A user stays `solved` if a puzzle's key later changes.
+- If a GitHub login is freed by a rename and someone else then takes that name, the new owner stays signed out until the old holder signs in again.
+- `hono-architecture-001`'s solution points at `hono-find-003`'s answer file. Fixing it needs a different scenario for one of the two puzzles.
+- Rich and unstorage don't fit the 17 topics well.

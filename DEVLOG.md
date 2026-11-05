@@ -1,5 +1,24 @@
 # DEVLOG
 
+## Launch checklist written down
+
+Type: Addition
+
+Goal: Let teammates see what's left before a public launch, pick up work without asking, and know which steps a person has to do by hand.
+
+What should be done: Write every remaining launch task in one place, with the steps for the manual ones, and make sure a Claude session tells the user about manual steps instead of trying them.
+
+What was done (technical):
+
+- `spec.md` section 14 is the launch checklist. It has a critical path, then two numbered lists. The numbers are meant to be used in PR titles and DEVLOG entries.
+- **Manual items, M1 to M9,** each with exact steps: the domain; the Supabase database (migrations, which connection string goes where, and seeding); the production GitHub OAuth app; the Vercel project and its environment variables; the R2 bucket with CORS and a write-only token; human blind second solves with the `blind-export` and `blind-check` commands; the legal review; protecting `main`; and an error-monitoring account.
+- **Per-developer setup:** each teammate makes their own local GitHub OAuth app and `web/.env.local`. The section also says where secrets live and what to do if one leaks.
+- **Code items, C1 to C9,** each with a "done when": CI, snapshot upload to R2, shared rate limiting, security headers, search and sharing metadata, legal pages and account deletion, a hosted migration runner, error monitoring, and a production smoke test.
+- The known open issues are listed there too, with details in the earlier DEVLOG entries.
+- `CLAUDE.md` now points at section 14. When a task depends on a manual item, Claude should give the user that item's steps and stop, rather than work around it.
+
+Still open: everything in section 14. Nothing on the checklist has been started.
+
 ## GitHub sign-in with Better Auth
 
 Type: Addition, Change

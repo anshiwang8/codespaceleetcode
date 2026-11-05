@@ -19,6 +19,14 @@ The site is named **codebases**. LeetCode-style puzzles set inside real open-sou
 - `web/lib/api-types.ts` holds the API response shapes the routes and UI share.
 - `web/lib/topics.ts` holds the topic list's labels and descriptions. Its slugs must match the `tags` enum in `content/schema/puzzle.schema.json`, and a web test checks this.
 
+## What's left, and manual steps
+
+`spec.md` section 14 is the launch checklist. **Manual** items (M1–M9 and per-developer setup) need a person with an account, a payment method, or a decision: domains, Supabase, the GitHub OAuth apps, Vercel, Cloudflare R2, human blind solves, legal review, branch protection. You can't do these. When a task depends on one, tell the user which item it is and give them its steps from section 14, then stop instead of working around it. **Code** items (C1–C9) are open to pick up; use their numbers in PR titles and DEVLOG entries.
+
+Never ask for a secret in chat, put one in a command, or print one. Secrets live only in `web/.env.local`, `ingest/.env`, or the Vercel and Cloudflare dashboards. If one appears in chat or terminal output, tell the user to regenerate it at its source.
+
+When a checklist item lands, mark it done in section 14 in the same change, along with its DEVLOG entry.
+
 ## Non-negotiable rules
 
 1. **Answer keys never reach the client.** `answer_json` and solutions are read only in server routes through the server-side database connection (`pg` with `DATABASE_URL`, in every environment). No answer data in props, page payloads, logs sent to the browser, or error messages. RLS denies client reads on `puzzles.answer_json` and `solutions`.
