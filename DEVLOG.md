@@ -1,5 +1,19 @@
 # DEVLOG
 
+## Legal pages approved (launch checklist M7)
+
+Type: Change
+
+Goal: Publish the privacy policy and terms as final, with a real address people can write to about their data.
+
+What should be done: Record the review in `web/lib/legal.ts`, and make the legal page test follow that file, not assume the pages are drafts.
+
+What was done (technical):
+
+- `web/lib/legal.ts`: `REVIEWED` is now `true`, which removes the "Draft" notice from `/privacy` and `/terms`. `CONTACT` is set, so both pages end with it as a `mailto:` link in place of the "will be listed here" placeholder. `LAST_UPDATED` stays 2026-11-05.
+- `web/e2e/account.spec.ts` imports `LEGAL`. It checks that the draft notice shows only while `REVIEWED` is false, and that the contact shows as a `mailto:` link when `CONTACT` is set (the placeholder otherwise). It keeps passing whichever way the file is set.
+- `spec.md` section 14 marks M7 done; sections 10 and the C6 row say the pages are approved.
+
 ## Code viewer could show a blank file
 
 Type: Fix

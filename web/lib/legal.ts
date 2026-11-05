@@ -2,8 +2,8 @@
 // 14, M7). Whoever approves them sets REVIEWED to true, fills in CONTACT, and updates LAST_UPDATED.
 // Until then each page says it's a draft.
 export const LEGAL = {
-  REVIEWED: false,
+  REVIEWED: true,
   LAST_UPDATED: "2026-11-05",
   /** Where people write about their data, for example privacy@<domain>. Null until M7 sets it. */
-  CONTACT: null as string | null,
+  CONTACT: "anshiwang15@gmail.com" as string | null,
 } as const;

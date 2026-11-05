@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { LEGAL } from "../lib/legal";
 import { FILES, openFile, openPuzzle, submitAndExpect, visible } from "./helpers";
 
 test.describe("account deletion", () => {
@@ -41,11 +42,21 @@ test.describe("legal pages", () => {
     ["/privacy", "Privacy policy"],
     ["/terms", "Terms"],
   ] as const) {
-    test(`${path} renders, says it's a draft, and links to the other page`, async ({ page }) => {
+    test(`${path} renders, shows its review state and contact, and links to the other page`, async ({ page }) => {
       const response = await page.goto(path);
       expect(response?.status()).toBe(200);
       await expect(page.getByRole("heading", { level: 1 })).toHaveText(title);
-      await expect(page.getByTestId("legal-draft")).toBeVisible();
+      // The draft notice shows exactly until lib/legal.ts says the pages were reviewed (M7).
+      await expect(page.getByTestId("legal-draft")).toHaveCount(LEGAL.REVIEWED ? 0 : 1);
+      if (LEGAL.CONTACT) {
+        await expect(page.getByRole("link", { name: LEGAL.CONTACT, exact: true })).toHaveAttribute(
+          "href",
+          `mailto:${LEGAL.CONTACT}`,
+        );
+        await expect(page.getByTestId("legal-contact-missing")).toHaveCount(0);
+      } else {
+        await expect(page.getByTestId("legal-contact-missing")).toBeVisible();
+      }
       await expect(page.getByRole("link", { name: "Privacy policy", exact: true })).toHaveAttribute("href", "/privacy");
       await expect(page.getByRole("link", { name: "Terms", exact: true })).toHaveAttribute("href", "/terms");
     });
