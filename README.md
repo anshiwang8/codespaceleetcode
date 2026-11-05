@@ -32,6 +32,14 @@ pnpm local
 
 That starts a local Postgres, loads the content, and serves the site at <http://127.0.0.1:3000>. The first load takes under a minute. Press Ctrl+C to stop it. Use the **Sign in** button in the header: it's a local dev login with no password, and you need it to submit answers.
 
+### GitHub sign-in
+
+Real sign-in uses [Better Auth](https://www.better-auth.com) with GitHub. To turn it on locally:
+
+1. Create a GitHub OAuth app at github.com → Settings → Developer settings → OAuth Apps. Set the homepage to `http://127.0.0.1:3000` and the callback URL to `http://127.0.0.1:3000/api/auth/callback/github`. Use `127.0.0.1`, not `localhost`, because that's where the site runs and the session cookie belongs to one hostname.
+2. Copy `web/.env.example` to `web/.env.local` and fill in `BETTER_AUTH_SECRET` (from `openssl rand -base64 32`), `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET`.
+3. Restart `pnpm local`. **Log in** on the landing page and **Sign in with GitHub** in the header now go to GitHub. The dev login stays available on localhost.
+
 ### On a fresh clone
 
 Snapshots of the repos aren't committed, so build them once before `pnpm local`. This fetches and indexes all 21 repos, which takes a few minutes:
@@ -46,7 +54,7 @@ cd ingest && uv run python -m ingest snapshot-all
 
 ## What isn't here yet
 
-GitHub sign-in, R2 uploads and deployment aren't built. Puzzles have had a blind second solve by an agent, not a person, and each puzzle page says so. See [spec.md](spec.md) for the design and [DEVLOG.md](DEVLOG.md) for what was done and what's known to be weak.
+R2 uploads and deployment aren't built. Puzzles have had a blind second solve by an agent, not a person, and each puzzle page says so. See [spec.md](spec.md) for the design and [DEVLOG.md](DEVLOG.md) for what was done and what's known to be weak.
 
 ## Developing
 

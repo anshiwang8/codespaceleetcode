@@ -1,16 +1,18 @@
 import "server-only";
 import { headers as nextHeaders } from "next/headers";
 import { z } from "zod";
+import { withAuth } from "@/lib/server/better-auth";
 import { getPool, withTransaction } from "@/lib/server/db";
 
 export interface CurrentUser {
   id: string;
   login: string;
+  /** How this session was made: a real GitHub sign-in, or the localhost dev login. */
+  via: "github" | "dev";
 }
 
 export type HeaderReader = Pick<Headers, "get">;
 
-/** Swap this implementation for Supabase Auth when GitHub OAuth is built. */
 export interface AuthProvider {
   getUser(headers: HeaderReader): Promise<CurrentUser | null>;
 }
@@ -83,18 +85,57 @@ const devAuthProvider: AuthProvider = {
       [parsed.data],
     );
     const row = rows[0];
-    return row ? { id: row.id, login: row.github_login } : null;
+    return row ? { id: row.id, login: row.github_login, via: "dev" } : null;
   },
 };
 
-const provider: AuthProvider = devAuthProvider;
+const GITHUB_LOGIN = /^[A-Za-z0-9-]{1,39}$/;
+
+function isUniqueViolation(error: unknown): boolean {
+  return typeof error === "object" && error !== null && "code" in error && error.code === "23505";
+}
+
+/**
+ * A Better Auth session from a GitHub sign-in. The `users` row that submissions and progress
+ * point at is made here, on the first request after sign-up, and its login follows GitHub renames.
+ */
+export const githubAuthProvider: AuthProvider = {
+  async getUser(headers) {
+    const cookie = headers.get("cookie");
+    // Without a cookie there's no session, so skip the lookup.
+    if (!cookie) return null;
+    const session = await withAuth((auth) => auth.api.getSession({ headers: new Headers({ cookie }) }));
+    if (!session) return null;
+    const login = session.user.githubLogin;
+    if (typeof login !== "string" || !GITHUB_LOGIN.test(login)) return null;
+    try {
+      await getPool().query(
+        `insert into users (id, github_login) values ($1, $2)
+         on conflict (id) do update set github_login = excluded.github_login
+           where users.github_login <> excluded.github_login`,
+        [session.user.id, login],
+      );
+    } catch (error) {
+      // GitHub frees a login when its owner renames, so another account can hold it here. That
+      // user stays signed out until the old row is renamed, rather than taking over its progress.
+      if (isUniqueViolation(error)) {
+        console.error(`[auth] GitHub login ${login} already belongs to another user`);
+        return null;
+      }
+      throw error;
+    }
+    return { id: session.user.id, login, via: "github" };
+  },
+};
 
 /** Route handlers pass `request.headers`. Server components can leave it out. */
 export async function getCurrentUser(headers?: HeaderReader): Promise<CurrentUser | null> {
-  return provider.getUser(headers ?? (await nextHeaders()));
+  const source = headers ?? (await nextHeaders());
+  // A real session wins. The dev login is only a stand-in, and only where it's allowed.
+  return (await githubAuthProvider.getUser(source)) ?? (await devAuthProvider.getUser(source));
 }
 
-/** Finds or creates the auth.users and users rows for a dev login. */
+/** Finds or creates the auth_users and users rows for a dev login. */
 export async function devLogin(login: string): Promise<CurrentUser> {
   return withTransaction(async (client) => {
     // Serializes two first logins for the same name, which would otherwise race on the unique key.
@@ -104,13 +145,16 @@ export async function devLogin(login: string): Promise<CurrentUser> {
       [login],
     );
     const found = existing.rows[0];
-    if (found) return { id: found.id, login };
+    if (found) return { id: found.id, login, via: "dev" };
+    // Dev users have no email, so they get a placeholder on a reserved domain, as in migration 0005.
     const created = await client.query<{ id: string }>(
-      "insert into auth.users default values returning id",
+      `insert into auth_users (name, email, email_verified, github_login)
+       values ($1, gen_random_uuid()::text || '@dev-login.invalid', false, $1) returning id`,
+      [login],
     );
     const id = created.rows[0]?.id;
-    if (!id) throw new Error("auth.users insert returned no row");
+    if (!id) throw new Error("auth_users insert returned no row");
     await client.query("insert into users (id, github_login) values ($1, $2)", [id, login]);
-    return { id, login };
+    return { id, login, via: "dev" };
   });
 }

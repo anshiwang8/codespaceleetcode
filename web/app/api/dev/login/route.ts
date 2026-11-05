@@ -6,6 +6,7 @@ import {
   devLoginSchema,
   isDevAuthAllowed,
 } from "@/lib/server/auth";
+import { isGitHubAuthConfigured } from "@/lib/server/better-auth";
 import { errorResponse, jsonResponse, readJson, route } from "@/lib/server/http";
 
 export const POST = route("dev.login", async (request) => {
@@ -13,7 +14,7 @@ export const POST = route("dev.login", async (request) => {
   const body = devLoginSchema.safeParse(await readJson(request));
   if (!body.success) return errorResponse(400, "login must be 1 to 39 letters, digits, - or _");
   const user = await devLogin(body.data.login);
-  const response = jsonResponse<MeResponse>({ user: { login: user.login }, devAuth: true });
+  const response = jsonResponse<MeResponse>({ user: { login: user.login, via: "dev" }, githubAuth: isGitHubAuthConfigured(), devAuth: true });
   response.cookies.set(DEV_COOKIE, user.login, {
     httpOnly: true,
     sameSite: "lax",

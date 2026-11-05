@@ -1,5 +1,54 @@
 # DEVLOG
 
+## GitHub sign-in with Better Auth
+
+Type: Addition, Change
+
+Goal: Real accounts, so "Log in" works and progress belongs to a GitHub user instead of a localhost-only dev name.
+
+What should be done: Use Better Auth instead of the Supabase Auth the spec planned, with GitHub as the only sign-in. Keep submissions and progress pointing at `users`, keep the dev login for localhost and the e2e tests, and keep every table locked away from clients.
+
+What was done (technical):
+
+- **Server.** `web/lib/server/better-auth.ts` builds Better Auth 1.7.16 on first use, through the app's own `pg` pool. `app/api/auth/[...all]/route.ts` mounts its routes.
+  - Table and column names are snake_case: `auth_users`, `auth_sessions`, `auth_accounts`, `auth_verifications`.
+  - Ids are UUIDs made by Postgres, so `users.id` can reference `auth_users.id`.
+  - Telemetry is off.
+- **Migration 0005** creates the four tables. Better Auth's own schema generator produced them from these options, and a test writes through Better Auth's adapter to prove they still match.
+  - Existing users (dev logins) get an `auth_users` row with the same id, so no progress is lost.
+  - `users.id` now references `auth_users` instead of Supabase's `auth.users`.
+  - The new tables have row-level security and no client grants, which `rls.test.ts` checks for every table.
+- **Who's signed in.** `getCurrentUser` reads a Better Auth session first, then falls back to the dev login where that's allowed. The first request after a GitHub sign-up creates the `users` row with the GitHub login, and a rename on GitHub updates it on the next sign-in.
+  - If a login freed by a rename is already held by another user, the new account stays signed out rather than taking over that progress.
+  - `/api/me` now says how the user signed in (`via`) and whether GitHub sign-in is configured.
+- **UI.**
+  - On the landing page, "Log in" starts GitHub sign-in and comes back to `/puzzles`. On a server with no GitHub OAuth app it says so.
+  - The header and the sign-in prompt offer "Sign in with GitHub" when it's configured, plus the dev sign-in on localhost.
+  - Sign-out ends whichever session is active, and on localhost clears a leftover dev cookie too.
+- **Hardening**, mostly from a security review that ran a real sign-in through the callback with GitHub's API faked:
+  - The GitHub login was being dropped. Marking the field `input: false` made Better Auth discard it from the profile mapping, so nobody could actually sign in. The field is now writable, and `/update-user`, the only route that could set it from a request, is disabled.
+  - Account linking by email is off, and the stored email is made from GitHub's numeric id, not the GitHub email. Before, a second GitHub account that verified the same email would have joined the first user.
+  - The GitHub access token reached the browser through `/get-access-token`. Tokens are now encrypted at rest, and the token, account-listing, linking and email-change routes are disabled.
+  - Better Auth turns its origin and CSRF checks off when `NODE_ENV` is `test`, so the tests proved nothing. They're now forced on.
+  - Production requires `BETTER_AUTH_SECRET` and `BETTER_AUTH_URL`.
+  - In dev without a URL, the trusted origin is the request's own Host, and only when it's a loopback address. Next reports `request.url` as `localhost` even on `127.0.0.1`, which broke sign-in on `127.0.0.1` until this change.
+  - Better Auth keeps a failed schema check for the life of its instance. A server that started before migration 0005 stayed broken until restarted, so a schema mismatch now drops the instance and the next request builds a new one.
+- **Tests.** `web/tests/github-auth.test.ts` has 26 tests:
+  - the whole sign-in through the real start and callback routes, including private emails, renames, and two accounts sharing an email;
+  - forged, unsigned and expired cookies;
+  - cross-site sign-out, an off-site `callbackURL` and a DNS-rebinding host, each refused with 403;
+  - no route hands out the token, and users can't set their own login;
+  - production refuses to start without its config.
+
+  I checked that the sign-in test fails with the original `input: false` bug. The landing e2e test clicks "Log in" and checks the request and the message.
+- `spec.md` sections 7–10, `CLAUDE.md`, `README.md` and `web/.env.example` describe the setup. The three Supabase key variables were dropped: they were reserved for Supabase sign-in, and nothing read them.
+
+Still open:
+
+- A real GitHub OAuth app hasn't been tried, since that needs your GitHub account. Every step except GitHub's own servers is covered by the callback tests. The steps are in `README.md`.
+- A user whose GitHub login is reused after a rename stays signed out until the old holder signs in again.
+- Better Auth's rate limits are in memory, like the app's own.
+
 ## codebases: landing page, white theme, solution tabs, and 36 more puzzles
 
 Type: Addition, Change

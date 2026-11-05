@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import styles from "@/components/landing/landing.module.css";
 import { IdePreview } from "@/components/landing/IdePreview";
+import { LoginButton } from "@/components/landing/LoginButton";
 import { Logo } from "@/components/site/Logo";
 import { PUZZLES_PATH } from "@/lib/browse";
 
@@ -90,21 +91,7 @@ export default function LandingPage() {
               <Link href={PUZZLES_PATH} className={`${styles.button} ${styles.primary}`}>
                 Continue as guest
               </Link>
-              <span className={styles.loginWrap}>
-                <button
-                  type="button"
-                  className={`${styles.button} ${styles.secondary}`}
-                  aria-disabled="true"
-                  aria-describedby="login-soon"
-                  title="Coming soon"
-                  data-testid="log-in"
-                >
-                  Log in
-                </button>
-                <span id="login-soon" className={styles.soon}>
-                  Coming soon
-                </span>
-              </span>
+              <LoginButton />
             </div>
           </div>
           <IdePreview />

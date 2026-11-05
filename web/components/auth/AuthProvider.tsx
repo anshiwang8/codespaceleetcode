@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { MeResponse } from "@/lib/api-types";
 import { ApiRequestError, api } from "@/lib/client/api";
+import { signInWithGitHub, signOutOfGitHub } from "@/lib/client/auth-client";
 
 const DEV_NAME_KEY = "cp-dev-login";
 
@@ -27,7 +28,11 @@ interface AuthValue {
   /** The name the dev sign-in button will use. Null until known, which is after mount. */
   devName: string | null;
   error: string | null;
-  signIn: () => Promise<void>;
+  /** Leaves for GitHub, then comes back to this page. */
+  gitHubSignIn: () => Promise<void>;
+  /** The localhost-only dev login. */
+  devSignIn: () => Promise<void>;
+  /** Ends whichever kind of session this is. */
   signOut: () => Promise<void>;
 }
 
@@ -43,7 +48,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let cancelled = false;
     api
       .me()
-      .catch((): MeResponse => ({ user: null, devAuth: false }))
+      .catch((): MeResponse => ({ user: null, githubAuth: false, devAuth: false }))
       .then((response) => {
         if (cancelled) return;
         setMe(response);
@@ -62,21 +67,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Server components read the cookie, so progress on the page has to be fetched again.
         router.refresh();
       } catch (cause) {
-        setError(cause instanceof ApiRequestError ? cause.message : "Sign-in failed");
+        setError(cause instanceof ApiRequestError || cause instanceof Error ? cause.message : "Sign-in failed");
       }
     },
     [router],
   );
+
+  const gitHubSignIn = useCallback(async () => {
+    setError(null);
+    const failed = await signInWithGitHub(window.location.pathname + window.location.search);
+    if (failed) setError(failed);
+  }, []);
+
+  const signOut = useCallback(async () => {
+    if (me?.user?.via !== "github") return change(api.devLogout);
+    return change(async () => {
+      const failed = await signOutOfGitHub();
+      if (failed) throw new Error(failed);
+      // On localhost a dev login cookie may be left behind, which would sign the user back in.
+      return me.devAuth ? api.devLogout() : api.me();
+    });
+  }, [me, change]);
 
   const value = useMemo<AuthValue>(
     () => ({
       me,
       devName,
       error,
-      signIn: () => change(() => api.devLogin(devName ?? devLoginName())),
-      signOut: () => change(api.devLogout),
+      gitHubSignIn,
+      devSignIn: () => change(() => api.devLogin(devName ?? devLoginName())),
+      signOut,
     }),
-    [me, devName, error, change],
+    [me, devName, error, change, gitHubSignIn, signOut],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

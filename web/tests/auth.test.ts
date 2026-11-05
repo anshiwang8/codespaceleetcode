@@ -167,7 +167,7 @@ describe.skipIf(!hasDatabase)("dev login", () => {
   async function countUsers(login: string): Promise<{ users: number; authUsers: number }> {
     const { rows } = await getPool().query<{ users: number; auth_users: number }>(
       `select count(*)::int as users,
-              (select count(*)::int from auth.users a join users u on u.id = a.id
+              (select count(*)::int from auth_users a join users u on u.id = a.id
                 where u.github_login = $1) as auth_users
          from users where github_login = $1`,
       [login],
@@ -178,7 +178,7 @@ describe.skipIf(!hasDatabase)("dev login", () => {
   const me = async (cookie?: string, host?: string) =>
     (await meRoute(makeRequest("/api/me", { cookie, host }), undefined)).json();
 
-  it("creates the auth.users and users rows on first use, and reuses them after", async () => {
+  it("creates the auth_users and users rows on first use, and reuses them after", async () => {
     await signIn("first-use");
     expect(await countUsers("first-use")).toEqual({ users: 1, authUsers: 1 });
     await signIn("first-use");
@@ -198,7 +198,7 @@ describe.skipIf(!hasDatabase)("dev login", () => {
 
   it("sets an HttpOnly, SameSite=Lax cookie", async () => {
     const response = await loginRoute(makeRequest("/api/dev/login", { body: { login: "cookie-check" } }), undefined);
-    expect(await response.json()).toEqual({ user: { login: "cookie-check" }, devAuth: true });
+    expect(await response.json()).toEqual({ user: { login: "cookie-check", via: "dev" }, githubAuth: false, devAuth: true });
     const cookie = response.headers.get("set-cookie") ?? "";
     expect(cookie).toContain(`${DEV_COOKIE}=cookie-check`);
     expect(cookie).toMatch(/HttpOnly/i);
@@ -224,14 +224,14 @@ describe.skipIf(!hasDatabase)("dev login", () => {
 
   it("reports the signed-in user, and whether dev login is available", async () => {
     const cookie = await signIn("me-user");
-    expect(await me(cookie)).toEqual({ user: { login: "me-user" }, devAuth: true });
-    expect(await me()).toEqual({ user: null, devAuth: true });
-    expect(await me(undefined, "example.com")).toEqual({ user: null, devAuth: false });
+    expect(await me(cookie)).toEqual({ user: { login: "me-user", via: "dev" }, githubAuth: false, devAuth: true });
+    expect(await me()).toEqual({ user: null, githubAuth: false, devAuth: true });
+    expect(await me(undefined, "example.com")).toEqual({ user: null, githubAuth: false, devAuth: false });
   });
 
   it("ignores a dev cookie from a non-local Host", async () => {
     const cookie = await signIn("ignored-host");
-    expect(await me(cookie, "example.com")).toEqual({ user: null, devAuth: false });
+    expect(await me(cookie, "example.com")).toEqual({ user: null, githubAuth: false, devAuth: false });
     const response = await submitRoute(
       makeRequest("/api/puzzles/fx-file/submit", {
         cookie,
@@ -246,7 +246,7 @@ describe.skipIf(!hasDatabase)("dev login", () => {
   it("ignores a dev cookie in production", async () => {
     const cookie = await signIn("ignored-prod");
     vi.stubEnv("NODE_ENV", "production");
-    expect(await me(cookie)).toEqual({ user: null, devAuth: false });
+    expect(await me(cookie)).toEqual({ user: null, githubAuth: false, devAuth: false });
     const response = await submitRoute(
       makeRequest("/api/puzzles/fx-file/submit", { cookie, body: { kind: "file", path: CONFIG_FILE } }),
       params({ slug: "fx-file" }),
@@ -261,7 +261,7 @@ describe.skipIf(!hasDatabase)("dev login", () => {
     `other_${DEV_COOKIE}=first-use`,
   ])("treats the cookie %s as signed out", async (cookie) => {
     await signIn("first-use");
-    expect(await me(cookie)).toEqual({ user: null, devAuth: true });
+    expect(await me(cookie)).toEqual({ user: null, githubAuth: false, devAuth: true });
   });
 
   it("finds its cookie among others", async () => {
@@ -272,7 +272,7 @@ describe.skipIf(!hasDatabase)("dev login", () => {
   it("logout clears the cookie", async () => {
     const response = await logoutRoute(makeRequest("/api/dev/logout", { method: "POST" }), undefined);
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ user: null, devAuth: true });
+    expect(await response.json()).toEqual({ user: null, githubAuth: false, devAuth: true });
     expect(response.headers.get("set-cookie")).toMatch(/Max-Age=0/i);
   });
 });

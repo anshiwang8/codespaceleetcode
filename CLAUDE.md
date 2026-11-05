@@ -15,6 +15,7 @@ The site is named **codebases**. LeetCode-style puzzles set inside real open-sou
 - `supabase/local/shim.sql` adds what hosted Supabase provides, for the local database only.
 - `web/app/(marketing)/page.tsx` is the static landing page at `/`, and must render without the database. `web/app/(app)/` holds every page under the site header, including the puzzle list at `/puzzles`.
 - `web/components/puzzle/Markdown.tsx` renders prompts, hints and solutions: GitHub-flavored Markdown with raw HTML dropped, and fenced `mermaid` blocks drawn by `MermaidDiagram.tsx`. Mermaid runs with `securityLevel: "strict"` and a `secure` list so a diagram can't change its config or inject CSS. Never loosen either.
+- `web/lib/server/better-auth.ts` configures Better Auth (GitHub sign-in, sessions in the `auth_*` tables from migration 0005). Change its table or column names only together with a migration. `getCurrentUser` in `web/lib/server/auth.ts` is the one place pages and routes learn who's signed in: a Better Auth session first, then the localhost-only dev login. Keep the origin check on, account linking off, and the token and user-editing routes in `disabledPaths`; `web/tests/github-auth.test.ts` runs a real sign-in through the callback to check all of it.
 - `web/lib/api-types.ts` holds the API response shapes the routes and UI share.
 - `web/lib/topics.ts` holds the topic list's labels and descriptions. Its slugs must match the `tags` enum in `content/schema/puzzle.schema.json`, and a web test checks this.
 
@@ -97,17 +98,18 @@ Split per package and documented in each `.env.example`; never commit real value
 `web/.env.example`:
 
 ```
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
 NEXT_PUBLIC_SNAPSHOT_CDN_URL=
+BETTER_AUTH_SECRET=
+BETTER_AUTH_URL=
+GITHUB_CLIENT_ID=
+GITHUB_CLIENT_SECRET=
 DATABASE_URL=
 SNAPSHOT_DIR=
 DEV_AUTH_TEST_HOST=
 TEST_DATABASE_URL=
 ```
 
-None of these are needed on localhost: `DATABASE_URL` and `SNAPSHOT_DIR` have local defaults outside production. `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` are reserved for Supabase sign-in, which isn't built, so nothing reads them yet. The server reaches the database only through `DATABASE_URL`.
+None of these are needed on localhost: `DATABASE_URL` and `SNAPSHOT_DIR` have local defaults outside production, and without `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` GitHub sign-in is simply off. Production refuses to start without `BETTER_AUTH_SECRET` and `BETTER_AUTH_URL`. The server reaches the database only through `DATABASE_URL`; Better Auth uses the same pool.
 
 `ingest/.env.example`:
 

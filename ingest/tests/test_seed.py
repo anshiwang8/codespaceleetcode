@@ -104,7 +104,9 @@ def _add_user_activity(url: str, slug: str, submission: bool = True) -> None:
         row = connection.execute(b"select id from puzzles where slug = %s", (slug,)).fetchone()
         assert row is not None
         connection.execute(
-            b"insert into auth.users (id) values (%s) on conflict do nothing", (AUTH_USER,)
+            b"insert into auth_users (id, name, email, email_verified)"
+            b" values (%s, 'dev', 'dev@dev-login.invalid', false) on conflict do nothing",
+            (AUTH_USER,),
         )
         connection.execute(
             b"insert into users (id, github_login) values (%s, 'dev') on conflict do nothing",
@@ -546,7 +548,9 @@ def _submit(url: str, slug: str, symbol_id: str, correct: bool) -> None:
         row = connection.execute(b"select id from puzzles where slug = %s", (slug,)).fetchone()
         assert row is not None
         connection.execute(
-            b"insert into auth.users (id) values (%s) on conflict do nothing", (AUTH_USER,)
+            b"insert into auth_users (id, name, email, email_verified)"
+            b" values (%s, 'dev', 'dev@dev-login.invalid', false) on conflict do nothing",
+            (AUTH_USER,),
         )
         connection.execute(
             b"insert into users (id, github_login) values (%s, 'dev') on conflict do nothing",

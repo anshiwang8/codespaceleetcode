@@ -15,21 +15,23 @@ test.describe("landing page", () => {
     await expect(visible(page, "puzzle-row-e2e-find-file")).toBeVisible();
   });
 
-  test("Log in is disabled, says it's coming soon, and goes nowhere", async ({ page }) => {
+  test("Log in starts GitHub sign-in, and says so when this server has no GitHub app", async ({ page }) => {
+    // The e2e server runs without GitHub OAuth credentials, so Better Auth refuses the provider.
     await page.goto("/");
     const login = page.getByRole("button", { name: "Log in" });
-    await expect(login).toHaveAttribute("aria-disabled", "true");
-    await expect(login).toHaveAccessibleDescription("Coming soon");
-    await expect(page.getByText("Coming soon", { exact: true })).toBeVisible();
+    await expect(login).toBeEnabled();
+    await expect(login).toHaveAccessibleDescription("with GitHub");
 
-    let navigated = false;
-    page.on("framenavigated", (frame) => {
-      if (frame === page.mainFrame()) navigated = true;
-    });
-    // Playwright won't click an aria-disabled button on its own, so force it, as a user's click would.
-    await login.click({ force: true });
-    await page.waitForLoadState("networkidle");
-    expect(navigated).toBe(false);
+    const started = page.waitForRequest((request) => request.url().endsWith("/api/auth/sign-in/social"));
+    await login.click();
+    const request = await started;
+    expect(request.method()).toBe("POST");
+    expect(request.postDataJSON()).toMatchObject({ provider: "github", callbackURL: "/puzzles" });
+
+    const note = page.getByTestId("log-in-note");
+    await expect(note).toHaveText("GitHub sign-in isn't set up on this server yet.");
+    await expect(note).toHaveAttribute("role", "alert");
+    await expect(login).toBeEnabled();
     expect(new URL(page.url()).pathname).toBe("/");
     await expect(page.locator("input[type='password']")).toHaveCount(0);
   });

@@ -126,7 +126,7 @@ export const SEARCH_FILE_CONTENT = [
 
 /** Empties the test database and loads the fixture snapshots and puzzles. */
 export async function seedFixtures(): Promise<Fixtures> {
-  await getPool().query("truncate repos, auth.users restart identity cascade");
+  await getPool().query("truncate repos, auth_users restart identity cascade");
 
   const snapshotId = await insertRepoAndSnapshot("acme-router", "a");
   const otherSnapshotId = await insertRepoAndSnapshot("other-lib", "b");

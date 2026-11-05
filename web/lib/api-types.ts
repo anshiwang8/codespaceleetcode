@@ -139,7 +139,9 @@ export interface SearchResponse {
 
 /** GET /api/me */
 export interface MeResponse {
-  user: { login: string } | null;
+  user: { login: string; via: "github" | "dev" } | null;
+  /** True when this server has a GitHub OAuth app configured. */
+  githubAuth: boolean;
   /** True when the localhost-only dev login is available. */
   devAuth: boolean;
 }

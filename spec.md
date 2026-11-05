@@ -214,7 +214,8 @@ Only `symbol-unique`, `sequence-edges` and `sequence-alternate-path` can take a 
 |---|---|
 | Web app | Next.js (App Router) + TypeScript (strict), deployed on Vercel |
 | Code viewer | Monaco (`@monaco-editor/react`) + custom file tree |
-| DB + auth | Supabase: Postgres, GitHub OAuth |
+| Database | Supabase Postgres |
+| Auth | Better Auth with GitHub sign-in, sessions stored in the same Postgres |
 | Code storage | Cloudflare R2 behind CDN: raw files + `manifest.json` per snapshot |
 | Code intelligence | SCIP indexers (`scip-typescript`, `scip-python`, `scip-go`), converted into Postgres tables |
 | Search | Postgres `pg_trgm` over file contents |
@@ -236,10 +237,10 @@ The site runs on localhost with no accounts or keys. Each hosted service has a l
 | Hosted | Local stand-in |
 |---|---|
 | Supabase Postgres | Real Postgres from the `embedded-postgres` npm package, data in `.localdb/`, always UTF-8. `supabase/local/shim.sql` adds the roles and `auth` schema Supabase provides, so migrations run unchanged |
-| Supabase GitHub OAuth | A dev login that sets a cookie, refused unless the request is from localhost and `NODE_ENV` isn't `production` |
+| GitHub sign-in | Works on localhost too, given a GitHub OAuth app whose callback is `http://127.0.0.1:3000/api/auth/callback/github`. Without one, a dev login that sets a cookie stands in. The dev login is refused unless the request is from localhost and `NODE_ENV` isn't `production` |
 | R2 behind a CDN | The route `/snapshots/<name>/...` serves `ingest/out/<name>/...` with an ETag and `Cache-Control: public, no-cache`, because a rebuilt snapshot keeps its name. `NEXT_PUBLIC_SNAPSHOT_CDN_URL` overrides it when set |
 
-GitHub OAuth, R2 upload and deployment aren't built yet. They're needed before a public launch.
+R2 upload and deployment aren't built yet. They're needed before a public launch.
 
 ### Repository layout
 ```
@@ -301,13 +302,25 @@ puzzles      (id, snapshot_id, slug, type, difficulty, title, prompt,
               answer_kind, answer_json, set_count, choices, hints, tags,
               verified_by, published)
 solutions    (puzzle_id, body_md)
-users        (id, github_login, created_at)                          -- via Supabase auth
+users        (id, github_login, created_at)                          -- id = auth_users.id
+auth_users, auth_sessions, auth_accounts, auth_verifications        -- Better Auth's tables
 submissions  (id, user_id, puzzle_id, answer_json, correct, created_at,
               time_on_puzzle_ms)
 progress     (user_id, puzzle_id, status, attempts, solved_at)        -- status: attempted | solved
 ```
 
 `answer_json` and `solutions` are only readable through server routes. The server connects with `pg` and `DATABASE_URL` in every environment, and refuses to run in production without it; nothing uses a Supabase client or the service role key. Row-level security and column grants deny client access.
+
+### Auth
+
+Better Auth runs inside the Next.js app (`web/lib/server/better-auth.ts`, mounted at `/api/auth/*`) and stores its users, sessions, linked accounts and verification tokens in the four `auth_*` tables, through the same `pg` pool as everything else. GitHub is the only sign-in method. Ids are UUIDs, so `users.id` references `auth_users.id`.
+
+- A first GitHub sign-in creates the `auth_users` row, then a hook creates the matching `users` row with the GitHub login. Submissions and progress keep pointing at `users`.
+- The session lives in an HTTP-only cookie. `getCurrentUser` reads it with `auth.api.getSession`, then the `users` row. It falls back to the dev login only where the dev login is allowed.
+- The GitHub email isn't kept. The stored email is a placeholder made from GitHub's numeric id, so it's unique, never changes, and works for accounts whose email is private. Account linking is off, so two GitHub accounts never join one user.
+- The GitHub access token is stored encrypted and never handed out. The Better Auth routes the app doesn't use are disabled: editing the user, changing email, linking accounts, and reading tokens.
+- Origin checks are on everywhere, including tests. In production `BETTER_AUTH_URL` and `BETTER_AUTH_SECRET` are required, and only that origin is trusted. Without `BETTER_AUTH_URL`, in dev, the trusted origin is the request's own Host, and only when it's a loopback address.
+- Clients never query the `auth_*` tables. Like every table, they have row-level security on and no client grants.
 
 Hosted Supabase grants `anon` and `authenticated` everything on each new table, sequence and function in `public`, and `supabase/local/shim.sql` does the same locally. So a migration that adds a table must enable row-level security, revoke client privileges on it and its sequences, and grant back only what clients may read. `web/tests/rls.test.ts` fails if a table has no row-level security, if clients hold any grant beyond the expected reads, or if they can use a sequence. Migration 0004 revokes the sequence privileges 0001 missed.
 
@@ -324,7 +337,8 @@ Hosted Supabase grants `anon` and `authenticated` everything on each new table, 
 | `/api/snapshots/:id/symbols?file=&line=&col=` | GET | Definition + references at a position, capped at 500, with `referencesTruncated` when there are more |
 | `/api/snapshots/:id/symbols/outline?file=` | GET | Symbols in a file |
 | `/api/snapshots/:id/search?q=` | GET | File/line matches, capped at 200 |
-| `/api/me` | GET | The signed-in user, and whether dev login is available |
+| `/api/me` | GET | The signed-in user and how they signed in, whether GitHub sign-in is configured, and whether dev login is available |
+| `/api/auth/*` | GET, POST | Better Auth's own routes: GitHub sign-in, its callback, the session, sign-out |
 | `/api/me/stats` | GET | Solved counts by type and difficulty |
 | `/api/dev/login`, `/api/dev/logout` | POST | Localhost mode only: start or end a dev session |
 | `/snapshots/<name>/<path>` | GET | Localhost mode only: `manifest.json` or a raw file |
@@ -344,7 +358,7 @@ Response shapes live in `web/lib/api-types.ts`. Submit validates that every subm
 
 The site is named **codebases**. The logo is the word in Arial, with "bases" in a blue box. The theme is a plain white background with a blue accent.
 
-- **Landing page (`/`):** the logo, a tagline, and two buttons. "Continue as guest" opens the puzzle list. "Log in" is shown but disabled until GitHub sign-in is built. Below the fold it explains why the product exists (interviews moving from algorithm puzzles to navigating real codebases), how it works, and the three puzzle types. It renders without the database.
+- **Landing page (`/`):** the logo, a tagline, and two buttons. "Continue as guest" opens the puzzle list. "Log in" starts GitHub sign-in and returns to the puzzle list, or says so if this server has no GitHub OAuth app configured. Below the fold it explains why the product exists (interviews moving from algorithm puzzles to navigating real codebases), how it works, and the three puzzle types. It renders without the database.
 - **Puzzle list (`/puzzles`):** solved state per row. Everything below lives in the URL (`type`, `difficulty`, `repo`, `tag`, `group`, `sort`), and the defaults are left out, so the plain list stays at `/puzzles`.
   - A difficulty strip: one bar split by difficulty, each segment's width its share of the puzzles and its filled part the share solved. Clicking a segment filters to that difficulty, and clicking it again clears the filter.
   - The strip's counts are taken under the other filters, so each says what clicking would show.

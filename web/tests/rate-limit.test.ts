@@ -35,7 +35,7 @@ describe("isRateLimited", () => {
 });
 
 describe("rateLimitKey", () => {
-  const user = { id: "u1", login: "someone" };
+  const user = { id: "u1", login: "someone", via: "github" as const };
 
   it("prefers the user", () => {
     expect(rateLimitKey(user, new Headers({ "x-forwarded-for": "198.51.100.1" }))).toBe("user:u1");

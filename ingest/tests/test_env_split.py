@@ -4,7 +4,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 WEB = REPO_ROOT / "web"
-SKIPPED_DIRS = frozenset({"node_modules", ".next", ".next-e2e"})
+SKIPPED_DIRS = frozenset({"node_modules", ".next", ".next-e2e", ".next-preview"})
 TEXT_SUFFIXES = frozenset(
     {".example", ".js", ".cjs", ".mjs", ".jsx", ".json", ".ts", ".mts", ".cts", ".tsx"}
 )
@@ -45,10 +45,11 @@ def test_the_scan_reads_env_files(tmp_path: Path) -> None:
 
 def test_env_examples_match_the_split() -> None:
     assert _env_keys(WEB / ".env.example") == {
-        "NEXT_PUBLIC_SUPABASE_URL",
-        "NEXT_PUBLIC_SUPABASE_ANON_KEY",
-        "SUPABASE_SERVICE_ROLE_KEY",
         "NEXT_PUBLIC_SNAPSHOT_CDN_URL",
+        "BETTER_AUTH_SECRET",
+        "BETTER_AUTH_URL",
+        "GITHUB_CLIENT_ID",
+        "GITHUB_CLIENT_SECRET",
         "DATABASE_URL",
         "SNAPSHOT_DIR",
         "DEV_AUTH_TEST_HOST",

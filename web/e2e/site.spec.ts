@@ -216,6 +216,8 @@ test.describe("dev sign-in and profile", () => {
   test("the header's control is labelled, signs in and signs out", async ({ page }) => {
     await page.goto("/puzzles");
     await expect(page.getByText("Local dev sign-in, no account")).toBeVisible();
+    // No GitHub OAuth app on the e2e server, so only the dev sign-in is offered.
+    await expect(page.getByTestId("github-sign-in")).toHaveCount(0);
     await signIn(page);
     await page.reload();
     await expect(visible(page, "signed-in-as")).toHaveText(/^dev-/);

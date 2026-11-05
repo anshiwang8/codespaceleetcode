@@ -132,10 +132,13 @@
   color: var(--text);
 }
 
-.secondary[aria-disabled="true"] {
-  color: var(--text-faint);
+.secondary:hover:not(:disabled) {
   background: var(--panel-raised);
-  cursor: not-allowed;
+}
+
+.secondary:disabled {
+  color: var(--text-faint);
+  cursor: progress;
 }
 
 .loginWrap {
@@ -143,6 +146,13 @@
   flex-direction: column;
   align-items: center;
   gap: 4px;
+}
+
+.loginError {
+  max-width: 220px;
+  color: var(--bad);
+  font-size: 12px;
+  text-align: center;
 }
 
 .soon {

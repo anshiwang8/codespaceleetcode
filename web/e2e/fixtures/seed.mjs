@@ -278,7 +278,7 @@ export async function seedFixture(client) {
   const manifest = JSON.parse(
     readFileSync(path.join(SNAPSHOT_DIR, NAME, "manifest.json"), "utf8"),
   );
-  await client.query("truncate repos, auth.users restart identity cascade");
+  await client.query("truncate repos, auth_users restart identity cascade");
   const repo = await client.query(
     "insert into repos (slug, url, language, license) values ($1, $2, $3, $4) returning id",
     [manifest.slug, manifest.url, manifest.language, manifest.license],
