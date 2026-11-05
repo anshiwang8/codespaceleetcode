@@ -61,6 +61,9 @@ class FileLoadError extends Error {
 class ModelStore {
   private loads = new Map<string, Promise<TextModel>>();
   private symbolLookups = new Map<string, Promise<SymbolAtPositionResponse | null>>();
+  /** Models this store made, and so may dispose. Another store's models are never touched. */
+  private owned = new Set<TextModel>();
+  private disposed = false;
 
   constructor(
     private snapshotId: number,
@@ -97,11 +100,24 @@ class ModelStore {
       throw new FileLoadError(`This file couldn't be loaded (HTTP ${response.status}).`, true);
     }
     const text = await response.text();
+    // This store's viewer was replaced while the file was on its way, as when React mounts the
+    // effect twice in development. The replacement loads the file itself. Making or adopting a
+    // model here would let this store's dispose() destroy the model the new one is showing.
+    if (this.disposed) throw new FileLoadError("This file's viewer was closed.", true);
     if (text.includes("\0")) throw new FileLoadError("This is a binary file, so it isn't shown.", false);
     const language = text.length > LARGE_FILE_CHARS ? "plaintext" : monacoLanguage(this.files.get(path)?.language);
     const uri = this.uriOf(path);
+    const existing = monaco.editor.getModel(uri);
+    if (existing) {
+      // Made by someone else, possibly empty (the editor component makes a blank model for a path
+      // it can't find). The file's content wins.
+      if (existing.getValue() !== text) existing.setValue(text);
+      return existing;
+    }
     // Monaco keeps a file's own line endings, so CRLF lines count the same as the server's.
-    return monaco.editor.getModel(uri) ?? monaco.editor.createModel(text, language, uri);
+    const model = monaco.editor.createModel(text, language, uri);
+    this.owned.add(model);
+    return model;
   }
 
   /** Null for anything the index doesn't know about, including when the request fails. */
@@ -124,9 +140,10 @@ class ModelStore {
   }
 
   dispose(): void {
-    for (const load of this.loads.values()) {
-      load.then((model) => model.dispose()).catch(() => {});
-    }
+    // Loads still in flight see `disposed` and make nothing, so only finished ones need disposing.
+    this.disposed = true;
+    for (const model of this.owned) model.dispose();
+    this.owned.clear();
     this.loads.clear();
   }
 }

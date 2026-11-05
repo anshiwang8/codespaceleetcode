@@ -239,6 +239,28 @@ test.describe("code viewer", () => {
     await expect(page.getByTestId("search-results")).toContainText("at least 2");
   });
 
+  // `next dev` mounts the viewer's effects twice, so two model stores fetch the README. When the
+  // first, discarded store's fetch finished last, it used to adopt the second store's model and
+  // dispose it, leaving a blank editor, and later files opened blank too.
+  test("a file still shows when a discarded load of it finishes last", async ({ page }) => {
+    let first = true;
+    await page.route("**/snapshots/**/files/README.md", async (route) => {
+      if (first) {
+        first = false;
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+      }
+      await route.continue();
+    });
+    await openPuzzle(page, "e2e-find-symbol");
+    await expectOpenFile(page, "README.md");
+    await expect(page.locator(".monaco-editor .view-lines").first()).toContainText("acme");
+    // Past the delayed fetch, so a late dispose would already have happened.
+    await page.waitForTimeout(2000);
+    await expect(page.locator(".monaco-editor .view-lines").first()).toContainText("acme");
+    await openFile(page, FILES.views);
+    await expect(page.locator(".monaco-editor .view-lines").first()).toContainText("renderNotFound");
+  });
+
   test("Monaco comes from this server, never a CDN", async ({ page }) => {
     const external: string[] = [];
     page.on("request", (request) => {

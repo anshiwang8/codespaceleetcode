@@ -1,5 +1,20 @@
 # DEVLOG
 
+## Code viewer could show a blank file
+
+Type: Fix
+
+Goal: A file always shows its content in the editor. Now and then a file opened blank: the right tab and outline, but an empty editor. It showed up as two intermittent e2e failures, one in CI.
+
+What should be done: Find why the editor sometimes had an empty model, and make it impossible.
+
+What was done (technical):
+
+- Cause: `CodeViewer`'s `ModelStore` disposed every model its loads produced, including loads still in flight when it was disposed. Its `fetchModel` ended with `getModel(uri) ?? createModel(...)`. When the viewer's effect ran twice (React strict mode in `next dev`, or any change to its inputs), the discarded store's fetch could finish after the new store had created the model. It then adopted that model and disposed it while the editor showed it, and `@monaco-editor/react` replaced it with a blank model for the same path.
+- Fix: a disposed store never creates or adopts a model, and a store disposes only models it created itself. If a model for the URI already exists, it gets the fetched text when its content differs, so a blank model made elsewhere can't stick.
+- Regression test in `web/e2e/viewer.spec.ts` delays the first README request so the discarded load finishes last. Without the fix it fails (blank editor); with it, it passed 3 runs out of 3.
+- The new account-deletion e2e test now uses the `visible()` helper, because a test ID read right after navigating can match React's hidden copy of the streamed HTML too.
+
 ## Hosted migration runner (launch checklist C7)
 
 Type: Addition

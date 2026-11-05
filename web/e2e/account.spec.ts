@@ -17,13 +17,13 @@ test.describe("account deletion", () => {
     await expect(visible(page, "stats-total")).toContainText("1 of 7");
 
     // The first click only opens the warning; Cancel closes it without deleting.
-    await page.getByTestId("delete-account-start").click();
-    await expect(page.getByTestId("delete-account")).toContainText("can't be undone");
+    await visible(page, "delete-account-start").click();
+    await expect(visible(page, "delete-account")).toContainText("can't be undone");
     await page.getByRole("button", { name: "Cancel" }).click();
-    await expect(page.getByTestId("delete-account-confirm")).toHaveCount(0);
+    await expect(visible(page, "delete-account-confirm")).toHaveCount(0);
 
-    await page.getByTestId("delete-account-start").click();
-    await page.getByTestId("delete-account-confirm").click();
+    await visible(page, "delete-account-start").click();
+    await visible(page, "delete-account-confirm").click();
     await expect(page).toHaveURL(/\/$/);
 
     await page.goto("/profile");
