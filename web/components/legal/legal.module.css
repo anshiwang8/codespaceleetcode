@@ -1,0 +1,57 @@
+.page {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 16px 64px;
+  line-height: 1.6;
+}
+
+.home {
+  display: inline-flex;
+  margin-bottom: 28px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.page h1 {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.updated {
+  margin-top: 2px;
+  color: var(--text-faint);
+  font-size: 12px;
+}
+
+.draft {
+  margin: 16px 0;
+}
+
+.page h2 {
+  margin: 28px 0 6px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.page p + p,
+.page p + ul,
+.page ul + p {
+  margin-top: 10px;
+}
+
+.page ul {
+  padding-left: 20px;
+}
+
+.page li + li {
+  margin-top: 4px;
+}
+
+.footer {
+  margin-top: 40px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  color: var(--text-faint);
+  font-size: 12px;
+}

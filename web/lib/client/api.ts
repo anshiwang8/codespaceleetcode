@@ -48,6 +48,12 @@ export const api = {
   me: () => request<MeResponse>("/api/me"),
   devLogin: (login: string) => post<MeResponse>("/api/dev/login", { login }),
   devLogout: () => post<MeResponse>("/api/dev/logout"),
+  deleteAccount: () =>
+    request<MeResponse>("/api/me", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ confirm: true }),
+    }),
   submit: (slug: string, submission: Submission) =>
     post<SubmitResponse>(`${puzzlePath(slug)}/submit`, submission),
   solution: (slug: string) => request<SolutionResponse>(`${puzzlePath(slug)}/solution`),

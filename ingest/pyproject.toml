@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Codebase Puzzles ingest pipeline: fetch, filter, SCIP index, convert."
 requires-python = ">=3.13,<3.14"
 dependencies = [
+    "boto3>=1.35",
     "jsonschema>=4.23",
     "protobuf>=6",
     "psycopg[binary]>=3.2",
@@ -20,6 +21,7 @@ ingest = "ingest.cli:app"
 
 [dependency-groups]
 dev = [
+    "boto3-stubs[s3]>=1.35",
     "grpcio-tools>=1.70",
     "pyright>=1.1.390",
     "pytest>=8",

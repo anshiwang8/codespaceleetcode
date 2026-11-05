@@ -1,0 +1,155 @@
+# Every check in CLAUDE.md's "Run the full suite" (launch checklist C1). Runs on every pull request
+# and on every push to main. Needs no secrets: databases are throwaway, and nothing is deployed.
+
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NEXT_TELEMETRY_DISABLED: "1"
+
+jobs:
+  web:
+    name: Web lint, typecheck and unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter web lint
+      - run: pnpm --filter web typecheck
+      - run: pnpm --filter web test
+        env:
+          # Tests make and drop their own database on this server.
+          TEST_DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
+
+  ingest:
+    name: Ingest ruff, pyright and tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 20
+    defaults:
+      run:
+        working-directory: ingest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv run ruff check src tests scripts
+      - run: uv run ruff format --check src tests scripts
+      - run: uv run pyright
+      - run: uv run python -m pytest
+        env:
+          # The seed and migrate tests make and drop throwaway databases on this server.
+          INGEST_TEST_DB_URL: postgres://postgres:postgres@localhost:5432/postgres
+
+  validate:
+    name: Content validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      # Snapshots take minutes to build, so they're cached. The key covers everything that decides
+      # their contents: the pinned repos, the pipeline's code and its locked dependencies.
+      - name: Restore snapshots
+        id: snapshots
+        uses: actions/cache@v4
+        with:
+          path: ingest/out
+          key: snapshots-${{ hashFiles('content/repos.yaml', 'ingest/src/**', 'ingest/uv.lock') }}
+      - name: Install the pinned SCIP indexers
+        if: steps.snapshots.outputs.cache-hit != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - if: steps.snapshots.outputs.cache-hit != 'true'
+        # Keep these in step with SCIP_*_VERSION in ingest/src/ingest/indexer.py.
+        run: npm install -g @sourcegraph/scip-typescript@0.6.0 @sourcegraph/scip-python@0.6.8
+      - name: Build snapshots
+        if: steps.snapshots.outputs.cache-hit != 'true'
+        working-directory: ingest
+        run: uv run python -m ingest snapshot-all
+      - name: pnpm validate
+        working-directory: ingest
+        run: uv run python -m ingest validate
+
+  e2e:
+    name: End-to-end (Playwright, next dev)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter web exec playwright install --with-deps chromium
+      - run: pnpm e2e
+        env:
+          CI: "true"
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-results
+          path: web/test-results/
+          retention-days: 7
+
+  smoke:
+    name: Production smoke test (next build, next start)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter web exec playwright install --with-deps chromium
+      - run: pnpm smoke
+        env:
+          CI: "true"
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-results
+          path: web/test-results/
+          retention-days: 7

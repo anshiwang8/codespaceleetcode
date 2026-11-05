@@ -1,5 +1,112 @@
 # DEVLOG
 
+## Hosted migration runner (launch checklist C7)
+
+Type: Addition
+
+Goal: Apply database migrations to hosted Supabase the same way every time, once each, in order, instead of pasting SQL into an editor and remembering which files went in.
+
+What should be done: A command that applies `supabase/migrations` to `SUPABASE_DB_URL` with a tracking table, like `scripts/localdb.mjs migrate` does locally.
+
+What was done (technical):
+
+- `uv run --env-file .env python -m ingest migrate [--dry-run]`, in `ingest/src/ingest/migrate.py`. It only runs with `SUPABASE_DB_URL` set explicitly, so it can't fall back to the local database.
+- Each file runs in its own transaction and is recorded with its SHA-256 in `migrations.applied`. That's a separate schema with every privilege revoked, so hosted Supabase's API can't expose it the way it would a new table in `public`.
+- It stops with a clear message if an applied file has changed (CLAUDE.md: never edit an applied migration), if a file would apply out of order, if the database has a migration this checkout doesn't, if the database has no `anon` and `authenticated` roles, or if it's a `pnpm db` database, which `localdb.mjs` already tracks in `public.schema_migrations`. A Postgres advisory lock stops two runs from overlapping.
+- 16 tests in `ingest/tests/test_migrate.py` (the no-roles check skips on a server whose other databases already created those roles, since roles are server-wide): planning with no database, plus throwaway databases on `INGEST_TEST_DB_URL` covering a fresh apply, a rerun, a failing file rolling back, an edited file, a dry run, and clients' lack of access to the tracking table.
+
+## Shared rate limiting in Postgres (launch checklist C3)
+
+Type: Change
+
+Goal: Rate limits that hold on Vercel, where many serverless instances each kept their own in-memory counts, so the real limit was the configured one times the number of instances.
+
+What should be done: Keep submit and search limits in Postgres, with a table that follows the RLS rule, and point Better Auth's limiter at the same store.
+
+What was done (technical):
+
+- Migration 0006 adds `rate_limits (key, count, window_start)` with row-level security on, client privileges revoked, and an index on `window_start` for pruning.
+- `web/lib/server/rate-limit.ts` counts each request with one `INSERT ... ON CONFLICT DO UPDATE` that also resets an expired window. That makes it atomic: a test fires 25 requests at once against a limit of 5 and exactly 5 get through. Time comes from the database's `now()`, so instances never disagree about the clock. About one request in a hundred also deletes windows older than an hour. Keys are cut to 200 characters.
+- `isRateLimited` is now async; the submit and search routes await it.
+- Better Auth's limiter uses the same table under an `auth:` prefix, through `rateLimit.customStorage.consume`. Better Auth turns its limiter on in production only.
+- Migration 0006 was applied to the local `pnpm db` database with `node scripts/localdb.mjs migrate`.
+
+## Snapshot upload to R2 (launch checklist C2)
+
+Type: Addition
+
+Goal: Put each snapshot's code where the browser will fetch it in production, so the site doesn't depend on the localhost `/snapshots` route.
+
+What should be done: `upload <slug>` and `upload-all` put `manifest.json` and `files/...` at `snapshots/<slug>@<sha>/`, with content types, skipping unchanged files and never deleting. Credentials only from `ingest/.env`.
+
+What was done (technical):
+
+- `ingest/src/ingest/upload.py`, run as `uv run --env-file .env python -m ingest upload <slug>` or `upload-all`, each with `--dry-run`. It uses `boto3` against R2's S3 API (`https://<account>.r2.cloudflarestorage.com`, region `auto`). `boto3` is a new dependency, and `boto3-stubs[s3]` keeps strict pyright clean.
+- Only the manifest and `files/` go up, with the same `Content-Type` and `Cache-Control: public, no-cache` the local route sends. Every put sends `Content-MD5`, so R2 rejects a corrupted upload.
+- It lists what's already under the prefix once and skips any file whose MD5 matches R2's ETag. Files upload 16 at a time, and the manifest goes last, only after every file succeeded. Nothing is deleted. Symlinks are refused.
+- Errors name the missing variables or R2's error code, never a credential value.
+- 14 tests in `ingest/tests/test_upload.py`: a fake store for paths, content types, ordering, skipping, failure, dry run and no deletes, and botocore's `Stubber` for the real S3 adapter's pagination and put parameters. A real upload needs the bucket (M5).
+
+## Search and sharing metadata (launch checklist C5)
+
+Type: Addition
+
+Goal: Let search engines find the puzzles, and show a proper preview card when someone shares a link.
+
+What should be done: `robots.txt`, a sitemap of `/`, `/puzzles` and the puzzle pages, and a social preview image.
+
+What was done (technical):
+
+- `web/app/robots.ts` allows everything except `/api/`, `/profile` and `/snapshots/`, and names the sitemap.
+- `web/app/sitemap.ts` lists `/`, `/puzzles`, `/privacy`, `/terms` and every published puzzle, dated by its snapshot's `indexed_at`. It's rendered on request, so a new puzzle shows up without a rebuild and the build doesn't need the database.
+- `web/app/opengraph-image.tsx` draws a 1200×630 PNG with the wordmark and tagline at build time. The root layout sets `metadataBase`, Open Graph and `twitter:card` so link previews get an absolute image URL.
+- Absolute URLs come from `siteOrigin()` in `web/lib/server/site.ts`, which is `BETTER_AUTH_URL`'s origin, already required in production. So a production build now needs `BETTER_AUTH_URL` set, as Vercel will.
+- Tests: `web/tests/seo.test.ts` (origin rules, robots, sitemap against the fixture database including unpublished puzzles) and `web/e2e/seo.spec.ts` (the real routes, the PNG's size, the meta tags).
+
+## Privacy policy, terms and account deletion (launch checklist C6)
+
+Type: Addition
+
+Goal: Let people see what the site keeps about them and delete their account themselves, which a public launch needs.
+
+What should be done: Static privacy and terms pages linked from the footer, and a way for a user to delete their account.
+
+What was done (technical):
+
+- `DELETE /api/me` in `web/app/api/me/route.ts` needs a signed-in user, the body `{ "confirm": true }`, and an `Origin` header matching the site (`isSameOriginRequest` in `web/lib/server/http.ts`), so another site can't trigger it. `deleteAccount` in `web/lib/server/account.ts` deletes the `auth_users` row in a transaction. That cascades to sessions, the linked GitHub account and its token, the `users` row, submissions and progress. It also deletes the user's `rate_limits` rows. The response clears Better Auth's cookies, by the names Better Auth reports, and the dev-login cookie. Better Auth's own `/delete-user` stays disabled.
+- The profile page has a "Delete account" section. The first click shows what will be lost, and only the second deletes. A new `btn-danger` style marks that button.
+- `/privacy` and `/terms` are static pages written from what the code actually stores: GitHub username, ID, name and avatar URL; the encrypted token; session IP and browser; submissions; no email, no analytics, no tracking cookies. They're linked from the landing page footer and the profile page. Until M7, `web/lib/legal.ts` has `REVIEWED: false`, which shows a draft notice, and `CONTACT: null`, which says a contact address will be added.
+- Tests: `web/tests/account.test.ts` checks that every table is emptied for a dev user and for a GitHub user with a linked account, that other users are left alone, the cookie clearing, the 403 for a foreign or missing Origin, the 400 without confirmation, and the 401 when signed out. `web/e2e/account.spec.ts` deletes through the real UI and checks the legal pages and footer links.
+
+## Production smoke test (launch checklist C9)
+
+Type: Addition
+
+Goal: Catch what only breaks in a production build before Vercel does: the stricter CSP with no eval, static pages, the dev login being off, and code coming from the CDN.
+
+What should be done: Playwright against `next build && next start`, checking the landing page, the puzzle list, a puzzle page with code from the CDN, and that `/api/dev/*` is 404.
+
+What was done (technical):
+
+- `pnpm smoke` runs `scripts/smoke.mjs`. It starts a throwaway Postgres with the fixture, and a small HTTP server on another port that serves the fixture snapshot the way R2 will (CORS, content types, `snapshots/<name>/...` paths only). It builds the app with `NEXT_PUBLIC_SNAPSHOT_CDN_URL` pointing there and the `/snapshots` route off, then runs `web/smoke/smoke.spec.ts` with `web/playwright.smoke.config.ts`.
+- The 7 checks: landing page up, with production's CSP (no `unsafe-eval`, the CDN in `connect-src`); the puzzle list; a puzzle page whose manifest and file requests all go to the CDN, with no CSP violations or page errors; the app's own `/snapshots` route returning 404; `/api/dev/login` and `/api/dev/logout` returning 404; robots and sitemap on the site's origin; and the legal pages.
+- The temporary-database code `scripts/e2e.mjs` had is now shared with the smoke runner in `scripts/test-env.mjs`. `.next-smoke` is gitignored, listed in `web/tsconfig.json` so builds don't rewrite that file, and skipped by the R2-credential scan.
+
+## CI on GitHub Actions (launch checklist C1)
+
+Type: Addition
+
+Goal: Run every check on every pull request and every push to `main`, so a broken change shows up before it merges, and so `main` can be protected (M8).
+
+What should be done: Web lint, typecheck and tests against a Postgres service, ingest tests, ruff, pyright, `pnpm validate` with the snapshots, and `pnpm e2e`.
+
+What was done (technical):
+
+- `.github/workflows/ci.yml` has five jobs on Ubuntu, with no secrets: web (lint, typecheck, vitest against a `postgres:17` service through `TEST_DATABASE_URL`); ingest (`uv sync --locked`, ruff check and format, pyright, pytest with `INGEST_TEST_DB_URL`); validate; e2e; and smoke.
+- The validate job restores `ingest/out` from a cache keyed on `content/repos.yaml`, `ingest/src/**` and `ingest/uv.lock`. On a miss it installs the pinned scip-typescript 0.6.0 and scip-python 0.6.8 and runs `snapshot-all`.
+- The e2e and smoke jobs install Chromium with its Linux libraries, and upload `web/test-results/` when they fail.
+- Runs on the same branch cancel each other, and the workflow can only read the repository.
+
 ## Security headers (launch checklist C4)
 
 Type: Addition, Fix

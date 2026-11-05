@@ -4,7 +4,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 WEB = REPO_ROOT / "web"
-SKIPPED_DIRS = frozenset({"node_modules", ".next", ".next-e2e", ".next-preview"})
+SKIPPED_DIRS = frozenset({"node_modules", ".next", ".next-e2e", ".next-preview", ".next-smoke"})
 TEXT_SUFFIXES = frozenset(
     {".example", ".js", ".cjs", ".mjs", ".jsx", ".json", ".ts", ".mts", ".cts", ".tsx"}
 )

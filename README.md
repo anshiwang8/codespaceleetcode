@@ -54,7 +54,7 @@ cd ingest && uv run python -m ingest snapshot-all
 
 ## What isn't here yet
 
-R2 uploads and deployment aren't built. [spec.md section 14](spec.md#14-launch-checklist) is the launch checklist: what's left, who can do it, and the exact steps for everything that needs a person with account access. Puzzles have had a blind second solve by an agent, not a person, and each puzzle page says so. See [spec.md](spec.md) for the design and [DEVLOG.md](DEVLOG.md) for what was done and what's known to be weak.
+The site isn't deployed yet: that needs the domain, database, R2 bucket and Vercel accounts, which a person has to set up. The code side is done except error monitoring. [spec.md section 14](spec.md#14-launch-checklist) is the launch checklist: what's left, who can do it, and the exact steps for everything that needs a person with account access. Puzzles have had a blind second solve by an agent, not a person, and each puzzle page says so. See [spec.md](spec.md) for the design and [DEVLOG.md](DEVLOG.md) for what was done and what's known to be weak.
 
 ## Developing
 
@@ -76,4 +76,18 @@ pnpm e2e
 
 ```bash
 pnpm validate
+```
+
+`pnpm smoke` builds the site for production and checks it with Playwright, with a local stand-in for the CDN. CI (`.github/workflows/ci.yml`) runs all of these on every pull request and every push to `main`. For `pnpm test` to include the ingest database tests, set `INGEST_TEST_DB_URL` to the `pnpm db` server, for example `postgres://postgres:postgres@localhost:54329/postgres`.
+
+### Hosted database and R2
+
+These read credentials from `ingest/.env` (copy `ingest/.env.example`), and only when you pass the file, so they can't hit a hosted service by accident. Each has `--dry-run`:
+
+```bash
+cd ingest && uv run --env-file .env python -m ingest migrate
+```
+
+```bash
+cd ingest && uv run --env-file .env python -m ingest upload-all
 ```

@@ -97,3 +97,29 @@ export function parseSnapshotId(id: string): number | null {
   const value = Number(id);
   return Number.isSafeInteger(value) ? value : null;
 }
+
+/**
+ * Whether a state-changing request came from this site. Browsers always send Origin on a fetch
+ * that isn't a simple GET, and a page on another site can't make it match this site's Host. Behind
+ * a proxy that rewrites Host, BETTER_AUTH_URL names the site's real origin.
+ */
+export function isSameOriginRequest(headers: Pick<Headers, "get">): boolean {
+  const origin = headers.get("origin");
+  if (!origin) return false;
+  let originUrl: URL;
+  try {
+    originUrl = new URL(origin);
+  } catch {
+    return false;
+  }
+  const configured = process.env.BETTER_AUTH_URL?.trim();
+  if (configured) {
+    try {
+      if (new URL(configured).origin === originUrl.origin) return true;
+    } catch {
+      // A malformed BETTER_AUTH_URL trusts nothing extra.
+    }
+  }
+  const host = headers.get("host");
+  return host !== null && originUrl.host.toLowerCase() === host.toLowerCase();
+}

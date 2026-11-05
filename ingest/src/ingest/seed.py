@@ -84,7 +84,7 @@ def seed_content(
         raise IngestError(f"{repos_path} doesn't exist.")
     repos = load_repos(repos_path)
 
-    target = _describe_target(url)
+    target = describe_target(url)
     echo(f"Seeding {target}")
     try:
         timeout = conninfo_to_dict(url).get("connect_timeout", _DEFAULT_CONNECT_TIMEOUT_SECONDS)
@@ -507,7 +507,7 @@ def _describe_snapshot(counts: SnapshotCounts) -> str:
     )
 
 
-def _describe_target(url: str) -> str:
+def describe_target(url: str) -> str:
     """Where we're connecting, without the password."""
     try:
         info = conninfo_to_dict(url)

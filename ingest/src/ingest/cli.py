@@ -1,5 +1,6 @@
 """The `ingest` command line."""
 
+import os
 from collections import Counter
 from pathlib import Path
 from typing import Annotated
@@ -13,11 +14,13 @@ from ingest.errors import IngestError
 from ingest.fetch import fetch_repo
 from ingest.filters import filter_tree
 from ingest.indexer import run_indexer, stage_files
+from ingest.migrate import migrate as run_migrations
 from ingest.puzzles import CONTENT_DIR
 from ingest.repos import Repo, find_repo, load_repos
 from ingest.scip_parse import load_index, normalize_path
 from ingest.seed import database_url, seed_content
 from ingest.summary import SnapshotSummary, summarize
+from ingest.upload import ObjectStore, describe_upload_error, r2_store_from_env, upload_snapshot
 from ingest.validate import format_report, validate_content
 from ingest.writer import read_summary, write_snapshot
 
@@ -51,6 +54,29 @@ def seed(
     """
     try:
         seed_content(content_dir, out_dir, database_url(), force, typer.echo)
+    except IngestError as error:
+        typer.secho(f"error: {error}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=1) from error
+
+
+@app.command()
+def migrate(
+    dry_run: Annotated[
+        bool, typer.Option("--dry-run", help="List pending migrations without applying them.")
+    ] = False,
+) -> None:
+    """Apply pending supabase/migrations to SUPABASE_DB_URL, in order, once each.
+
+    Run it with the hosted URL loaded: `uv run --env-file .env python -m ingest migrate`.
+    """
+    url = os.environ.get("SUPABASE_DB_URL", "").strip()
+    try:
+        if not url:
+            raise IngestError(
+                "SUPABASE_DB_URL isn't set. This command is for the hosted database; locally, "
+                "`pnpm db` applies migrations."
+            )
+        run_migrations(url, typer.echo, dry_run=dry_run)
     except IngestError as error:
         typer.secho(f"error: {error}", fg=typer.colors.RED, err=True)
         raise typer.Exit(code=1) from error
@@ -139,6 +165,51 @@ def snapshot_all(
     if failures:
         typer.secho(f"\n{len(failures)} failed: {', '.join(failures)}", fg=typer.colors.RED)
         raise typer.Exit(code=1)
+
+
+DryRunOption = Annotated[
+    bool, typer.Option("--dry-run", help="Say what would be uploaded without uploading.")
+]
+
+
+@app.command()
+def upload(slug: str, dry_run: DryRunOption = False) -> None:
+    """Upload one snapshot's manifest and files to R2, skipping files already there.
+
+    Needs R2_* from ingest/.env: `uv run --env-file .env python -m ingest upload <slug>`.
+    """
+    try:
+        repo = find_repo(paths.REPOS_YAML, slug)
+        _upload(r2_store_from_env(), [repo], dry_run)
+    except IngestError as error:
+        typer.secho(f"error: {error}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=1) from error
+
+
+@app.command("upload-all")
+def upload_all(dry_run: DryRunOption = False) -> None:
+    """Upload every repo's snapshot in content/repos.yaml to R2. Stops at the first failure."""
+    try:
+        _upload(r2_store_from_env(), load_repos(paths.REPOS_YAML), dry_run)
+    except IngestError as error:
+        typer.secho(f"error: {error}", fg=typer.colors.RED, err=True)
+        raise typer.Exit(code=1) from error
+
+
+def _upload(store: ObjectStore, repos: list[Repo], dry_run: bool) -> None:
+    for repo in repos:
+        try:
+            upload_snapshot(
+                store,
+                paths.OUT_DIR / repo.snapshot_name,
+                repo.snapshot_name,
+                typer.echo,
+                dry_run=dry_run,
+            )
+        except IngestError:
+            raise
+        except Exception as error:
+            raise IngestError(f"{repo.slug}: {describe_upload_error(error)}") from error
 
 
 def _snapshot(repo: Repo) -> SnapshotSummary:

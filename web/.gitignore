@@ -19,6 +19,7 @@
 /.next/
 /.next-e2e/
 /.next-preview/
+/.next-smoke/
 /out/
 
 # production

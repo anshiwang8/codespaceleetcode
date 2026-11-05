@@ -13,6 +13,7 @@
     "test:ingest": "cd ingest && uv run python -m pytest",
     "test:web": "pnpm --filter web test",
     "e2e": "node scripts/e2e.mjs",
+    "smoke": "node scripts/smoke.mjs",
     "validate": "cd ingest && uv run python -m ingest validate",
     "db": "node scripts/localdb.mjs start",
     "db:reset": "node scripts/localdb.mjs reset"

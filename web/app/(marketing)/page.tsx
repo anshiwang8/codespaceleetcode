@@ -218,6 +218,8 @@ export default function LandingPage() {
           <nav aria-label="Footer" className={styles.footerNav}>
             <Link href={PUZZLES_PATH}>Puzzles</Link>
             <a href="#how">How it works</a>
+            <Link href="/privacy">Privacy</Link>
+            <Link href="/terms">Terms</Link>
           </nav>
         </div>
       </footer>

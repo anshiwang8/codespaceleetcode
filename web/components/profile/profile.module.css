@@ -63,3 +63,30 @@
   border-bottom: 1px solid var(--line);
   text-align: right;
 }
+
+.danger {
+  margin-top: 40px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.danger h2 {
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.danger p + p {
+  margin-top: 10px;
+}
+
+.dangerActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.legalLinks {
+  color: var(--text-faint);
+  font-size: 12px;
+}

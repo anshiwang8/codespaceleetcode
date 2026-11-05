@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { SignInPrompt } from "@/components/auth/SignInPrompt";
+import { DeleteAccount } from "@/components/profile/DeleteAccount";
 import { StatsTable } from "@/components/profile/StatsTable";
 import styles from "@/components/profile/profile.module.css";
 import { getCurrentUser } from "@/lib/server/auth";
@@ -35,6 +36,7 @@ export default async function ProfilePage() {
           <StatsTable title="By difficulty" group="difficulty" rows={stats.byDifficulty} />
         </div>
       )}
+      <DeleteAccount />
     </main>
   );
 }

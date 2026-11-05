@@ -138,6 +138,19 @@ input {
   background: var(--accent-hover);
 }
 
+/* For actions that can't be undone, such as deleting an account. */
+.btn-danger {
+  border-color: var(--bad);
+  background: var(--bad);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.btn-danger:hover:not(:disabled) {
+  border-color: #991b1b;
+  background: #991b1b;
+}
+
 .btn-quiet {
   border-color: transparent;
   background: transparent;

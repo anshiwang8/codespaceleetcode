@@ -110,6 +110,18 @@ interface DetailRow extends SummaryRow {
   manifest_url: string;
 }
 
+/** Published puzzles for the sitemap, dated by when their snapshot was last indexed. */
+export async function listSitemapPuzzles(): Promise<{ slug: string; lastModified: Date }[]> {
+  const { rows } = await getPool().query<{ slug: string; indexed_at: Date }>(
+    `select p.slug, s.indexed_at
+       from puzzles p
+       join snapshots s on s.id = p.snapshot_id
+      where p.published
+      order by p.slug`,
+  );
+  return rows.map((row) => ({ slug: row.slug, lastModified: row.indexed_at }));
+}
+
 export async function getPuzzleDetail(
   userId: string | null,
   slug: string,

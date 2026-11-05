@@ -2,6 +2,7 @@ import "server-only";
 import { betterAuth } from "better-auth";
 import { nextCookies } from "better-auth/next-js";
 import { getPool } from "@/lib/server/db";
+import { consumeAuthRateLimit } from "@/lib/server/rate-limit";
 
 /** GitHub sign-in is on only when the OAuth app's credentials are set. */
 export function isGitHubAuthConfigured(): boolean {
@@ -44,6 +45,9 @@ export function betterAuthOptions() {
     // Next reports `request.url` as localhost even when the site is on 127.0.0.1, so it can't be used.
     ...(baseURL ? {} : { trustedOrigins: (request?: Request) => sameHostOrigins(request) }),
     database: getPool(),
+    // Better Auth's own limits (on in production) are kept in the rate_limits table with ours, so
+    // they hold across serverless instances instead of per process.
+    rateLimit: { customStorage: { consume: consumeAuthRateLimit } },
     telemetry: { enabled: false },
     advanced: {
       database: { generateId: "uuid" as const },

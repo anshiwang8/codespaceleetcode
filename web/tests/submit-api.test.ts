@@ -128,8 +128,8 @@ describe.skipIf(!hasDatabase)("POST /api/puzzles/:slug/submit", () => {
     await seedFixtures();
   });
 
-  beforeEach(() => {
-    resetRateLimits();
+  beforeEach(async () => {
+    await resetRateLimits();
   });
 
   it("needs sign-in, and records nothing without it", async () => {

@@ -15,8 +15,8 @@ describe.skipIf(!hasDatabase)("snapshot code index", () => {
     fixtures = await seedFixtures();
   });
 
-  beforeEach(() => {
-    resetRateLimits();
+  beforeEach(async () => {
+    await resetRateLimits();
   });
 
   const symbols = (query: string, id: number | string = fixtures.snapshotId) =>

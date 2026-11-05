@@ -10,7 +10,7 @@ interface Context {
 export const POST = route("puzzles.submit", async (request, { params }: Context) => {
   const user = await getCurrentUser(request.headers);
   if (!user) return errorResponse(401, "Sign in to submit an answer");
-  if (isRateLimited(`submit:${rateLimitKey(user, request.headers)}`, SUBMIT_LIMIT)) {
+  if (await isRateLimited(`submit:${rateLimitKey(user, request.headers)}`, SUBMIT_LIMIT)) {
     return errorResponse(429, "Too many submissions. Try again in a minute.");
   }
   const slug = parseSlug((await params).slug);

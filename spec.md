@@ -240,7 +240,7 @@ The site runs on localhost with no accounts or keys. Each hosted service has a l
 | GitHub sign-in | Works on localhost too, given a GitHub OAuth app whose callback is `http://127.0.0.1:3000/api/auth/callback/github`. Without one, a dev login that sets a cookie stands in. The dev login is refused unless the request is from localhost and `NODE_ENV` isn't `production` |
 | R2 behind a CDN | The route `/snapshots/<name>/...` serves `ingest/out/<name>/...` with an ETag and `Cache-Control: public, no-cache`, because a rebuilt snapshot keeps its name. `NEXT_PUBLIC_SNAPSHOT_CDN_URL` overrides it when set |
 
-R2 upload and deployment aren't built yet. They're needed before a public launch; section 14 lists the steps.
+`python -m ingest upload` puts snapshots in R2 (section 14, C2). Creating the bucket and the Vercel deployment need a person with the accounts; section 14 lists the steps.
 
 ### Repository layout
 ```
@@ -307,7 +307,12 @@ auth_users, auth_sessions, auth_accounts, auth_verifications        -- Better Au
 submissions  (id, user_id, puzzle_id, answer_json, correct, created_at,
               time_on_puzzle_ms)
 progress     (user_id, puzzle_id, status, attempts, solved_at)        -- status: attempted | solved
+rate_limits  (key, count, window_start)                               -- shared by every server instance
 ```
+
+Hosted migrations are applied by `python -m ingest migrate`, which records each file and its SHA-256 in `migrations.applied`, a schema clients can't reach. It refuses to continue if an applied file changed, if files would apply out of order, or if the database has a migration the checkout doesn't. Locally, `scripts/localdb.mjs` does the same job with `public.schema_migrations`.
+
+Deleting an account (`DELETE /api/me`) removes the `auth_users` row, which cascades to the user's sessions, linked GitHub account and token, `users` row, submissions and progress, and deletes their `rate_limits` rows.
 
 `answer_json` and `solutions` are only readable through server routes. The server connects with `pg` and `DATABASE_URL` in every environment, and refuses to run in production without it; nothing uses a Supabase client or the service role key. Row-level security and column grants deny client access.
 
@@ -347,12 +352,15 @@ Hosted Supabase grants `anon` and `authenticated` everything on each new table, 
 | `/api/snapshots/:id/symbols/outline?file=` | GET | Symbols in a file |
 | `/api/snapshots/:id/search?q=` | GET | File/line matches, capped at 200 |
 | `/api/me` | GET | The signed-in user and how they signed in, whether GitHub sign-in is configured, and whether dev login is available |
+| `/api/me` | DELETE | Deletes the signed-in user's account and everything about them, and clears the session cookies. Needs `{ "confirm": true }` and a same-origin `Origin` header |
 | `/api/auth/*` | GET, POST | Better Auth's own routes: GitHub sign-in, its callback, the session, sign-out |
 | `/api/me/stats` | GET | Solved counts by type and difficulty |
 | `/api/dev/login`, `/api/dev/logout` | POST | Localhost mode only: start or end a dev session |
 | `/snapshots/<name>/<path>` | GET | Localhost mode only: `manifest.json` or a raw file |
+| `/robots.txt`, `/sitemap.xml` | GET | For search engines. The sitemap lists `/`, `/puzzles`, the legal pages and every published puzzle, with absolute URLs on `BETTER_AUTH_URL`'s origin |
+| `/opengraph-image` | GET | The 1200×630 PNG shown when a link to the site is shared |
 
-Response shapes live in `web/lib/api-types.ts`. Submit validates that every submitted ID exists in the snapshot before grading. Submit and search are rate-limited, in memory and per process, so a real deployment needs a shared store. Reading a puzzle needs no sign-in; submitting does.
+Response shapes live in `web/lib/api-types.ts`. Submit validates that every submitted ID exists in the snapshot before grading. Submit and search are rate-limited in Postgres (`rate_limits`, migration 0006), so the limits hold across serverless instances. One upsert counts a request and resets an expired window, so concurrent requests can't both slip under a limit, and the database's clock is the one every instance uses. Better Auth's own limiter uses the same table through `rateLimit.customStorage`. About one request in a hundred also deletes windows older than an hour. Reading a puzzle needs no sign-in; submitting does.
 
 - Signed-out requests to `/solution` and `/api/me/stats` get 401. A signed-in user who hasn't unlocked a solution gets 403.
 - Every graded submission counts as an attempt, including ones after solving. A rejected request doesn't.
@@ -381,7 +389,8 @@ The site is named **codebases**. The logo is the word in Arial, with "bases" in 
   - Go-to-definition (F12 / ctrl-click, cmd-click on macOS), find references, and a breadcrumb trail of visited files.
   - Repo name, SHA, license, and link back to GitHub at that SHA.
 - **Result:** correct / incorrect, attempt count. Solution unlocks on a correct answer.
-- **Profile:** solved counts by type and difficulty.
+- **Profile:** solved counts by type and difficulty, and "Delete account". Deleting takes two clicks: the first shows what will be lost, the second deletes.
+- **Privacy policy (`/privacy`) and terms (`/terms`):** static pages linked from the landing page footer and the profile. They describe what the code actually stores. Until M7 approves them, `web/lib/legal.ts` has `REVIEWED: false` and each page says it's a draft.
 
 ---
 
@@ -421,8 +430,8 @@ What's left before a public launch, as of 2026-11-05. When an item lands, mark i
 
 ### Critical path
 
-1. M1 domain → M2 database and M5 R2 bucket → C2 snapshot upload → M3 production OAuth app → M4 Vercel → first deploy.
-2. C1 CI and C3 shared rate limiting before real users arrive.
+1. M1 domain → M2 database and M5 R2 bucket → first `upload-all` (C2 is built) → M3 production OAuth app → M4 Vercel → first deploy.
+2. M8 branch protection, now that CI (C1) exists. C3 shared rate limiting is done.
 3. M6 human second solves before the site is announced publicly (section 6).
 
 ### Manual: needs a person
@@ -430,13 +439,13 @@ What's left before a public launch, as of 2026-11-05. When an item lands, mark i
 | # | Task | Steps | Unblocks |
 |---|---|---|---|
 | M1 | **Register the production domain** | Pick and buy it. Every URL below says `<domain>`. | M3, M4, M5's custom domain |
-| M2 | **Create the hosted database** | 1. Create a Supabase project. 2. Apply `supabase/migrations/0001` to `0005` in order, in the SQL editor or with `psql`. Don't apply `supabase/local/shim.sql`: hosted Supabase already has those roles and the `auth` schema. There's no hosted migration runner yet (C7), so record which files you applied. 3. Get two connection strings from Project Settings → Database. The **direct or session** one is for seeding and migrations, and goes in `ingest/.env` as `SUPABASE_DB_URL`. The **transaction pooler** one (port 6543) is for the app, and goes in Vercel as `DATABASE_URL`. 4. Seed with `cd ingest && uv run python -m ingest seed`, with `SUPABASE_DB_URL` set and the snapshots built (`snapshot-all`). The loaded content is about 340 MB, so the 500 MB free tier fits for now. | Deploy |
+| M2 | **Create the hosted database** | 1. Create a Supabase project. 2. Get two connection strings from Project Settings → Database. The **direct or session** one is for seeding and migrations, and goes in `ingest/.env` as `SUPABASE_DB_URL`. The **transaction pooler** one (port 6543) is for the app, and goes in Vercel as `DATABASE_URL`. 3. Apply the migrations with `cd ingest && uv run --env-file .env python -m ingest migrate` (try `--dry-run` first). Run it again after any new migration lands. Don't apply `supabase/local/shim.sql`: hosted Supabase already has those roles and the `auth` schema. 4. Seed with `uv run --env-file .env python -m ingest seed`, with the snapshots built (`snapshot-all`). The loaded content is about 340 MB, so the 500 MB free tier fits for now. | Deploy |
 | M3 | **Create the production GitHub OAuth app** | GitHub → Settings → Developer settings → OAuth Apps → New. Homepage `https://<domain>`, callback `https://<domain>/api/auth/callback/github`. Use an org account if the team has one, so it isn't tied to one person. Generate a client secret and put it straight into Vercel (M4). Never put it in git, a chat, or a terminal prompt. | Sign-in in production |
 | M4 | **Create the Vercel project** | Import the GitHub repo. Root directory `web`, framework Next.js; pnpm is picked up from `packageManager`. Set these environment variables for Production: `DATABASE_URL` (M2's pooler URL); `BETTER_AUTH_SECRET`, a new one rather than the local one, made with `node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`; `BETTER_AUTH_URL=https://<domain>`; `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` (M3); and `NEXT_PUBLIC_SNAPSHOT_CDN_URL` (M5). `NEXT_PUBLIC_*` values are baked in at build time, so redeploy after changing one. Then add the domain. | Deploy |
-| M5 | **Create the R2 bucket** | In Cloudflare, create an R2 bucket and give it public read access through a custom domain such as `cdn.<domain>` (`r2.dev` is fine for testing). Add a CORS rule allowing `GET` from `https://<domain>`, because the browser fetches the files directly. Create an API token with write access to that bucket only. Its values go in `ingest/.env` as `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` and `R2_BUCKET`, and never anywhere under `web/`. The public bucket URL becomes `NEXT_PUBLIC_SNAPSHOT_CDN_URL`. | C2's first real upload, M4 |
+| M5 | **Create the R2 bucket** | In Cloudflare, create an R2 bucket and give it public read access through a custom domain such as `cdn.<domain>` (`r2.dev` is fine for testing). Add a CORS rule allowing `GET` from `https://<domain>`, because the browser fetches the files directly. Create an API token with write access to that bucket only. Its values go in `ingest/.env` as `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` and `R2_BUCKET`, and never anywhere under `web/`. The public bucket URL becomes `NEXT_PUBLIC_SNAPSHOT_CDN_URL`. Optionally, add a Cloudflare response header rule for the custom domain that sends `X-Content-Type-Options: nosniff`, as the app does. Then upload with `cd ingest && uv run --env-file .env python -m ingest upload-all` (`--dry-run` first), and again after any snapshot is rebuilt. | M4 |
 | M6 | **Human blind second solves** | Every puzzle needs a person in `verified_by` (section 6). **Don't solve a puzzle you wrote, or one whose YAML or solution you've read.** 1. `cd ingest && uv run python -m ingest blind-export --out ../blind.json --repo <slug>` exports only what a solver may see. 2. Solve each puzzle in the local site or from the export, and write your answers as a JSON map of puzzle id to submission, such as `{"<puzzle-id>": {"kind": "symbol", "id": "src/app.ts#App.handle"}}`. The other kinds are `{"kind": "file", "path": ...}`, `{"kind": "location", "id": "path:L10-L14"}`, `{"kind": "sequence" or "set", "ids": [...]}` and `{"kind": "choice", "option": "b"}`. 3. `uv run python -m ingest blind-check <answers.json> --solver <your-name> --write` grades it, printing pass or fail only, and adds you to `verified_by` for each pass. You get one graded attempt per puzzle version. 4. A fail means the key is wrong or the prompt allows another answer. Report it to the author; don't retry. 5. Commit the YAML changes and `content/blind-attempts.json`. Don't commit `blind.json` or your answers. | Public launch |
-| M7 | **Review the legal pages** | Once C6 drafts them, someone accountable reads and approves the privacy policy and terms. | Public launch |
-| M8 | **Protect `main`** | Once C1 exists, in GitHub → Settings → Branches, require the CI checks and a pull request before merging to `main`. | Safe collaboration |
+| M7 | **Review the legal pages** | C6 drafted `/privacy` and `/terms` from what the code stores. Someone accountable reads and approves them, and decides anything they leave open, such as a governing law. Then in `web/lib/legal.ts` set `REVIEWED: true` (which removes the draft notice), set `CONTACT` to a real address, and update `LAST_UPDATED`. | Public launch |
+| M8 | **Protect `main`** | In GitHub → Settings → Branches, add a rule for `main` that requires a pull request and these CI checks from `.github/workflows/ci.yml`: "Web lint, typecheck and unit tests", "Ingest ruff, pyright and tests", "Content validation", "End-to-end (Playwright, next dev)" and "Production smoke test (next build, next start)". | Safe collaboration |
 | M9 | **Pick an error-monitoring service** | For C8. Create the account, for example Sentry, and get its DSN. | C8 |
 
 **Per-developer setup (manual, each teammate once).** Follow `README.md`: Node 22 or 24, pnpm, uv, the SCIP indexers, then `snapshot-all`. To use GitHub sign-in locally, each developer creates their **own** OAuth app with the callback `http://127.0.0.1:3000/api/auth/callback/github`, and puts the four values in their own `web/.env.local` (README, "GitHub sign-in"). Don't share one secret between developers. Without that file, GitHub sign-in is off and the localhost dev login still works.
@@ -447,15 +456,15 @@ What's left before a public launch, as of 2026-11-05. When an item lands, mark i
 
 | # | Task | Done when | Needs |
 |---|---|---|---|
-| C1 | **CI on GitHub Actions** | Every PR runs web lint, typecheck and tests (against a Postgres service container via `TEST_DATABASE_URL`), ingest tests (`INGEST_TEST_DB_URL`), `ruff` and `pyright`, `pnpm validate`, and `pnpm e2e`. `validate` needs the snapshots, so CI builds them with the pinned indexers or restores them from a cache keyed on `content/repos.yaml` and the pipeline's source. | None |
-| C2 | **Snapshot upload to R2** | `uv run python -m ingest upload <slug>` (and an `upload-all`) puts `manifest.json` and `files/...` at `snapshots/<slug>@<sha>/` in the bucket, matching what `web/lib/client/snapshot-urls.ts` fetches. It sets content types, skips files already there with the same hash, and never deletes. Unit-tested with a fake S3 client. Credentials come from `ingest/.env` only (`ingest/tests/test_env_split.py` keeps them out of `web/`). | M5 for a real upload |
-| C3 | **Shared rate limiting** | Submit and search limits are kept in Postgres (or Redis), not process memory, so they hold across serverless instances. A new table follows the RLS rule in section 8. Better Auth's own limiter is pointed at the same store (`rateLimit.storage`). | None |
+| C1 | ~~**CI on GitHub Actions**~~ **Done 2026-11-05.** | Every PR runs web lint, typecheck and tests (against a Postgres service container via `TEST_DATABASE_URL`), ingest tests (`INGEST_TEST_DB_URL`), `ruff` and `pyright`, `pnpm validate`, and `pnpm e2e`. `validate` needs the snapshots, so CI builds them with the pinned indexers or restores them from a cache keyed on `content/repos.yaml` and the pipeline's source. Also runs `pnpm smoke` (C9). The workflow is `.github/workflows/ci.yml`. | None |
+| C2 | ~~**Snapshot upload to R2**~~ **Done 2026-11-05.** | `uv run python -m ingest upload <slug>` (and an `upload-all`) puts `manifest.json` and `files/...` at `snapshots/<slug>@<sha>/` in the bucket, matching what `web/lib/client/snapshot-urls.ts` fetches. It sets content types, skips files already there with the same hash, and never deletes. Unit-tested with a fake S3 client. Credentials come from `ingest/.env` only (`ingest/tests/test_env_split.py` keeps them out of `web/`). Files go up before the manifest, so a manifest never names a missing file. Skipping compares each file's MD5 with R2's ETag. | M5 for a real upload |
+| C3 | ~~**Shared rate limiting**~~ **Done 2026-11-05.** | Submit and search limits are kept in Postgres (or Redis), not process memory, so they hold across serverless instances. A new table follows the RLS rule in section 8. Better Auth's own limiter is pointed at the same store (`rateLimit.customStorage`). Built as migration 0006 and `web/lib/server/rate-limit.ts`. | None |
 | C4 | ~~**Security headers**~~ **Done 2026-11-05.** | `next.config.ts` sends a Content Security Policy, HSTS, `X-Content-Type-Options`, `Referrer-Policy` and `frame-ancestors`. The CSP allows Monaco's workers, mermaid's inline SVG styles, and the snapshot CDN origin in `connect-src`. The e2e suite still passes with it on. See section 8, "Security headers". | None |
-| C5 | **Search and sharing metadata** | `robots.txt`, a sitemap of `/`, `/puzzles` and the puzzle pages, and a social preview image for the landing page. | M1 for absolute URLs |
-| C6 | **Privacy policy, terms, account deletion** | Static pages linked from the footer, and a way for a user to delete their account. Deleting an `auth_users` row cascades to `users`, submissions and progress. Better Auth's `/delete-user` is in `disabledPaths`, so this needs either a carefully re-enabled route or our own. | M7 to publish |
-| C7 | **Hosted migration runner** | A script that applies `supabase/migrations` to `SUPABASE_DB_URL` in order, with a tracking table, like `scripts/localdb.mjs migrate` does locally. This makes M2 repeatable. | None |
+| C5 | ~~**Search and sharing metadata**~~ **Done 2026-11-05.** | `robots.txt`, a sitemap of `/`, `/puzzles` and the puzzle pages, and a social preview image for the landing page. URLs are absolute on `BETTER_AUTH_URL`'s origin, so they follow the domain once M1 and M4 set it. | None now |
+| C6 | ~~**Privacy policy, terms, account deletion**~~ **Done 2026-11-05.** | Static pages linked from the footer, and a way for a user to delete their account. Deleting an `auth_users` row cascades to `users`, submissions and progress. Better Auth's `/delete-user` stays in `disabledPaths`; deletion is our own `DELETE /api/me`. The pages are drafts until M7. | M7 to publish |
+| C7 | ~~**Hosted migration runner**~~ **Done 2026-11-05.** | A script that applies `supabase/migrations` to `SUPABASE_DB_URL` in order, with a tracking table, like `scripts/localdb.mjs migrate` does locally. This makes M2 repeatable. Built as `python -m ingest migrate` (section 8). | None |
 | C8 | **Error monitoring** | Server and client errors reach the service, with no answer data or secrets in the payloads (rule 1). | M9 |
-| C9 | **Production smoke test** | A Playwright run against `next build && next start`, checking the landing page, the puzzle list, a puzzle page with code loaded from the CDN, and that `/api/dev/*` returns 404. The dev login is refused in production, so signed-in flows stay in the dev e2e suite. | None |
+| C9 | ~~**Production smoke test**~~ **Done 2026-11-05.** | A Playwright run against `next build && next start`, checking the landing page, the puzzle list, a puzzle page with code loaded from the CDN, and that `/api/dev/*` returns 404. The dev login is refused in production, so signed-in flows stay in the dev e2e suite. Run with `pnpm smoke`; a small local server stands in for the CDN on another origin. | None |
 
 ### Known issues (DEVLOG has the details)
 
