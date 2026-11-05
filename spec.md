@@ -324,6 +324,15 @@ Better Auth runs inside the Next.js app (`web/lib/server/better-auth.ts`, mounte
 
 Hosted Supabase grants `anon` and `authenticated` everything on each new table, sequence and function in `public`, and `supabase/local/shim.sql` does the same locally. So a migration that adds a table must enable row-level security, revoke client privileges on it and its sequences, and grant back only what clients may read. `web/tests/rls.test.ts` fails if a table has no row-level security, if clients hold any grant beyond the expected reads, or if they can use a sequence. Migration 0004 revokes the sequence privileges 0001 missed.
 
+### Security headers
+
+`web/next.config.ts` sends these on every response, including API routes and snapshot files. `web/lib/security-headers.ts` builds them, and `web/tests/security-headers.test.ts` and `web/e2e/security-headers.spec.ts` check them.
+
+- **Content Security Policy.** `default-src 'self'`. Nothing from another host can run as a script or style. `connect-src` adds only the origin of `NEXT_PUBLIC_SNAPSHOT_CDN_URL`, and a value that isn't an http or https URL stops the build. `worker-src 'self'` covers Monaco's bundled worker. `object-src 'none'`, `base-uri 'self'`, `form-action 'self'` and `frame-ancestors 'none'`. Production adds `upgrade-insecure-requests`; `next dev` adds `'unsafe-eval'`, which React needs there.
+- `script-src` allows `'unsafe-inline'`, because Next.js streams page data in inline scripts and a header in `next.config.ts` can't carry a per-request nonce. Moving to a nonce means setting the CSP in `proxy.ts` and rendering every page dynamically, the landing page included. `style-src` allows `'unsafe-inline'` because Monaco injects `<style>` elements, mermaid puts one in each SVG, and React writes `style` attributes.
+- `Strict-Transport-Security: max-age=63072000; includeSubDomains`, without `preload`. Joining the preload list is hard to undo, so it's a separate decision.
+- `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, and `X-Frame-Options: DENY` for browsers too old for `frame-ancestors`. `X-Powered-By` is off.
+
 ---
 
 ## 9. API
@@ -441,7 +450,7 @@ What's left before a public launch, as of 2026-11-05. When an item lands, mark i
 | C1 | **CI on GitHub Actions** | Every PR runs web lint, typecheck and tests (against a Postgres service container via `TEST_DATABASE_URL`), ingest tests (`INGEST_TEST_DB_URL`), `ruff` and `pyright`, `pnpm validate`, and `pnpm e2e`. `validate` needs the snapshots, so CI builds them with the pinned indexers or restores them from a cache keyed on `content/repos.yaml` and the pipeline's source. | None |
 | C2 | **Snapshot upload to R2** | `uv run python -m ingest upload <slug>` (and an `upload-all`) puts `manifest.json` and `files/...` at `snapshots/<slug>@<sha>/` in the bucket, matching what `web/lib/client/snapshot-urls.ts` fetches. It sets content types, skips files already there with the same hash, and never deletes. Unit-tested with a fake S3 client. Credentials come from `ingest/.env` only (`ingest/tests/test_env_split.py` keeps them out of `web/`). | M5 for a real upload |
 | C3 | **Shared rate limiting** | Submit and search limits are kept in Postgres (or Redis), not process memory, so they hold across serverless instances. A new table follows the RLS rule in section 8. Better Auth's own limiter is pointed at the same store (`rateLimit.storage`). | None |
-| C4 | **Security headers** | `next.config.ts` sends a Content Security Policy, HSTS, `X-Content-Type-Options`, `Referrer-Policy` and `frame-ancestors`. The CSP allows Monaco's workers, mermaid's inline SVG styles, and the snapshot CDN origin in `connect-src`. The e2e suite still passes with it on. | None |
+| C4 | ~~**Security headers**~~ **Done 2026-11-05.** | `next.config.ts` sends a Content Security Policy, HSTS, `X-Content-Type-Options`, `Referrer-Policy` and `frame-ancestors`. The CSP allows Monaco's workers, mermaid's inline SVG styles, and the snapshot CDN origin in `connect-src`. The e2e suite still passes with it on. See section 8, "Security headers". | None |
 | C5 | **Search and sharing metadata** | `robots.txt`, a sitemap of `/`, `/puzzles` and the puzzle pages, and a social preview image for the landing page. | M1 for absolute URLs |
 | C6 | **Privacy policy, terms, account deletion** | Static pages linked from the footer, and a way for a user to delete their account. Deleting an `auth_users` row cascades to `users`, submissions and progress. Better Auth's `/delete-user` is in `disabledPaths`, so this needs either a carefully re-enabled route or our own. | M7 to publish |
 | C7 | **Hosted migration runner** | A script that applies `supabase/migrations` to `SUPABASE_DB_URL` in order, with a tracking table, like `scripts/localdb.mjs migrate` does locally. This makes M2 repeatable. | None |

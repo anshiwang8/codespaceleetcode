@@ -126,6 +126,10 @@ try {
       DATABASE_URL: databaseUrl,
       SNAPSHOT_DIR,
       NEXT_PUBLIC_SNAPSHOT_CDN_URL: "",
+      // The tests expect GitHub sign-in off, even when a developer's web/.env.local sets up an
+      // OAuth app. An empty value here wins over the file.
+      GITHUB_CLIENT_ID: "",
+      GITHUB_CLIENT_SECRET: "",
       NEXT_TELEMETRY_DISABLED: "1",
       E2E_DIST_DIR: DIST_DIR,
     });

@@ -1,5 +1,23 @@
 # DEVLOG
 
+## Security headers (launch checklist C4)
+
+Type: Addition, Fix
+
+Goal: Every page and API response tells the browser to refuse scripts from other hosts, refuse to be framed, use HTTPS only, and not guess content types, so an injected script or a clickjacking page has much less to work with.
+
+What should be done: Send a Content Security Policy, HSTS, `X-Content-Type-Options`, `Referrer-Policy` and `frame-ancestors` from `next.config.ts`, without breaking Monaco, its worker, mermaid, or fetching snapshots from the CDN. The whole e2e suite has to pass with them on.
+
+What was done (technical):
+
+- `web/lib/security-headers.ts` builds the headers and `web/next.config.ts` sends them on every path, including API routes and `/snapshots`. The config is now a function of the Next.js phase, so `next dev` gets `'unsafe-eval'`, which React needs there, and a production build doesn't. `X-Powered-By` is off.
+- The CSP is `default-src 'self'`, with `connect-src` adding only the origin of `NEXT_PUBLIC_SNAPSHOT_CDN_URL`. A value that isn't an http or https URL stops the build instead of quietly producing a policy that blocks every snapshot. `worker-src 'self'` covers Monaco's bundled worker. `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `frame-ancestors 'none'`, and in production `upgrade-insecure-requests`.
+- `script-src` keeps `'unsafe-inline'`. Next.js streams page data in inline scripts, and a header from `next.config.ts` can't carry a per-request nonce. A nonce would need the CSP set in `proxy.ts` and every page rendered dynamically, the static landing page included. That's a possible follow-up, written down in `spec.md` section 8. `style-src` keeps `'unsafe-inline'` for Monaco's injected styles, mermaid's `<style>` inside each SVG, and React `style` attributes.
+- HSTS is two years with `includeSubDomains`, without `preload`, since getting onto the preload list is hard to undo. `X-Frame-Options: DENY` is there for browsers too old for `frame-ancestors`.
+- Tests: `web/tests/security-headers.test.ts` checks each directive, dev against production, the CDN origin, and a bad CDN URL. `web/e2e/security-headers.spec.ts` checks the headers on pages, an API route and a snapshot file. It fails on any CSP violation while loading the landing page and puzzle list, opening files in Monaco, and signing in, submitting and opening a solution with mermaid diagrams. It also checks that another page can't frame the site.
+- Fix to the e2e runner: `scripts/e2e.mjs` now sets `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` to empty. A developer's `web/.env.local` with a GitHub OAuth app was turning GitHub sign-in on for the e2e server, which failed three tests that expect it off: the landing page's "Log in" note, the header's sign-in control, and the phone layout, where the extra button made the header 69px too wide.
+- `spec.md` section 8 has a new "Security headers" part, and C4 is marked done in section 14.
+
 ## Launch checklist written down
 
 Type: Addition
