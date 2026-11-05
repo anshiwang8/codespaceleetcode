@@ -4,7 +4,7 @@ LeetCode-style puzzles set inside real open-source repos, each pinned to a commi
 
 ## Run it on localhost
 
-No accounts, API keys or Docker needed. It has been run on macOS and Windows; Linux should work but is untested. You need Node 22 or newer, [pnpm](https://pnpm.io) 12, git and [uv](https://docs.astral.sh/uv/).
+No accounts, API keys or Docker needed. It has been run on macOS and Windows, and CI runs it on Linux (Ubuntu). You need Node 22 or newer, [pnpm](https://pnpm.io) 12, git and [uv](https://docs.astral.sh/uv/).
 
 macOS or Linux:
 

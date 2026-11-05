@@ -104,7 +104,8 @@ What was done (technical):
 
 - `.github/workflows/ci.yml` has five jobs on Ubuntu, with no secrets: web (lint, typecheck, vitest against a `postgres:17` service through `TEST_DATABASE_URL`); ingest (`uv sync --locked`, ruff check and format, pyright, pytest with `INGEST_TEST_DB_URL`); validate; e2e; and smoke.
 - The validate job restores `ingest/out` from a cache keyed on `content/repos.yaml`, `ingest/src/**` and `ingest/uv.lock`. On a miss it installs the pinned scip-typescript 0.6.0 and scip-python 0.6.8 and runs `snapshot-all`.
-- The e2e and smoke jobs install Chromium with its Linux libraries, and upload `web/test-results/` when they fail.
+- The e2e and smoke jobs install Chromium with its Linux libraries, and upload `web/test-results/` when they fail. On the first run, the e2e job's install hung for 30 minutes in `apt-get update` on GitHub's Azure Ubuntu mirror and was cancelled, while the same step passed in the smoke job. So each install attempt now has a 5-minute limit and up to three tries.
+- The first run on `main` also showed that the whole pipeline works on Linux: building all 21 snapshots with the pinned indexers, validation, ingest and web tests, and the production smoke test all passed there.
 - Runs on the same branch cancel each other, and the workflow can only read the repository.
 
 ## Security headers (launch checklist C4)

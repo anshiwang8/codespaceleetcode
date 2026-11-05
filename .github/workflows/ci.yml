@@ -120,7 +120,16 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter web exec playwright install --with-deps chromium
+      - name: Install Chromium and its Linux libraries
+        # apt mirrors sometimes stall; a stuck attempt is cut off and retried rather than using up
+        # the job's whole timeout.
+        timeout-minutes: 16
+        run: |
+          for attempt in 1 2 3; do
+            timeout 300 pnpm --filter web exec playwright install --with-deps chromium && exit 0
+            echo "Install attempt $attempt failed or stalled; retrying."
+          done
+          exit 1
       - run: pnpm e2e
         env:
           CI: "true"
@@ -143,7 +152,16 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter web exec playwright install --with-deps chromium
+      - name: Install Chromium and its Linux libraries
+        # apt mirrors sometimes stall; a stuck attempt is cut off and retried rather than using up
+        # the job's whole timeout.
+        timeout-minutes: 16
+        run: |
+          for attempt in 1 2 3; do
+            timeout 300 pnpm --filter web exec playwright install --with-deps chromium && exit 0
+            echo "Install attempt $attempt failed or stalled; retrying."
+          done
+          exit 1
       - run: pnpm smoke
         env:
           CI: "true"
