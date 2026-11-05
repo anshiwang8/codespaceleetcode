@@ -26,7 +26,7 @@ Command.parse_args(ctx, args)                         line 1396
   1397  if no args and no_args_is_help  -> raise NoArgsIsHelpError
   1400  parser = self.make_parser(ctx)
   1401  opts, args, param_order = parser.parse_args(args)
-  1403  for param in iter_params_for_processing(...):
+  1403  for each param, in processing order:
   1404      _, args = param.handle_parse_result(ctx, opts, args)
   1415  for name, value in ctx.params.items():  UNSET -> None
   1419  if args and not allow_extra_args and not resilient_parsing:   <-- answer

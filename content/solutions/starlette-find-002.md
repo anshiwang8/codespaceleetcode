@@ -10,10 +10,9 @@
 
 ## The key code
 
-`starlette/routing.py`, lines 719–733:
+`starlette/routing.py`, lines 720–733 (`route_path` is computed on the line just above):
 
 ```python
-        route_path = get_route_path(scope)
         if scope["type"] == "http" and self.redirect_slashes and route_path != "/":
             redirect_scope = dict(scope)
             if route_path.endswith("/"):

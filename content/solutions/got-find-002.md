@@ -70,7 +70,7 @@ retry: {                         1367
 | 500, 502, 503, 504 | Internal Server Error, Bad Gateway, Service Unavailable, Gateway Timeout |
 | 521, 522, 524 | Cloudflare-specific: web server down, connection timed out, a timeout occurred |
 
-They are all transient conditions where trying again later can reasonably succeed. 413 is a special case: `calculateRetryDelay` only retries it when the server sends `Retry-After`, and returns 0 otherwise (`calculate-retry-delay.ts:34-35`).
+They are all transient conditions where trying again later can reasonably succeed. 413 is a special case: got's built-in retry delay only allows a retry for it when the server sends `Retry-After`, and is 0 (no retry) otherwise.
 
 ## Why other selections are wrong
 

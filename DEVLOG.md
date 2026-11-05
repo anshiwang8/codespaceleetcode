@@ -23,11 +23,13 @@ What was done (technical):
   - Their notes caught two prompts that misdescribed the code or left a condition open. `rich-find-001` said "while its task is unfinished", but the code checks `not task.completed`, a numeric count. `unstorage-trace-001` didn't say `opts.base` is unset. Both were reworded and re-solved by `agent:blind-12`.
   - A solution rewriter noted that `fastapi-trace-001` didn't rule out `Depends` parameters, which allow longer recursive chains. The prompt now fixes a plain endpoint, and `agent:blind-13` re-solved it.
 - **Review.** An independent review found no Rule 1 leaks, and its three findings were fixed: the Unlocked badge's text was white on pale blue, diagrams could inject CSS through `themeCSS`, and old filtered list links lost their filters. New e2e specs cover the landing page, the tabs and unlock, diagram and table rendering, the Expand dialog, and the redirect.
+- **Solution audit.** An agent checked 22 solutions line by line against the code. Every answer line matched its key and every excerpt was verbatim. It found three wrong claims (`rtk-architecture-002`, `starlette-find-003`, `axios-find-002`) and one off-by-one line range, all fixed. It also found solutions that give away another puzzle's answer, so a script scanned all 136 solutions for another same-repo puzzle's key: its symbol, file or line, or at least half of its set or sequence. Of 33 flagged pairs, 18 were real leaks, plus one partial, and were rewritten to describe the code without naming the other answer. The other 14 were incidental and left alone.
 
 Still open:
 
 - "Log in" does nothing yet. GitHub sign-in and its UI are the next step, and the local dev login in the header stays until then.
 - Rich and unstorage don't fit the 17 topics well, so several of their puzzles are tagged only `code-structure` or `routing`.
+- `hono-architecture-001`'s solution has to say RegExpRouter is tried first, which points at `hono-find-003`'s answer file. Fixing that needs a different scenario for one of the two puzzles.
 - `h3-find-001`'s window also covers the whole `~findRoute` method, so selecting the whole method is graded correct. That's how windows work, but the window could be tightened.
 
 ## Browse puzzles by difficulty and topic

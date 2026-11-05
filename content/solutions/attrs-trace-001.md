@@ -81,7 +81,7 @@ sequenceDiagram
     DW->>DO: do_it(cls, True)
     DO->>A: attrs(maybe_cls=cls, ...)
     A->>AW: wrap(maybe_cls)
-    AW->>B: add_repr / add_eq / add_init ... (queue scripts, return)
+    AW->>B: add_* methods (queue scripts, return)
     AW->>B: build_class()
     B->>B: _eval_snippets()
     B->>L: compile all queued scripts once
@@ -89,7 +89,7 @@ sequenceDiagram
 
 ## Why plausible wrong answers are wrong
 
-- **Putting an `add_*` method on the stack** (for example `_ClassBuilder.add_init`). Those methods build source text with `_make_init_script` and friends and append it to `self._script_snippets`. They return before anything is compiled. The hint points at this trap.
+- **Putting an `add_*` method on the stack** (for example `_ClassBuilder.add_init`). Those methods only build source text and queue it. They return before anything is compiled. The hint points at this trap.
 - **Including `_ClassBuilder.__init__`.** It runs when `attrs.wrap` constructs the builder, and it returns before `build_class` is called. The prompt also skips constructors.
 - **Ending at `_compile_and_eval`.** That function compiles and evaluates, but it never touches `linecache`. It is called *by* the end function.
 - **Going through `_ClassBuilder._create_slots_class`.** `define` defaults to `slots=True`, so this does run, but only after `_eval_snippets` has returned. It reaches `_make_cached_property_getattr` (and so a second `_linecache_and_compile` call) only when the class has a `cached_property`, which the prompt rules out.

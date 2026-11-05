@@ -44,7 +44,7 @@ flowchart TD
 
 ## Why nearby code is wrong
 
-- **Lines 726-730 (`if props.is_frozen:`)** install `_frozen_setattrs`. That is the frozen case, where on_setattr hooks don't apply at all.
+- **Lines 726-730 (`if props.is_frozen:`)** replace the class's `__setattr__` and `__delattr__`. That is the frozen case, where on_setattr hooks don't apply at all.
 - **Lines 736-744 (the field loop)** gather the facts the decision needs, but they don't make it. The prompt asks for the `if` statement through the line that switches the hook off.
 - **`_ClassBuilder.add_setattr`** (line 1174) is the consumer of the decision, not the place where it is made.
 

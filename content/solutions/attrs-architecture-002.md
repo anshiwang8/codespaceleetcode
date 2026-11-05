@@ -4,7 +4,7 @@
 
 ## How a strong engineer gets there
 
-1. **Find the single pass.** `_ClassBuilder.build_class` (line 800) starts with `self._eval_snippets()`. That method (line 782) joins every entry of `self._script_snippets`, compiles the result once with `_linecache_and_compile`, and then runs each entry's hook to attach the compiled function to the class dictionary.
+1. **Find the single pass.** `_ClassBuilder._eval_snippets` (line 782) joins every entry of `self._script_snippets`, compiles the result in one call, and then runs each entry's hook to attach the compiled function to the class dictionary.
 2. **Find what fills the queue.** Search the file for `_script_snippets`. Apart from the slot declaration (line 670), the initialization (line 765) and the reads in `_eval_snippets` (lines 786-797), there are exactly five appends:
 
    | Line | Method | Generated source from |

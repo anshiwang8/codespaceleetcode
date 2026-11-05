@@ -4,7 +4,7 @@
 
 ## How to navigate there
 
-1. **Open the method the prompt names.** In `src/hono-base.ts`, search for `#dispatch(`. Both entry points lead here: `Hono.fetch` calls `this.#dispatch(request, rest[1], rest[0], request.method)`, and `Hono.request` calls `fetch`.
+1. **Open the method the prompt names.** In `src/hono-base.ts`, search for `#dispatch(`.
 
 2. **Find the slow path first.** Search the method for `compose(`. There is exactly one call in `#dispatch`, at line 469. Anything that "skips compose" must be a branch that returns before line 469.
 

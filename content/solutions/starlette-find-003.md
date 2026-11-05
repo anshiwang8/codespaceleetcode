@@ -34,12 +34,14 @@ Either way you reach the handler, lines 65–69:
 ```mermaid
 sequenceDiagram
   participant EM as ExceptionMiddleware.__call__
-  participant W as wrap_app_handling_exceptions
+  participant WO as wrap_app_handling_exceptions (outer)
   participant RR as request_response app
-  participant EP as endpoint
+  participant W as wrap_app_handling_exceptions (inner)
+  participant EP as endpoint function
   EM->>EM: put handler maps in scope["starlette.exception_handlers"]
-  EM->>RR: through the router and route
-  RR->>W: wrap the endpoint call
+  EM->>WO: wrap self.app (line 63)
+  WO->>RR: through the router and route
+  RR->>W: wrap the endpoint call (routing.py line 65)
   W->>EP: await app(...)
   EP-->>W: raise HTTPException(403)
   W->>W: no status handler for 403, look up HTTPException by MRO
@@ -48,7 +50,7 @@ sequenceDiagram
 ```
 
 1. `ExceptionMiddleware.__call__` (line 47) stores its two handler maps in `scope["starlette.exception_handlers"]`.
-2. The request reaches the endpoint through `request_response` in `starlette/routing.py`, which runs the endpoint inside `wrap_app_handling_exceptions(app, request)` (line 65).
+2. The middleware then runs its own app inside `wrap_app_handling_exceptions(self.app, conn)` (line 63). For a function or method endpoint, `Route` also wraps it with `request_response` in `starlette/routing.py`, which runs the endpoint inside a second, inner `wrap_app_handling_exceptions(app, request)` (line 65). The inner wrapper catches an exception from a function endpoint. For an `HTTPEndpoint` class, which isn't wrapped by `request_response`, the middleware's outer wrapper catches it. Both read the same handler maps.
 3. In `starlette/_exception_handler.py`, `wrap_app_handling_exceptions` reads those maps from the scope. With nothing registered for status 403, it calls `_lookup_exception_handler`, which walks `type(exc).__mro__` and finds the `HTTPException` entry, `self.http_exception`.
 4. `http_exception` returns `PlainTextResponse(exc.detail, status_code=403, ...)`, and the wrapper sends it.
 

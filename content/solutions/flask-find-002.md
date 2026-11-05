@@ -71,7 +71,7 @@ So the two methods split the work: `handle_user_exception` tries user-registered
 - **Line 909** (`handler = self._find_error_handler(...)`). The lookup itself. It is allowed inside the selection, but on its own it doesn't cover the anchor.
 - **Line 914** (`return self.ensure_sync(handler)(e)`). The opposite case: a handler *was* found and is called.
 - **Lines 901-904** (the `BadRequestKeyError` block). It sets `e.show_exception = True` for better debug output and falls through. No re-raise.
-- **`handle_http_exception`**, lines 876-877 (`if handler is None: return e`). Structurally almost identical, but it is a different method and it *returns* the HTTP exception (which werkzeug can render as a response) instead of re-raising.
+- **Lines 876-877** (`if handler is None: return e`), in another error-handling method just above. Structurally almost identical, but it is a different method and it *returns* the HTTP exception (which werkzeug can render as a response) instead of re-raising.
 - **`handle_exception`**, lines 958-961 (`raise` / `raise e`). Different method, different condition (`propagate`).
 - **`src/flask/sansio/app.py` lines 911-912.** Same line numbers, different file: they are `if self.config["TRAP_HTTP_EXCEPTIONS"]: return True` inside `trap_http_exception`. The answer must be in `src/flask/app.py`.
 
@@ -79,4 +79,4 @@ So the two methods split the work: `handle_user_exception` tries user-registered
 
 - A bare `raise` only makes sense while an exception is being handled. When you see one in a helper, find the `except` block that calls the helper to understand which exception it re-raises.
 - Error handling in web frameworks is usually layered: a "try user handlers" layer and a "last resort 500" layer. Find both before reasoning about what a user sees.
-- Two methods with the same shape (`handle_http_exception` and `handle_user_exception`) can differ in one crucial word, `return e` versus `raise`. Read the exact statement, not the pattern.
+- Two methods with the same shape can differ in one crucial word, `return e` versus `raise`. Read the exact statement, not the pattern.

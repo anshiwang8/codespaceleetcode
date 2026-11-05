@@ -70,7 +70,7 @@ sequenceDiagram
     PR-->>P: HTTPError 404
 ```
 
-1. `parent.fetch` → `"~request"` → `H3Core.handler`. `"~findRoute"` asks the parent's router for `GET /api/late` and gets `undefined`. The HEAD fallback (line 255) doesn't apply to a GET.
+1. `parent.fetch` → `"~request"` → `H3Core.handler`. `"~findRoute"` asks the parent's router for `GET /api/late` and gets `undefined`. The HEAD fallback in `"~findRoute"` doesn't apply to a GET.
 2. `createDispatcher` sees one parent middleware and builds `composed(event, routeHandler(route))`. With no route, `routeHandler` returns `NoHandler` (line 137), which is `() => kNotFound` (line 39).
 3. The wrapper checks the prefix (`/api/late` starts with `/api` and the next character is `/`), and `hasEmptySegmentAfterBase` is false. It sets the pathname to `/late` and runs the child's chain.
 4. The logger takes one parameter, so `normalizeMiddleware` wrapped it when `child.use` ran (`src/middleware.ts:22-28`). It logs `/late` (the stripped path), returns `undefined`, and the wrapper calls `next()`. That reaches the terminal function the mount wrapper passed in, which restores the path and calls the parent's `next()`, which runs `NoHandler`. The result is `kNotFound`.

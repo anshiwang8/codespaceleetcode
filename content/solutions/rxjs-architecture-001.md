@@ -10,13 +10,14 @@
 1. **Read the imports of `packages/rxjs/src/single.ts`.** The file is short, and its imports already list the candidates:
 
    ```ts
-   // packages/rxjs/src/single.ts:1-5
+   // packages/rxjs/src/single.ts:1-4
    import { create } from './create.js';
    import { EmptyError } from './empty-error.js';
    import { NotFoundError } from './not-found-error.js';
    import { SequenceError } from './sequence-error.js';
-   import { subscribeToSource } from './util/observable-helpers.js';
    ```
+
+   Line 5 imports one more helper, from `./util/observable-helpers.js`.
 
    Three imports have `Error` in their names. An import alone does not prove the class is used, so check each one.
 
@@ -101,7 +102,7 @@ stateDiagram-v2
 | `packages/rxjs/src/timeout-error.ts` | Defines `TimeoutError`. Not imported by `single.ts`. |
 | `packages/rxjs/src/argument-out-of-range-error.ts` | Defines `ArgumentOutOfRangeError`. Not imported by `single.ts`. |
 | `packages/rxjs/src/first.ts`, `last.ts`, `throw-if-empty.ts` | Other operators that also construct `EmptyError`. They use the class; they do not define it. |
-| `packages/rxjs/src/util/observable-helpers.ts` | Imported for `subscribeToSource`. It defines no error class. |
+| `packages/rxjs/src/util/observable-helpers.ts` | Imported for a helper. It defines no error class. |
 | `packages/rxjs/src/create.ts` | Imported for the `create` symbol used to build the output observable. No error class. |
 | `packages/rxjs/src/index.ts` | Re-exports the error classes for the public API. It does not define them. |
 | `packages/rxjs/src/catch-error.ts`, `on-error-resume-next.ts` | Have "error" in the file name but are operators, not error classes. |
@@ -109,8 +110,8 @@ stateDiagram-v2
 
 ## Details worth noticing
 
-- **The upstream is cancelled before the error is sent.** Every path calls `sourceController.abort()` first. Its signal is passed to `subscribeToSource` as the extra signal (line 71), so aborting it unsubscribes from the source. For `SequenceError` this matters: `single` stops listening as soon as it knows the answer is wrong.
-- **A throwing predicate is not one of the three.** If `predicate` throws, `subscribeToSource`'s `guard` wrapper catches it and calls `subscriber.error(error)` with the thrown value. `single` does not construct that error.
+- **The upstream is cancelled before the error is sent.** Every path calls `sourceController.abort()` first. Its signal is passed to the imported helper as an extra argument (line 71), so aborting it unsubscribes from the source. For `SequenceError` this matters: `single` stops listening as soon as it knows the answer is wrong.
+- **A throwing predicate is not one of the three.** If `predicate` throws, the imported helper catches it and calls `subscriber.error(error)` with the thrown value. `single` does not construct that error.
 - **One file per error class.** Each error has its own module. Operators import just the ones they raise, and `index.ts` re-exports all of them for the public API.
 
 ## Takeaways

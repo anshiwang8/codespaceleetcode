@@ -46,8 +46,8 @@ A search for `class Depends` across `fastapi/` gives exactly one hit, this one, 
 
 | Public function (`param_functions.py`) | Returns (line) | Class (`params.py`) |
 |---|---|---|
-| `Path()` | `params.Path(` (340) | `class Path(Param)` (142) |
-| `Query()` | `params.Query(` (699) | `class Query(Param)` (232) |
+| `Path()` | `params.Path(` (340) | `class Path` (142) |
+| `Query()` | `params.Query(` (699) | `class Query` (232) |
 | `Body()` | `params.Body(` (1694) | `class Body(FieldInfo)` (498) |
 | `Depends()` | `params.Depends(` (2477) | `@dataclass class Depends` (791) |
 | `Security()` | `params.Security(` (2568) | `@dataclass class Security(Depends)` (798) |

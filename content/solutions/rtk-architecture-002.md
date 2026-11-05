@@ -51,7 +51,7 @@ unshift action  [ actionCreator, immutable, thunk, serializable ]
 In Redux, the first middleware in the array is the outermost one. It sees every dispatched value first. With this order:
 
 - The **action-creator check** (`actionCreatorInvariantMiddleware.ts:28-33`) calls `console.warn` when the dispatched value is an RTK action creator, i.e. `dispatch(increment)` instead of `dispatch(increment())`. Sitting before thunk matters: an action creator is a function, and thunk would otherwise call it as if it were a thunk.
-- The **immutable-state check** wraps everything else, including thunks, so it can detect mutations that happen anywhere during a dispatch.
+- The **immutable-state check** wraps everything after it, including thunk and the serializable check, so it can detect mutations that happen anywhere during a dispatch.
 - The **serializable check** comes after thunk, so it only sees real action objects, not thunk functions.
 
 ## Why the other options are wrong

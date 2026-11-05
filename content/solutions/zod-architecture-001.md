@@ -51,7 +51,7 @@ This part is not asked about, but it shows the same rule at work:
 ## Step 4: decide `additionalProperties`
 
 ```ts
-// packages/zod/src/v4/core/to-json-schema.ts:517-527
+// packages/zod/src/v4/core/to-json-schema.ts, the end of foldObjects
 if (objects.every((object) => object.additionalProperties === false)) {
   folded.additionalProperties = false;
 } else {
@@ -95,7 +95,7 @@ The tempting wrong answer is d: "A is closed, so the merged object must be close
 
 The doc comment on `foldIntersection` (lines 532-537) explains the reason. In JSON Schema, `additionalProperties` inside one `allOf` member only sees that member's own `properties`, so two closed objects in an `allOf` would reject each other's keys. Zod's parser does not work that way. It pools the keys of both sides and reports a key as unrecognized only when *every* side rejects it (the comment cites `handleIntersectionResults`). To make the emitted JSON Schema match the parser, Zod merges the members into one object, and the merged rule for unknown keys is:
 
-- closed only if every member is closed (line 516 comment: "A key no member declares is rejected only when every member rejects it"),
+- closed only if every member is closed (the comment just above the check: "A key no member declares is rejected only when every member rejects it"),
 - otherwise, an unknown key must satisfy whatever the catchall members demand.
 
 For this input, a key like `c` is not declared by either member. A alone would reject it, but B accepts any string, so the merged object accepts `c` when it is a string.

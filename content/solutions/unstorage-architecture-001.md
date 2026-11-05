@@ -10,7 +10,7 @@ The key `data:a` still sits in the root memory driver, but `getKeys` hides it, b
 
 ```text
 setItem("data:a")   mountpoints [""]           -> root driver, relative key "data:a"
-mount("data", m2)   mountpoints ["data:", ""]  (sorted longest first, line 545)
+mount("data", m2)   mountpoints ["data:", ""]  (kept longest first by mount)
 setItem("data:b")   mountpoints ["data:", ""]  -> m2, relative key "b"
 ```
 
@@ -41,7 +41,7 @@ setItem("data:b")   mountpoints ["data:", ""]  -> m2, relative key "b"
 | 1 | `data:` (m2) | `b` | `data:b` | `[]` | `data:b` |
 | 2 | `""` (root) | `data:a` | `data:a` | `["data:"]` | none (`data:a` starts with `data:`) |
 
-The final filter (`filterKeyByBase` with an empty base) only drops keys ending in `$`, so the result is `["data:b"]`.
+The final filter only drops metadata keys, so the result is `["data:b"]`.
 
 ```mermaid
 flowchart TD
@@ -65,4 +65,4 @@ The data isn't lost. Unmount `data` and both `getKeys()` and `getItem("data:a")`
 ## Takeaways
 
 - In a storage with mount points (like a filesystem), a mount *shadows* whatever its parent already holds under that prefix. Expect listing and reading to agree.
-- When a loop's behaviour depends on order, check where the order is set. Here it's set in `mount`, not in `getKeys`.
+- When a loop's behaviour depends on order, check where the order is set. Here it's set when mounts are added, not in `getKeys`.

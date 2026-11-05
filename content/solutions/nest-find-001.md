@@ -34,7 +34,7 @@
 
 ## Why `undefined` means "circular"
 
-In JavaScript modules, if `a.module.ts` imports `b.module.ts` and `b.module.ts` imports `a.module.ts`, one of them is evaluated first. While it runs, the other module's exports are not initialized yet. A decorator such as `@Module({ imports: [AModule] })` is evaluated at class-definition time, so it can capture the binding before it has a value, which shows up as `undefined` in the metadata. Nest cannot tell this apart from a typo, but a circular file import is the usual cause, so it reports a `CircularDependencyException` and names the module (`context` is `metatype.name`, passed from `scanModulesForDependencies`).
+In JavaScript modules, if `a.module.ts` imports `b.module.ts` and `b.module.ts` imports `a.module.ts`, one of them is evaluated first. While it runs, the other module's exports are not initialized yet. A decorator such as `@Module({ imports: [AModule] })` is evaluated at class-definition time, so it can capture the binding before it has a value, which shows up as `undefined` in the metadata. Nest cannot tell this apart from a typo, but a circular file import is the usual cause, so it reports a `CircularDependencyException` and names the module (`context` is `metatype.name`, passed down from the per-module pass).
 
 The fix on the user side is `forwardRef(() => AModule)`. That is the second branch in `insertImport`: a forward reference is unwrapped by calling `related.forwardRef()` at scan time, when both modules are fully loaded.
 
@@ -45,11 +45,10 @@ DependenciesScanner.scan
 ├─ registerCoreModule
 ├─ scanForModules             walks imports recursively to discover modules
 │    throws UndefinedModuleException / InvalidModuleException on bad entries
-└─ scanModulesForDependencies for each discovered module:
+└─ a second pass, over each discovered module:
      ├─ reflectImports        → insertImport (throws CircularDependencyException)
-     ├─ reflectProviders      → insertProvider   (undefined: UndefinedModuleEntryException)
-     ├─ reflectControllers    → insertController (undefined: UndefinedModuleEntryException)
-     └─ reflectExports        → insertExportedProviderOrModule (undefined: UndefinedModuleEntryException)
+     └─ one reflect method each for providers, controllers and exports
+          (undefined: UndefinedModuleEntryException, thrown in the reflect loop)
 ```
 
 Notice the asymmetry: for `providers`, `controllers` and `exports`, the *reflect* method itself checks for `undefined` inside its loop. For `imports`, the check lives in the *insert* method.

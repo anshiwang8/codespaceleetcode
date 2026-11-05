@@ -21,7 +21,7 @@ sequenceDiagram
     R->>F: this.fetch(request, Env, executionCtx)
     F->>D: this.dispatch(request, rest[1], rest[0], request.method)
     Note over D: getPath, router.match, new Context
-    Note over D: matchResult[0].length is 2 or more
+    Note over D: two or more handlers matched
     D->>C: compose(matchResult[0], errorHandler, notFoundHandler)
     C-->>D: composed function
 ```
@@ -56,15 +56,9 @@ sequenceDiagram
 
    Note the argument swap: `fetch(request, env, executionCtx)` becomes `#dispatch(request, executionCtx, env, method)`.
 
-3. **`Hono.#dispatch`** (line 425) does the real work. For a GET request it calls `this.getPath`, then `this.router.match`, then `new Context(...)`. Then it tests the handler count:
+3. **`Hono.#dispatch`** (line 425) does the real work. For a GET request it calls `this.getPath`, then `this.router.match`, then `new Context(...)`. Then it checks how many handlers matched, and has a fast path that calls a lone handler directly without `compose`.
 
-   ```ts
-   // src/hono-base.ts:448-449
-   // Do not `compose` if it has only one handler
-   if (matchResult[0].length === 1) {
-   ```
-
-   The prompt fixes the runtime path: the match returns two or more handlers, so this branch is skipped and execution reaches line 469:
+   The prompt fixes the runtime path: the match returns two or more handlers, so the fast path is skipped and execution reaches line 469:
 
    ```ts
    // src/hono-base.ts:469
@@ -78,7 +72,7 @@ sequenceDiagram
 | Detail in the prompt | What it rules out |
 |---|---|
 | "called with a URL string" | The `input instanceof Request` branch. Both branches call `this.fetch`, so the answer is the same, but fixing it removes doubt. |
-| "two or more handlers" | The single-handler fast path at line 449, which returns before `compose` is ever called. With one handler, the chain would never reach the end condition. |
+| "two or more handlers" | The single-handler fast path in `#dispatch`, which returns before `compose` is ever called. With one handler, the chain would never reach the end condition. |
 | "each entry must be called from the body of the one before it" | Listing `getPath` or `Router.match` as steps. They are called from `#dispatch`, but `compose` is not called from them. |
 | "Skip constructors, built-ins and third-party or platform calls" | `new Request(...)`, `new Context(...)`, `RegExp.test`, and `toString`. |
 

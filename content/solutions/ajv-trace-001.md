@@ -29,7 +29,7 @@ sequenceDiagram
 **`Ajv.validate` → `Ajv.compile`.** `validate` (`lib/core.ts:355`, the implementation after a stack of overloads) branches on the type of its first argument:
 
 ```ts
-// lib/core.ts:360-365
+// lib/core.ts:361-366
 if (typeof schemaKeyRef == "string") {
   v = this.getSchema<T>(schemaKeyRef)
   if (!v) throw new Error(`no schema with key or ref "${schemaKeyRef}"`)

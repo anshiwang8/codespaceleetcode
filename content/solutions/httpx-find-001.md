@@ -72,7 +72,7 @@ That is a real difference from requests, whose `resolve_redirects` drops the bod
 - **`BaseClient._redirect_url`** (line 517). It turns the `Location` header into a URL: handling a missing host, relative URLs and fragments. It doesn't look at the method.
 - **`BaseClient._redirect_headers`** (line 546). It *receives* the already-chosen method as a parameter and adjusts headers to match. It never decides the method.
 - **`BaseClient._redirect_stream`** (line 573). Also receives the chosen method, and decides whether to keep the body.
-- **`Client._send_handling_redirects`** (line 964). The loop that follows redirects and calls `_build_redirect_request`. It isn't a `BaseClient` method, and it doesn't choose methods.
+- **The redirect-following loops on `Client` and `AsyncClient`.** They decide whether to follow a redirect and send the next request. They aren't `BaseClient` methods, and they don't choose methods.
 - **`Response.has_redirect_location`** (in `httpx/_models.py`). It decides *whether* to follow a redirect, not which method to use.
 
 ## Takeaways

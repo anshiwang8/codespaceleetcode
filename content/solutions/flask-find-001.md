@@ -67,7 +67,7 @@ Both loops walk `names = (None, *reversed(req.blueprints))`: the app's own hooks
 ## Why the other candidates are wrong
 
 - **`Flask.full_dispatch_request`** (line 1023). It calls `preprocess_request` and acts on its result, but it contains neither loop. It also sends the `request_started` signal, which is not a registered callback in the prompt's sense.
-- **`Flask.dispatch_request`** (line 993). It runs *after* preprocessing, raises any routing exception, handles automatic `OPTIONS`, and calls the view function. No hooks.
+- **`Flask.dispatch_request`** (line 993). It runs *after* preprocessing, raises any routing exception and calls the view function. No hooks.
 - **`Flask.process_response`** (line 1441). The mirror image on the response side: it runs `after_this_request` callbacks and `after_request_funcs`, then saves the session.
 - **`Flask.wsgi_app`** (line 1627). The outer entry point. It pushes the context and calls `full_dispatch_request`.
 - **`Scaffold.before_request` and `Scaffold.url_value_preprocessor`** (`src/flask/sansio/scaffold.py`, lines 468 and 567). These are the decorators that *register* callbacks into the dicts. They don't run them, and they're not in `src/flask/app.py`.

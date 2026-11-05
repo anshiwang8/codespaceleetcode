@@ -30,7 +30,7 @@
 3. **Open the helper and match each part of the prompt.**
 
    ```ts
-   // packages/rxjs/src/util/observable-helpers.ts:13-45
+   // packages/rxjs/src/util/observable-helpers.ts
    export function subscribeToSource<T>(
      source: Observable<T>,
      subscriber: Subscriber<unknown>,
@@ -68,9 +68,9 @@
 
    | Prompt says | Code |
    |---|---|
-   | "subscribe to their upstream source" | `source.subscribe(...)` on line 32 |
+   | "subscribe to their upstream source" | the `source.subscribe(...)` call |
    | "override the `next`, `error` or `complete` handlers" | the `overrides?: Partial<Observer<T>>` parameter, used through `guard` |
-   | "ties the upstream subscription's `AbortSignal` to the derived subscriber" | `{ signal: ... subscriber.signal ... }` on line 38 |
+   | "ties the upstream subscription's `AbortSignal` to the derived subscriber" | the `signal` option passed to `source.subscribe`, built from `subscriber.signal` |
 
 ## What `guard` adds
 

@@ -98,7 +98,7 @@ sequenceDiagram
 
 ## Background: why resilient parsing?
 
-`_resolve_context` reuses the normal parsing code (`make_context`, then `parse_args`) to find out which command and parameters the user has typed so far. But a partial command line is usually invalid: required options are missing, a value is half-typed. Setting `resilient_parsing = True` tells the context to skip errors, prompts and callbacks. You can see the flag checked throughout `core.py`, for example in the extra-arguments check in `Command.parse_args` (line 1419) and in `Group.resolve_command`. That way completion never crashes or prompts while the user presses Tab.
+`_resolve_context` reuses the normal parsing code (`make_context`, then `parse_args`) to find out which command and parameters the user has typed so far. But a partial command line is usually invalid: required options are missing, a value is half-typed. Setting `resilient_parsing = True` tells the context to skip errors, prompts and callbacks. You can see the flag checked throughout `core.py`, for example in the extra-arguments check in `Command.parse_args` and in `Group.resolve_command`. That way completion never crashes or prompts while the user presses Tab.
 
 ## Takeaways
 

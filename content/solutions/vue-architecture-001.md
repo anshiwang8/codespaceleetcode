@@ -92,7 +92,7 @@ Structural directives like `v-if` and `v-for` change the shape of the tree, so t
 - **`transformVBindShorthand.ts`** has "VBind" in its name, but it exports a `NodeTransform` that is the first entry of the array.
 - **`noopDirectiveTransform.ts`** is a `DirectiveTransform`, but the base preset does not register it. `compiler-dom` uses it for `cloak`.
 - **`transformElement.ts`** is the consumer of the record, not one of its entries.
-- **`packages/compiler-dom/src/transforms/vOn.ts` and `vModel.ts`** define functions with the same names, but they are in a different package. They are registered in `DOMDirectiveTransforms` in `packages/compiler-dom/src/index.ts`.
+- **`packages/compiler-dom/src/transforms/vOn.ts` and `vModel.ts`** define functions with the same names, but they are in a different package. They are registered by compiler-dom itself, not by `getBaseTransformPreset`.
 
 ## Takeaways
 

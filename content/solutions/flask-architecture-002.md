@@ -60,7 +60,7 @@ The app registers `@app.after_request` functions `A` then `B`. Blueprint `bp` re
 X -> Y -> C -> B -> A -> save_session
 ```
 
-This is the reverse of how `preprocess_request` walks `before_request_funcs` (`names = (None, *reversed(req.blueprints))` on line 1424: app first, then outer to inner). Request hooks go outside-in, response hooks go inside-out, like nested middleware.
+This is the reverse of how the request-side hooks are walked (`names = (None, *reversed(req.blueprints))`: app first, then outer to inner). Request hooks go outside-in, response hooks go inside-out, like nested middleware.
 
 ## Why the session is saved last
 

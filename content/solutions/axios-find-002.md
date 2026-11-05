@@ -68,7 +68,7 @@ The block after the loop (lines 224-234) lets you opt out of this: when the merg
 
 ## Why the other candidates are wrong
 
-- **`getMergedValue`:** the shared helper that does the copying for every strategy. It isn't in the table, and it only ever sees `target` and `source`.
+- **`getMergedValue`:** the shared helper that does the copying for every strategy. It isn't in the table. It never receives `config1` or `config2`, so it can't tell an omitted key from an explicit `undefined`.
 - **`getMergedTransitionalOption`:** it reads one transitional flag for the `validateStatus` fix-up after the loop. It isn't a strategy.
 - **`valueFromConfig2`:** it also "drops the default", but in *both* cases. For `url`, `method` and `data`, an instance default is never used.
 - **`mergeConfig`:** the function that drives the loop, not a strategy.
