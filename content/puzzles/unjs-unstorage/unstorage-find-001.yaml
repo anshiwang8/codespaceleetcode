@@ -1,0 +1,21 @@
+id: unstorage-find-001
+snapshot: unjs-unstorage@5781aae
+type: find
+difficulty: easy
+title: Hidden metadata keys
+prompt: |
+  `setMeta(key, value)` stores metadata as a separate item whose key is the
+  item key with a `$` appended. `storage.getKeys()` never lists those `$`
+  keys. In src/ (ignore src/drivers/), select the function that removes them
+  from the list `getKeys` returns. Select a function.
+answer:
+  kind: symbol
+  id: src/utils.ts#filterKeyByBase
+  accept: []
+  accept_reasons: []
+hints:
+  - Open getKeys in src/storage.ts and look at what happens to allKeys just before it is returned.
+solution: solutions/unstorage-find-001.md
+tags: [code-structure]
+authors: [agent-author-unstorage-axios]
+verified_by: [agent:blind-11]

@@ -1,0 +1,42 @@
+id: axios-architecture-001
+snapshot: axios-axios@fb88a1b
+type: architecture
+difficulty: hard
+title: Interceptor running order
+prompt: |
+  Using the default axios instance (default `transitional` settings), this
+  code registers three request interceptors and two response interceptors,
+  then makes a request:
+
+  ```js
+  axios.interceptors.request.use(A);
+  axios.interceptors.request.use(B, null, { runWhen: () => false });
+  axios.interceptors.request.use(C);
+  axios.interceptors.response.use(D);
+  axios.interceptors.response.use(E);
+  await axios.get('https://example.com/');
+  ```
+
+  Following `Axios._request` in lib/core/Axios.js and the defaults it reads,
+  in what order do the interceptors and `dispatchRequest` run? Select one
+  option.
+answer:
+  kind: choice
+  option: d
+choices:
+  - id: a
+    label: A, C, dispatchRequest, D, E
+  - id: b
+    label: C, B, A, dispatchRequest, D, E
+  - id: c
+    label: A, C, dispatchRequest, E, D
+  - id: d
+    label: C, A, dispatchRequest, D, E
+  - id: e
+    label: C, A, dispatchRequest, E, D
+hints:
+  - Check the default value of every transitional flag that _request reads while it builds the request chain.
+solution: solutions/axios-architecture-001.md
+tags: [middleware, request-lifecycle]
+authors: [agent-author-unstorage-axios]
+verified_by: [agent:blind-11]

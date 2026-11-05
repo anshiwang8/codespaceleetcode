@@ -1,0 +1,29 @@
+id: jinja-trace-001
+snapshot: pallets-jinja@5ef7011
+type: trace
+difficulty: hard
+title: From get_template to the parser
+prompt: |
+  Start at Environment.get_template in src/jinja2/environment.py, called with a
+  template name that is a string and no parent. The environment's loader is a
+  FileSystemLoader, there is no bytecode cache, and the template is not already
+  in the environment's template cache. Select the chain of functions and methods,
+  in call order, where each one directly calls the next, ending at the Environment
+  method that constructs a Parser for the template source. Include that method.
+  Direct calls only. Skip class constructors and standard-library calls.
+answer:
+  kind: sequence
+  ids:
+    - src/jinja2/environment.py#Environment.get_template
+    - src/jinja2/environment.py#Environment._load_template
+    - src/jinja2/loaders.py#BaseLoader.load
+    - src/jinja2/environment.py#Environment.compile
+    - src/jinja2/environment.py#Environment._parse
+  accept_sequences: []
+  accept_reasons: []
+hints:
+  - FileSystemLoader only overrides how the source is found, not how a template is loaded.
+solution: solutions/jinja-trace-001.md
+tags: [compilers]
+authors: [agent-author-jinja-starlette]
+verified_by: [agent:blind-9]

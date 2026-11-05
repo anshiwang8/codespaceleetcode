@@ -73,3 +73,33 @@
   sha: 45cb2252c737906f37544f5ba6bee0295fb81468
   language: python
   license: MIT
+- slug: pallets-jinja
+  url: https://github.com/pallets/jinja
+  sha: 5ef70112a1ff19c05324ff889dd30405b1002044
+  language: python
+  license: BSD-3-Clause
+- slug: encode-starlette
+  url: https://github.com/encode/starlette
+  sha: 0f08970e5cce0aec4fc1cea7447c262d741795eb
+  language: python
+  license: BSD-3-Clause
+- slug: textualize-rich
+  url: https://github.com/Textualize/rich
+  sha: 9d8f9a372cc5916fd4781fec207ced7ddac2f08f
+  language: python
+  license: MIT
+- slug: python-attrs-attrs
+  url: https://github.com/python-attrs/attrs
+  sha: 9d9f94a043de7fc4012459853a4ed597a5577855
+  language: python
+  license: MIT
+- slug: unjs-unstorage
+  url: https://github.com/unjs/unstorage
+  sha: 5781aae96f7f34820a99e447df29ceead97e9210
+  language: typescript
+  license: MIT
+- slug: axios-axios
+  url: https://github.com/axios/axios
+  sha: fb88a1b133c1a2d774713070b8ca25f7bcd382ac
+  language: javascript
+  license: MIT

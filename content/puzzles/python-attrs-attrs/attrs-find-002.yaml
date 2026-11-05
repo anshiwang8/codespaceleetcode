@@ -1,0 +1,23 @@
+id: attrs-find-002
+snapshot: python-attrs-attrs@9d9f94a
+type: find
+difficulty: medium
+title: Skipping a hook nobody needs
+prompt: |
+  A mutable class decorated with `define` gets a class-level on_setattr hook that converts
+  and validates on assignment. In `_ClassBuilder.__init__` in src/attr/_make.py, the builder
+  can decide that this hook is pointless because no field has anything for it to do, and
+  switch it off. Select the lines of the single `if` statement that makes that decision,
+  from the `if` line (including its multi-line condition) through the line that switches the
+  hook off.
+answer:
+  kind: location
+  path: src/attr/_make.py
+  anchor: [745, 756]
+  window: [731, 758]
+hints:
+  - Just before this statement, a loop over the fields records whether any of them has a validator or a converter.
+solution: solutions/attrs-find-002.md
+tags: [validation, configuration]
+authors: [agent-author-rich-rhf]
+verified_by: [agent:blind-10]

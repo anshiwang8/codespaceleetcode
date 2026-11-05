@@ -1,0 +1,21 @@
+id: starlette-find-001
+snapshot: encode-starlette@0f08970
+type: find
+difficulty: easy
+title: The path a route is matched against
+prompt: |
+  Route.matches in starlette/routing.py does not run its path regex against
+  `scope["path"]` directly. It first computes a path that has the ASGI
+  `root_path` prefix removed, so that an app mounted under a prefix still matches
+  its own routes. Select the function that computes that path.
+answer:
+  kind: symbol
+  id: starlette/_utils.py#get_route_path
+  accept: []
+  accept_reasons: []
+hints:
+  - Look at the first line of the http branch of Route.matches.
+solution: solutions/starlette-find-001.md
+tags: [routing]
+authors: [agent-author-jinja-starlette]
+verified_by: [agent:blind-10]

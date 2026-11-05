@@ -1,0 +1,30 @@
+id: starlette-trace-001
+snapshot: encode-starlette@0f08970
+type: trace
+difficulty: medium
+title: Serving a static file conditionally
+prompt: |
+  Start at StaticFiles.__call__ in starlette/staticfiles.py. It receives an HTTP
+  GET request for a path that is an existing regular file in the configured
+  directory. html mode is off, and the request carries an If-None-Match header.
+  Select the chain of methods, in call order, where each one directly calls the
+  next, ending at the method that compares the request's conditional headers
+  with the headers of the file response and returns whether a 304 Not Modified
+  response can be sent instead. Include that method.
+  Direct calls only. Skip class constructors, property reads, and
+  standard-library and third-party calls (including anyio).
+answer:
+  kind: sequence
+  ids:
+    - starlette/staticfiles.py#StaticFiles.__call__
+    - starlette/staticfiles.py#StaticFiles.get_response
+    - starlette/staticfiles.py#StaticFiles.file_response
+    - starlette/staticfiles.py#StaticFiles.is_not_modified
+  accept_sequences: []
+  accept_reasons: []
+hints:
+  - The 304 decision needs the response's own ETag, so it happens after the file response has been created.
+solution: solutions/starlette-trace-001.md
+tags: [request-lifecycle]
+authors: [agent-author-jinja-starlette]
+verified_by: [agent:blind-10]

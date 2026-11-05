@@ -1,0 +1,21 @@
+id: rich-find-002
+snapshot: textualize-rich@9d8f9a3
+type: find
+difficulty: medium
+title: Tags that are never closed
+prompt: |
+  In the function `render` in rich/markup.py, markup such as `"[bold]Hello"` opens a tag
+  that no closing tag ever matches, yet the resulting Text is still bold. Select the lines
+  of the loop that turns every tag still open after the whole string has been parsed into
+  a span. Select from the loop's header line through the last line of its body.
+answer:
+  kind: location
+  path: rich/markup.py
+  anchor: [224, 228]
+  window: [222, 231]
+hints:
+  - Opening tags are pushed onto a stack together with the text offset where they started.
+solution: solutions/rich-find-002.md
+tags: [compilers]
+authors: [agent-author-rich-rhf]
+verified_by: [agent:blind-9]

@@ -1,0 +1,30 @@
+id: jinja-architecture-002
+snapshot: pallets-jinja@5ef7011
+type: architecture
+difficulty: hard
+title: How the sandbox sees attribute access
+prompt: |
+  A template containing `{{ user.name }}`, where `user` is a variable passed to
+  render, is compiled and rendered by a SandboxedEnvironment from
+  src/jinja2/sandbox.py. Before the value of `name` is returned, the sandbox runs
+  its is_safe_attribute check on it. Which statement correctly describes how that
+  check gets into the path of the attribute access? Read the code generator in
+  src/jinja2/compiler.py and the environment classes. Select one option.
+answer:
+  kind: choice
+  option: d
+choices:
+  - id: a
+    label: The parser checks each attribute name against is_safe_attribute while it builds the Getattr node, so unsafe names never reach the compiled code.
+  - id: b
+    label: Only when the environment's sandboxed flag is true, the code generator writes an inline call to is_safe_attribute before each attribute access.
+  - id: c
+    label: Before rendering, the sandbox wraps every value in the render context in a proxy object whose __getattr__ runs the check.
+  - id: d
+    label: The code generator writes every attribute access as a call to environment.getattr(...), and SandboxedEnvironment overrides getattr with a version that runs the check.
+hints:
+  - Look at what the code generator writes for a Getattr node, and whether that depends on the environment class.
+solution: solutions/jinja-architecture-002.md
+tags: [auth-and-security, compilers, extension-points]
+authors: [agent-author-jinja-starlette]
+verified_by: [agent:blind-9]

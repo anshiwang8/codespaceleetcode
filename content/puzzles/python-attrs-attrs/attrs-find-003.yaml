@@ -1,0 +1,22 @@
+id: attrs-find-003
+snapshot: python-attrs-attrs@9d9f94a
+type: find
+difficulty: medium
+title: Where asdict really recurses
+prompt: |
+  `attrs.asdict(inst)`, imported from the `attrs` package, turns an attrs instance into a
+  dict and recurses into fields whose values are themselves attrs instances. Select the
+  file that defines the function containing that recursive walk over the instance's fields
+  (not a file that only re-exports a name or forwards the call with different defaults).
+  Select a file.
+answer:
+  kind: file
+  path: src/attr/_funcs.py
+  accept: []
+  accept_reasons: []
+hints:
+  - Start at src/attrs/__init__.py and follow the import of `asdict` until you reach a body that loops over fields.
+solution: solutions/attrs-find-003.md
+tags: [code-structure]
+authors: [agent-author-rich-rhf]
+verified_by: [agent:blind-10]

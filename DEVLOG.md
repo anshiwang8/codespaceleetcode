@@ -1,5 +1,35 @@
 # DEVLOG
 
+## codebases: landing page, white theme, solution tabs, and 36 more puzzles
+
+Type: Addition, Change
+
+Goal: Give the site its name and a front door, drop the brown look for a plain white one, make solutions a proper tab with detailed explanations, and add puzzles from more repos.
+
+What should be done: Rename the site to codebases with a logo. Put a landing page at `/` with "Log in" (not working yet) and "Continue as guest", plus a scrolling section on why codebase interviews are replacing LeetCode. Move the list to `/puzzles`. Add Description and Solution tabs to the puzzle page. Rewrite every solution into a longer explanation with diagrams where they help. Add puzzles from new repos.
+
+What was done (technical):
+
+- **Theme.** One light theme in `web/app/globals.css`: white background and panels, gray borders, near-black text, blue accent `#2563eb`. The dark palette and the `prefers-color-scheme` switch are gone, and Monaco always uses the light theme (`cb-light`).
+- **Logo.** `web/components/site/Logo.tsx`: "code" in Arial, then "bases" in a blue box. Screen readers get one "codebases". The favicon and page titles match.
+- **Routes.** Route groups split the app. `app/(marketing)/page.tsx` is the static landing page at `/`, which renders without the database. `app/(app)/` holds the list at `/puzzles`, puzzle pages, profile, and the error and not-found pages, all under the site header. `browseHref` builds `/puzzles?…`. A redirect in `next.config.ts` sends old `/?tag=…` style links to `/puzzles` with their query.
+- **Landing page.** A hero with the logo, a tagline, "Continue as guest" (to `/puzzles`) and a "Log in" button that is `aria-disabled` with a "Coming soon" note. Below the fold: why companies are moving to codebase interviews, how it works, the three puzzle types with examples, and a closing call to action. It has no statistics or claims about named companies. A static HTML mock of the IDE stands in for a screenshot.
+- **Tabs.** The prompt panel has Description and Solution tabs, using the ARIA tabs pattern with arrow, Home and End keys. Solution is locked until a correct answer and never fetches `/solution` before then. After a correct answer the tab shows an "Unlocked" badge and the answer tray offers "View solution". The solution is fetched once and kept, including under React's development double-run.
+- **Markdown.** A shared `Markdown` component adds `remark-gfm` (tables, strikethrough) and keeps `skipHtml`. Fenced `mermaid` blocks render as diagrams through `mermaid` 11.17.2, loaded with a dynamic import only on pages that have a diagram. It runs with `securityLevel: "strict"`, and a `secure` list stops a diagram's `%%{init}%%` from changing the theme or injecting CSS. Diagrams keep their natural size and scroll sideways in the narrow panel, and an Expand button opens a large view. A diagram that fails to parse shows its source instead.
+- **Solutions.** All 100 existing solutions were rewritten by three agents, one per group of five repos, each checking the key against the snapshot first. None was wrong. Solutions now run about 55–200 lines with navigation steps, code excerpts with `path:line` references, comparison tables, design background and takeaways. Layouts vary by puzzle. There are 110 mermaid diagrams in all, and every one parses with mermaid 11. A script checked that all 1,056 quoted code lines exist in their snapshot. Several small factual slips in the old solutions were fixed along the way. The solution format is now written in `spec.md` section 4.
+- **New repos and puzzles.** Six repos were pinned at their HEAD: `pallets-jinja`, `encode-starlette`, `textualize-rich`, `python-attrs-attrs`, `unjs-unstorage` and `axios-axios` (JavaScript, indexed with `allowJs`). Each has 6 puzzles covering all three types and every answer kind, with 2 easy, 2 medium and 2 hard in most repos. That makes 36 new puzzles, and 136 across 21 repos.
+  - `react-hook-form` was tried and dropped. Its logic lives in one 2,465-line closure whose inner functions get no symbols, and its utilities are anonymous default exports, which leaves 75 edges in `src/`.
+  - Three blind solvers (`agent:blind-9` to `-11`) solved all 36 from the export only, and every one passed on the first graded attempt.
+  - Their notes caught two prompts that misdescribed the code or left a condition open. `rich-find-001` said "while its task is unfinished", but the code checks `not task.completed`, a numeric count. `unstorage-trace-001` didn't say `opts.base` is unset. Both were reworded and re-solved by `agent:blind-12`.
+  - A solution rewriter noted that `fastapi-trace-001` didn't rule out `Depends` parameters, which allow longer recursive chains. The prompt now fixes a plain endpoint, and `agent:blind-13` re-solved it.
+- **Review.** An independent review found no Rule 1 leaks, and its three findings were fixed: the Unlocked badge's text was white on pale blue, diagrams could inject CSS through `themeCSS`, and old filtered list links lost their filters. New e2e specs cover the landing page, the tabs and unlock, diagram and table rendering, the Expand dialog, and the redirect.
+
+Still open:
+
+- "Log in" does nothing yet. GitHub sign-in and its UI are the next step, and the local dev login in the header stays until then.
+- Rich and unstorage don't fit the 17 topics well, so several of their puzzles are tagged only `code-structure` or `routing`.
+- `h3-find-001`'s window also covers the whole `~findRoute` method, so selecting the whole method is graded correct. That's how windows work, but the window could be tightened.
+
 ## Browse puzzles by difficulty and topic
 
 Type: Addition, Change

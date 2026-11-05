@@ -1,0 +1,22 @@
+id: starlette-find-002
+snapshot: encode-starlette@0f08970
+type: find
+difficulty: medium
+title: Building the trailing-slash redirect path
+prompt: |
+  In Router.app in starlette/routing.py, when no route matched an HTTP request
+  fully or partially and slash redirects are enabled, the router builds a copy
+  of the scope with an alternate path and checks whether any route would match
+  that instead. Select the lines of the `if`/`else` statement that computes the
+  alternate path, from its `if` line through the last line of its `else` body.
+answer:
+  kind: location
+  path: starlette/routing.py
+  anchor: [722, 725]
+  window: [720, 726]
+hints:
+  - The alternate path either loses or gains one character at the end.
+solution: solutions/starlette-find-002.md
+tags: [routing]
+authors: [agent-author-jinja-starlette]
+verified_by: [agent:blind-10]

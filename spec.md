@@ -149,6 +149,8 @@ answer: { kind: choice, option: b }
 
 Each `solutions/<id>.md` contains: the answer, the navigation path a strong engineer would take (where to start, what to search for, which definitions to jump to), and why plausible wrong answers are wrong. Solutions are only visible after a correct submission. There is no "give up".
 
+A solution is a detailed explanation, not just the answer, and solutions don't all share one layout. It starts with `# <id>: <title>` and an `**Answer:**` line. After that the author picks what helps: a diagram of the flow or module structure, short code excerpts with `path:line` references, a table of candidates, background on the design, and takeaways. The format is GitHub-flavored Markdown with raw HTML stripped. Fenced ` ```mermaid ` blocks render as diagrams, and ` ```text ` blocks hold ASCII trees. Every claim must hold at the pinned SHA.
+
 ---
 
 ## 5. Repositories
@@ -340,7 +342,10 @@ Response shapes live in `web/lib/api-types.ts`. Submit validates that every subm
 
 ## 10. UI
 
-- **Puzzle list:** solved state per row. Everything below lives in the URL (`type`, `difficulty`, `repo`, `tag`, `group`, `sort`), and the defaults are left out, so the plain list stays at `/`.
+The site is named **codebases**. The logo is the word in Arial, with "bases" in a blue box. The theme is a plain white background with a blue accent.
+
+- **Landing page (`/`):** the logo, a tagline, and two buttons. "Continue as guest" opens the puzzle list. "Log in" is shown but disabled until GitHub sign-in is built. Below the fold it explains why the product exists (interviews moving from algorithm puzzles to navigating real codebases), how it works, and the three puzzle types. It renders without the database.
+- **Puzzle list (`/puzzles`):** solved state per row. Everything below lives in the URL (`type`, `difficulty`, `repo`, `tag`, `group`, `sort`), and the defaults are left out, so the plain list stays at `/puzzles`.
   - A difficulty strip: one bar split by difficulty, each segment's width its share of the puzzles and its filled part the share solved. Clicking a segment filters to that difficulty, and clicking it again clears the filter.
   - The strip's counts are taken under the other filters, so each says what clicking would show.
   - Type, topic and repo are drop-downs. Topics show by label.
@@ -348,6 +353,7 @@ Response shapes live in `web/lib/api-types.ts`. Submit validates that every subm
   - Clicking a column header sorts every section by that column, A to Z, except difficulty, which goes easiest first. Clicking it again reverses the order. Ties keep the default order, by puzzle ID.
   - Signed out, counts say how many puzzles there are instead of how many are solved.
 - **Puzzle page:** prompt panel (left), file tree + Monaco + search (center), answer tray (right).
+  - The prompt panel has two tabs. **Description** holds the prompt, answer kind and hints. **Solution** shows a locked state until the puzzle is solved, and the solution is never fetched before then. After a correct answer the tab is marked unlocked and the answer tray offers "View solution".
   - The answer tray shows the required kind, the current selection, and for `set` the "n of N selected" count. For `sequence`, an ordered list with drag to reorder.
   - Go-to-definition (F12 / ctrl-click, cmd-click on macOS), find references, and a breadcrumb trail of visited files.
   - Repo name, SHA, license, and link back to GitHub at that SHA.

@@ -1,0 +1,27 @@
+id: axios-find-002
+snapshot: axios-axios@fb88a1b
+type: find
+difficulty: hard
+title: When an explicit undefined counts
+prompt: |
+  In lib/core/mergeConfig.js, `mergeConfig(config1, config2)` merges an
+  instance's defaults (`config1`) with a request config (`config2`) by
+  choosing one merge strategy function per key from the `mergeMap` table
+  (falling back to `mergeDeepProperties` for keys not in the table).
+
+  For exactly one strategy function, the result depends on whether
+  `config2` omits the key or has it as an own property set to `undefined`:
+  when the key is omitted, the default from `config1` is kept, but when it is
+  explicitly `undefined`, the default is dropped and the merged config's value
+  is `undefined`. Select that strategy function. Select a function.
+answer:
+  kind: symbol
+  id: lib/core/mergeConfig.js#mergeDirectKeys
+  accept: []
+  accept_reasons: []
+hints:
+  - Most strategies only ever see the two values. Look for one that is handed more than that.
+solution: solutions/axios-find-002.md
+tags: [configuration]
+authors: [agent-author-unstorage-axios]
+verified_by: [agent:blind-11]

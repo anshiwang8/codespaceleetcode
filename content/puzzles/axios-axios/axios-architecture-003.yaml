@@ -1,0 +1,22 @@
+id: axios-architecture-003
+snapshot: axios-axios@fb88a1b
+type: architecture
+difficulty: easy
+title: Naming a new adapter
+prompt: |
+  A request config can name its adapter with a string, such as
+  `adapter: 'fetch'`, and the request fails if axios does not know the name.
+  You want a new adapter to be selectable by its own name. In lib/, select the file that defines the table mapping adapter names
+  to adapters (not the file that sets the default adapter order). Select a
+  file.
+answer:
+  kind: file
+  path: lib/adapters/adapters.js
+  accept: []
+  accept_reasons: []
+hints:
+  - dispatchRequest does not resolve the name itself; it hands it to a helper.
+solution: solutions/axios-architecture-003.md
+tags: [extension-points, http-clients]
+authors: [agent-author-unstorage-axios]
+verified_by: [agent:blind-11]

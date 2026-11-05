@@ -1,0 +1,26 @@
+id: unstorage-architecture-002
+snapshot: unjs-unstorage@5781aae
+type: architecture
+difficulty: medium
+title: Drivers that report their own changes
+prompt: |
+  `storage.watch()` only hears about external changes when a mounted
+  driver object has a `watch` method; for drivers without one, the storage
+  layer emits change events itself after its own writes.
+
+  In src/drivers/ (ignore src/drivers/utils/), exactly 3 driver files export
+  a factory whose returned driver object has a `watch` method, whether that
+  method is written in the file itself or comes from another driver's object.
+  Select all 3 files.
+answer:
+  kind: set
+  ids:
+    - src/drivers/fs.ts
+    - src/drivers/localstorage.ts
+    - src/drivers/session-storage.ts
+hints:
+  - A text search finds two of them. For the third, look for a driver that builds its object out of another driver's object.
+solution: solutions/unstorage-architecture-002.md
+tags: [extension-points, code-structure]
+authors: [agent-author-unstorage-axios]
+verified_by: [agent:blind-11]

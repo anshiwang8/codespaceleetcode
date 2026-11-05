@@ -1,0 +1,22 @@
+id: rich-architecture-002
+snapshot: textualize-rich@9d8f9a3
+type: architecture
+difficulty: easy
+title: Leaving a buffer context
+prompt: |
+  A Console collects Segments in a buffer and only writes them out when the outermost
+  buffer context is left: `Console._exit_buffer` lowers the nesting counter and then checks
+  whether the buffer should be flushed. In the non-test source under rich/, select all 3
+  methods whose bodies call `Console._exit_buffer` directly. Select methods.
+answer:
+  kind: set
+  ids:
+    - rich/console.py#Console.__exit__
+    - rich/console.py#Console.end_capture
+    - rich/console.py#PagerContext.__exit__
+hints:
+  - One of them belongs to a class other than Console, in the same file.
+solution: solutions/rich-architecture-002.md
+tags: [code-structure]
+authors: [agent-author-rich-rhf]
+verified_by: [agent:blind-9]

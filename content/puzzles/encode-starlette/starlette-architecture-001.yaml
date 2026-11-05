@@ -1,0 +1,33 @@
+id: starlette-architecture-001
+snapshot: encode-starlette@0f08970
+type: architecture
+difficulty: hard
+title: Layers of the middleware stack
+prompt: |
+  An application is created as
+  `app = Starlette(routes=routes, middleware=[Middleware(A), Middleware(B)], max_body_size=1024)`
+  and then, before it handles any request, `app.add_middleware(C)` is called. A,
+  B and C are ASGI middleware classes. Read starlette/applications.py. When the
+  first request arrives and the middleware stack is built, which list gives the
+  layers a request passes through, from the outermost to the innermost? Select
+  one option.
+answer:
+  kind: choice
+  option: e
+choices:
+  - id: a
+    label: ServerErrorMiddleware, RequestBodyLimitMiddleware, A, B, C, ExceptionMiddleware, Router
+  - id: b
+    label: ServerErrorMiddleware, C, A, B, RequestBodyLimitMiddleware, ExceptionMiddleware, Router
+  - id: c
+    label: RequestBodyLimitMiddleware, ServerErrorMiddleware, C, A, B, ExceptionMiddleware, Router
+  - id: d
+    label: ServerErrorMiddleware, RequestBodyLimitMiddleware, B, A, C, ExceptionMiddleware, Router
+  - id: e
+    label: ServerErrorMiddleware, RequestBodyLimitMiddleware, C, A, B, ExceptionMiddleware, Router
+hints:
+  - Check where add_middleware puts the new entry, then check why the build loop iterates in reverse.
+solution: solutions/starlette-architecture-001.md
+tags: [middleware, request-lifecycle]
+authors: [agent-author-jinja-starlette]
+verified_by: [agent:blind-10]

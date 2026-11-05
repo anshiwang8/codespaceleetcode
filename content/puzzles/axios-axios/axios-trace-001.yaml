@@ -1,0 +1,33 @@
+id: axios-trace-001
+snapshot: axios-axios@fb88a1b
+type: trace
+difficulty: medium
+title: A request that was aborted before it started
+prompt: |
+  Starting at `Axios.request` in lib/core/Axios.js, list the functions
+  called, in order, until the constructor of the error class that is thrown
+  because the request's `signal` is already aborted is called.
+
+  Assume the default axios instance with no interceptors registered, no
+  `cancelToken`, and a request config whose `signal` is an `AbortSignal`
+  that was aborted before the call.
+
+  List direct calls only (each function must be called literally in the body
+  of the previous one; `fn.call(...)` counts as calling `fn`), and skip
+  standard-library and third-party calls. Include the start method in your
+  sequence, and end with the constructor.
+answer:
+  kind: sequence
+  ids:
+    - lib/core/Axios.js#Axios.request
+    - lib/core/Axios.js#Axios._request
+    - lib/core/dispatchRequest.js#dispatchRequest
+    - lib/core/dispatchRequest.js#throwIfCancellationRequested
+    - lib/cancel/CanceledError.js#CanceledError.<constructor>
+  accept_sequences: []
+hints:
+  - The check happens before any adapter is chosen.
+solution: solutions/axios-trace-001.md
+tags: [request-lifecycle, http-clients, errors]
+authors: [agent-author-unstorage-axios]
+verified_by: [agent:blind-11]

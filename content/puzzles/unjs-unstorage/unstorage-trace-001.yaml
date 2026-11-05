@@ -1,0 +1,37 @@
+id: unstorage-trace-001
+snapshot: unjs-unstorage@5781aae
+type: trace
+difficulty: medium
+title: A Cloudflare KV binding that cannot write
+prompt: |
+  Starting at the `driver` factory constant in
+  src/drivers/cloudflare-kv-binding.ts, list the functions called, in order,
+  until the function that constructs the `Error` object that gets thrown is
+  called.
+
+  The methods of the object that `driver` returns have no symbols of their
+  own, so a call made inside one of those methods counts as a call made by
+  `driver`.
+
+  Assume the returned driver's `getItem` is called, and `opts.binding` is an
+  object (not a string) that has `get` and `delete` properties but no `put`.
+  `opts.base` is not set.
+
+  List direct calls only (each function must be called literally in the body
+  of the previous one), and skip standard-library and third-party calls.
+  Include the start symbol in your sequence.
+answer:
+  kind: sequence
+  ids:
+    - src/drivers/cloudflare-kv-binding.ts#driver
+    - src/drivers/utils/cloudflare.ts#getKVBinding
+    - src/drivers/utils/cloudflare.ts#getBinding
+    - src/drivers/utils/cloudflare.ts#validateBinding
+    - src/drivers/utils/index.ts#createError
+  accept_sequences: []
+hints:
+  - getItem asks for the binding before it touches the key-value store. Follow that call into src/drivers/utils/.
+solution: solutions/unstorage-trace-001.md
+tags: [errors, validation]
+authors: [agent-author-unstorage-axios]
+verified_by: [agent:blind-12]

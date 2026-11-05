@@ -1,0 +1,23 @@
+id: axios-architecture-002
+snapshot: axios-axios@fb88a1b
+type: architecture
+difficulty: medium
+title: Where cancellation errors are born
+prompt: |
+  In lib/, exactly 5 files contain an expression `new CanceledError(...)`
+  (a file that only imports or re-exports `CanceledError` does not count, and
+  neither does the file that defines the class). Select all 5 files.
+answer:
+  kind: set
+  ids:
+    - lib/adapters/http.js
+    - lib/adapters/xhr.js
+    - lib/cancel/CancelToken.js
+    - lib/core/dispatchRequest.js
+    - lib/helpers/composeSignals.js
+hints:
+  - Find All References on the CanceledError class, then discard the import lines.
+solution: solutions/axios-architecture-002.md
+tags: [errors, http-clients]
+authors: [agent-author-unstorage-axios]
+verified_by: [agent:blind-11]

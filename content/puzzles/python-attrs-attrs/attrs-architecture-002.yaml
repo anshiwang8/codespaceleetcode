@@ -1,0 +1,25 @@
+id: attrs-architecture-002
+snapshot: python-attrs-attrs@9d9f94a
+type: architecture
+difficulty: medium
+title: Methods compiled in one pass
+prompt: |
+  `_ClassBuilder` in src/attr/_make.py attaches dunder methods to a class in two different
+  ways. Some are ordinary Python functions or closures put straight into the class
+  namespace. Others are generated as source code that is queued on the builder and
+  compiled later, together, in a single pass when the class is built. Select all 5 methods
+  of `_ClassBuilder` whose bodies queue generated source for that pass. Select methods.
+answer:
+  kind: set
+  ids:
+    - src/attr/_make.py#_ClassBuilder.add_repr
+    - src/attr/_make.py#_ClassBuilder.add_hash
+    - src/attr/_make.py#_ClassBuilder.add_init
+    - src/attr/_make.py#_ClassBuilder.add_attrs_init
+    - src/attr/_make.py#_ClassBuilder.add_eq
+hints:
+  - Find the method that compiles the queue, then find every place the queue is appended to.
+solution: solutions/attrs-architecture-002.md
+tags: [compilers]
+authors: [agent-author-rich-rhf]
+verified_by: [agent:blind-10]

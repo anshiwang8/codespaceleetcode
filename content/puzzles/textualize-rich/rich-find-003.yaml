@@ -1,0 +1,23 @@
+id: rich-find-003
+snapshot: textualize-rich@9d8f9a3
+type: find
+difficulty: easy
+title: Output without escape codes
+prompt: |
+  When a Console writes to standard output on a legacy Windows console, `Console._write_buffer`
+  in rich/console.py does not turn its buffered Segments into one string of ANSI escape codes.
+  Instead it hands the buffer to a function that walks the Segments one by one, including
+  their control codes, and turns each into a call on a terminal object. Select the file that
+  defines that Segment-walking function (not the file that defines the terminal object it
+  calls). Select a file.
+answer:
+  kind: file
+  path: rich/_windows_renderer.py
+  accept: []
+  accept_reasons: []
+hints:
+  - The imports for this path are done lazily, inside the method, right before they are used.
+solution: solutions/rich-find-003.md
+tags: [code-structure]
+authors: [agent-author-rich-rhf]
+verified_by: [agent:blind-9]

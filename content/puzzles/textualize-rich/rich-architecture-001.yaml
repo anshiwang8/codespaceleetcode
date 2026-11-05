@@ -1,0 +1,31 @@
+id: rich-architecture-001
+snapshot: textualize-rich@9d8f9a3
+type: architecture
+difficulty: hard
+title: Two live displays on one console
+prompt: |
+  A `Live` display from rich/live.py is started on a Console attached to an interactive
+  terminal (no alternate screen, not transient). While it is still running, a second `Live`
+  is started on the same Console. Read `Live.start`, `Live.refresh` and the `Live.renderable`
+  property, plus the live-stack methods on `Console` in rich/console.py. While both are
+  running, how does the second display's content reach the terminal? Select one option.
+answer:
+  kind: choice
+  option: d
+choices:
+  - id: a
+    label: It never does. Console.set_live raises LiveError, because a console allows only one active Live display.
+  - id: b
+    label: The second Live starts its own refresh thread and redraws its own region of the terminal, independently of the first.
+  - id: c
+    label: Nothing from the second Live is shown until the first Live stops, at which point the second takes over the display.
+  - id: d
+    label: The first Live draws a group made of the content of every Live on the console's stack, and refreshing the second Live only triggers a refresh of the first.
+  - id: e
+    label: The second Live replaces the first, which stops redrawing until the second one stops.
+hints:
+  - Look at what `Live.start` does when `set_live` returns False, and at which Lives the `renderable` property collects.
+solution: solutions/rich-architecture-001.md
+tags: [code-structure]
+authors: [agent-author-rich-rhf]
+verified_by: [agent:blind-9]

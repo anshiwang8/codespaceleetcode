@@ -1,0 +1,24 @@
+id: jinja-architecture-001
+snapshot: pallets-jinja@5ef7011
+type: architecture
+difficulty: easy
+title: Loaders that replace the loading step
+prompt: |
+  In src/jinja2/loaders.py, BaseLoader.load implements the standard way to turn a
+  template name into a Template: get the source, use the bytecode cache if there
+  is one, compile, and build the Template. Most loader classes only override
+  get_source and inherit that load method unchanged. Select all 3 classes in
+  src/jinja2/loaders.py that define their own load method instead. Select the
+  classes, not the methods.
+answer:
+  kind: set
+  ids:
+    - src/jinja2/loaders.py#PrefixLoader
+    - src/jinja2/loaders.py#ChoiceLoader
+    - src/jinja2/loaders.py#ModuleLoader
+hints:
+  - Two of them hold other loaders. The third never has source text to compile.
+solution: solutions/jinja-architecture-001.md
+tags: [extension-points]
+authors: [agent-author-jinja-starlette]
+verified_by: [agent:blind-9]

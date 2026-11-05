@@ -1,0 +1,33 @@
+id: attrs-trace-001
+snapshot: python-attrs-attrs@9d9f94a
+type: trace
+difficulty: hard
+title: From @define to compiled methods
+prompt: |
+  Start at `define` in src/attr/_next_gen.py, applied bare as a class decorator
+  (`@define` with no parentheses and no arguments) to a class whose fields are all
+  annotated and which defines no `cached_property`. List the call stack, outermost first, at
+  the moment of the first call to the function in src/attr/_make.py that compiles generated
+  source code and registers it with `linecache`. End at that function. Include the start and
+  the end. Direct calls only: each entry must be called from the body of the one before it.
+  Skip class constructors, built-ins and standard-library calls, and leave out functions
+  that have already returned by that moment.
+answer:
+  kind: sequence
+  ids:
+    - src/attr/_next_gen.py#define
+    - src/attr/_next_gen.py#define.wrap
+    - src/attr/_next_gen.py#define.do_it
+    - src/attr/_make.py#attrs
+    - src/attr/_make.py#attrs.wrap
+    - src/attr/_make.py#_ClassBuilder.build_class
+    - src/attr/_make.py#_ClassBuilder._eval_snippets
+    - src/attr/_make.py#_linecache_and_compile
+  accept_sequences: []
+  accept_reasons: []
+hints:
+  - The `add_*` methods of the class builder prepare source code, but none of them compiles it.
+solution: solutions/attrs-trace-001.md
+tags: [compilers, code-structure]
+authors: [agent-author-rich-rhf]
+verified_by: [agent:blind-10]

@@ -1,0 +1,22 @@
+id: starlette-find-003
+snapshot: encode-starlette@0f08970
+type: find
+difficulty: hard
+title: The default HTTPException handler
+prompt: |
+  In a Starlette application with no exception handlers registered, an endpoint
+  raises `HTTPException(status_code=403)`. The client receives a plain-text
+  response with status 403 whose body is the exception's detail. Within
+  starlette/, select the file that defines the handler that builds that response.
+  Select a file.
+answer:
+  kind: file
+  path: starlette/middleware/exceptions.py
+  accept: []
+  accept_reasons: []
+hints:
+  - A default handler is registered somewhere before any user handlers are added. Look for where that registration happens, not where the exception is caught.
+solution: solutions/starlette-find-003.md
+tags: [errors, middleware]
+authors: [agent-author-jinja-starlette]
+verified_by: [agent:blind-10]

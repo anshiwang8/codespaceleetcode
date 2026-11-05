@@ -1,0 +1,29 @@
+id: rich-trace-001
+snapshot: textualize-rich@9d8f9a3
+type: trace
+difficulty: medium
+title: From a plain string to word-wrap offsets
+prompt: |
+  Start at `Console.render` in rich/console.py, called directly with a plain `str` (not a
+  Text instance) and default console options, so the available width is at least 1, the
+  Text's `no_wrap` is unset and its overflow is the default. List the call stack, outermost
+  first, at the moment the offsets where a line must be broken for word wrapping are
+  computed. End at the function in rich/_wrap.py that computes those offsets. Include the
+  start and the end. Direct calls only: each entry must be called from the body of the one
+  before it. Skip constructors, built-ins and standard-library calls, and leave out
+  functions that have already returned by that moment.
+answer:
+  kind: sequence
+  ids:
+    - rich/console.py#Console.render
+    - rich/text.py#Text.__rich_console__
+    - rich/text.py#Text.wrap
+    - rich/_wrap.py#divide_line
+  accept_sequences: []
+  accept_reasons: []
+hints:
+  - "`Console.render` has a separate branch for a `str`. Look at what it does with the object that branch builds."
+solution: solutions/rich-trace-001.md
+tags: [code-structure]
+authors: [agent-author-rich-rhf]
+verified_by: [agent:blind-9]

@@ -1,0 +1,21 @@
+id: attrs-find-001
+snapshot: python-attrs-attrs@9d9f94a
+type: find
+difficulty: easy
+title: What a frozen class does on assignment
+prompt: |
+  When a class is built with `frozen=True`, the class builder in src/attr/_make.py puts a
+  replacement `__setattr__` into the class's namespace, so that assigning to an attribute of
+  an instance raises an error. Select the function that is installed as that `__setattr__`
+  (not the one installed as `__delattr__`). Select a function.
+answer:
+  kind: symbol
+  id: src/attr/_make.py#_frozen_setattrs
+  accept: []
+  accept_reasons: []
+hints:
+  - Look in `_ClassBuilder.__init__` for the branch that runs when the class properties say it is frozen.
+solution: solutions/attrs-find-001.md
+tags: [code-structure]
+authors: [agent-author-rich-rhf]
+verified_by: [agent:blind-10]

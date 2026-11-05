@@ -1,0 +1,24 @@
+id: axios-find-001
+snapshot: axios-axios@fb88a1b
+type: find
+difficulty: medium
+title: Filling in allowAbsoluteUrls
+prompt: |
+  In lib/core/Axios.js, `Axios._request` makes sure the merged config always
+  has a defined `allowAbsoluteUrls` before the request is dispatched: it keeps
+  the request's own value, otherwise falls back to the instance default, and
+  otherwise uses a hard-coded value.
+
+  Select the lines of the whole `if` / `else if` / `else` statement that does
+  this, from the first `if` line through the final closing brace.
+answer:
+  kind: location
+  path: lib/core/Axios.js
+  anchor: [173, 182]
+  window: [170, 191]
+hints:
+  - It sits between the paramsSerializer checks and the spelling check for baseUrl.
+solution: solutions/axios-find-001.md
+tags: [configuration, http-clients]
+authors: [agent-author-unstorage-axios]
+verified_by: [agent:blind-11]

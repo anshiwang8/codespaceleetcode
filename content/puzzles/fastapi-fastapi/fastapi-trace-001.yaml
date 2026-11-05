@@ -5,7 +5,8 @@ difficulty: hard
 title: How a route's parameters get analyzed
 prompt: |
   Start at APIRoute.__init__ in fastapi/routing.py, for a route created with
-  default arguments (no custom APIRoute subclass). Select the chain of functions
+  default arguments (no custom APIRoute subclass) whose endpoint has one plain
+  query parameter and no `Depends` parameters. Select the chain of functions
   and methods, in call order, where each one directly calls the next, ending at
   the function in fastapi/dependencies/utils.py that classifies one parameter of
   the endpoint's signature (given its name, annotation and default) as a path,
@@ -28,4 +29,4 @@ hints:
 solution: solutions/fastapi-trace-001.md
 tags: [dependency-injection, routing]
 authors: [agent-author-3]
-verified_by: [agent:blind-3]
+verified_by: [agent:blind-13]

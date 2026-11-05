@@ -1,0 +1,23 @@
+id: rich-find-001
+snapshot: textualize-rich@9d8f9a3
+type: find
+difficulty: medium
+title: The column that refreshes less often
+prompt: |
+  A `Progress` display asks each of its columns for a fresh renderable every time it
+  refreshes. Among the built-in column classes defined in rich/progress.py, exactly one
+  is configured so that it can hand back its previous output instead of re-rendering
+  until a fixed fraction of a second has passed. Select the class
+  of that column (the concrete column class, not the base class that implements the
+  caching). Select a class.
+answer:
+  kind: symbol
+  id: rich/progress.py#TimeRemainingColumn
+  accept: []
+  accept_reasons: []
+hints:
+  - Every column is called through the same method on the base class. Read what it checks before it calls `render`.
+solution: solutions/rich-find-001.md
+tags: [extension-points]
+authors: [agent-author-rich-rhf]
+verified_by: [agent:blind-12]

@@ -1,0 +1,27 @@
+id: starlette-architecture-002
+snapshot: encode-starlette@0f08970
+type: architecture
+difficulty: easy
+title: Where body size limits are applied
+prompt: |
+  A maximum request body size can be configured at several levels of a
+  Starlette app, and each level enforces it by wrapping an ASGI app in
+  RequestBodyLimitMiddleware from starlette/middleware/body_limit.py. Within
+  starlette/routing.py and starlette/applications.py, select all 4 methods whose
+  own body puts RequestBodyLimitMiddleware around an app when a max_body_size is
+  given, either by constructing it directly or by adding it to a middleware list
+  that the same method then builds. Select the methods, not the classes that own
+  them.
+answer:
+  kind: set
+  ids:
+    - starlette/applications.py#Starlette.build_middleware_stack
+    - starlette/routing.py#Route.__init__
+    - starlette/routing.py#Mount.__init__
+    - starlette/routing.py#Router.__init__
+hints:
+  - Find references on RequestBodyLimitMiddleware, and ignore the tests.
+solution: solutions/starlette-architecture-002.md
+tags: [middleware, routing, configuration]
+authors: [agent-author-jinja-starlette]
+verified_by: [agent:blind-10]

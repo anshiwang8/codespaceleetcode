@@ -1,6 +1,6 @@
-# Codebase Puzzles
+# codebases
 
-LeetCode-style puzzles set inside real open-source repos, each pinned to a commit. You read the code in a browser IDE and answer by clicking on it. Answers are graded on the server by exact ID. There are 100 puzzles across 15 TypeScript and Python repos.
+LeetCode-style puzzles set inside real open-source repos, each pinned to a commit. You read the code in a browser IDE and answer by clicking on it. Answers are graded on the server by exact ID. There are 136 puzzles across 21 TypeScript, JavaScript and Python repos.
 
 ## Run it on localhost
 
@@ -34,7 +34,7 @@ That starts a local Postgres, loads the content, and serves the site at <http://
 
 ### On a fresh clone
 
-Snapshots of the repos aren't committed, so build them once before `pnpm local`. This fetches and indexes all 15 repos, which takes a few minutes:
+Snapshots of the repos aren't committed, so build them once before `pnpm local`. This fetches and indexes all 21 repos, which takes a few minutes:
 
 ```bash
 npm install -g @sourcegraph/scip-typescript@0.6.0 @sourcegraph/scip-python@0.6.8

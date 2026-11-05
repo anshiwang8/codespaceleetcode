@@ -1,0 +1,39 @@
+id: unstorage-architecture-001
+snapshot: unjs-unstorage@5781aae
+type: architecture
+difficulty: hard
+title: Keys hidden by a later mount
+prompt: |
+  Consider this code, using the built-in memory driver:
+
+  ```ts
+  import { createStorage } from "unstorage";
+  import memory from "unstorage/drivers/memory";
+
+  const storage = createStorage();        // root mount: a memory driver
+  await storage.setItem("data:a", "1");
+  storage.mount("data", memory());        // a second, empty memory driver
+  await storage.setItem("data:b", "2");
+  const keys = await storage.getKeys();
+  ```
+
+  Following `createStorage` and its `getKeys` method in src/storage.ts, what
+  is `keys`? Select one option.
+answer:
+  kind: choice
+  option: c
+choices:
+  - id: a
+    label: '["data:a", "data:b"]'
+  - id: b
+    label: '["b", "data:a"]'
+  - id: c
+    label: '["data:b"]'
+  - id: d
+    label: '["data:a"]'
+hints:
+  - Work out the order in which getKeys visits the two mounts, and what maskedMounts holds when it reaches the second one.
+solution: solutions/unstorage-architecture-001.md
+tags: [routing, code-structure]
+authors: [agent-author-unstorage-axios]
+verified_by: [agent:blind-11]

@@ -1,0 +1,29 @@
+id: attrs-architecture-001
+snapshot: python-attrs-attrs@9d9f94a
+type: architecture
+difficulty: medium
+title: Hashing a default mutable class
+prompt: |
+  A class is decorated with bare `@define` from src/attr/_next_gen.py. It is not frozen,
+  has no frozen base class, is not an exception, and defines none of `__eq__`, `__ne__` or
+  `__hash__` itself. Read how `define` calls `attrs`, and how the inner `wrap` of `attrs` in
+  src/attr/_make.py decides the class's hashability. What does the built class do about
+  `__hash__`? Select one option.
+answer:
+  kind: choice
+  option: a
+choices:
+  - id: a
+    label: The class's `__hash__` is set to None, so calling hash() on an instance raises TypeError.
+  - id: b
+    label: attrs generates a `__hash__` computed from the field values.
+  - id: c
+    label: attrs leaves `__hash__` alone, so instances hash by identity through the `__hash__` inherited from object.
+  - id: d
+    label: attrs generates a field-based `__hash__` and caches its result on each instance.
+hints:
+  - Work out what `eq` ends up as first, then follow the `hash is None` branch.
+solution: solutions/attrs-architecture-001.md
+tags: [configuration]
+authors: [agent-author-rich-rhf]
+verified_by: [agent:blind-10]

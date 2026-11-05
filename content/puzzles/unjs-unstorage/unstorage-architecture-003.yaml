@@ -1,0 +1,22 @@
+id: unstorage-architecture-003
+snapshot: unjs-unstorage@5781aae
+type: architecture
+difficulty: easy
+title: Registering a new built-in driver
+prompt: |
+  The `builtinDrivers` map and the `BuiltinDriverName` type in
+  src/_drivers.ts list every built-in driver. You add a new driver file,
+  src/drivers/foo.ts, and want it to appear there. Select the file whose code
+  writes src/_drivers.ts (not src/_drivers.ts itself, and not a file that
+  only reads it). Select a file.
+answer:
+  kind: file
+  path: scripts/gen-drivers.ts
+  accept: []
+  accept_reasons: []
+hints:
+  - Look outside src/.
+solution: solutions/unstorage-architecture-003.md
+tags: [extension-points, code-structure]
+authors: [agent-author-unstorage-axios]
+verified_by: [agent:blind-11]

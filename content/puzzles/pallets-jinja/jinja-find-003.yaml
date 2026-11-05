@@ -1,0 +1,22 @@
+id: jinja-find-003
+snapshot: pallets-jinja@5ef7011
+type: find
+difficulty: medium
+title: Where the built-in filters are listed
+prompt: |
+  Environment.__init__ in src/jinja2/environment.py fills `self.filters` by
+  copying a dictionary that maps every built-in filter name (such as "upper" or
+  "join") to the function that implements it. Within src/jinja2/, select the file
+  where that dictionary literal is actually written out, entry by entry. Select a
+  file.
+answer:
+  kind: file
+  path: src/jinja2/filters.py
+  accept: []
+  accept_reasons: []
+hints:
+  - Follow the import of the name that Environment.__init__ copies, and keep following it if it is itself imported.
+solution: solutions/jinja-find-003.md
+tags: [configuration]
+authors: [agent-author-jinja-starlette]
+verified_by: [agent:blind-9]

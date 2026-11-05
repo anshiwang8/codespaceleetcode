@@ -1,0 +1,22 @@
+id: jinja-find-001
+snapshot: pallets-jinja@5ef7011
+type: find
+difficulty: easy
+title: The one real variable lookup
+prompt: |
+  In src/jinja2/runtime.py, the Context class lets code look up a template
+  variable by name in several ways: `resolve`, `get`, and item access with `[]`.
+  None of those three does the lookup itself. They all end up in one Context
+  method that checks the context's own variables, then its parent mapping, and
+  returns a sentinel value when the name is in neither. Select that method.
+answer:
+  kind: symbol
+  id: src/jinja2/runtime.py#Context.resolve_or_missing
+  accept: []
+  accept_reasons: []
+hints:
+  - Start at Context.resolve and jump to the definition of the first method it calls.
+solution: solutions/jinja-find-001.md
+tags: [code-structure]
+authors: [agent-author-jinja-starlette]
+verified_by: [agent:blind-9]

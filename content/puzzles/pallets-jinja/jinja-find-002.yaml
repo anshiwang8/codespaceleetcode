@@ -1,0 +1,22 @@
+id: jinja-find-002
+snapshot: pallets-jinja@5ef7011
+type: find
+difficulty: medium
+title: Stripping whitespace before a tag
+prompt: |
+  In Jinja, writing a minus sign on an opening delimiter, as in `{%- if x %}`,
+  removes all whitespace (including newlines) between the preceding text and the
+  tag. In Lexer.tokeniter in src/jinja2/lexer.py, select the lines of the single
+  `if` branch that performs this removal: from its `if` line through the last
+  line of its body. Do not include the `elif` branch that follows it.
+answer:
+  kind: location
+  path: src/jinja2/lexer.py
+  anchor: [736, 740]
+  window: [733, 741]
+hints:
+  - The lexer looks at which whitespace-control character was captured next to the opening delimiter.
+solution: solutions/jinja-find-002.md
+tags: [compilers]
+authors: [agent-author-jinja-starlette]
+verified_by: [agent:blind-9]

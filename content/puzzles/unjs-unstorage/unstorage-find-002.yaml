@@ -1,0 +1,25 @@
+id: unstorage-find-002
+snapshot: unjs-unstorage@5781aae
+type: find
+difficulty: medium
+title: The most specific mount wins
+prompt: |
+  In src/storage.ts, a storage can have two mount points that both prefix a
+  key, for example `cache` and `cache:images`. A key such as
+  `cache:images:logo.png` is then served by the more specific mount. The
+  lookup inside `createStorage` simply returns the first mount point in
+  `context.mountpoints` that the key starts with.
+
+  Select the line that makes the more specific mount point come first in
+  that list. Select the line.
+answer:
+  kind: location
+  path: src/storage.ts
+  anchor: [545, 545]
+  window: [538, 556]
+hints:
+  - The order is not fixed at lookup time. Look at what happens when a driver is added.
+solution: solutions/unstorage-find-002.md
+tags: [routing]
+authors: [agent-author-unstorage-axios]
+verified_by: [agent:blind-11]
