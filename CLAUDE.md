@@ -4,7 +4,7 @@ Operational rules for working in this repo. Read `spec.md` before any non-trivia
 
 ## Project
 
-LeetCode-style puzzles set inside real open-source repos pinned to a commit. v1 has three puzzle types: Find, Trace, Architecture. Users navigate code in a browser IDE and submit a precise answer, which is graded server-side against a canonical answer key.
+The site is named **codebases**. LeetCode-style puzzles set inside real open-source repos pinned to a commit. v1 has three puzzle types: Find, Trace, Architecture. Users navigate code in a browser IDE and submit a precise answer, which is graded server-side against a canonical answer key.
 
 ## Layout
 
@@ -13,6 +13,8 @@ LeetCode-style puzzles set inside real open-source repos pinned to a commit. v1 
 - `content/` holds `repos.yaml`, `schema/`, `puzzles/<repo-slug>/<id>.yaml`, `solutions/<id>.md`, and `blind-attempts.json` (each blind solver's first graded result).
 - `supabase/migrations/` holds SQL migrations. Never edit an applied migration; add a new one. Hosted Supabase gives clients every privilege on a new table or sequence, so a migration that adds one must enable RLS, revoke `anon` and `authenticated`, and grant back only what clients may read. `web/tests/rls.test.ts` checks this.
 - `supabase/local/shim.sql` adds what hosted Supabase provides, for the local database only.
+- `web/app/(marketing)/page.tsx` is the static landing page at `/`, and must render without the database. `web/app/(app)/` holds every page under the site header, including the puzzle list at `/puzzles`.
+- `web/components/puzzle/Markdown.tsx` renders prompts, hints and solutions: GitHub-flavored Markdown with raw HTML dropped, and fenced `mermaid` blocks drawn by `MermaidDiagram.tsx`. Mermaid runs with `securityLevel: "strict"` and a `secure` list so a diagram can't change its config or inject CSS. Never loosen either.
 - `web/lib/api-types.ts` holds the API response shapes the routes and UI share.
 - `web/lib/topics.ts` holds the topic list's labels and descriptions. Its slugs must match the `tags` enum in `content/schema/puzzle.schema.json`, and a web test checks this.
 
@@ -34,6 +36,7 @@ LeetCode-style puzzles set inside real open-source repos pinned to a commit. v1 
 - Python: type hints, `ruff` + `pyright` clean. Run with `uv run`.
 - Puzzle IDs: `<repo-short>-<type>-<nnn>`, e.g. `hono-trace-002`.
 - One concept per puzzle. If the prompt needs "and", split it.
+- A solution follows the format in spec section 4. Every quoted code line and `path:line` reference must hold at the pinned SHA, and it must not name another puzzle's answer: its symbol, file or line, or most of its set or sequence.
 - Rate difficulty by the rules in spec section 4, and tag each puzzle with 1 to 3 topics from the fixed list there.
 
 ## Testing

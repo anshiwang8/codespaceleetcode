@@ -1,4 +1,4 @@
-# Spec: Codebase Puzzles
+# Spec: codebases
 
 A LeetCode-style site where every puzzle is set in a real open-source repository, pinned to a commit. Users read the code in a browser IDE and submit a precise answer, which is graded automatically. Each puzzle comes with a written solution.
 
@@ -270,7 +270,7 @@ repos.yaml
 
 ### Runtime flow
 ```
-puzzle list → puzzle page
+landing page → puzzle list → puzzle page
   → GET puzzle (prompt, type, answer kind, count for sets; no answer key)
   → manifest.json from CDN → file tree
   → open file → raw file from CDN → Monaco
