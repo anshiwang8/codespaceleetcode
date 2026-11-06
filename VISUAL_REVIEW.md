@@ -20,7 +20,7 @@ Open [the generated gallery](web/visual-review/index.html). Final PNGs are under
 
 The 29 screenshots retain motion and wait for explicit route content, hydrated account controls, fonts and no running/pending animations. Landing sections are scrolled into view once before full-page capture. History uses stable synthetic UTC activity and deterministic fixture names. The gallery checks document overflow and intersecting header control rectangles. Deletion is never submitted by screenshot tests. Only public fixture choices appear in workspace screenshots; the unlocked solution body is masked.
 
-Motion tests run separately and check actual animation starts and termination, one-time viewport reveals, reduced-motion durations/delays and left-anchored progress, absent JavaScript and a silent observer, rapid native group toggles, filter-pending feedback, navigation interruption, keyboard focus, progress changes without layout changes, history append position/focus, repeated cancellation, in-flight answer changes, duplicate submission prevention, solution tab focus and Monaco node identity. Request interception uses explicit gates, and animation readiness uses bounded state polling instead of long sleeps. Browser exceptions, console errors, failed requests (excluding normal navigation aborts) and failed application responses fail the review.
+Motion tests run separately and check actual animation starts and termination, one-time viewport reveals, reduced-motion durations/delays and left-anchored progress, absent JavaScript and a silent observer, rapid native group toggles, filter-pending feedback, navigation interruption, keyboard focus, progress changes without layout changes, history append position/focus, repeated cancellation, in-flight answer changes, duplicate submission prevention, solution tab focus and Monaco node identity. Request interception uses explicit gates, and animation readiness uses bounded state polling instead of long sleeps. Browser exceptions, console errors, failed requests (excluding normal navigation aborts) and failed application responses fail gallery/representative motion checks. A separate pending-button test explicitly expects and asserts a simulated provider refusal.
 
 ## Inspection record — November 6, 2026
 
@@ -36,7 +36,18 @@ Available early `before/` images are partial: the checkout's existing profile ch
 
 ## Actual checks
 
-Results are finalized below after the last verification run.
+| Check | Result |
+| --- | --- |
+| `pnpm visual:review` | 9 passed; 29 final-state screenshots; no unexpected browser errors or failed application requests |
+| Web unit suite, isolated database | 19 files, 588 tests passed |
+| Ingest unit suite, isolated database | 516 passed; 2 existing platform skips |
+| Content validation | All 136 puzzles passed |
+| Ingest ruff, format and pyright | Passed; 44 Python files already formatted; no type errors |
+| Full Playwright regression suite | Final run in progress |
+| Production build and smoke | Earlier build and all 7 smoke tests passed; final run in progress |
+| Web lint and typecheck | Passed; final verification follows the browser runs |
+
+Concurrent verification initially hit local timeouts. Running the unit and browser suites separately resolved the timing failures without increasing their timeouts. The first regression run also found expectations left over from the existing profile/wording work; those checks now target the current labels and solved-count elements. The history exhaustion expectation additionally verifies that the completed action retains focus.
 
 ## Limits
 
