@@ -3,7 +3,7 @@ import { LEGAL } from "../lib/legal";
 import { FILES, openFile, openPuzzle, submitAndExpect, visible } from "./helpers";
 
 test.describe("account deletion", () => {
-  test("deleting from the profile removes progress and signs out", async ({ page }) => {
+  test("deleting from settings removes progress and signs out", async ({ page }) => {
     await page.goto("/profile");
     await visible(page, "profile-signed-out").getByRole("button", { name: /Local dev sign-in/ }).click();
     await expect(visible(page, "stats-total")).toContainText("0 of 7");
@@ -16,11 +16,13 @@ test.describe("account deletion", () => {
 
     await page.goto("/profile");
     await expect(visible(page, "stats-total")).toContainText("1 of 7");
+    await visible(page, "settings-link").getByRole("link", { name: "Open settings" }).click();
+    await expect(page).toHaveURL(/\/settings$/);
 
     // The first click only opens the warning; Cancel closes it without deleting.
     await visible(page, "delete-account-start").click();
     await expect(visible(page, "delete-account")).toContainText("can't be undone");
-    await page.getByRole("button", { name: "Cancel" }).click();
+    await visible(page, "delete-account-cancel").click();
     await expect(visible(page, "delete-account-confirm")).toHaveCount(0);
 
     await visible(page, "delete-account-start").click();
@@ -38,16 +40,16 @@ test.describe("account deletion", () => {
 });
 
 test.describe("legal pages", () => {
-  for (const [path, title] of [
-    ["/privacy", "Privacy policy"],
-    ["/terms", "Terms"],
+  for (const [path, title, key] of [
+    ["/privacy", "Privacy policy", "privacy"],
+    ["/terms", "Terms", "terms"],
   ] as const) {
     test(`${path} renders, shows its review state and contact, and links to the other page`, async ({ page }) => {
       const response = await page.goto(path);
       expect(response?.status()).toBe(200);
       await expect(page.getByRole("heading", { level: 1 })).toHaveText(title);
-      // The draft notice shows exactly until lib/legal.ts says the pages were reviewed (M7).
-      await expect(page.getByTestId("legal-draft")).toHaveCount(LEGAL.REVIEWED ? 0 : 1);
+      // The draft notice shows exactly until lib/legal.ts says the page was reviewed (M7, M11).
+      await expect(page.getByTestId("legal-draft")).toHaveCount(LEGAL.PAGES[key].reviewed ? 0 : 1);
       if (LEGAL.CONTACT) {
         await expect(page.getByRole("link", { name: LEGAL.CONTACT, exact: true })).toHaveAttribute(
           "href",

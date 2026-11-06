@@ -1,5 +1,48 @@
 # DEVLOG
 
+## Themes, and editable profile and account settings
+
+Type: Addition
+
+Goal: Let people make codebases look the way they like, with a large set of tested themes that follow their account, and let them manage their own profile, links, picture and a verified contact email, without weakening privacy or the product's rules.
+
+What should be done: All 187 Monkeytype preset palettes adapted under original names, a typed token registry, System mode, and a picker in Settings and on the profile page with preview, Apply and Cancel. Settings sections for Appearance, Profile, Links, and Email and account. A default silhouette avatar, picture upload with crop, optional profile fields and links, and a required, verified contact email. A migration with row-level security, deletion that cleans up, an updated privacy page, tests, screenshots and docs.
+
+What was done (technical):
+
+- **Themes** (`web/lib/themes/`).
+  - `tokens.ts` is the registry: 55 semantic tokens. `globals.css` declares the same defaults, and every component color now comes from a token (the tracker's heat levels, Markdown shadows and the result icon were hard-coded).
+  - `derive.ts` turns a preset's five colors into all 55. It raises text to 7:1, secondary text to 4.5:1, accent-as-text and button labels to 4.5:1 and indicators to 3:1 by changing lightness only, keeping hue. When no text could reach 7:1 it moves the background away from mid-gray (30 themes). Status colors are fixed hues, kept readable on their own tints; an error color that isn't red becomes red.
+  - The source palettes are vendored in `docs/themes/monkeytype-presets.json`, parsed as text from Monkeytype commit `0e07023`, never executed. `docs/themes/README.md` credits Monkeytype (GPL-3.0) and says codebases isn't affiliated. No logos, branding or custom CSS effects (52 presets have one; the mapping says so).
+  - `tests/themes.test.ts` generates `catalog.generated.ts` (189 themes: codebases Light, codebases Dark, 187 adapted) and `docs/themes/MAPPING.md` with `UPDATE_THEMES=1`, and checks every theme: 950 checks covering tokens, unique IDs and names, distinct palettes, safe values, every contrast target, rising heat levels, red and green apart in hue, and syntax colors.
+  - `codebases Light` is exactly the old look, except two status tints went from 10% to 7% and two gray syntax colors darkened, so status text and comments pass 4.5:1.
+  - `prepaint.ts` is an inline script in `app/layout.tsx` that applies the cached theme before first paint, on every page including the static landing page. It accepts only token-named properties with `#rrggbb` or `rgb()` values.
+  - `controller.ts`: preview, cancel, apply, favorites, System following `prefers-color-scheme`. Signed in, the choice is saved to `user_preferences`; signed out, to `localStorage`. The cache is tagged with a hash of its owner, so a sign-out or another account never keeps someone else's theme.
+  - The picker (`components/themes/ThemePicker.tsx`) is in Settings and in a native `<dialog>` from a Theme button on the profile page, beside "Browse puzzles" and on the signed-out profile too. It started in the header and was moved to the profile on review; the header has no theme control. The picker has search, All, Light, Dark, Favorites, swatches, a preview, arrow keys, Escape cancels, Restore default.
+  - Monaco gets a theme built from the tokens and switched with `setTheme` on the `codebases:theme` event, so the editor keeps its model, selection and scroll. Mermaid redraws from the tokens with its strict settings unchanged.
+- **Settings** (`/settings`, `/settings/email`, `/settings/email/verify`). Each section has its own Save and Cancel, inline errors with `aria-invalid`, and a warning before leaving with unsaved changes. Sign out and account deletion moved here; the profile links to it.
+  - Details: display name, pronouns, bio, birthday, validated in `lib/profile-fields.ts` for both browser and server. Birthdays are real dates from 1900 up to today in UTC+14, Feb 29 only in leap years, never shown or turned into an age.
+  - Links: LinkedIn, GitHub, website, X, Bluesky, Mastodon (any server, `/@name`), up to 3 labeled custom links. HTTPS only, no credentials, ports, IPs or single-label hosts, and exact host matching. Rendered with `rel="noopener noreferrer nofollow"`, labels as text.
+  - Picture: `lib/server/avatar.ts` decodes with sharp (now a direct dependency), accepts only decoded JPEG, PNG and WebP, refuses animation and sides over 8000 pixels, applies orientation, crops, resizes to 256×256 and re-encodes as WebP with no metadata. Stored in `user_avatars`, served only to its owner by `/api/me/avatar?v=`. The editor has drag and arrow-key positioning, zoom, Save, Cancel and Remove.
+  - The avatar everywhere is the user's picture or a white head-and-shoulders silhouette on neutral gray, also when a picture fails to load. Initials avatars and GitHub's name are gone from the profile.
+  - Contact email: `lib/server/email.ts` with 256-bit tokens stored as SHA-256 hashes, bound to user and purpose, single use, 30-minute expiry. A change needs a sign-in in the last 15 minutes and tells the old address. A taken address gets the same response as a free one. 5 requests an hour, 20 confirmations per 10 minutes. The verify page removes the token from the URL and sends no referrer. A banner asks signed-in users without an address to add one; nothing is blocked.
+  - Delivery: `lib/server/email-delivery.ts` uses Resend's HTTP API with `RESEND_API_KEY` and `EMAIL_FROM`, a local JSON outbox in development, and says honestly that email is unavailable in production without them.
+- **Data:** migration 0007 adds `user_profiles`, `user_preferences`, `user_avatars`, `user_emails` and `email_verifications`, all cascading from `users`, with row-level security on and client privileges revoked. New per-user rate-limit keys end in `user:<id>`, so account deletion removes them too. `/api/me` gains display name, picture version, `needsEmail` and appearance, never an address.
+- **Privacy page** describes the new data, Resend, browser storage and deletion in Settings. `lib/legal.ts` now tracks review per page; the privacy policy is a draft again until M11, and the terms stay reviewed.
+- **Fixes found on the way:**
+  - A server-rendered picture that failed before hydration never fell back to the silhouette; `Avatar` now checks the image once mounted.
+  - The theme list's visually hidden radios were positioned against the page, stretching it by about 1000px; options now anchor them.
+  - On a phone the theme dialog's Apply and Cancel were below the fold; they now sit above the preview.
+  - The 1-in-100 rate-limit prune used the database's real clock even when a test passed a fixed time, which deleted a test's rows now and then. It now uses the request's clock.
+- **Tests:**
+  - New unit tests: `themes` (950 checks), `theme-runtime` (pre-paint, including a tampered cache), `profile-fields`, `avatar` (formats, EXIF and GPS stripping, orientation, crop, animation, limits), and `settings` (access and CSRF, saving and clearing, display name never taken from GitHub, preferences, avatar ownership, every email flow including expiry, replay, reauth, the decoy, unavailability, send failure and rate limits, and deletion cleanup).
+  - New e2e: `e2e/settings.spec.ts` covers preview, cancel, Escape and apply; first paint with every app script blocked; System; keyboard and favorites; per-account themes; Monaco keeping its node and selection; details, links, picture and email flows through the outbox; and a 375px phone.
+  - `e2e/visual-themes.spec.ts` captures a contact sheet of all 189 themes and key screens in 7 representative themes.
+  - The bounce test failed about one run in six, on `main` too: after seeking through the animation to find its peak it called `play()` from the end, which restarts it. It now returns to where it was first.
+- **Results:** typecheck and lint clean. Web unit 1605 passed and ingest 516 passed (2 platform skips), both on a throwaway Postgres. `pnpm validate` 136 of 136. ruff and pyright clean. `pnpm visual:review` 24 passed, with 56 gallery screenshots and 52 theme screenshots. `pnpm e2e` 111 passed (one run under heavy machine load had a single timeout that passed on rerun). Build and `pnpm smoke` 7 passed.
+
+Still open: M10 (email delivery in production) and M11 (privacy re-review) in spec section 14. The email banner appears once the account loads, so it shifts the page down once for accounts without an address. The picture has no server-side face detection or moderation; it's private to its owner.
+
 ## Profile: compact lifetime summary, a year-long activity tracker with streaks, and filterable history
 
 Type: Change

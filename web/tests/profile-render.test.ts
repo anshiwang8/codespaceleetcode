@@ -8,7 +8,7 @@ import { ContinuePracticing } from "@/components/profile/ContinuePracticing";
 import { IdentityCard } from "@/components/profile/IdentityCard";
 import { ProgressBreakdown } from "@/components/profile/ProgressBreakdown";
 import { cumulativeSolves, SolveChart } from "@/components/profile/SolveChart";
-import { avatarTone, initials } from "@/components/site/Avatar";
+import { Avatar } from "@/components/site/Avatar";
 import type { PracticeStreaks, ProfileIdentity, ProfileProgress } from "@/lib/api-types";
 import { formatDate, formatDateTime, formatDay, plural } from "@/lib/format";
 import { buildActivity, resolvePeriod } from "@/lib/server/profile";
@@ -55,6 +55,10 @@ describe("profile states", () => {
       provider: "dev",
       memberSince: "2026-11-02T23:30:00.000Z",
       githubUrl: null,
+      pronouns: null,
+      bio: null,
+      links: { custom: [] },
+      avatarVersion: null,
     };
     const markup = html(createElement(IdentityCard, { identity, progress }));
     expect(markup).toContain("Local development account");
@@ -72,6 +76,10 @@ describe("profile states", () => {
       provider: "github",
       memberSince: "2026-01-01T00:00:00.000Z",
       githubUrl: "https://github.com/octocat",
+      pronouns: null,
+      bio: null,
+      links: { custom: [] },
+      avatarVersion: null,
     };
     const markup = html(createElement(IdentityCard, { identity, progress }));
     expect(markup).toContain('href="https://github.com/octocat"');
@@ -136,6 +144,10 @@ describe("profile states", () => {
       provider: "dev",
       memberSince: "2026-11-02T23:30:00.000Z",
       githubUrl: null,
+      pronouns: null,
+      bio: null,
+      links: { custom: [] },
+      avatarVersion: null,
     };
     const markup = html(createElement(IdentityCard, { identity, progress }));
     expect(markup).toMatch(/Attempted<\/dt><dd[^>]*>4<\/dd><dd[^>]*>distinct puzzles, solved ones included/);
@@ -223,11 +235,20 @@ describe("formatting", () => {
     expect(plural(1200, "attempt", "attempts")).toBe("1,200 attempts");
   });
 
-  it("gives every login stable initials and a color", () => {
-    expect(initials("octocat")).toBe("O");
-    expect(initials("octo-cat")).toBe("OC");
-    expect(initials("dev_1a2b")).toBe("D1");
-    expect(avatarTone("octocat")).toBe(avatarTone("octocat"));
-    expect(avatarTone("octocat")).toMatch(/^#[0-9a-f]{6}$/);
+  it("draws the default picture as a white silhouette, decorative unless given a name", () => {
+    const plain = html(createElement(Avatar, { version: null }));
+    expect(plain).toContain('data-kind="silhouette"');
+    expect(plain).toContain('aria-hidden="true"');
+    expect(plain).toContain("<svg");
+    expect(plain).not.toContain("<img");
+    const named = html(createElement(Avatar, { version: null, label: "Default picture" }));
+    expect(named).toContain('role="img"');
+    expect(named).toContain('aria-label="Default picture"');
+  });
+
+  it("shows an uploaded picture from this site only, by version", () => {
+    const markup = html(createElement(Avatar, { version: "0123456789abcdef", size: "large" }));
+    expect(markup).toContain('src="/api/me/avatar?v=0123456789abcdef"');
+    expect(markup).toContain('data-kind="picture"');
   });
 });

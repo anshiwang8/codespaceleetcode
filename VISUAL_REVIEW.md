@@ -14,12 +14,13 @@ Open [the generated gallery](web/visual-review/index.html). Final PNGs are under
 
 | States | Viewports |
 | --- | --- |
+| Every theme on four contact sheets; list, landing, profile, Settings, theme dialog and workspace in 7 themes; Settings and theme dialog in 2 themes | 1440×900; 375×812 |
 | Landing; default, filtered and empty puzzle list | 375×900, 768×900, 1440×900 |
-| Signed-out, new-user, populated/long-login profiles; deletion confirmation | 375×900, 768×900, 1440×900 |
+| Signed-out, new-user, populated/long-login profiles; Settings and its deletion confirmation | 375×900, 768×900, 1440×900 |
 | Workspace locked solution, selected choice, incorrect/correct feedback, unlocked solution | 1366×800 |
 | Profile activity: dense history (about 14 months), a past calendar year, a keyboard-picked empty day with zero history results, period loading, recoverable activity and history failures, a sparse account with every puzzle solved and a very long repository name, all puzzles solved | 375×900, 768×900, 1440×900 |
 
-The 50 screenshots retain motion and wait for explicit route content, hydrated account controls, fonts and no running/pending animations. Landing sections are scrolled into view once before full-page capture. History uses stable synthetic UTC activity and deterministic fixture names. The gallery checks document overflow and intersecting header control rectangles. Deletion is never submitted by screenshot tests. Only public fixture choices appear in workspace screenshots; the unlocked solution body is masked.
+The gallery screenshots retain motion and wait for explicit route content, hydrated account controls, fonts and no running/pending animations. Landing sections are scrolled into view once before full-page capture. History uses stable synthetic UTC activity and deterministic fixture names. The gallery checks document overflow and intersecting header control rectangles. Deletion is never submitted by screenshot tests. Only public fixture choices appear in workspace screenshots; the unlocked solution body is masked.
 
 Motion tests run separately and check actual animation starts and termination, one-time viewport reveals, reduced-motion durations/delays and left-anchored progress, absent JavaScript and a silent observer, rapid native group toggles, filter-pending feedback, navigation interruption, keyboard focus, progress changes without layout changes, history append position/focus, repeated cancellation, in-flight answer changes, duplicate submission prevention, solution tab focus, Monaco node identity, the activity tracker (no square ever animates, including across a period change; a picked date keeps the cell's size and place and fades its selection strip in once; reduced motion leaves nothing running), and the correct-result bounce (it starts, plays once, peaks between 1.1 and 1.3 scale, ends at rest, leaves the result box and View solution button unmoved, doesn't play for a wrong result, and has no duration under reduced motion). Request interception uses explicit gates, and animation readiness uses bounded state polling instead of long sleeps. Browser exceptions, console errors, failed requests (excluding normal navigation aborts) and failed application responses fail gallery/representative motion checks. A separate pending-button test explicitly expects and asserts a simulated provider refusal.
 
@@ -56,20 +57,37 @@ The profile gallery was captured with `pnpm visual:review`. The images were open
 
 Checked by eye in the final images: dense and sparse activity, the rolling period and a past year, hatched dates before the account's history, the today ring, the selected-day ring and strip with zero history results, loading and both recoverable errors, 100% completion, and wrapping of a 39-character login and a 66-character repository name.
 
+## Inspection record: themes and settings, November 6, 2026
+
+`e2e/visual-themes.spec.ts` (part of `pnpm visual:review`) writes to `web/visual-review/after/themes/`:
+
+- `contact-sheet-1.png` to `contact-sheet-4.png`: every one of the 189 themes as a card drawn only from its tokens: its name and ID, secondary text, a link, the default avatar, the primary and danger buttons, a picked chip, the Correct, Hint and Wrong chips on their tints, the five heat levels, and two lines of syntax colors on the editor background.
+- Key screens at 1440px (puzzle list, landing, a dense profile, Settings with an inline error, the theme dialog, and the workspace after a wrong answer) in 7 representative themes: `default-light`, `default-dark`, `dracula` (saturated dark), `arch` (near-black), `botanical` (light, background moved off mid-gray), `diner` (dark, moved the same way) and `beach` (the accent needing the biggest change).
+- Settings and the open theme dialog at 375px in `default-light` and `dracula`.
+
+All four contact sheets were inspected in halves at full size, and the dracula Settings, botanical workspace, diner profile and both phone dialogs opened at full size. That found and fixed:
+
+- The theme list's visually hidden radios were positioned against the page instead of their option, so Settings ran about 1000px of empty page past its end (4256px tall, now 3301px).
+- On a phone the theme dialog put Apply and Cancel under the list and preview, off the first screen. They now sit right under a shorter list.
+
+After review the Theme button moved from the header to the profile page, beside "Browse puzzles", and the picker lost its "n of N shown. Saved: …" line. The profile's top and the phone dialog were captured and inspected again (`*-profile.png`, `*-profile-375.png`, `*-theme-dialog*.png`).
+
+Checked by eye: every theme's text, secondary text, buttons, status chips and syntax are readable and visibly its own palette; Monaco, the tracker, the chart and the banner follow the theme; the silhouette avatar reads on every background; and nothing overflows at 375px. The gallery's own pages also moved: the deletion confirmation is now captured on Settings (`settings-delete-confirmation-*.png`), with a new `settings-*.png`.
+
 ## Actual checks
 
 | Check | Result |
 | --- | --- |
-| `pnpm visual:review` | 14 passed (7 motion, 7 gallery); 50 final-state screenshots; no unexpected browser errors or failed application requests |
-| Web unit suite, throwaway database | 21 files, 611 tests passed |
+| `pnpm visual:review` | 24 passed (7 motion, 7 gallery, 10 themes); 56 gallery screenshots plus 52 under `themes/`; no unexpected browser errors or failed application requests |
+| Web unit suite, throwaway database | 26 files, 1605 tests passed (950 of them theme checks) |
 | Ingest unit suite, throwaway database | 516 passed; 2 existing platform skips |
 | Content validation | All 136 puzzles passed |
 | Ingest ruff, format and pyright | Passed; 44 Python files already formatted; no type errors |
-| `pnpm e2e` | All 100 tests passed |
+| `pnpm e2e` | All 111 tests passed |
 | Production build and `pnpm smoke` | Build passed; all 7 smoke tests passed |
 | Web lint and typecheck | Both passed |
 
-The table is the profile pass's run; every suite ran one at a time. In the earlier motion pass, concurrent verification initially hit local timeouts. Running the unit and browser suites separately resolved the timing failures without increasing their timeouts. The first regression run also found expectations left over from the existing profile/wording work; those checks now target the current labels and solved-count elements. The history exhaustion expectation additionally verifies that the completed action retains focus.
+The table is the themes and settings pass's run; every suite ran one at a time. That pass also fixed a test that failed about one run in six on `main` too: the bounce test measured the animation's peak by seeking through it, then called `play()` from the end, which restarts a finished animation and recorded a second bounce. It now returns to where it was first. In the earlier motion pass, concurrent verification initially hit local timeouts. Running the unit and browser suites separately resolved the timing failures without increasing their timeouts. The first regression run also found expectations left over from the existing profile/wording work; those checks now target the current labels and solved-count elements. The history exhaustion expectation additionally verifies that the completed action retains focus.
 
 ## Limits
 
