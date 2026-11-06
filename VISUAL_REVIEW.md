@@ -30,6 +30,7 @@ The initial captures were reviewed, the following problems were corrected, and t
 - A completed/canceled animation could leave a `finished` promise pending. Review readiness now polls actual animation state with a five-second bound.
 - Disabling the history button dropped keyboard focus. The stable button now uses `aria-disabled` and guards repeated requests.
 - At 375px the signed-out button overlapped Profile despite zero document overflow. Compact visible sign-in labels preserve the full accessible name; the header can wrap when both sign-in methods are present. Pairwise header-rectangle checks cover this regression.
+- The landing sign-in error message widened its wrapper and shifted the button. The wrapper and button now reserve the pending label’s width; the focused test compares position and dimensions before, during and after a refused sign-in.
 - Difficulty selection no longer changes the strip's height. Progress fills transform inside fixed tracks, with numeric values immediately readable.
 
 Available early `before/` images are partial: the checkout's existing profile changes were still being completed during that capture. They are context, not approved pixel baselines. No changed image was automatically accepted.
@@ -43,9 +44,9 @@ Available early `before/` images are partial: the checkout's existing profile ch
 | Ingest unit suite, isolated database | 516 passed; 2 existing platform skips |
 | Content validation | All 136 puzzles passed |
 | Ingest ruff, format and pyright | Passed; 44 Python files already formatted; no type errors |
-| Full Playwright regression suite | Final run in progress |
-| Production build and smoke | Earlier build and all 7 smoke tests passed; final run in progress |
-| Web lint and typecheck | Passed; final verification follows the browser runs |
+| `pnpm e2e` | All 94 tests passed |
+| Production build and `pnpm smoke` | Build passed; all 7 smoke tests passed |
+| Web lint and typecheck | Both passed |
 
 Concurrent verification initially hit local timeouts. Running the unit and browser suites separately resolved the timing failures without increasing their timeouts. The first regression run also found expectations left over from the existing profile/wording work; those checks now target the current labels and solved-count elements. The history exhaustion expectation additionally verifies that the completed action retains focus.
 

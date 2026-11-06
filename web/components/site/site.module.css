@@ -206,3 +206,7 @@
     white-space: nowrap;
   }
 }
+
+@media (max-width: 640px) {
+  .auth :global(.btn-small) { padding-inline: var(--space-2); }
+}
