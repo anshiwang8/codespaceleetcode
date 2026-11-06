@@ -1,5 +1,52 @@
 # DEVLOG
 
+## Profile: compact lifetime summary, a year-long activity tracker with streaks, and filterable history
+
+Type: Change
+
+Goal: Make the profile useful for someone coming back to practice. It should show lifetime totals at a glance, a GitHub-style year of activity with honest streaks, how solves have grown, and history you can narrow to what you're looking for, without a wall of separate cards.
+
+What should be done: Restructure the existing profile (identity and summary; full-width tracker with streaks; continue practicing; progress with a first-solve chart; filterable history; account) using existing data. Add only what this product's data supports.
+
+What was done (technical):
+
+- **Summary.** `IdentityCard` holds identity, "Browse puzzles" and one band of lifetime figures divided by rules:
+  - Solved: distinct puzzles.
+  - Attempted: distinct puzzles, solved ones included.
+  - In progress: attempted, not solved.
+  - Completion: rounded down, with "n of N available puzzles solved".
+  - Submissions: quieter, every graded submission including repeats; never counted as puzzles. Added as `ProfileProgress.submissions`.
+  - The separate overview tiles (`ProgressOverview`) are gone, so solved and completion figures aren't repeated.
+- **Tracker** (`ActivityTracker`; layout and wording in `lib/activity.ts`). It replaces the 90-day `ActivityCalendar`.
+  - Period: "Last 365 days" (today and the 364 dates before) or any calendar year from the history's start through this year (365 or 366 dates).
+  - Grid: week columns starting Sunday, month labels over the column holding each 1st, and Mon/Wed/Fri labels pinned while the weeks scroll.
+  - Shades: a neutral zero plus four accent blues, for 0, 1, 2–3, 4–6 and 7+ submissions.
+  - Dates before the history starts, or after today, are hatched "No record", not zero. Padding cells aren't dates at all. Today has a dark ring.
+  - Interaction: an ARIA grid with one Tab stop; arrows move by a day or a week, and Home/End go to the period's ends. A detail line for hover, focus and tap reads like "November 6, 2026: 3 submissions, 1 correct.". Enter, click or tap picks a date and filters the history, with Clear in both places. There's also a table alternative.
+  - Narrow screens: the calendar scrolls by itself, opened at the newest dates.
+- **Streaks** are lifetime and come from one SQL query that groups distinct active UTC dates into runs.
+  - Current streak: the run ending today, or ending yesterday while today is still open; otherwise 0.
+  - Longest streak: over all history.
+  - Also shown: active days in the period, submissions today, and "Practiced today" or "No submissions today". The period picker never changes them.
+- **First-solve chart** (`SolveChart`): a dependency-free SVG step line of distinct puzzles first solved over the calendar's period, starting from a baseline of earlier solves. Each solved, published puzzle counts once, on its first correct submission's UTC date (`progress.solved_at` if none is recorded), so it ends at the solved count. It has a sentence and a table alternative.
+- **Categories** (`CategoryBreakdowns`): type, difficulty, repository and topic rows link to the puzzle list through `browseHref`. The note that topics overlap stays.
+- **History filters:** type, difficulty, repository, result (`passed` or `failed`) and the picked date, applied in SQL across the whole history. The user-scoped cursor continues the same filtered list. Each change restarts at the first page, aborts the request in flight, and a generation counter keeps an older response from replacing a newer one. Errors offer Try again. There's a "No submissions match" state.
+- **Data:**
+  - `lib/server/profile.ts` gains `resolvePeriod`, `buildActivity` (with availability), `selectableYears`, `streaksFrom`, `buildTimeline` and `getActivity`.
+  - Queries: per-date counts for the period, streak runs, and first solves through a lateral join. Each is one query; there's never one query per date, and raw submissions never go to the browser.
+  - The server's UTC date is the single day boundary.
+  - New `GET /api/me/activity?period=` (zod-validated; 400 for a year outside the user's history). `/api/me/history` validates the new filters, including real calendar dates.
+  - No migration.
+- **Motion:** the period and history bodies dim while loading, and the selected-date strip fades in. No square animates, and reduced motion removes it all. The bounce stays reserved for the correct-result ✓.
+- **Tests:**
+  - `tests/activity.test.ts`: weekday alignment and padding, leap-year Feb 29, month labels including the crowding rule, intensity thresholds, date wording.
+  - `tests/profile.test.ts`: rolling and leap periods, UTC midnight and year boundaries, availability, the today and yesterday streak rules, a 400-day streak longer than any period, duplicate same-day submissions, unpublished puzzles in streaks, first solves counted once despite repeated correct answers, the chart total matching the solved count, the activity route's 400s, and server-side history filters across pages and users.
+  - `tests/profile-render.test.ts`: summary wording, the grid's single tab stop and named cells, the selected date, and the chart.
+  - `e2e/profile.spec.ts`: keyboard navigation and date filtering, a deliberate request race, period failure and recovery, all-solved, and the phone calendar.
+  - `e2e/motion.spec.ts`: tracker motion. `e2e/visual-review.spec.ts`: a profile activity gallery at three widths.
+- **Results:** typecheck and lint clean. Web unit 611 passed and ingest 516 passed (2 platform skips), both on a throwaway Postgres. `pnpm validate` 136 of 136. ruff and pyright clean. `pnpm visual:review` 14 passed with 50 screenshots. `pnpm e2e` 100 passed. Build and `pnpm smoke` 7 passed.
+- **Left out on purpose:** public profiles, leaderboards, badges, XP and levels; streak freezes, penalties and notifications; study time (`time_on_puzzle_ms` is client-reported); speed, accuracy, mastery or skill scores; GitHub contribution import; saved filters, export and bulk deletion.
+
 ## Design audit: an honest landing page, clearer gates, and one bounce
 
 Type: Change

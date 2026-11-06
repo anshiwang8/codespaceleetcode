@@ -21,6 +21,13 @@ const DAY = new Intl.DateTimeFormat(LOCALE, {
   timeZone: DISPLAY_TIME_ZONE,
 });
 const MONTH = new Intl.DateTimeFormat(LOCALE, { month: "short", timeZone: DISPLAY_TIME_ZONE });
+const LONG_DAY = new Intl.DateTimeFormat(LOCALE, {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+  timeZone: DISPLAY_TIME_ZONE,
+});
+const SHORT_DAY = new Intl.DateTimeFormat(LOCALE, { month: "short", day: "numeric", timeZone: DISPLAY_TIME_ZONE });
 const DATE_TIME = new Intl.DateTimeFormat(LOCALE, {
   year: "numeric",
   month: "short",
@@ -63,4 +70,14 @@ export function formatDay(day: string): string {
 /** "Nov", from a YYYY-MM-DD calendar date. */
 export function formatMonth(day: string): string {
   return MONTH.format(dayToDate(day));
+}
+
+/** "November 6, 2026", from a YYYY-MM-DD calendar date. */
+export function formatLongDay(day: string): string {
+  return LONG_DAY.format(dayToDate(day));
+}
+
+/** "Nov 6", from a YYYY-MM-DD calendar date. */
+export function formatShortDay(day: string): string {
+  return SHORT_DAY.format(dayToDate(day));
 }

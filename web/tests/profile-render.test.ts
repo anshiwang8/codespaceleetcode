@@ -3,14 +3,15 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import ProfileError from "@/app/(app)/profile/error";
 import ProfileLoading from "@/app/(app)/profile/loading";
-import { ActivityCalendar } from "@/components/profile/ActivityCalendar";
+import { ActivityTracker } from "@/components/profile/ActivityTracker";
 import { ContinuePracticing } from "@/components/profile/ContinuePracticing";
 import { IdentityCard } from "@/components/profile/IdentityCard";
 import { ProgressBreakdown } from "@/components/profile/ProgressBreakdown";
+import { cumulativeSolves, SolveChart } from "@/components/profile/SolveChart";
 import { avatarTone, initials } from "@/components/site/Avatar";
-import type { ProfileIdentity, ProfileProgress } from "@/lib/api-types";
+import type { PracticeStreaks, ProfileIdentity, ProfileProgress } from "@/lib/api-types";
 import { formatDate, formatDateTime, formatDay, plural } from "@/lib/format";
-import { fillActivity } from "@/lib/server/profile";
+import { buildActivity, resolvePeriod } from "@/lib/server/profile";
 
 // The profile's states rendered to HTML, the way the server sends them.
 
@@ -22,6 +23,7 @@ const progress: ProfileProgress = {
   attempted: 1,
   total: 10,
   completionPercent: 30,
+  submissions: 12,
   byType: { find: emptyCount, trace: emptyCount, architecture: emptyCount },
   byDifficulty: { easy: emptyCount, medium: emptyCount, hard: emptyCount },
   byRepo: [],
@@ -60,7 +62,7 @@ describe("profile states", () => {
     // Shown in UTC, so it's the same day on the server and in every browser.
     expect(markup).toContain("Member since <time");
     expect(markup).toContain("Nov 2, 2026");
-    expect(markup).toContain("3</strong> of <span");
+    expect(markup).toContain("3 of 10 available puzzles solved");
   });
 
   it("a GitHub account links to its GitHub page and shows its display name", () => {
@@ -127,24 +129,89 @@ describe("profile states", () => {
     expect(markup).toContain("1 in progress");
   });
 
-  it("the activity grid has a text summary and a table of active days", () => {
-    const activity = fillActivity(
-      ["2026-11-04", "2026-11-05", "2026-11-06"],
-      [{ date: "2026-11-05", submissions: 2, passed: 1 }],
-    );
-    const markup = html(createElement(ActivityCalendar, { activity }));
-    expect(markup).toContain("2 submissions on 1 day in the last 90 days.");
-    expect(markup).toContain("one day in UTC");
-    expect(markup).toContain("Thu, Nov 5, 2026");
-    // The picture is hidden from screen readers; the table carries the same data.
-    expect(markup).toMatch(/class="[^"]*calendar[^"]*" style="[^"]*" aria-hidden="true"/);
-    expect(markup).toContain("<caption");
+  it("the summary keeps distinct puzzles and repeated submissions apart", () => {
+    const identity: ProfileIdentity = {
+      login: "dev-1a2b",
+      displayName: null,
+      provider: "dev",
+      memberSince: "2026-11-02T23:30:00.000Z",
+      githubUrl: null,
+    };
+    const markup = html(createElement(IdentityCard, { identity, progress }));
+    expect(markup).toMatch(/Attempted<\/dt><dd[^>]*>4<\/dd><dd[^>]*>distinct puzzles, solved ones included/);
+    expect(markup).toMatch(/In progress<\/dt><dd[^>]*>1</);
+    expect(markup).toMatch(/Submissions<\/dt><dd[^>]*>12<\/dd><dd[^>]*>graded answers, repeats included/);
+    expect(markup).toContain('href="/puzzles"');
   });
 
-  it("an empty activity window says there's nothing yet", () => {
-    const activity = fillActivity(["2026-11-06"], []);
-    expect(html(createElement(ActivityCalendar, { activity }))).toContain("No submissions in the last 90 days.");
+  const streaks: PracticeStreaks = { current: 2, longest: 7, submissionsToday: 0, today: "2026-11-06" };
+  const tracker = (selectedDate: string | null = null) => {
+    const activity = buildActivity(resolvePeriod("rolling", "2026-11-06"), "2026-11-06", "2026-10-01", [
+      { date: "2026-11-05", submissions: 2, passed: 1 },
+    ]);
+    return html(
+      createElement(ActivityTracker, {
+        activity,
+        streaks,
+        loading: false,
+        requested: "rolling",
+        error: null,
+        onPeriodChange: () => {},
+        onRetry: () => {},
+        selectedDate,
+        onSelectDate: () => {},
+      }),
+    );
+  };
+
+  it("the tracker is a grid with one tab stop, named cells and a text alternative", () => {
+    const markup = tracker();
+    expect(markup).toContain('role="grid"');
+    expect(markup.match(/role="gridcell"/g)).toHaveLength(365);
+    // Only one cell is in the Tab order: today, when nothing is selected.
+    expect(markup.match(/tabindex="0"/g)).toHaveLength(1);
+    expect(markup).toMatch(/tabindex="0"[^>]*data-today="true"|data-today="true"[^>]*tabindex="0"/);
+    expect(markup).toContain('aria-label="November 5, 2026: 2 submissions, 1 correct."');
+    expect(markup).toContain('aria-label="November 6, 2026 (today): no submissions."');
+    expect(markup).toContain('aria-label="September 30, 2026: before your history starts."');
+    expect(markup).toContain("Show active days as a table");
+    expect(markup).toContain("Last 365 days: 2 submissions");
+    expect(markup).toContain("No submissions today");
+    expect(markup).toContain('data-testid="streak-current"><strong class="tabular">2</strong>');
+    expect(markup).toContain('data-testid="streak-longest"><strong class="tabular">7</strong>');
+    for (const level of ["No submissions", "1 submission", "2–3 submissions", "4–6 submissions", "7 or more submissions"]) {
+      expect(markup).toContain(level);
+    }
   });
+
+  it("a selected date takes the tab stop and offers a reset", () => {
+    const markup = tracker("2026-11-05");
+    expect(markup).toMatch(/aria-selected="true"[^>]*data-date="2026-11-05"|data-date="2026-11-05"[^>]*aria-selected="true"/);
+    expect(markup).toContain("Clear date");
+    expect(markup).toContain("November 5, 2026");
+  });
+
+  it("the first-solve chart steps up from its baseline, with a table of first solves", () => {
+    const timeline = {
+      start: "2026-01-01",
+      end: "2026-12-31",
+      baseline: 3,
+      solves: [
+        { date: "2026-02-01", count: 2 },
+        { date: "2026-03-01", count: 1 },
+      ],
+    };
+    expect(cumulativeSolves(timeline)).toEqual([
+      { date: "2026-02-01", added: 2, total: 5 },
+      { date: "2026-03-01", added: 1, total: 6 },
+    ]);
+    const markup = html(createElement(SolveChart, { timeline, label: "2026" }));
+    expect(markup).toContain('role="img"');
+    expect(markup).toContain("3 puzzles first solved in this period, 6 in total by December 31, 2026.");
+    expect(markup).toContain("Show first solves as a table");
+    expect(markup).not.toMatch(/speed|skill|accuracy|mastery/i);
+  });
+
 });
 
 describe("formatting", () => {

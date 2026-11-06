@@ -1,5 +1,8 @@
 import type {
+  ActivityPeriodKey,
+  ActivityResponse,
   ApiError,
+  HistoryFilters,
   HistoryPage,
   MeResponse,
   OutlineResponse,
@@ -47,7 +50,15 @@ const puzzlePath = (slug: string) => `/api/puzzles/${encodeURIComponent(slug)}`;
 
 export const api = {
   me: () => request<MeResponse>("/api/me"),
-  history: (before: string, signal?: AbortSignal) => request<HistoryPage>(`/api/me/history?${new URLSearchParams({ before })}`, { signal }),
+  /** A page of history. Filters apply to the whole history; `before` continues the same list. */
+  history: (query: HistoryFilters & { before?: string }, signal?: AbortSignal) => {
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(query)) if (value) params.set(key, String(value));
+    const search = params.toString();
+    return request<HistoryPage>(`/api/me/history${search ? `?${search}` : ""}`, { signal });
+  },
+  activity: (period: ActivityPeriodKey, signal?: AbortSignal) =>
+    request<ActivityResponse>(`/api/me/activity?${new URLSearchParams({ period })}`, { signal }),
   devLogin: (login: string) => post<MeResponse>("/api/dev/login", { login }),
   devLogout: () => post<MeResponse>("/api/dev/logout"),
   deleteAccount: () =>

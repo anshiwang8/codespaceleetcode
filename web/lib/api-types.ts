@@ -191,6 +191,8 @@ export interface ProfileIdentity {
 export interface ProfileProgress extends ProgressCount {
   /** solved / total as a whole percent, rounded down so it reads 100 only when everything is solved. */
   completionPercent: number;
+  /** Every graded submission to a published puzzle, repeats included. Not a count of puzzles. */
+  submissions: number;
   byType: Record<PuzzleType, ProgressCount>;
   byDifficulty: Record<Difficulty, ProgressCount>;
   byRepo: RepoProgress[];
@@ -210,23 +212,85 @@ export interface UnfinishedPuzzle {
   lastSubmittedAt: string | null;
 }
 
-/** One calendar day of graded submissions. Days are in `ProfileActivity.timeZone`. */
+/**
+ * One UTC calendar date of graded submissions. `available` is false for a date after today or
+ * before the account's history starts: those weren't missed practice, so they show as
+ * unavailable rather than as zero.
+ */
 export interface ActivityDay {
   /** YYYY-MM-DD. */
   date: string;
   submissions: number;
   /** Submissions that were graded right. */
   passed: number;
+  available: boolean;
 }
+
+/** "rolling" is the 365 UTC dates ending today; a four-digit year is that calendar year. */
+export type ActivityPeriodKey = "rolling" | `${number}`;
 
 export interface ProfileActivity {
   /** The zone that decides which day a submission falls on. Always UTC. */
   timeZone: "UTC";
-  /** Every day of the window, oldest first, including days with no submissions. */
+  period: ActivityPeriodKey;
+  /** "Last 365 days", or the year. */
+  label: string;
+  /** First and last dates of the period, inclusive. A calendar year has 365 or 366 of them. */
+  start: string;
+  end: string;
+  /** Today's UTC date on the server, the one boundary every activity figure uses. */
+  today: string;
+  /** Every date of the period, oldest first. */
   days: ActivityDay[];
-  /** Days in the window with at least one submission. */
+  /** Dates in the period with at least one submission. */
   activeDays: number;
   submissions: number;
+  /** Calendar years that can be shown: from the account's first year through this one. */
+  years: number[];
+}
+
+/**
+ * Practice streaks over the account's whole history, never just the period shown. A streak day
+ * is a UTC date with at least one graded submission to a published puzzle.
+ */
+export interface PracticeStreaks {
+  /** The run ending today, or yesterday if today has no submissions yet; otherwise 0. */
+  current: number;
+  /** The longest run of consecutive active dates ever recorded. */
+  longest: number;
+  /** Graded submissions today (UTC). */
+  submissionsToday: number;
+  today: string;
+}
+
+/**
+ * Distinct puzzles first solved, over the same period as the activity calendar. Each solved
+ * puzzle counts once, on the date of its first correct submission.
+ */
+export interface SolveTimeline {
+  start: string;
+  end: string;
+  /** Puzzles first solved before `start`. */
+  baseline: number;
+  /** Dates in the period with first solves, oldest first. */
+  solves: { date: string; count: number }[];
+}
+
+/** GET /api/me/activity?period= */
+export interface ActivityResponse {
+  activity: ProfileActivity;
+  timeline: SolveTimeline;
+}
+
+/** History filters. Each narrows the whole history on the server, not just the loaded page. */
+export interface HistoryFilters {
+  type?: PuzzleType;
+  difficulty?: Difficulty;
+  repo?: string;
+  /** "passed" or "failed". */
+  outcome?: "passed" | "failed";
+  /** One UTC date, YYYY-MM-DD. */
+  date?: string;
 }
 
 /** One graded submission, without the answer that was submitted. */
@@ -256,6 +320,8 @@ export interface ProfileResponse {
   progress: ProfileProgress;
   unfinished: UnfinishedPuzzle[];
   activity: ProfileActivity;
+  streaks: PracticeStreaks;
+  timeline: SolveTimeline;
   history: HistoryPage;
 }
 

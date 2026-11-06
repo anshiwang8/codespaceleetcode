@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ProgressFill } from "@/components/motion/ProgressFill";
 import styles from "@/components/profile/profile.module.css";
 import type { ProgressCount } from "@/lib/api-types";
@@ -10,6 +11,8 @@ export interface BreakdownRow extends ProgressCount {
   detail?: string;
   /** A class for the label, such as a difficulty's color. */
   tone?: string;
+  /** The puzzle list filtered to this category, built with browseHref. */
+  href?: string;
 }
 
 interface ProgressBreakdownProps {
@@ -39,9 +42,18 @@ export function ProgressBreakdown({ title, id, rows, note, mono }: ProgressBreak
           return (
             <li key={row.key} className={styles.row} data-testid={`stats-row-${row.key}`}>
               <span className={styles.rowLabel}>
-                <span className={[row.tone, mono ? "mono" : undefined].filter(Boolean).join(" ") || undefined}>
-                  {row.label}
-                </span>
+                {row.href ? (
+                  <Link
+                    href={row.href}
+                    className={[styles.rowLink, row.tone, mono ? "mono" : undefined].filter(Boolean).join(" ")}
+                  >
+                    {row.label}
+                  </Link>
+                ) : (
+                  <span className={[row.tone, mono ? "mono" : undefined].filter(Boolean).join(" ") || undefined}>
+                    {row.label}
+                  </span>
+                )}
                 {row.detail ? <span className={styles.rowDetail}>{row.detail}</span> : null}
               </span>
               <span
