@@ -41,7 +41,7 @@ observable.observers_?.forEach(d => {
 })
 ```
 
-X has one observer, C. C is `UP_TO_DATE_`, so `C.onBecomeStale_()` runs first, and only afterwards is C marked `STALE_`.
+X has one observer, C. C is `UP_TO_DATE_`, so `C.onBecomeStale_()` runs first, and only afterward is C marked `STALE_`.
 
 `ComputedValue.onBecomeStale_` (`packages/mobx/src/core/computedvalue.ts:138`) is a one-liner: `propagateMaybeChanged(this)`. That function walks C's observers:
 

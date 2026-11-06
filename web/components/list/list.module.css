@@ -1,60 +1,85 @@
+/* The puzzle list at /puzzles. The page frame comes from .page in app/globals.css. */
+
 .page {
-  width: 100%;
-  max-width: 1120px;
-  margin: 0 auto;
-  padding: 20px 16px 48px;
+  padding-top: var(--space-6);
 }
 
-.heading {
+/* Signed-in progress, beside the page title. */
+.progress {
+  display: grid;
+  gap: 6px;
+  min-width: 220px;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.progress strong {
+  color: var(--text);
+  font-size: var(--text-lg);
+}
+
+.progressHint {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+/* Difficulty, filters and grouping, in one panel. */
+.controls {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5) var(--space-5);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface-sunken);
+}
+
+.toolbar {
   display: flex;
-  align-items: baseline;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.heading h1 {
-  font-size: 18px;
-  font-weight: 600;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3) var(--space-5);
 }
 
 .filters {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 8px 12px;
-  margin-bottom: 14px;
+  gap: var(--space-3);
 }
 
 .filter {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  color: var(--text-muted);
-  font-size: 12px;
+  display: grid;
+  gap: var(--space-1);
 }
 
-.filter select {
-  min-width: 130px;
-  max-width: 220px;
-  padding: 3px 6px;
-  border: 1px solid var(--line-strong);
-  border-radius: var(--radius);
-  background: var(--panel);
-  color: var(--text);
-  font-size: 13px;
+.filter :global(.select) {
+  width: 200px;
+  max-width: 100%;
 }
 
 .clear {
-  padding-bottom: 4px;
-  font-size: 12px;
+  color: var(--accent-text);
 }
 
-/* Difficulty strip: the whole catalogue as one bar, each difficulty's width its share of puzzles. */
+.updating {
+  align-self: center;
+  color: var(--text-faint);
+  font-size: var(--text-sm);
+}
+
+.count {
+  margin: var(--space-5) 0 var(--space-1);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Difficulty strip: the whole catalog as one bar, each difficulty's width its share of puzzles. */
 
 .strip {
   display: flex;
-  gap: 6px;
-  margin-bottom: 16px;
+  gap: var(--space-2);
 }
 
 .segment {
@@ -63,10 +88,18 @@
   display: grid;
   flex-basis: 0;
   min-width: 96px;
-  gap: 2px;
-  padding-bottom: 2px;
+  gap: 4px;
+  padding: 6px 8px 8px;
+  margin: -6px -8px -8px;
+  border-radius: var(--radius);
   color: var(--text-muted);
-  transition: opacity 120ms ease;
+  transition:
+    opacity 120ms ease,
+    background-color 120ms ease;
+}
+
+.segment + .segment {
+  margin-left: 0;
 }
 
 .segment[data-difficulty="easy"] {
@@ -82,6 +115,7 @@
 }
 
 .segment:hover {
+  background: var(--hover);
   text-decoration: none;
 }
 
@@ -89,26 +123,28 @@
   position: relative;
   height: 10px;
   overflow: hidden;
-  border-radius: 2px;
-  background: color-mix(in srgb, var(--tone) 30%, transparent);
-  transition: height 120ms ease, background-color 120ms ease;
+  border-radius: var(--radius-pill);
+  background: color-mix(in srgb, var(--tone) 22%, transparent);
+  transition:
+    height 120ms ease,
+    background-color 120ms ease;
 }
 
 .segment:hover .segmentBar {
-  background: color-mix(in srgb, var(--tone) 42%, transparent);
+  background: color-mix(in srgb, var(--tone) 34%, transparent);
 }
 
-/* The selected difficulty's bar grows, so it reads as pressed. */
+/* The selected difficulty's bar grows, so it reads as pressed; its label is underlined too. */
 .segment[aria-current="true"] .segmentBar {
   height: 14px;
 }
 
 .segment[data-dimmed="true"] {
-  opacity: 0.45;
+  opacity: 0.5;
 }
 
 .segment[data-dimmed="true"]:hover {
-  opacity: 0.8;
+  opacity: 0.85;
 }
 
 .segmentSolved {
@@ -119,62 +155,51 @@
 
 .segmentLabel {
   color: var(--tone);
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 650;
 }
 
 .segment[aria-current="true"] .segmentLabel {
   text-decoration: underline;
-  text-underline-offset: 3px;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
 }
 
 .segmentCount {
-  font-size: 12px;
+  font-size: var(--text-sm);
   font-variant-numeric: tabular-nums;
 }
 
-/* Type, topic and repo on the left, grouping on the right. */
-
-.toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 8px 16px;
-  margin-bottom: 6px;
-}
-
-.toolbar .filters {
-  margin-bottom: 0;
-}
+/* Group by: a segmented control of links. */
 
 .groupBy {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  display: grid;
+  gap: var(--space-1);
 }
 
 .groupByLabel {
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: var(--text-sm);
+  font-weight: 500;
 }
 
 .segmented {
   display: inline-flex;
+  padding: 3px;
   border: 1px solid var(--line-strong);
   border-radius: var(--radius);
-  overflow: hidden;
-}
-
-.segmented li + li {
-  border-left: 1px solid var(--line-strong);
+  background: var(--panel);
 }
 
 .segmented a {
-  display: block;
-  padding: 3px 10px;
+  display: flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-sm);
   color: var(--text-muted);
-  font-size: 13px;
+  font-size: var(--text-sm);
+  font-weight: 500;
 }
 
 .segmented a:hover {
@@ -184,25 +209,31 @@
 }
 
 .segmented a[aria-current="true"] {
-  background: var(--panel-raised);
-  color: var(--text);
-  font-weight: 600;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-weight: 650;
 }
 
 /* Grouped sections */
 
 .group {
-  margin-top: 18px;
+  margin-top: var(--space-5);
 }
 
 .groupSummary {
   display: flex;
-  align-items: baseline;
-  gap: 10px;
-  padding: 4px 0 6px;
-  border-bottom: 1px solid var(--line-strong);
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-2) var(--space-1);
+  border-bottom: 2px solid var(--line-strong);
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
   cursor: pointer;
   list-style: none;
+}
+
+.groupSummary:hover {
+  background: var(--hover);
 }
 
 .groupSummary::-webkit-details-marker {
@@ -212,12 +243,11 @@
 /* A caret that turns when the section opens. */
 .groupSummary::before {
   content: "";
-  align-self: center;
   width: 0;
   height: 0;
-  border-top: 4px solid transparent;
-  border-bottom: 4px solid transparent;
-  border-left: 5px solid var(--text-faint);
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 6px solid var(--text-faint);
   transition: transform 120ms ease;
 }
 
@@ -226,77 +256,64 @@ details[open] > .groupSummary::before {
 }
 
 .groupSummary h2 {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: var(--text-lg);
+  font-weight: 650;
 }
 
 .groupMeta {
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: var(--text-sm);
   font-variant-numeric: tabular-nums;
 }
 
 .groupBar {
-  align-self: center;
-  width: 120px;
-  height: 4px;
+  width: 140px;
+  height: 6px;
   margin-left: auto;
-  overflow: hidden;
-  border-radius: 2px;
-  background: var(--line);
-}
-
-.groupBar > span {
-  display: block;
-  height: 100%;
-  background: var(--ok);
 }
 
 .groupDescription {
-  margin: 6px 0 2px;
+  margin: var(--space-2) 0 var(--space-1);
   color: var(--text-muted);
-  font-size: 12px;
+  font-size: var(--text-sm);
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .segment,
-  .segmentBar,
-  .groupSummary::before {
-    transition: none;
-  }
-}
+/* The table */
 
 .table {
   width: 100%;
   border-collapse: collapse;
+  font-size: 15px;
 }
 
 .table th {
-  padding: 4px 10px;
+  padding: var(--space-2) var(--space-3);
   border-bottom: 1px solid var(--line-strong);
   color: var(--text-faint);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.03em;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
   text-align: left;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .table td {
-  padding: 6px 10px;
+  padding: 10px var(--space-3);
   border-bottom: 1px solid var(--line);
-  vertical-align: baseline;
+  vertical-align: middle;
 }
 
 .table tbody tr:hover {
-  background: var(--hover);
+  background: var(--accent-softer);
 }
 
 /* Each header is a link that sorts by its column. */
 .sortable a {
   display: inline-flex;
-  align-items: baseline;
+  align-items: center;
   gap: 4px;
+  padding: 2px 0;
   color: inherit;
 }
 
@@ -320,17 +337,21 @@ details[open] > .groupSummary::before {
 
 .glyph {
   display: inline-block;
-  width: 14px;
-  font-family: var(--font-mono);
+  width: 18px;
+  font-weight: 700;
 }
 
 .statusText {
-  font-size: 12px;
+  font-size: var(--text-sm);
 }
 
 .title a {
   color: var(--text);
-  font-weight: 500;
+  font-weight: 550;
+}
+
+.title a:hover {
+  color: var(--accent-text);
 }
 
 .type,
@@ -340,37 +361,66 @@ details[open] > .groupSummary::before {
 
 .type {
   color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.difficulty {
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: currentcolor;
+  vertical-align: 1px;
 }
 
 .repo {
+  font-size: 13px;
   white-space: nowrap;
-  font-size: 12px;
+}
+
+.language {
+  margin-left: 6px;
+  color: var(--text-faint);
+  font-size: var(--text-xs);
 }
 
 .tags {
-  font-size: 11px;
+  min-width: 140px;
 }
 
 .tags a {
-  margin: 0 4px 2px 0;
-}
-
-.tags a:hover {
-  color: var(--text);
-  text-decoration: none;
+  margin: 2px 4px 2px 0;
 }
 
 .skeletonRows {
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
 }
 
 .skeletonRows > div {
-  height: 26px;
+  height: 40px;
 }
 
-/* On a phone each row becomes a small card. It's a read-only list, per spec section 11. */
-@media (max-width: 720px) {
+.skeletonHeader {
+  width: 220px;
+  height: 36px;
+  margin-bottom: var(--space-5);
+}
+
+.skeletonPanel {
+  height: 132px;
+  border-radius: var(--radius-lg);
+}
+
+/* Below this width the table won't fit, so each row becomes a small card. */
+@media (max-width: 860px) {
   .table thead {
     position: absolute;
     width: 1px;
@@ -386,40 +436,33 @@ details[open] > .groupSummary::before {
 
   .table tr {
     display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 2px 10px;
-    padding: 10px 2px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 4px var(--space-3);
+    padding: var(--space-3) var(--space-1);
     border-bottom: 1px solid var(--line);
   }
 
   .table td {
     display: block;
+    min-width: 0;
     padding: 0;
     border: 0;
-    min-width: 0;
   }
 
   .title {
     grid-column: 1 / -1;
     grid-row: 1;
-    font-size: 14px;
-  }
-
-  .status {
-    grid-column: 2;
-    grid-row: 2;
-    text-align: right;
+    font-size: var(--text-md);
   }
 
   .type {
     grid-column: 1;
     grid-row: 2;
-    display: inline;
   }
 
-  .difficulty {
+  .status {
     grid-column: 2;
-    grid-row: 3;
+    grid-row: 2;
     text-align: right;
   }
 
@@ -430,18 +473,87 @@ details[open] > .groupSummary::before {
     text-overflow: ellipsis;
   }
 
+  .difficulty {
+    grid-column: 2;
+    grid-row: 3;
+    text-align: right;
+  }
+
   .tags {
     grid-column: 1 / -1;
     grid-row: 4;
-  }
-
-  .filter {
-    flex: 1 1 40%;
-  }
-
-  .filter select {
-    width: 100%;
-    max-width: none;
-    min-height: 34px;
+    min-width: 0;
   }
 }
+
+@media (max-width: 640px) {
+  .controls {
+    padding: var(--space-4);
+  }
+
+  .toolbar,
+  .filters {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+  }
+
+  .filter :global(.select) {
+    width: 100%;
+  }
+
+  .segmented {
+    display: flex;
+  }
+
+  .segmented li {
+    flex: 1;
+  }
+
+  .segmented a {
+    justify-content: center;
+    padding: 0 var(--space-2);
+  }
+
+  .strip {
+    gap: var(--space-1);
+  }
+
+  .segment {
+    min-width: 0;
+  }
+
+  .groupBar {
+    width: 100%;
+    flex-basis: 100%;
+    margin-left: 0;
+  }
+}
+
+.filters { position: relative; }
+.updating { animation: var(--motion-fade) var(--motion-control) var(--motion-ease); }
+.segment, .segmented a, .groupSummary, .table tbody tr {
+  transition: background-color var(--motion-control) var(--motion-feedback), opacity var(--motion-control) var(--motion-feedback);
+}
+/* Keep the strip's height fixed when a difficulty becomes active. */
+.segmentBar { height: 14px; }
+.segment[aria-current="true"] .segmentBar { height: 14px; }
+.groupSummary::before { transition: transform var(--motion-control) var(--motion-ease); }
+.groupContent { animation: var(--motion-fade) var(--motion-panel) var(--motion-ease); }
+/* Native details removes closed descendants from focus immediately. Supporting browsers fade
+   the opening content; older browsers retain the same immediate, accessible native behavior. */
+@supports selector(details::details-content) {
+  .group details::details-content {
+    opacity: 0;
+    transition: opacity var(--motion-panel) var(--motion-ease);
+  }
+  .group details[open]::details-content { opacity: 1; }
+  @starting-style { .group details[open]::details-content { opacity: 0.6; } }
+}
+.segmentSolved {
+  transform-origin: left;
+  transition: transform var(--motion-progress) var(--motion-ease);
+}
+
+/* Pending text shares a label line, so it never moves the filters or grouping control. */
+.updating { position: absolute; top: 0; right: 0; }

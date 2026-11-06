@@ -79,6 +79,6 @@ Keeping preprocessing separate from dispatch lets `full_dispatch_request` use on
 
 ## Takeaways
 
-- When a prompt describes a behaviour in terms of data ("registered preprocessors", "before-request callbacks"), search for the attribute that stores that data. The reader of that attribute is usually the answer.
+- When a prompt describes a behavior in terms of data ("registered preprocessors", "before-request callbacks"), search for the attribute that stores that data. The reader of that attribute is usually the answer.
 - In request-processing frameworks, find the `try` block that wraps dispatch first. It shows every phase (preprocess, dispatch, error handling, finalize) in one screen.
 - Notice the early return. "Stop as soon as a hook returns something" is a common pattern for short-circuiting, used for authentication checks and similar gates.

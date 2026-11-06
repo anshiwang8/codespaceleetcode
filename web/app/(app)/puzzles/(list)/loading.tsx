@@ -2,14 +2,18 @@ import styles from "@/components/list/list.module.css";
 
 export default function Loading() {
   return (
-    <main className={styles.page} aria-busy="true">
+    <main className={`page ${styles.page}`} aria-busy="true">
       <p className="visually-hidden" role="status">
-        Loading
+        Loading puzzles…
       </p>
-      <div className={styles.skeletonRows} aria-hidden="true">
-        {Array.from({ length: 8 }, (_, index) => (
-          <div key={index} className="skeleton" />
-        ))}
+      <div aria-hidden="true">
+        <div className={`skeleton ${styles.skeletonHeader}`} />
+        <div className={`skeleton ${styles.skeletonPanel}`} />
+        <div className={styles.skeletonRows}>
+          {Array.from({ length: 8 }, (_, index) => (
+            <div key={index} className="skeleton" />
+          ))}
+        </div>
       </div>
     </main>
   );

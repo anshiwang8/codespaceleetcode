@@ -12,6 +12,12 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
     await page.goto("/puzzles/e2e-find-symbol", { timeout: 180_000 });
     await page.locator(".monaco-editor .view-line").first().waitFor({ timeout: 180_000 });
     await page.goto("/profile", { timeout: 180_000 });
+    if (process.env.VISUAL_REVIEW) {
+      // Compile these route handlers before motion assertions. Invalid signed-out requests do
+      // not create activity; the screenshot contexts use their own deterministic accounts.
+      await page.request.post("/api/puzzles/e2e-arch-choice/submit", { data: {} });
+      await page.request.get("/api/me/history");
+    }
   } finally {
     await browser.close();
   }

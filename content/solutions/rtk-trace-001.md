@@ -8,9 +8,9 @@
 
 ## How a strong engineer would approach it
 
-Work backwards from the end point, because it is rare. `createSingleArgumentStateOperator` is defined in `entities/state_adapter.ts:11`. Find its references: outside its own file, the only caller is `unsorted_state_adapter.ts`, which imports it on line 11 and uses it once, on line 191. So whatever path you take from the sorted adapter has to pass through `createUnsortedStateAdapter`.
+Work backward from the end point, because it is rare. `createSingleArgumentStateOperator` is defined in `entities/state_adapter.ts:11`. Find its references: outside its own file, the only caller is `unsorted_state_adapter.ts`, which imports it on line 11 and uses it once, on line 191. So whatever path you take from the sorted adapter has to pass through `createUnsortedStateAdapter`.
 
-Then work forwards to confirm. `createSortedStateAdapter` calls `createUnsortedStateAdapter` near the top of its body:
+Then work forward to confirm. `createSortedStateAdapter` calls `createUnsortedStateAdapter` near the top of its body:
 
 ```ts
 // packages/toolkit/src/entities/sorted_state_adapter.ts:58-59
@@ -70,4 +70,4 @@ Then it returns an `operation(state)` that calls `operator(state as S, undefined
 ## Takeaways
 
 - For a trace to a rarely-used function, start from the end: find its few callers, then connect them back to the start.
-- Composition by destructuring (`const { a, b } = otherFactory()`) is a common way to reuse behaviour without inheritance. When a function seems to be missing from a module, check whether it is borrowed this way.
+- Composition by destructuring (`const { a, b } = otherFactory()`) is a common way to reuse behavior without inheritance. When a function seems to be missing from a module, check whether it is borrowed this way.

@@ -60,4 +60,4 @@ The two `asdict`s differ only in `retain_collection_types`. The classic `attr.as
 ## Takeaways
 
 - When a package's `__init__.py` is all imports, it's a facade. Keep following the imports until you reach a body that does real work.
-- A function that just calls another with a fixed keyword argument is a wrapper. It's worth noting what it changes, but the behaviour lives in the callee.
+- A function that just calls another with a fixed keyword argument is a wrapper. It's worth noting what it changes, but the behavior lives in the callee.

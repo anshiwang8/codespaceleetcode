@@ -15,7 +15,7 @@ interface FilterBarProps {
   tags: string[];
 }
 
-/** Type, topic and repo, plus clearing every filter. Difficulty has the strip above. */
+/** Type, topic and repository, plus clearing every filter. Difficulty has the strip above. */
 export function FilterBar({ state, repos, tags }: FilterBarProps) {
   const { filters } = state;
   const router = useRouter();
@@ -23,6 +23,7 @@ export function FilterBar({ state, repos, tags }: FilterBarProps) {
   const searchParams = useSearchParams();
   const [pending, startTransition] = useTransition();
 
+  // Each change is a new history entry, so Back undoes it.
   const setFilter = (name: keyof BrowseFilters, value: string) => {
     const next = new URLSearchParams(searchParams);
     if (value) next.set(name, value);
@@ -34,12 +35,13 @@ export function FilterBar({ state, repos, tags }: FilterBarProps) {
   const select = (
     name: "type" | "tag" | "repo",
     label: string,
+    allLabel: string,
     options: { value: string; label: string }[],
   ) => (
     <label className={styles.filter}>
-      <span>{label}</span>
-      <select value={filters[name] ?? ""} onChange={(event) => setFilter(name, event.target.value)}>
-        <option value="">All</option>
+      <span className="field-label">{label}</span>
+      <select className="select" value={filters[name] ?? ""} onChange={(event) => setFilter(name, event.target.value)}>
+        <option value="">{allLabel}</option>
         {options.map((option) => (
           <option key={option.value} value={option.value}>
             {option.label}
@@ -60,15 +62,18 @@ export function FilterBar({ state, repos, tags }: FilterBarProps) {
   const active = Object.values(filters).some(Boolean);
 
   return (
-    <div className={styles.filters} aria-busy={pending}>
-      {select("type", "Type", entries(TYPE_LABELS))}
-      {select("tag", "Topic", topics)}
-      {select("repo", "Repo", plain(repos))}
+    <div className={`${styles.filters} pending-track`} aria-busy={pending}>
+      {select("type", "Type", "All types", entries(TYPE_LABELS))}
+      {select("tag", "Topic", "All topics", topics)}
+      {select("repo", "Repository", "All repositories", plain(repos))}
       {active ? (
-        <Link href={browseHref({ ...state, filters: {} })} className={styles.clear}>
+        <Link href={browseHref({ ...state, filters: {} })} className={`btn btn-quiet ${styles.clear}`}>
           Clear filters
         </Link>
       ) : null}
+      <span className={styles.updating} role="status">
+          {pending ? "Updating…" : ""}
+        </span>
     </div>
   );
 }

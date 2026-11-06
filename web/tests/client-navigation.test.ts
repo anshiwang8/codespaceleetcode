@@ -55,7 +55,7 @@ describe("navigationReducer", () => {
     expect(state.trail.at(-1)).toBe(`f${TRAIL_LIMIT + 4}`);
   });
 
-  it("closing the active tab activates its neighbour, and the last leaves nothing open", () => {
+  it("closing the active tab activates its neighbor, and the last leaves nothing open", () => {
     let state = open(open(open(initialNavigation, "a"), "b"), "c");
     state = navigationReducer(state, { type: "close", path: "c" });
     expect(state.activePath).toBe("b");

@@ -77,5 +77,5 @@ flowchart LR
 ## Takeaways
 
 - When a lookup returns "the first match", the real rule lives wherever the collection is built. Search for writes to the collection, not just reads.
-- `dict` (and `OrderedDict`) iteration order is insertion order, and `d[k] = d.pop(k)` is a common idiom for moving a key to the end. Recognising it makes code like `mount` readable at a glance.
+- `dict` (and `OrderedDict`) iteration order is insertion order, and `d[k] = d.pop(k)` is a common idiom for moving a key to the end. Recognizing it makes code like `mount` readable at a glance.
 - Docstrings can point you in the right direction ("Adapters are sorted in descending order by prefix length"), but confirm with the code, as done above.

@@ -1,4 +1,4 @@
-# rxjs-trace-002: How forkJoin recognises a dictionary of sources
+# rxjs-trace-002: How forkJoin recognizes a dictionary of sources
 
 **Answer:** `forkJoinImpl` -> `normalizeInputs` -> `isPlainObject`
 
@@ -98,7 +98,7 @@ So `forkJoin({ a, b })` emits `{ a: lastA, b: lastB }`, while `forkJoin([a, b])`
 
 ## Why check the prototype?
 
-`isPlainObject` accepts only objects whose prototype is exactly `Object.prototype`. That rules out arrays (already handled), class instances, and observables themselves. Without the prototype check, `forkJoin(someObservable)` with a single observable argument would be mistaken for a dictionary and split into its enumerable own properties. With the check, a single non-plain argument falls through to `{ keys: null, sources: inputArguments }` and is treated as one source. A side effect is that `Object.create(null)` dictionaries are not recognised, since their prototype is `null`.
+`isPlainObject` accepts only objects whose prototype is exactly `Object.prototype`. That rules out arrays (already handled), class instances, and observables themselves. Without the prototype check, `forkJoin(someObservable)` with a single observable argument would be mistaken for a dictionary and split into its enumerable own properties. With the check, a single non-plain argument falls through to `{ keys: null, sources: inputArguments }` and is treated as one source. A side effect is that `Object.create(null)` dictionaries are not recognized, since their prototype is `null`.
 
 ## Takeaways
 

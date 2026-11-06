@@ -4,7 +4,7 @@
 
 ## The key idea
 
-`mount` treats an `H3` child as a *source of data to copy*, not as something to forward to. At the moment `mount` runs it copies the child's routes into the parent's router, and it adds one wrapper middleware that runs the child's middleware. The child's middleware list is read lazily at request time, but its routes are not. So a route added afterwards exists only in the child.
+`mount` treats an `H3` child as a *source of data to copy*, not as something to forward to. At the moment `mount` runs it copies the child's routes into the parent's router, and it adds one wrapper middleware that runs the child's middleware. The child's middleware list is read lazily at request time, but its routes are not. So a route added afterward exists only in the child.
 
 ## Timeline
 
@@ -74,7 +74,7 @@ sequenceDiagram
 2. `createDispatcher` sees one parent middleware and builds `composed(event, routeHandler(route))`. With no route, `routeHandler` returns `NoHandler` (line 137), which is `() => kNotFound` (line 39).
 3. The wrapper checks the prefix (`/api/late` starts with `/api` and the next character is `/`), and `hasEmptySegmentAfterBase` is false. It sets the pathname to `/late` and runs the child's chain.
 4. The logger takes one parameter, so `normalizeMiddleware` wrapped it when `child.use` ran (`src/middleware.ts:22-28`). It logs `/late` (the stripped path), returns `undefined`, and the wrapper calls `next()`. That reaches the terminal function the mount wrapper passed in, which restores the path and calls the parent's `next()`, which runs `NoHandler`. The result is `kNotFound`.
-5. `kNotFound` travels back up through `callLayer`, which treats it as unhandled and returns the memoised `next()` result, still `kNotFound`. In `src/response.ts`, `prepareResponse` turns it into an `HTTPError` with status 404 (lines 139-144).
+5. `kNotFound` travels back up through `callLayer`, which treats it as unhandled and returns the memoized `next()` result, still `kNotFound`. In `src/response.ts`, `prepareResponse` turns it into an `HTTPError` with status 404 (lines 139-144).
 
 ## Why the other options are wrong
 

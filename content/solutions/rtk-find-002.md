@@ -46,7 +46,7 @@ flowchart TD
 ```
 
 - The `rejected` action creator sets `meta.condition` by checking the name (line 596).
-- `skipDispatch` (lines 725-729) is true when `meta.condition` is set and `dispatchConditionRejection` is not enabled. So by default a cancelled-by-condition thunk dispatches neither `pending` nor `rejected`. The `pending` dispatch (line 670) comes after the throw, so it never runs either.
+- `skipDispatch` (lines 725-729) is true when `meta.condition` is set and `dispatchConditionRejection` is not enabled. So by default a canceled-by-condition thunk dispatches neither `pending` nor `rejected`. The `pending` dispatch (line 670) comes after the throw, so it never runs either.
 
 A plain object is enough because only its `name` is inspected. `miniSerializeError` (line 94) copies any string-valued `name`, `message`, `stack` and `code` properties from an object into the action's `error` field, so a plain object serializes the same way an `Error` would.
 

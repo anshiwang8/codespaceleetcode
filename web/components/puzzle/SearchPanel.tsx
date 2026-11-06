@@ -26,14 +26,14 @@ export function SearchPanel({ snapshotId, onOpen }: SearchPanelProps) {
 
   useEffect(() => {
     if (!active) return;
-    let cancelled = false;
+    let canceled = false;
     const timer = setTimeout(() => {
       api.search(snapshotId, query).then(
         (response) => {
-          if (!cancelled) setSearch({ query, state: "ready", response });
+          if (!canceled) setSearch({ query, state: "ready", response });
         },
         (error: unknown) => {
-          if (cancelled) return;
+          if (canceled) return;
           setSearch({
             query,
             state: "error",
@@ -43,7 +43,7 @@ export function SearchPanel({ snapshotId, onOpen }: SearchPanelProps) {
       );
     }, DEBOUNCE_MS);
     return () => {
-      cancelled = true;
+      canceled = true;
       clearTimeout(timer);
     };
   }, [snapshotId, query, active]);

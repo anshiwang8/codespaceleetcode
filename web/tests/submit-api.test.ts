@@ -96,7 +96,7 @@ const unknownReferences: [string, string, unknown][] = [
   ["fx-location", "a span past the end of the file", { kind: "location", id: `${CONFIG_FILE}:L3-L12` }],
   ["fx-location", "a malformed span", { kind: "location", id: `${CONFIG_FILE}:L3` }],
   ["fx-location", "line zero", { kind: "location", id: `${CONFIG_FILE}:L0-L4` }],
-  ["fx-location", "a backwards span", { kind: "location", id: `${CONFIG_FILE}:L4-L3` }],
+  ["fx-location", "a backward span", { kind: "location", id: `${CONFIG_FILE}:L4-L3` }],
   ["fx-location", "a bare path", { kind: "location", id: CONFIG_FILE }],
   ["fx-sequence", "one unknown step", { kind: "sequence", ids: [HANDLE_SYMBOL, "src/router.ts#Nope"] }],
   ["fx-sequence", "a file as a step", { kind: "sequence", ids: [HANDLE_SYMBOL, ROUTER_FILE] }],

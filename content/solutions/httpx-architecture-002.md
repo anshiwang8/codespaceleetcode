@@ -75,7 +75,7 @@ flowchart LR
 
 - **Port beats host beats scheme.** The tuple order means any pattern with a port sorts ahead of every pattern without one, regardless of host length. And `"all://example.com"` (scheme `""` because `all` is treated as a wildcard, line 174) still sorts ahead of `"https://"`, because the host length is compared before the scheme length.
 - **Matching is structured, not a string prefix.** `matches` (line 192) compares scheme, host (by regex, with `*.` wildcard support, lines 177-190) and port separately. `"https://example.com"` does *not* match `https://www.example.com`, because the host regex is anchored (`^example\.com$`).
-- **Proxies use the same table.** `self._mounts` starts with one entry per proxy key from `_get_proxy_map` (lines 697-710), and user mounts are merged in afterwards. A mount whose key equals a proxy key replaces it, because `URLPattern.__eq__` and `__hash__` both use the pattern string.
+- **Proxies use the same table.** `self._mounts` starts with one entry per proxy key from `_get_proxy_map` (lines 697-710), and user mounts are merged in afterward. A mount whose key equals a proxy key replaces it, because `URLPattern.__eq__` and `__hash__` both use the pattern string.
 
 ## Compare with requests
 

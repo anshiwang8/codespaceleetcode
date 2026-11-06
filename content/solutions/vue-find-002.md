@@ -96,7 +96,7 @@ The same object, link E-d2, is a node in both lists.
 
 An effect's dependencies can change between runs. With `if (flag) read(a) else read(b)`, a run that takes the `else` branch no longer depends on `a`. If the old link stayed, writes to `a` would keep re-running the effect for nothing.
 
-A simpler design would unsubscribe from every dependency before each run and re-subscribe from scratch. The version-marking approach avoids that churn: links that are read again are reused in place (only their `version` is synced), and only the links that were not touched get removed. The loop walks from the tail backwards, which is why `head` ends up as the last surviving link seen.
+A simpler design would unsubscribe from every dependency before each run and re-subscribe from scratch. The version-marking approach avoids that churn: links that are read again are reused in place (only their `version` is synced), and only the links that were not touched get removed. The loop walks from the tail backward, which is why `head` ends up as the last surviving link seen.
 
 ## Takeaways
 

@@ -59,7 +59,8 @@ export function AnswerTray({
       <div className={styles.submitRow}>
         <button
           type="button"
-          className="btn btn-primary"
+          className="btn btn-primary pending-track"
+          aria-busy={submitting}
           disabled={!ready || submitting || waitingForAuth}
           onClick={onSubmit}
           data-testid="submit"
@@ -82,6 +83,7 @@ export function AnswerTray({
       <div aria-live="polite">
         {result ? (
           <div
+            key={result.attempts}
             className={result.correct ? styles.resultCorrect : styles.resultIncorrect}
             data-testid="result"
             data-correct={result.correct}

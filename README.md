@@ -38,7 +38,7 @@ Real sign-in uses [Better Auth](https://www.better-auth.com) with GitHub. To tur
 
 1. Create a GitHub OAuth app at github.com → Settings → Developer settings → OAuth Apps. Set the homepage to `http://127.0.0.1:3000` and the callback URL to `http://127.0.0.1:3000/api/auth/callback/github`. Use `127.0.0.1`, not `localhost`, because that's where the site runs and the session cookie belongs to one hostname.
 2. Copy `web/.env.example` to `web/.env.local` and fill in `BETTER_AUTH_SECRET` (from `openssl rand -base64 32`), `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET`.
-3. Restart `pnpm local`. **Log in** on the landing page and **Sign in with GitHub** in the header now go to GitHub. The dev login stays available on localhost.
+3. Restart `pnpm local`. **Sign in** on the landing page and **Sign in with GitHub** in the header now go to GitHub. The dev login stays available on localhost.
 
 ### On a fresh clone
 
@@ -91,3 +91,9 @@ cd ingest && uv run --env-file .env python -m ingest migrate
 ```bash
 cd ingest && uv run --env-file .env python -m ingest upload-all
 ```
+
+## Visual and motion review
+
+Run `pnpm visual:review` from the repo root. It starts its own temporary fixture database and local app, then runs the screenshot and motion checks. It can run beside `pnpm dev` and `pnpm e2e`. Open `web/visual-review/index.html` to compare the screenshots; machine results and a run report are saved beside it. The output is ignored by git and remains available after the temporary app/database stop.
+
+See [VISUAL_REVIEW.md](VISUAL_REVIEW.md) for coverage, the inspection record and limitations.

@@ -20,7 +20,7 @@ import {
 
 // Always a cold build. Restoring Turbopack's cache from a run on another port left every other run
 // stuck with the page reloading forever.
-const DIST_DIR = ".next-e2e";
+const DIST_DIR = process.env.VISUAL_REVIEW ? ".next-visual" : ".next-e2e";
 removeWebDir(DIST_DIR);
 
 let database = null;
@@ -38,6 +38,7 @@ try {
   database = await startFixtureDatabase("codebase_puzzles_e2e");
   const webPort = await freePort();
   const cli = playwrightCli();
+  if (process.env.VISUAL_REVIEW) console.log(`Visual review: isolated fixture app at http://127.0.0.1:${webPort}`);
 
   // Does nothing, quickly, once the browser is there.
   exitCode = await runNode(cli, ["install", "chromium"], {});

@@ -106,7 +106,7 @@ When the consumer of `filter`'s output unsubscribes, its `subscriber.signal` abo
 
 ## Background
 
-This version of RxJS is built on the native-style `Observable` from `@rxjs/observable-polyfill` (imported on line 1 of the helper), where subscriptions are cancelled through `AbortSignal` rather than by returning a `Subscription`. That makes "pass the right signal upstream" the one thing every operator must get right, which is why it lives in a single shared helper.
+This version of RxJS is built on the native-style `Observable` from `@rxjs/observable-polyfill` (imported on line 1 of the helper), where subscriptions are canceled through `AbortSignal` rather than by returning a `Subscription`. That makes "pass the right signal upstream" the one thing every operator must get right, which is why it lives in a single shared helper.
 
 ## Takeaways
 

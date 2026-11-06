@@ -28,6 +28,9 @@ interface AuthValue {
   /** The name the dev sign-in button will use. Null until known, which is after mount. */
   devName: string | null;
   error: string | null;
+  clearError: () => void;
+  /** True while a sign-in or sign-out request is in flight. */
+  pending: boolean;
   /** Leaves for GitHub, then comes back to this page. */
   gitHubSignIn: () => Promise<void>;
   /** The localhost-only dev login. */
@@ -43,31 +46,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [me, setMe] = useState<MeResponse | null>(null);
   const [devName, setDevName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
+    let canceled = false;
     api
       .me()
       .catch((): MeResponse => ({ user: null, githubAuth: false, devAuth: false }))
       .then((response) => {
-        if (cancelled) return;
+        if (canceled) return;
         setMe(response);
         setDevName(devLoginName());
       });
     return () => {
-      cancelled = true;
+      canceled = true;
     };
   }, []);
 
   const change = useCallback(
     async (request: () => Promise<MeResponse>) => {
       setError(null);
+      setPending(true);
       try {
         setMe(await request());
         // Server components read the cookie, so progress on the page has to be fetched again.
         router.refresh();
       } catch (cause) {
-        setError(cause instanceof ApiRequestError || cause instanceof Error ? cause.message : "Sign-in failed");
+        setError(cause instanceof ApiRequestError || cause instanceof Error ? cause.message : "Sign-in failed. Try again.");
+      } finally {
+        setPending(false);
       }
     },
     [router],
@@ -75,9 +82,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const gitHubSignIn = useCallback(async () => {
     setError(null);
+    setPending(true);
     const failed = await signInWithGitHub(window.location.pathname + window.location.search);
-    if (failed) setError(failed);
+    // On success the browser is already leaving for GitHub, so the controls stay busy.
+    if (failed) {
+      setError(failed);
+      setPending(false);
+    }
   }, []);
+
+  const clearError = useCallback(() => setError(null), []);
 
   const signOut = useCallback(async () => {
     if (me?.user?.via !== "github") return change(api.devLogout);
@@ -94,11 +108,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       me,
       devName,
       error,
+      clearError,
+      pending,
       gitHubSignIn,
       devSignIn: () => change(() => api.devLogin(devName ?? devLoginName())),
       signOut,
     }),
-    [me, devName, error, change, gitHubSignIn, signOut],
+    [me, devName, error, clearError, pending, change, gitHubSignIn, signOut],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

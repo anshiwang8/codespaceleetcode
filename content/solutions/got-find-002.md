@@ -79,7 +79,7 @@ They are all transient conditions where trying again later can reasonably succee
 - **The whole `retry` object (1367-1405)** starts before the window and includes much more than the status codes.
 - **Stopping at line 1388 (`524,`)** leaves the closing `],` uncovered.
 - **Line 661 in the `RetryOptions` type** declares the field's type, not its value.
-- **The copies and normalisation at lines 1515, 1558 and 3213** operate on whatever array is already there. None of them defines the default list.
+- **The copies and normalization at lines 1515, 1558 and 3213** operate on whatever array is already there. None of them defines the default list.
 - **`calculate-retry-delay.ts:22`** reads the list with `retryOptions.statusCodes.includes(...)`. It uses the default but doesn't define it, and it is in another file.
 
 ## Takeaways

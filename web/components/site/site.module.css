@@ -1,62 +1,208 @@
+/* The app header, on every page except the landing page. */
+
+.skipLink {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 100;
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  transform: translateY(-200%);
+}
+
+.skipLink:focus {
+  transform: none;
+}
+
 .header {
-  display: flex;
   flex: none;
-  align-items: center;
-  gap: 20px;
   height: var(--header-height);
-  padding: 0 12px;
   border-bottom: 1px solid var(--line);
   background: var(--panel);
 }
 
+.inner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  height: 100%;
+  padding: 0 var(--space-4);
+}
+
 .brand {
   display: inline-flex;
+  flex: none;
   align-items: center;
+  padding: 4px;
+  margin-left: -4px;
   border-radius: var(--radius);
-  white-space: nowrap;
 }
 
 .brand:hover {
   text-decoration: none;
 }
 
-.nav {
+.nav ul {
   display: flex;
-  gap: 14px;
+  gap: var(--space-1);
 }
 
 .nav a {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius);
   color: var(--text-muted);
+  font-size: 15px;
+  font-weight: 500;
 }
 
 .nav a:hover {
+  background: var(--hover);
   color: var(--text);
+  text-decoration: none;
+}
+
+/* The current page, or the section the page is in. The weight and the bar both mark it. */
+.nav a[aria-current] {
+  color: var(--text);
+  font-weight: 650;
+}
+
+.nav a[aria-current]::after {
+  content: "";
+  position: absolute;
+  right: var(--space-3);
+  bottom: -10px;
+  left: var(--space-3);
+  height: 2px;
+  border-radius: 2px;
+  background: var(--accent);
 }
 
 .auth {
   display: flex;
+  flex: 1 1 auto;
   align-items: center;
-  gap: 8px;
-  margin-left: auto;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  min-width: 0;
   white-space: nowrap;
+}
+
+.account {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+/* GitHub logins run to 39 characters, so a long one is cut short; the full one is in the title. */
+.login {
+  min-width: 0;
+  max-width: 220px;
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  text-overflow: ellipsis;
 }
 
 .devLabel {
   color: var(--text-faint);
-  font-size: 12px;
+  font-size: var(--text-xs);
 }
 
-.authError {
+.authBanner {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid color-mix(in srgb, var(--bad) 40%, transparent);
+  background: var(--bad-soft);
+  color: var(--text);
+  font-size: var(--text-sm);
+}
+
+.authBanner span {
   color: var(--bad);
-  font-size: 12px;
+  font-weight: 700;
+}
+
+/*
+ * Everything under the header. A flex column held to the height left, so the puzzle workspace can
+ * fill it exactly. Longer pages overflow it and the document scrolls, as before.
+ */
+.content {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.content:focus {
+  outline: none;
+}
+
+@media (max-width: 899px) {
+  .login {
+    max-width: 140px;
+  }
 }
 
 @media (max-width: 640px) {
-  .header {
-    gap: 14px;
+  .inner {
+    gap: var(--space-2);
+    padding: 0 var(--space-3);
   }
 
+  .nav a {
+    padding: 0 var(--space-2);
+  }
+
+  .nav a[aria-current]::after {
+    right: var(--space-2);
+    left: var(--space-2);
+  }
+
+  .auth {
+    gap: var(--space-2);
+  }
+
+  /* The avatar stays; the login is still read out, from the visually hidden text. */
+  .login,
   .devLabel {
-    display: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+}
+
+.nav a { transition: background-color var(--motion-control) var(--motion-feedback), color var(--motion-control) var(--motion-feedback); }
+.nav a[aria-current]::after { animation: var(--motion-fade) var(--motion-control) var(--motion-ease); }
+.authBanner { animation: var(--motion-fade) var(--motion-panel) var(--motion-ease); }
+
+@media (max-width: 640px) {
+  /* Keep navigation and account targets separate even with both local and GitHub sign-in. */
+  .header { height: auto; min-height: var(--header-height); }
+  .inner { height: auto; min-height: var(--header-height); flex-wrap: wrap; }
+  .auth { flex: 1 0 auto; }
+  .authDetail {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 }

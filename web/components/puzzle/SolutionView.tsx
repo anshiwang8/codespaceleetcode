@@ -19,16 +19,16 @@ export function SolutionView({ slug }: { slug: string }) {
   const request = useRef<{ key: string; promise: ReturnType<typeof api.solution> } | null>(null);
 
   useEffect(() => {
-    let cancelled = false;
+    let canceled = false;
     const key = `${slug}
 ${attempt}`;
     if (request.current?.key !== key) request.current = { key, promise: api.solution(slug) };
     request.current.promise.then(
       (response) => {
-        if (!cancelled) setSolution({ state: "ready", body: response.bodyMd });
+        if (!canceled) setSolution({ state: "ready", body: response.bodyMd });
       },
       (error: unknown) => {
-        if (cancelled) return;
+        if (canceled) return;
         setSolution({
           state: "error",
           message: error instanceof ApiRequestError ? error.message : "The solution couldn't be loaded.",
@@ -36,7 +36,7 @@ ${attempt}`;
       },
     );
     return () => {
-      cancelled = true;
+      canceled = true;
     };
   }, [slug, attempt]);
 

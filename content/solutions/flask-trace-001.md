@@ -100,5 +100,5 @@ The flag is set at registration time, in `App.add_url_rule` (`src/flask/sansio/a
 ## Takeaways
 
 - In a trace, a function that is called and returns without leading to the end condition (`preprocess_request`, `request_context`) is a sibling, not a step. Each step must be the caller of the next one.
-- Framework "automatic" behaviour is usually decided by a flag set at registration and checked at dispatch. Finding both ends explains why the behaviour happens and how to turn it off (`provide_automatic_options=False` on the route).
+- Framework "automatic" behavior is usually decided by a flag set at registration and checked at dispatch. Finding both ends explains why the behavior happens and how to turn it off (`provide_automatic_options=False` on the route).
 - `make_default_options_response` is documented as an override point ("This can be changed through subclassing"). Methods like that are good anchors when you search a framework for where a default response is built.

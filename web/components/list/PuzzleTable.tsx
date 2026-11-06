@@ -8,9 +8,10 @@ import { topicLabel } from "@/lib/topics";
 /** A column a group heading already states, so each row doesn't repeat it. */
 export type OmittedColumn = "difficulty" | "repo";
 
+// Shapes as well as colors, so the status reads without color. The text is always there too.
 const STATUS_GLYPHS: Record<PuzzleStatus, string> = {
-  unsolved: "·",
-  attempted: "○",
+  unsolved: "○",
+  attempted: "◐",
   solved: "✓",
 };
 
@@ -52,8 +53,8 @@ export function PuzzleTable({ puzzles, state, omit }: PuzzleTableProps) {
           <SortHeader state={state} column="title" label="Puzzle" />
           <SortHeader state={state} column="type" label="Type" />
           {omit === "difficulty" ? null : <SortHeader state={state} column="difficulty" label="Difficulty" />}
-          {omit === "repo" ? null : <SortHeader state={state} column="repo" label="Repo" />}
-          <SortHeader state={state} column="tags" label="Tags" />
+          {omit === "repo" ? null : <SortHeader state={state} column="repo" label="Repository" />}
+          <SortHeader state={state} column="tags" label="Topics" />
         </tr>
       </thead>
       <tbody>
@@ -71,13 +72,14 @@ export function PuzzleTable({ puzzles, state, omit }: PuzzleTableProps) {
             <td className={styles.type}>{TYPE_LABELS[puzzle.type]}</td>
             {omit === "difficulty" ? null : (
               <td className={`${styles.difficulty} difficulty-${puzzle.difficulty}`}>
+                <span aria-hidden="true" className={styles.dot} />
                 {DIFFICULTY_LABELS[puzzle.difficulty]}
               </td>
             )}
             {omit === "repo" ? null : (
               <td className={styles.repo}>
-                <span className="mono">{puzzle.repoSlug}</span>{" "}
-                <span className="muted">{puzzle.language}</span>
+                <span className="mono">{puzzle.repoSlug}</span>
+                <span className={styles.language}>{puzzle.language}</span>
               </td>
             )}
             <td className={styles.tags}>

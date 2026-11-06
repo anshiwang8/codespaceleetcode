@@ -52,7 +52,7 @@ sequenceDiagram
                proxy_manager = self.proxy_manager_for(proxy)
    ```
 
-   `select_proxy` and `prepend_scheme_if_needed` are requests functions in `utils.py`, but they only choose and normalise the proxy URL. They don't call onward toward the header, so they're not part of the chain. `parse_url` is urllib3.
+   `select_proxy` and `prepend_scheme_if_needed` are requests functions in `utils.py`, but they only choose and normalize the proxy URL. They don't call onward toward the header, so they're not part of the chain. `parse_url` is urllib3.
 
 3. **`proxy_manager_for`** (line 269). This is where the prompt's two assumptions decide the branch:
 

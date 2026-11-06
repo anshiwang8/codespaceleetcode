@@ -1,4 +1,6 @@
+import { ProgressFill } from "@/components/motion/ProgressFill";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { z } from "zod";
 import { DifficultyStrip } from "@/components/list/DifficultyStrip";
 import { FilterBar } from "@/components/list/FilterBar";
@@ -7,6 +9,7 @@ import { PuzzleGroupSection } from "@/components/list/PuzzleGroupSection";
 import { PuzzleTable } from "@/components/list/PuzzleTable";
 import styles from "@/components/list/list.module.css";
 import {
+  browseHref,
   DEFAULT_GROUPING,
   difficultyTallies,
   filterPuzzles,
@@ -61,10 +64,14 @@ export default async function PuzzleListPage({ searchParams }: PageProps<"/puzzl
   if (repos.length === 0) {
     return (
       <main className="page-message" data-testid="no-puzzles-seeded">
-        <h1>No puzzles seeded yet</h1>
-        <p className="muted">The database is running, but it has no published puzzles.</p>
+        <h1>No puzzles yet</h1>
         <p className="muted">
-          From <code>ingest/</code>, run <code>uv run python -m ingest seed</code>, then reload this page.
+          There aren&apos;t any puzzles to show right now. New ones are on the way, so check back soon.
+        </p>
+        <p className="actions">
+          <Link href="/" className="btn">
+            Back to home
+          </Link>
         </p>
       </main>
     );
@@ -75,34 +82,72 @@ export default async function PuzzleListPage({ searchParams }: PageProps<"/puzzl
   const groups = groupPuzzles(shown, state.group, state.filters);
   const showProgress = user !== null;
   const solved = shown.filter((puzzle) => puzzle.status === "solved").length;
+  const solvedAll = all.filter((puzzle) => puzzle.status === "solved").length;
+  const share = all.length === 0 ? 0 : Math.floor((solvedAll / all.length) * 100);
+  const filtered = Object.values(state.filters).some(Boolean);
 
   return (
-    <main className={styles.page}>
-      <div className={styles.heading}>
-        <h1>Puzzles</h1>
-        <p className="muted" data-testid="puzzle-count">
-          {shown.length === all.length
-            ? `${all.length} ${all.length === 1 ? "puzzle" : "puzzles"}`
-            : `${shown.length} of ${all.length} puzzles`}
-          {showProgress ? `, ${solved} solved` : null}
-        </p>
+    <main className={`page ${styles.page}`}>
+      <div className="page-header">
+        <div>
+          <h1 className="page-title">Puzzles</h1>
+          <p className="page-lede">
+            Each puzzle is set in a real open-source repository. Read the code, find the answer, and
+            select it in the editor.
+          </p>
+        </div>
+        {showProgress ? (
+          <div className={styles.progress} data-testid="list-progress">
+            <p>
+              <strong className="tabular">{solvedAll}</strong> of{" "}
+              <span className="tabular">{all.length}</span> solved
+            </p>
+            <div
+              className="meter"
+              role="progressbar"
+              aria-label="Puzzles solved"
+              aria-valuemin={0}
+              aria-valuemax={all.length}
+              aria-valuenow={solvedAll}
+              aria-valuetext={`${solvedAll} of ${all.length} ${all.length === 1 ? "puzzle" : "puzzles"} solved`}
+            >
+              <ProgressFill percent={share} />
+            </div>
+          </div>
+        ) : (
+          <p className={styles.progressHint}>Sign in to keep track of what you&apos;ve solved.</p>
+        )}
       </div>
 
-      <DifficultyStrip
-        state={state}
-        tallies={difficultyTallies(all, state.filters)}
-        showProgress={showProgress}
-      />
+      <section className={styles.controls} aria-label="Filter and group puzzles">
+        <DifficultyStrip
+          state={state}
+          tallies={difficultyTallies(all, state.filters)}
+          showProgress={showProgress}
+        />
+        <div className={styles.toolbar}>
+          <FilterBar state={state} repos={repos} tags={tags} />
+          <GroupBy state={state} />
+        </div>
+      </section>
 
-      <div className={styles.toolbar}>
-        <FilterBar state={state} repos={repos} tags={tags} />
-        <GroupBy state={state} />
-      </div>
+      <p className={styles.count} data-testid="puzzle-count" aria-live="polite">
+        {shown.length === all.length
+          ? `${all.length} ${all.length === 1 ? "puzzle" : "puzzles"}`
+          : `${shown.length} of ${all.length} ${all.length === 1 ? "puzzle" : "puzzles"}`}
+        {showProgress ? `, ${solved} solved` : null}
+      </p>
 
       {groups.length === 0 ? (
-        <p className="notice" data-testid="no-matches">
-          No puzzles match these filters.
-        </p>
+        <div className="empty" data-testid="no-matches">
+          <strong>No puzzles match these filters.</strong>
+          <span>Try a different type, topic or repository, or clear the filters to see everything.</span>
+          {filtered ? (
+            <Link href={browseHref({ ...state, filters: {} })} className="btn btn-small">
+              Clear filters
+            </Link>
+          ) : null}
+        </div>
       ) : state.group === "none" ? (
         <PuzzleTable puzzles={shown} state={state} />
       ) : (

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import styles from "@/components/landing/landing.module.css";
+import { ViewportReveals } from "@/components/landing/ViewportReveals";
 import { IdePreview } from "@/components/landing/IdePreview";
 import { LoginButton } from "@/components/landing/LoginButton";
 import { Logo } from "@/components/site/Logo";
@@ -76,6 +77,7 @@ export default function LandingPage() {
       </header>
 
       <main>
+        <ViewportReveals />
         <section className={styles.hero} data-testid="hero">
           <div className={styles.heroText}>
             <Logo size="large" className={styles.heroLogo} />
@@ -97,7 +99,7 @@ export default function LandingPage() {
           <IdePreview />
         </section>
 
-        <section className={styles.section} id="why" aria-labelledby="why-heading">
+        <section className={styles.section} id="why" data-reveal aria-labelledby="why-heading">
           <div className={styles.split}>
             <div>
               <p className={styles.eyebrow}>Why this exists</p>
@@ -148,7 +150,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className={`${styles.section} ${styles.tinted}`} id="how" aria-labelledby="how-heading">
+        <section className={`${styles.section} ${styles.tinted}`} id="how" data-reveal aria-labelledby="how-heading">
           <p className={styles.eyebrow}>How it works</p>
           <h2 id="how-heading" className={styles.h2}>
             A real repo, a real editor, and one right answer.
@@ -166,7 +168,7 @@ export default function LandingPage() {
           </ol>
         </section>
 
-        <section className={styles.section} id="types" aria-labelledby="types-heading">
+        <section className={styles.section} id="types" data-reveal aria-labelledby="types-heading">
           <p className={styles.eyebrow}>Three kinds of puzzle</p>
           <h2 id="types-heading" className={styles.h2}>
             Find it, trace it, explain it.
@@ -200,7 +202,7 @@ export default function LandingPage() {
           </ul>
         </section>
 
-        <section className={styles.closing} aria-labelledby="closing-heading">
+        <section className={styles.closing} data-reveal aria-labelledby="closing-heading">
           <h2 id="closing-heading" className={styles.closingHeading}>
             Open a real codebase and start reading.
           </h2>

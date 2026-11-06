@@ -81,10 +81,10 @@ The `ParameterSource` enum (line 199) lists its members in the same order, after
 
 ## Why the prompt excludes `Option.consume_value`
 
-`Option.consume_value` (line 3820) starts with `value, source = super().consume_value(ctx, opts)`, so it inherits the precedence above. It then adds option-only behaviour: resolving flags given without a value (`FLAG_NEEDS_VALUE`) and **prompting**. It may prompt when the value is `UNSET` or came from `DEFAULT_MAP` or `DEFAULT` (`source >= ParameterSource.DEFAULT_MAP`, line 3866), but not when it came from the environment. With an environment variable set, the answer for an `Option` is the same. Asking about the base method keeps the question free of prompt configuration.
+`Option.consume_value` (line 3820) starts with `value, source = super().consume_value(ctx, opts)`, so it inherits the precedence above. It then adds option-only behavior: resolving flags given without a value (`FLAG_NEEDS_VALUE`) and **prompting**. It may prompt when the value is `UNSET` or came from `DEFAULT_MAP` or `DEFAULT` (`source >= ParameterSource.DEFAULT_MAP`, line 3866), but not when it came from the environment. With an environment variable set, the answer for an `Option` is the same. Asking about the base method keeps the question free of prompt configuration.
 
 ## Takeaways
 
 - A sequence of `if value is UNSET:` blocks is a priority list. The first block that assigns wins, and you can read the precedence straight from the order of the blocks.
 - Use a sentinel (`UNSET`) rather than `None` when `None` is a legitimate value. Click needs both: `None` can come from a `default_map`, and `UNSET` means "nothing yet".
-- When a subclass override calls `super()` first, the base method defines the core rule, and the override can only add to it afterwards.
+- When a subclass override calls `super()` first, the base method defines the core rule, and the override can only add to it afterward.

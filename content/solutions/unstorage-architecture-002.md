@@ -79,4 +79,4 @@ Having `watch` doesn't guarantee events. The localstorage `watch` returns early 
 ## Takeaways
 
 - Capabilities can be inherited through an object spread. A text search for a method name misses drivers that get it from another driver's object, so also check which drivers import other drivers.
-- An optional interface method often switches behaviour elsewhere (here, whether `setItem` emits events). When you meet one, search for where its presence is tested.
+- An optional interface method often switches behavior elsewhere (here, whether `setItem` emits events). When you meet one, search for where its presence is tested.

@@ -9,7 +9,7 @@ export default function PrivacyPage() {
   return (
     <LegalPage title="Privacy policy">
       <p>
-        codebases is a site for practising reading code. This page says what we keep about you, why, who else
+        codebases is a site for practicing reading code. This page says what we keep about you, why, who else
         handles it, and how to delete it. We keep as little as the site needs to work.
       </p>
 

@@ -14,7 +14,7 @@ export const DEFAULT_GROUPING: Grouping = "difficulty";
 export const GROUPING_LABELS: Record<Grouping, string> = {
   difficulty: "Difficulty",
   topic: "Topic",
-  repo: "Repo",
+  repo: "Repository",
   none: "None",
 };
 
@@ -87,7 +87,7 @@ export function orderTags(tags: Iterable<string>): string[] {
   return [...known, ...other];
 }
 
-const collator = new Intl.Collator("en", { sensitivity: "base", numeric: true });
+const collator = new Intl.Collator("en-US", { sensitivity: "base", numeric: true });
 
 /** What each column sorts by: the text the row shows, except difficulty, which goes easiest first. */
 const SORT_KEYS: Record<SortColumn, (puzzle: PuzzleSummary) => string | number> = {

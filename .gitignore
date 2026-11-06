@@ -22,3 +22,7 @@ ingest/out/
 # Env files: only the examples are committed
 .env*
 !.env.example
+
+# Generated browser review artifacts (kept locally for inspection)
+web/visual-review/
+web/test-results-visual/

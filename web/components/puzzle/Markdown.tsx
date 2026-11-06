@@ -52,7 +52,7 @@ interface MarkdownProps {
 }
 
 /**
- * The one markdown renderer for prompts, hints and solutions: GitHub-flavoured markdown, with
+ * The one markdown renderer for prompts, hints and solutions: GitHub-flavored markdown, with
  * fenced mermaid blocks drawn as diagrams. skipHtml drops raw HTML in the source entirely.
  */
 export function Markdown({ source, className, testId }: MarkdownProps) {

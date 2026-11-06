@@ -68,7 +68,7 @@ test.describe("puzzle list", () => {
   test("the topic drop-down filters by topic, by its label", async ({ page }) => {
     await page.goto("/puzzles");
     const topic = page.getByRole("combobox", { name: "Topic" });
-    await expect(topic.locator("option")).toHaveText(["All", "Routing", "Configuration and defaults", "Auth and security", "Code structure"]);
+    await expect(topic.locator("option")).toHaveText(["All topics", "Routing", "Configuration and defaults", "Auth and security", "Code structure"]);
 
     await topic.selectOption({ label: "Code structure" });
     await expect(page).toHaveURL(/tag=code-structure/);
@@ -198,13 +198,14 @@ test.describe("puzzle list", () => {
     }
   });
 
-  test("an empty database explains how to seed it", async ({ page }) => {
+  test("with nothing published, the list says so without developer instructions", async ({ page }) => {
     const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
     await client.connect();
     try {
       await client.query("update puzzles set published = false");
       await page.goto("/puzzles");
-      await expect(visible(page, "no-puzzles-seeded")).toContainText("uv run python -m ingest seed");
+      await expect(visible(page, "no-puzzles-seeded")).toContainText("No puzzles yet");
+      await expect(visible(page, "no-puzzles-seeded")).not.toContainText("ingest");
     } finally {
       await client.query("update puzzles set published = true");
       await client.end();
@@ -213,7 +214,7 @@ test.describe("puzzle list", () => {
 });
 
 test.describe("dev sign-in and profile", () => {
-  test("the header's control is labelled, signs in and signs out", async ({ page }) => {
+  test("the header's control is labeled, signs in and signs out", async ({ page }) => {
     await page.goto("/puzzles");
     await expect(page.getByText("Local dev sign-in, no account")).toBeVisible();
     // No GitHub OAuth app on the e2e server, so only the dev sign-in is offered.
@@ -239,9 +240,10 @@ test.describe("dev sign-in and profile", () => {
 
     await page.goto("/profile");
     await expect(visible(page, "stats-total")).toContainText("1 of 7");
-    await expect(visible(page, "stats-row-find").locator("td").first()).toHaveText("1");
-    await expect(visible(page, "stats-row-trace").locator("td").first()).toHaveText("0");
-    await expect(visible(page, "stats-row-easy").locator("td").first()).toHaveText("1");
-    await expect(visible(page, "stats-row-hard").locator("td").first()).toHaveText("0");
+    await expect(visible(page, "stats-row-find").getByTestId("solved-count")).toHaveText("1");
+    await expect(visible(page, "stats-row-trace").getByTestId("solved-count")).toHaveText("0");
+    await expect(visible(page, "stats-row-easy").getByTestId("solved-count")).toHaveText("1");
+    await expect(visible(page, "stats-row-hard").getByTestId("solved-count")).toHaveText("0");
+    await expect(page.getByRole("progressbar", { name: "Find" })).toHaveAttribute("aria-valuetext", /^1 of \d+ solved$/);
   });
 });

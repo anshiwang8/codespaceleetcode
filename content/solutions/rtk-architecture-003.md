@@ -17,7 +17,7 @@ What is left is exactly four declarations:
 |---|---|---|---|
 | `RejectWithValue` | `createAsyncThunk.ts:64` | no | Marker wrapper returned by the `rejectWithValue` helper |
 | `FulfillWithMeta` | `createAsyncThunk.ts:76` | no | Marker wrapper returned by the `fulfillWithValue` helper |
-| `TaskAbortError` | `listenerMiddleware/exceptions.ts:14` | yes | Thrown when a listener task is cancelled or completes |
+| `TaskAbortError` | `listenerMiddleware/exceptions.ts:14` | yes | Thrown when a listener task is canceled or completes |
 | `Tuple` | `utils.ts:29` | yes | `Array` subclass used for typed middleware and enhancer lists |
 
 Two of the four are not exported, so searching the public API in `index.ts` would miss them. The text search is the reliable route.
@@ -40,7 +40,7 @@ if (result instanceof FulfillWithMeta) {
 
 Both classes have a private `_type` field whose comment says it is type-only and "does not exist at runtime". It keeps TypeScript from treating the two structurally identical classes as interchangeable.
 
-**`TaskAbortError`** is thrown by the listener middleware's task helpers (`listenerMiddleware/task.ts:13` and `:28`) and recognised with `instanceof TaskAbortError` (`listenerMiddleware/index.ts:461`, `task.ts:63`). Note that it `implements SerializedError` and does not extend `Error`. A search for `extends Error` would not find it.
+**`TaskAbortError`** is thrown by the listener middleware's task helpers (`listenerMiddleware/task.ts:13` and `:28`) and recognized with `instanceof TaskAbortError` (`listenerMiddleware/index.ts:461`, `task.ts:63`). Note that it `implements SerializedError` and does not extend `Error`. A search for `extends Error` would not find it.
 
 **`Tuple`** extends `Array`, calls `Object.setPrototypeOf(this, Tuple.prototype)` in its constructor, overrides `Symbol.species` and `concat`, and adds `prepend`, so derived arrays stay `Tuple`s. Its job is mostly at the type level: it keeps the exact element types of a middleware list. `getDefaultMiddleware.ts:62` and `getDefaultEnhancers.ts:22` construct it.
 

@@ -72,7 +72,7 @@ A `ClickException` is an **error with a message for the user**. It has `message`
 `Abort` and `Exit` are **signals**. They carry no message to show:
 
 - `Exit` means "stop now with this status code". `Context.exit` closes the context and raises it (`src/click/core.py:856-857`). A normal successful run ends this way too: `Command.main` calls `ctx.exit()` after `invoke` returns (line 1602), which raises `Exit(0)`.
-- `Abort` means "the user cancelled". `Context.abort` raises it (line 847), and so do the prompt helpers in `src/click/termui.py` when input is interrupted (line 245) or a confirmation is declined with `abort=True` (line 344).
+- `Abort` means "the user canceled". `Context.abort` raises it (line 847), and so do the prompt helpers in `src/click/termui.py` when input is interrupted (line 245) or a confirmation is declined with `abort=True` (line 344).
 
 If they were `ClickException` subclasses, the `except ClickException` handler would call `show()` and print `Error: ` for a successful exit. Keeping them separate lets `Command.main` treat each kind differently:
 

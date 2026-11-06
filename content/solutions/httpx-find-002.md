@@ -49,7 +49,7 @@ _redirect_headers(request, url, method)          line 546
     )
 ```
 
-`_is_https_redirect` (line 62) recognises exactly one safe cross-origin move: same host, from `http` on port 80 to `https` on port 443.
+`_is_https_redirect` (line 62) recognizes exactly one safe cross-origin move: same host, from `http` on port 80 to `https` on port 443.
 
 ```python
 # httpx/_client.py:66-74

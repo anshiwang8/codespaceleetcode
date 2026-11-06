@@ -85,4 +85,4 @@ Zod v4 has one core and two public APIs. Both `ZodType` in `classic/` and `ZodMi
 
 - A namespace import (`import * as core from ".../index.js"`) plus a barrel file of `export *` lines is a two-hop lookup. Search for `export const <Name>` across the package to skip the barrel.
 - TypeScript allows a type and a value with the same name. Note which one a puzzle (or a call site) refers to.
-- Libraries that offer several API flavours usually keep one shared core. Find the call from the outer layer into the core, here `core.$ZodType.init`, and you have found the layer boundary.
+- Libraries that offer several API flavors usually keep one shared core. Find the call from the outer layer into the core, here `core.$ZodType.init`, and you have found the layer boundary.

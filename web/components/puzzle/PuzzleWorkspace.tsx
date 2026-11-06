@@ -35,6 +35,10 @@ export function PuzzleWorkspace({ puzzle }: { puzzle: PuzzleDetail }) {
   const [manifestState, setManifestState] = useState<ManifestState>({ state: "loading" });
   const [manifestAttempt, setManifestAttempt] = useState(0);
 
+  const submissionRequest = useRef<AbortController | null>(null);
+  const draftRevision = useRef(0);
+  useEffect(() => () => submissionRequest.current?.abort(), []);
+
   const [result, setResult] = useState<SubmitResponse | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -65,21 +69,21 @@ export function PuzzleWorkspace({ puzzle }: { puzzle: PuzzleDetail }) {
 
   const manifestUrl = puzzle.snapshot.manifestUrl;
   useEffect(() => {
-    let cancelled = false;
+    let canceled = false;
     (async () => {
       const response = await fetch(resolveManifestUrl(manifestUrl));
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return (await response.json()) as Manifest;
     })().then(
       (manifest) => {
-        if (cancelled) return;
+        if (canceled) return;
         setManifestState({ state: "ready", manifest });
         // Same first step as landing on a repo: read the README if there is one.
         const readme = manifest.files.find((file) => /^readme(\.[a-z]+)?$/i.test(file.path));
         if (readme) navigate({ type: "open", path: readme.path });
       },
       () => {
-        if (!cancelled) {
+        if (!canceled) {
           setManifestState({
             state: "error",
             message: "This snapshot's files couldn't be loaded.",
@@ -88,7 +92,7 @@ export function PuzzleWorkspace({ puzzle }: { puzzle: PuzzleDetail }) {
       },
     );
     return () => {
-      cancelled = true;
+      canceled = true;
     };
   }, [manifestUrl, manifestAttempt]);
 
@@ -98,6 +102,7 @@ export function PuzzleWorkspace({ puzzle }: { puzzle: PuzzleDetail }) {
   }, []);
 
   const pick = useCallback((action: DraftAction) => {
+    draftRevision.current += 1;
     dispatchDraft(action);
     setResult(null);
     setSubmitError(null);
@@ -108,17 +113,21 @@ export function PuzzleWorkspace({ puzzle }: { puzzle: PuzzleDetail }) {
   const submit = async () => {
     const submission = toSubmission(draft, elapsedMs(startedAt, Date.now()));
     // Until /api/me answers there's no login to tie the result to, and it would never be shown.
-    if (!submission || submitting || me === null) return;
+    if (!submission || submissionRequest.current || me === null) return;
     if (signedOut) {
       needSignIn("Sign in to submit. Your answer stays selected.");
       return;
     }
+    const controller = new AbortController();
+    const revision = draftRevision.current;
+    submissionRequest.current = controller;
     setSubmitting(true);
     setSubmitError(null);
     setSignInReason(null);
     try {
-      const response = await api.submit(puzzle.slug, submission);
-      setResult(response);
+      const response = await api.submit(puzzle.slug, submission, controller.signal);
+      if (controller.signal.aborted) return;
+      if (revision === draftRevision.current) setResult(response);
       if (login) {
         setLocalProgress({
           login,
@@ -127,13 +136,15 @@ export function PuzzleWorkspace({ puzzle }: { puzzle: PuzzleDetail }) {
         });
       }
     } catch (error) {
+      if (controller.signal.aborted) return;
       if (error instanceof ApiRequestError && error.status === 401) {
         needSignIn("Sign in to submit. Your answer stays selected.");
       } else {
         setSubmitError(error instanceof ApiRequestError ? error.message : "Submitting failed.");
       }
     } finally {
-      setSubmitting(false);
+      submissionRequest.current = null;
+      if (!controller.signal.aborted) setSubmitting(false);
     }
   };
 

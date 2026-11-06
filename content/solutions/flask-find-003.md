@@ -71,7 +71,7 @@ The base class and the default implementation share the file, so the answer is t
 
 ## Background: why a provider object?
 
-The provider API was added in Flask 2.2 (`JSONProvider` is marked `versionadded:: 2.2`, line 35). It gathers all JSON behaviour (serialization, parsing and building JSON responses) behind one instance per app. Swapping in another JSON library means writing a subclass that implements `dumps` and `loads`, then either setting `json_provider_class` on a `Flask` subclass or assigning `app.json` directly. `JSONProvider`'s docstring describes both options (lines 28-30). The provider holds the app through `weakref.proxy` (line 39) so it doesn't create a reference cycle with the app.
+The provider API was added in Flask 2.2 (`JSONProvider` is marked `versionadded:: 2.2`, line 35). It gathers all JSON behavior (serialization, parsing and building JSON responses) behind one instance per app. Swapping in another JSON library means writing a subclass that implements `dumps` and `loads`, then either setting `json_provider_class` on a `Flask` subclass or assigning `app.json` directly. `JSONProvider`'s docstring describes both options (lines 28-30). The provider holds the app through `weakref.proxy` (line 39) so it doesn't create a reference cycle with the app.
 
 ## Takeaways
 

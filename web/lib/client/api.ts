@@ -1,5 +1,6 @@
 import type {
   ApiError,
+  HistoryPage,
   MeResponse,
   OutlineResponse,
   SearchResponse,
@@ -46,6 +47,7 @@ const puzzlePath = (slug: string) => `/api/puzzles/${encodeURIComponent(slug)}`;
 
 export const api = {
   me: () => request<MeResponse>("/api/me"),
+  history: (before: string, signal?: AbortSignal) => request<HistoryPage>(`/api/me/history?${new URLSearchParams({ before })}`, { signal }),
   devLogin: (login: string) => post<MeResponse>("/api/dev/login", { login }),
   devLogout: () => post<MeResponse>("/api/dev/logout"),
   deleteAccount: () =>
@@ -54,8 +56,10 @@ export const api = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ confirm: true }),
     }),
-  submit: (slug: string, submission: Submission) =>
-    post<SubmitResponse>(`${puzzlePath(slug)}/submit`, submission),
+  submit: (slug: string, submission: Submission, signal?: AbortSignal) =>
+    request<SubmitResponse>(`${puzzlePath(slug)}/submit`, {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(submission), signal,
+    }),
   solution: (slug: string) => request<SolutionResponse>(`${puzzlePath(slug)}/solution`),
   symbolAt: (snapshotId: number, file: string, line: number, col: number) => {
     const query = new URLSearchParams({ file, line: String(line), col: String(col) });

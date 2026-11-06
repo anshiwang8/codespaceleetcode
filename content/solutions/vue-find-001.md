@@ -68,14 +68,14 @@ sequenceDiagram
 
 ## A detail worth noticing: the order trick
 
-`Dep.notify` walks its subscribers from the tail backwards:
+`Dep.notify` walks its subscribers from the tail backward:
 
 ```ts
 // packages/reactivity/src/dep.ts:193
 for (let link = this.subs; link; link = link.prevSub) {
 ```
 
-`batch` prepends each subscriber to `batchedSub`. Walking backwards and prepending cancel out, so `endBatch` sees the subscribers in their original subscription order. The `__DEV__` comment in `Dep.notify` says the same thing: subscribers are "notified and batched in reverse-order and then invoked in original order".
+`batch` prepends each subscriber to `batchedSub`. Walking backward and prepending cancel out, so `endBatch` sees the subscribers in their original subscription order. The `__DEV__` comment in `Dep.notify` says the same thing: subscribers are "notified and batched in reverse-order and then invoked in original order".
 
 ## Why the other candidates are wrong
 

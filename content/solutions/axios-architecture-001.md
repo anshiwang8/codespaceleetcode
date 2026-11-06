@@ -78,9 +78,9 @@ flowchart LR
 
 ## Why axios behaves this way
 
-Reversed request interceptors are long-standing axios behaviour: each new request interceptor wraps the ones added before it, a bit like decorators. Changing that would break existing apps, so the new registration-order behaviour sits behind a `transitional` flag that defaults to the old ordering. The flag is read from the merged `config` *per request*, so one call can opt in with `transitional: { legacyInterceptorReqResOrdering: false }` without changing the instance.
+Reversed request interceptors are long-standing axios behavior: each new request interceptor wraps the ones added before it, a bit like decorators. Changing that would break existing apps, so the new registration-order behavior sits behind a `transitional` flag that defaults to the old ordering. The flag is read from the merged `config` *per request*, so one call can opt in with `transitional: { legacyInterceptorReqResOrdering: false }` without changing the instance.
 
 ## Takeaways
 
 - Before you trust a list's order, check every `unshift` and `push`, and any flag that switches between them.
-- Flags in a "transitional" or "compat" object are where a library keeps old behaviour. Always check their default values.
+- Flags in a "transitional" or "compat" object are where a library keeps old behavior. Always check their default values.

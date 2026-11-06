@@ -4,7 +4,7 @@
 
 ## How a strong engineer gets there
 
-The prompt describes behaviour ("hands back its previous output"), not a name, so start from the mechanism instead of guessing which column it might be.
+The prompt describes behavior ("hands back its previous output"), not a name, so start from the mechanism instead of guessing which column it might be.
 
 1. Open `rich/progress.py` and find the base class every column derives from, `ProgressColumn` (line 507). A `Progress` display does not call `render` on a column directly. It calls the column object itself, so read `ProgressColumn.__call__`.
 2. `__call__` only consults its cache when a class attribute is set:
@@ -52,5 +52,5 @@ The time-remaining estimate is computed from a recent speed sample, so it jitter
 
 ## Takeaways
 
-- When a behaviour is described rather than named, find the shared code path every candidate goes through (here `__call__`) and look for the switch it reads.
+- When a behavior is described rather than named, find the shared code path every candidate goes through (here `__call__`) and look for the switch it reads.
 - A class attribute that defaults to `None` on a base class is a common Python extension point. Searching for the attribute's name finds every override quickly.

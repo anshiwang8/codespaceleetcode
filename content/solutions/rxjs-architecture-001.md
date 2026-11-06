@@ -87,7 +87,7 @@ stateDiagram-v2
     Done --> [*]
 ```
 
-| Source behaviour | Result | Error class |
+| Source behavior | Result | Error class |
 |---|---|---|
 | completes with no values | error | `EmptyError` |
 | emits values, none match, then completes | error | `NotFoundError('No matching values')` |
@@ -110,7 +110,7 @@ stateDiagram-v2
 
 ## Details worth noticing
 
-- **The upstream is cancelled before the error is sent.** Every path calls `sourceController.abort()` first. Its signal is passed to the imported helper as an extra argument (line 71), so aborting it unsubscribes from the source. For `SequenceError` this matters: `single` stops listening as soon as it knows the answer is wrong.
+- **The upstream is canceled before the error is sent.** Every path calls `sourceController.abort()` first. Its signal is passed to the imported helper as an extra argument (line 71), so aborting it unsubscribes from the source. For `SequenceError` this matters: `single` stops listening as soon as it knows the answer is wrong.
 - **A throwing predicate is not one of the three.** If `predicate` throws, the imported helper catches it and calls `subscriber.error(error)` with the thrown value. `single` does not construct that error.
 - **One file per error class.** Each error has its own module. Operators import just the ones they raise, and `index.ts` re-exports all of them for the public API.
 

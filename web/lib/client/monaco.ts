@@ -55,7 +55,7 @@ export function monacoLanguage(manifestLanguage: string | undefined): string {
   return LANGUAGE_IDS[manifestLanguage ?? ""] ?? "plaintext";
 }
 
-// Editor colours mirror the CSS variables in app/globals.css. Monaco needs literal hex values.
+// Editor colors mirror the CSS variables in app/globals.css. Monaco needs literal hex values.
 // The site has one light theme, so the editor is light whatever the system asks for.
 export const LIGHT_THEME = "cb-light";
 

@@ -4,7 +4,7 @@
 
 ## How a strong engineer would get there
 
-The prompt gives you three strong filters: the file (`src/requests/sessions.py`), the kind (a module-level function, not a method), and a very specific behaviour (overlay request entries on session entries, then drop keys whose value is `None`).
+The prompt gives you three strong filters: the file (`src/requests/sessions.py`), the kind (a module-level function, not a method), and a very specific behavior (overlay request entries on session entries, then drop keys whose value is `None`).
 
 1. **List the module-level functions.** In `sessions.py` they are `merge_setting` (line 76), `merge_hooks` (line 108) and, at the very bottom, the deprecated `session()` factory (line 908). Everything else is a method on `SessionRedirectMixin` or `Session`. Three candidates is a small enough list to read them all.
 2. **Read for the `None` removal.** Only one of the three contains code that deletes keys:
@@ -61,6 +61,6 @@ The `dict_class` parameter is also worth noticing. `prepare_request` passes `dic
 
 ## Takeaways
 
-- When a prompt gives you a precise behaviour, search for the code that performs that behaviour (`del`, `is None`) rather than for a name. Names like `merge_*` can appear on several functions.
+- When a prompt gives you a precise behavior, search for the code that performs that behavior (`del`, `is None`) rather than for a name. Names like `merge_*` can appear on several functions.
 - Small "policy" helpers such as `merge_setting` are common in client libraries: one function encodes the precedence rule, and every setting goes through it. Once you find it, you understand the precedence of every option at once.
 - Check the early-return branches of a merge helper. They often hold the rules people get wrong, like "a non-mapping request value replaces the session value entirely".

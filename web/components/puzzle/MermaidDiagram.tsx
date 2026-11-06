@@ -31,7 +31,7 @@ function loadMermaid(): Promise<Mermaid> {
         "fontFamily",
         "altFontFamily",
       ],
-      // Mermaid can't read CSS variables, since it works its colours out from these, so they're
+      // Mermaid can't read CSS variables, since it works its colors out from these, so they're
       // written out: a light theme for a white page with the site's blue accent.
       theme: "base",
       themeVariables: {
@@ -97,15 +97,15 @@ export function MermaidDiagram({ source }: { source: string }) {
   const rendering = useRef<{ source: string; result: Promise<Rendered> } | null>(null);
 
   useEffect(() => {
-    let cancelled = false;
+    let canceled = false;
     if (rendering.current?.source !== source) {
       rendering.current = { source, result: renderDiagram(source) };
     }
     void rendering.current.result.then((result) => {
-      if (!cancelled) setDiagram(result);
+      if (!canceled) setDiagram(result);
     });
     return () => {
-      cancelled = true;
+      canceled = true;
     };
   }, [source]);
 

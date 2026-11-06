@@ -12,7 +12,7 @@ interface DifficultyStripProps {
 }
 
 /**
- * One bar for the whole catalogue, split by difficulty in proportion to how many puzzles each has.
+ * One bar for the whole catalog, split by difficulty in proportion to how many puzzles each has.
  * The filled part of each segment is the share solved. Each segment filters to its difficulty, and
  * clicking the selected one clears that filter.
  */
@@ -40,7 +40,7 @@ export function DifficultyStrip({ state, tallies, showProgress }: DifficultyStri
             style={{ flexGrow: Math.max(total, 1) }}
           >
             <span className={styles.segmentBar} aria-hidden="true">
-              {showProgress ? <span className={styles.segmentSolved} style={{ width: `${share}%` }} /> : null}
+              {showProgress ? <span className={styles.segmentSolved} style={{ width: "100%", transform: `scaleX(${share / 100})` }} /> : null}
             </span>
             <span className={styles.segmentLabel}>{DIFFICULTY_LABELS[difficulty]}</span>
             <span className={styles.segmentCount}>

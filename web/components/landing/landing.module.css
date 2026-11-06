@@ -1,4 +1,4 @@
-/* The landing page. Colours come from the variables in app/globals.css. */
+/* The landing page. Colors come from the variables in app/globals.css. */
 
 .page {
   --content: 1120px;
@@ -106,7 +106,8 @@
   min-height: 44px;
   padding: 0 20px;
   border: 1px solid transparent;
-  border-radius: 8px;
+  /* The same shape and states as the app's .btn in app/globals.css, a size larger. */
+  border-radius: var(--radius);
   font-size: 15px;
   font-weight: 600;
   line-height: 1;
@@ -133,7 +134,8 @@
 }
 
 .secondary:hover:not(:disabled) {
-  background: var(--panel-raised);
+  border-color: var(--text-faint);
+  background: var(--hover);
 }
 
 .secondary:disabled {
@@ -142,6 +144,7 @@
 }
 
 .loginWrap {
+  width: 172px;
   display: inline-flex;
   flex-direction: column;
   align-items: center;
@@ -738,3 +741,26 @@
     transition: none;
   }
 }
+
+.heroText > * {
+  animation: var(--motion-enter) var(--motion-panel) var(--motion-ease);
+  animation-fill-mode: backwards;
+}
+.heroText > :nth-child(2) { animation-delay: var(--motion-stagger); }
+.heroText > :nth-child(3) { animation-delay: calc(2 * var(--motion-stagger)); }
+.heroText > :nth-child(4) { animation-delay: calc(3 * var(--motion-stagger)); }
+.preview {
+  animation: var(--motion-enter) var(--motion-panel) var(--motion-ease);
+  animation-fill-mode: backwards;
+  animation-delay: calc(3 * var(--motion-stagger));
+}
+.page [data-revealed="true"] { animation: var(--motion-enter) var(--motion-panel) var(--motion-ease); }
+.button, .topNav a {
+  transition: background-color var(--motion-control) var(--motion-feedback),
+    border-color var(--motion-control) var(--motion-feedback), color var(--motion-control) var(--motion-feedback),
+    box-shadow var(--motion-control) var(--motion-feedback);
+}
+.button:active:not(:disabled) { box-shadow: inset 0 0 0 2px color-mix(in srgb, currentColor 22%, transparent); }
+
+/* Reserve the longer pending label's width before sign-in begins. */
+.loginWrap .button { min-width: 172px; }
