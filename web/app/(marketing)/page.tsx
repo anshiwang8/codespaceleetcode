@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { CodeDemo } from "@/components/landing/CodeDemo";
+import { LANDING_EXAMPLES } from "@/components/landing/examples";
 import styles from "@/components/landing/landing.module.css";
-import { ViewportReveals } from "@/components/landing/ViewportReveals";
-import { IdePreview } from "@/components/landing/IdePreview";
 import { LoginButton } from "@/components/landing/LoginButton";
+import { ViewportReveals } from "@/components/landing/ViewportReveals";
 import { Logo } from "@/components/site/Logo";
-import { PUZZLES_PATH } from "@/lib/browse";
+import { browseHref, DEFAULT_GROUPING, PUZZLES_PATH } from "@/lib/browse";
 
 export const metadata: Metadata = {
   title: { absolute: "codebases: practice reading real code" },
@@ -14,51 +15,33 @@ export const metadata: Metadata = {
 // Plain HTML, no data: the landing page renders without the database.
 export const dynamic = "force-static";
 
+const EASY_FIND = browseHref({ filters: { type: "find", difficulty: "easy" }, group: DEFAULT_GROUPING });
+
 const STEPS = [
   {
-    title: "Real repos, pinned to a commit",
-    body: "Every puzzle is set inside a real open-source repository at a fixed commit, so the code never shifts under you and every answer stays checkable.",
+    title: "Pick a puzzle",
+    body: "Filter by difficulty, topic or repository. Each puzzle names its repository and the commit it's pinned to, so the code never changes under you.",
   },
   {
-    title: "An IDE in your browser",
-    body: "A file tree, search, go-to-definition and find references, backed by a precise code index of the whole repo. Nothing to install.",
+    title: "Read the code",
+    body: "The workspace has a file tree, search, go-to-definition and find references, all from a code index of that commit.",
   },
   {
-    title: "Answer by clicking on code",
-    body: "You pick a file, a symbol, or a range of lines straight from the editor. There's nothing to type, so nothing turns on spelling.",
+    title: "Select your answer",
+    body: "Depending on the question, click a function or class, a file, a range of lines, or one of the listed options. Answers are never typed.",
   },
   {
-    title: "Graded exactly",
-    body: "Your answer is checked on the server against one canonical answer. It's right or it isn't, with no fuzzy matching.",
-  },
-  {
-    title: "A written solution for each",
-    body: "Solve a puzzle and its detailed solution unlocks, walking through where to look and why the answer is the answer.",
+    title: "Submit and see the result",
+    body: "The server checks your answer against the puzzle's one correct answer. Every submission counts as an attempt. A correct answer unlocks a written solution that shows where to look and why.",
   },
 ] as const;
 
-const TYPES = [
-  {
-    name: "Find",
-    summary: "Locate one specific thing.",
-    example: "Which method decides whether a request path matches a route?",
-    answer: ["src/router.ts#Router.match"],
-    answerLabel: "One symbol",
-  },
-  {
-    name: "Trace",
-    summary: "Follow a call chain from a start to an end point.",
-    example: "Starting at the server's entry point, which functions does a request pass through, in order, before it's matched?",
-    answer: ["start", "Router.handle", "Router.match"],
-    answerLabel: "An ordered chain",
-  },
-  {
-    name: "Architecture",
-    summary: "Module responsibilities, boundaries and extension points.",
-    example: "Which module would you change to send logs somewhere new, without touching the router?",
-    answer: ["src/logging/"],
-    answerLabel: "A module",
-  },
+const LIMITS = [
+  "No code runs. Puzzles are about reading, not executing or fixing.",
+  "No partial credit. An answer is the exact symbol, file, lines or option, or it's wrong.",
+  "No peeking. A solution shows only after you've solved the puzzle.",
+  "The workspace needs a laptop-size screen. The puzzle list works on a phone.",
+  "Each puzzle's second, blind solve has been done by an automated agent so far, not yet by a person. Every puzzle page says so.",
 ] as const;
 
 export default function LandingPage() {
@@ -66,7 +49,7 @@ export default function LandingPage() {
     <div className={styles.page}>
       <header className={styles.topBar}>
         <div className={styles.topBarInner}>
-          <Link href="/" className={styles.brand}>
+          <Link href="/" className={styles.brand} aria-label="codebases home">
             <Logo size="small" />
           </Link>
           <nav aria-label="Main" className={styles.topNav}>
@@ -78,137 +61,124 @@ export default function LandingPage() {
 
       <main>
         <ViewportReveals />
-        <section className={styles.hero} data-testid="hero">
+        <section className={styles.hero} data-testid="hero" aria-labelledby="hero-heading">
           <div className={styles.heroText}>
-            <Logo size="large" className={styles.heroLogo} />
-            <h1 className={styles.tagline}>
-              Practice the interview that&apos;s replacing LeetCode: reading real code.
+            <h1 id="hero-heading" className={styles.tagline}>
+              Practice reading code you didn&apos;t write.
             </h1>
             <p className={styles.subline}>
-              Short puzzles set inside real open-source repositories. Find where a behavior lives,
-              trace a request through the layers, and explain how the modules fit together, all in a
-              browser IDE.
+              Each puzzle puts you in a real open-source repository, such as requests, Flask, Hono or Zod, pinned to
+              one commit. It asks one precise question: where a behavior lives, which calls a request passes through,
+              or how the modules divide the work. You find the answer in a browser IDE and click it to submit.
             </p>
             <div className={styles.actions}>
-              <Link href={PUZZLES_PATH} className={`${styles.button} ${styles.primary}`}>
-                Continue as guest
+              <Link href={PUZZLES_PATH} className={`${styles.button} ${styles.primary}`} data-testid="browse-puzzles">
+                Browse puzzles
               </Link>
               <LoginButton />
             </div>
+            <p className={styles.gate}>
+              Reading puzzles needs no account. Signing in is free.
+            </p>
           </div>
-          <IdePreview />
+          <CodeDemo />
+        </section>
+
+        <section className={styles.section} id="how" data-reveal aria-labelledby="how-heading">
+          <h2 id="how-heading" className={styles.h2}>
+            How a puzzle works
+          </h2>
+          <div className={styles.howGrid}>
+            <ol className={styles.steps}>
+              {STEPS.map((step, index) => (
+                <li key={step.title} className={styles.step}>
+                  <span className={styles.stepNumber} aria-hidden="true">
+                    {index + 1}
+                  </span>
+                  <div>
+                    <h3 className={styles.h3}>{step.title}</h3>
+                    <p>{step.body}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+            <div className={styles.limits}>
+              <h3 className={styles.h3}>What it doesn&apos;t do</h3>
+              <ul>
+                {LIMITS.map((limit) => (
+                  <li key={limit}>{limit}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section className={`${styles.section} ${styles.tinted}`} id="types" data-reveal aria-labelledby="types-heading">
+          <div className={styles.sectionInner}>
+            <h2 id="types-heading" className={styles.h2}>
+              Three kinds of puzzle
+            </h2>
+            <p className={styles.lede}>
+              Each one below is a real puzzle on the site. Open it to read the full prompt and the code.
+            </p>
+            <ul className={styles.types}>
+              {LANDING_EXAMPLES.map((example) => (
+                <li key={example.type} className={styles.typeCard}>
+                  <h3 className={styles.typeName}>{example.type}</h3>
+                  <p className={styles.typeSummary}>{example.summary}</p>
+                  <div className={styles.example}>
+                    <p className={styles.exampleRepo}>
+                      <span className="mono">{example.repo}</span>
+                    </p>
+                    <p className={styles.exampleTitle}>
+                      <Link href={`/puzzles/${example.slug}`}>{example.title}</Link>
+                    </p>
+                    <p className={styles.examplePrompt}>{example.prompt}</p>
+                  </div>
+                  <dl className={styles.answerShape}>
+                    <dt>You answer with</dt>
+                    <dd>{example.answer}</dd>
+                    <dt>Written as</dt>
+                    <dd>
+                      <code className={styles.answerChip}>{example.format}</code>
+                    </dd>
+                  </dl>
+                </li>
+              ))}
+            </ul>
+          </div>
         </section>
 
         <section className={styles.section} id="why" data-reveal aria-labelledby="why-heading">
-          <div className={styles.split}>
-            <div>
-              <p className={styles.eyebrow}>Why this exists</p>
-              <h2 id="why-heading" className={styles.h2}>
-                The job is reading code. Interviews are catching up.
-              </h2>
-            </div>
+          <div className={styles.why}>
+            <h2 id="why-heading" className={styles.h2}>
+              Why practice this
+            </h2>
             <div className={styles.prose}>
               <p>
-                Most of an engineer&apos;s day isn&apos;t spent writing an algorithm from a blank file.
-                It&apos;s spent in a codebase someone else wrote: finding where a behavior lives,
-                following a request through its layers, and working out where a change belongs.
+                Most engineering work happens in code someone else wrote. Before you can change it, you have to find
+                where a behavior lives, follow a request through its layers, and see where a new piece would belong.
+                It&apos;s a skill, and it improves with practice.
               </p>
               <p>
-                That&apos;s why companies are moving away from algorithm puzzles toward interviews that
-                look like the work. You get an unfamiliar repository and a question about it, and the
-                interviewer watches how you find your way.
+                Some interviews now test it directly: you get an unfamiliar repository and questions about it. Plenty
+                still ask algorithm questions. codebases is practice for the reading part, with questions that have one
+                checkable answer, so you know whether you found it.
               </p>
-              <p>
-                Algorithm puzzles mostly reward memorized patterns. Now that AI assistants can solve the
-                well-known ones on request, a correct answer says less than it used to about how someone
-                will do on the job.
-              </p>
-              <p>
-                Reading unfamiliar code is a skill, and it gets better with practice. codebases is that
-                practice, on real code, with answers that are either right or wrong.
-              </p>
-            </div>
-          </div>
-
-          <div className={styles.compare}>
-            <div className={styles.compareCol}>
-              <h3 className={styles.compareHead}>An algorithm puzzle</h3>
-              <ul className={styles.compareList}>
-                <li>A blank file and a problem you may have seen before</li>
-                <li>Rewards recalling the right pattern</li>
-                <li>A well-known problem is easy to hand to an AI assistant</li>
-              </ul>
-            </div>
-            <div className={`${styles.compareCol} ${styles.compareOurs}`}>
-              <h3 className={styles.compareHead}>A codebase puzzle</h3>
-              <ul className={styles.compareList}>
-                <li>Thousands of lines of code you&apos;ve never seen</li>
-                <li>Rewards navigating, tracing and judgment</li>
-                <li>Close to what you&apos;ll do in your first week</li>
-              </ul>
             </div>
           </div>
         </section>
 
-        <section className={`${styles.section} ${styles.tinted}`} id="how" data-reveal aria-labelledby="how-heading">
-          <p className={styles.eyebrow}>How it works</p>
-          <h2 id="how-heading" className={styles.h2}>
-            A real repo, a real editor, and one right answer.
-          </h2>
-          <ol className={styles.steps}>
-            {STEPS.map((step, index) => (
-              <li key={step.title} className={styles.step}>
-                <span className={styles.stepNumber} aria-hidden="true">
-                  {index + 1}
-                </span>
-                <h3 className={styles.h3}>{step.title}</h3>
-                <p>{step.body}</p>
-              </li>
-            ))}
-          </ol>
-        </section>
-
-        <section className={styles.section} id="types" data-reveal aria-labelledby="types-heading">
-          <p className={styles.eyebrow}>Three kinds of puzzle</p>
-          <h2 id="types-heading" className={styles.h2}>
-            Find it, trace it, explain it.
-          </h2>
-          <ul className={styles.types}>
-            {TYPES.map((type) => (
-              <li key={type.name} className={styles.typeCard}>
-                <h3 className={styles.typeName}>{type.name}</h3>
-                <p className={styles.typeSummary}>{type.summary}</p>
-                <p className={styles.example}>
-                  <span className={styles.exampleLabel}>For example</span>
-                  {type.example}
-                </p>
-                <p className={styles.answer}>
-                  <span className={styles.exampleLabel}>{type.answerLabel}</span>
-                  <span className={styles.answerIds}>
-                    {type.answer.map((id, index) => (
-                      <span key={id} className={styles.answerItem}>
-                        {index > 0 ? (
-                          <span className={styles.arrow} aria-hidden="true">
-                            →
-                          </span>
-                        ) : null}
-                        <code className={styles.answerChip}>{id}</code>
-                      </span>
-                    ))}
-                  </span>
-                </p>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <section className={styles.closing} data-reveal aria-labelledby="closing-heading">
+        <section className={styles.closing} aria-labelledby="closing-heading">
           <h2 id="closing-heading" className={styles.closingHeading}>
-            Open a real codebase and start reading.
+            Start with an easy one
           </h2>
-          <p className={styles.closingText}>No setup, no install. Pick a puzzle and go.</p>
-          <Link href={PUZZLES_PATH} className={`${styles.button} ${styles.primary}`}>
-            Continue as guest
+          <p className={styles.closingText}>
+            Easy Find puzzles name the file or folder to look in, so one search or one jump to a definition gets you to
+            the answer.
+          </p>
+          <Link href={EASY_FIND} className={`${styles.button} ${styles.primary}`} data-testid="try-easy">
+            Try an easy Find puzzle
           </Link>
         </section>
       </main>

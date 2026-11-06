@@ -239,14 +239,18 @@ test.describe("results", () => {
     await openFile(page, FILES.router);
     await page.locator('[data-testid="outline-pick"][data-symbol="src/router.ts#Router.match"]').click();
 
+    // The tray says sign-in is needed before the button is pressed, not only after.
+    await expect(page.getByTestId("submit-gate")).toHaveText("Anyone can read this puzzle. Sign in to submit an answer.");
     await page.getByTestId("submit").click();
     const prompt = page.getByTestId("sign-in-prompt");
+    await expect(page.getByTestId("submit-gate")).toHaveCount(0);
     await expect(prompt).toContainText("Sign in to submit");
     await expect(page.getByTestId("result")).toHaveCount(0);
 
     await prompt.getByRole("button", { name: /Local dev sign-in/ }).click();
     await expect(page.getByTestId("signed-in-as")).toHaveText(/^dev-/);
     await expect(prompt).toHaveCount(0);
+    await expect(page.getByTestId("submit-gate")).toHaveCount(0);
     // Signing in didn't lose the selection or the open file.
     await expect(page.getByTestId("selected-answer")).toHaveText("src/router.ts#Router.match");
     await expect(page.getByTestId("code-viewer")).toHaveAttribute("data-shown-path", FILES.router);

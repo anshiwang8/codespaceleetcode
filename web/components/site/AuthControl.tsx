@@ -44,7 +44,9 @@ export function AuthControl() {
           aria-busy={pending}
           data-testid="github-sign-in"
         >
-          Sign in<span className={styles.authDetail}> with GitHub</span>
+          <span>
+            Sign in<span className={styles.authDetail}> with GitHub</span>
+          </span>
         </button>
       ) : null}
       {me.devAuth ? (
@@ -57,7 +59,9 @@ export function AuthControl() {
             disabled={pending}
             aria-busy={pending}
           >
-            Sign in<span className={styles.authDetail}>{devName ? ` as ${devName}` : ""}</span>
+            <span>
+              Sign in<span className={styles.authDetail}>{devName ? ` as ${devName}` : ""}</span>
+            </span>
           </button>
         </>
       ) : null}

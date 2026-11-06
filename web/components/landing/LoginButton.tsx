@@ -32,7 +32,7 @@ export function LoginButton() {
         onClick={() => void signIn()}
         data-testid="log-in"
       >
-        {pending ? "Opening GitHub…" : "Sign in"}
+        {pending ? "Opening GitHub…" : "Sign in with GitHub"}
       </button>
       <span
         id="login-note"
@@ -40,7 +40,7 @@ export function LoginButton() {
         role={error ? "alert" : undefined}
         data-testid="log-in-note"
       >
-        {error ?? "with GitHub"}
+        {error ?? "to submit answers and save progress"}
       </span>
     </span>
   );

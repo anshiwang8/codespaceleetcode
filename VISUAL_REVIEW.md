@@ -20,7 +20,7 @@ Open [the generated gallery](web/visual-review/index.html). Final PNGs are under
 
 The 29 screenshots retain motion and wait for explicit route content, hydrated account controls, fonts and no running/pending animations. Landing sections are scrolled into view once before full-page capture. History uses stable synthetic UTC activity and deterministic fixture names. The gallery checks document overflow and intersecting header control rectangles. Deletion is never submitted by screenshot tests. Only public fixture choices appear in workspace screenshots; the unlocked solution body is masked.
 
-Motion tests run separately and check actual animation starts and termination, one-time viewport reveals, reduced-motion durations/delays and left-anchored progress, absent JavaScript and a silent observer, rapid native group toggles, filter-pending feedback, navigation interruption, keyboard focus, progress changes without layout changes, history append position/focus, repeated cancellation, in-flight answer changes, duplicate submission prevention, solution tab focus and Monaco node identity. Request interception uses explicit gates, and animation readiness uses bounded state polling instead of long sleeps. Browser exceptions, console errors, failed requests (excluding normal navigation aborts) and failed application responses fail gallery/representative motion checks. A separate pending-button test explicitly expects and asserts a simulated provider refusal.
+Motion tests run separately and check actual animation starts and termination, one-time viewport reveals, reduced-motion durations/delays and left-anchored progress, absent JavaScript and a silent observer, rapid native group toggles, filter-pending feedback, navigation interruption, keyboard focus, progress changes without layout changes, history append position/focus, repeated cancellation, in-flight answer changes, duplicate submission prevention, solution tab focus, Monaco node identity, and the correct-result bounce (it starts, plays once, peaks between 1.1 and 1.3 scale, ends at rest, leaves the result box and View solution button unmoved, doesn't play for a wrong result, and has no duration under reduced motion). Request interception uses explicit gates, and animation readiness uses bounded state polling instead of long sleeps. Browser exceptions, console errors, failed requests (excluding normal navigation aborts) and failed application responses fail gallery/representative motion checks. A separate pending-button test explicitly expects and asserts a simulated provider refusal.
 
 ## Inspection record — November 6, 2026
 
@@ -35,20 +35,29 @@ The initial captures were reviewed, the following problems were corrected, and t
 
 Available early `before/` images are partial: the checkout's existing profile changes were still being completed during that capture. They are context, not approved pixel baselines. No changed image was automatically accepted.
 
+## Inspection record: design audit pass, November 6, 2026
+
+This pass followed `DESIGN_AUDIT.md`. `VISUAL_PHASE=before pnpm visual:review --grep gallery` captured `before/`. After the changes, the final gallery was inspected at full size, two problems were fixed, and it was captured again:
+
+- At 1440px the worked example's three columns left the code too narrow: line 20 was cut off and the answer ID broke mid-word. The example now puts the question and answer on the left and the code on the right, and long code lines wrap on a phone instead of scrolling inside a region a keyboard can't reach.
+- The sign-in note wrapped to two lines and repeated the line under the buttons. The note now fits on one line, and the hero line only says reading needs no account.
+
+Checked by eye in the final images: landing at 375, 768 and 1440 (and the hero at 375 and 768 in a dev server), the header's dev sign-in label at 768, list status glyphs at 375, the signed-out answer tray, and the correct, incorrect and unlocked workspace states. The bounce was verified by the motion test, not from screenshots.
+
 ## Actual checks
 
 | Check | Result |
 | --- | --- |
-| `pnpm visual:review` | 9 passed; 29 final-state screenshots; no unexpected browser errors or failed application requests |
-| Web unit suite, isolated database | 19 files, 588 tests passed |
-| Ingest unit suite, isolated database | 516 passed; 2 existing platform skips |
+| `pnpm visual:review` | 10 passed (6 motion, 4 gallery); 29 final-state screenshots; no unexpected browser errors or failed application requests |
+| Web unit suite, throwaway database | 20 files, 592 tests passed |
+| Ingest unit suite, throwaway database | 516 passed; 2 existing platform skips |
 | Content validation | All 136 puzzles passed |
 | Ingest ruff, format and pyright | Passed; 44 Python files already formatted; no type errors |
-| `pnpm e2e` | All 94 tests passed |
+| `pnpm e2e` | All 95 tests passed |
 | Production build and `pnpm smoke` | Build passed; all 7 smoke tests passed |
 | Web lint and typecheck | Both passed |
 
-Concurrent verification initially hit local timeouts. Running the unit and browser suites separately resolved the timing failures without increasing their timeouts. The first regression run also found expectations left over from the existing profile/wording work; those checks now target the current labels and solved-count elements. The history exhaustion expectation additionally verifies that the completed action retains focus.
+The table is this pass's run; every suite ran one at a time. In the earlier motion pass, concurrent verification initially hit local timeouts. Running the unit and browser suites separately resolved the timing failures without increasing their timeouts. The first regression run also found expectations left over from the existing profile/wording work; those checks now target the current labels and solved-count elements. The history exhaustion expectation additionally verifies that the completed action retains focus.
 
 ## Limits
 
