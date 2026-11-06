@@ -1,0 +1,285 @@
+/* Settings at /settings, and the focused email pages. */
+
+.page {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.page > * {
+  min-width: 0;
+}
+
+.focused {
+  display: grid;
+  gap: var(--space-4);
+  max-width: 720px;
+}
+
+.signedOut {
+  margin-top: var(--space-4);
+}
+
+.toc ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+}
+
+.toc a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-pill);
+  background: var(--panel);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.toc a:hover {
+  border-color: var(--line-strong);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.section {
+  display: grid;
+  gap: var(--space-4);
+  scroll-margin-top: var(--space-4);
+}
+
+.lede {
+  margin-top: calc(-1 * var(--space-2));
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.subheading {
+  font-size: 15px;
+  font-weight: 650;
+}
+
+/* Forms */
+
+.form {
+  display: grid;
+  gap: var(--space-4);
+  max-width: 640px;
+}
+
+.field {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.inline :global(.input) {
+  flex: 1 1 260px;
+  width: auto;
+}
+
+.date {
+  max-width: 220px;
+}
+
+.optional {
+  color: var(--text-faint);
+  font-weight: 400;
+}
+
+.required {
+  color: var(--text-faint);
+  font-weight: 400;
+}
+
+.hint {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.hint code {
+  font-size: 0.9em;
+}
+
+.fieldError {
+  color: var(--bad);
+  font-size: var(--text-sm);
+}
+
+.fieldError::before {
+  content: "⚠ ";
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.saveNote {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.saveError {
+  color: var(--bad);
+  font-size: var(--text-sm);
+}
+
+/* Links */
+
+.linkLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.mark {
+  display: inline-grid;
+  place-items: center;
+  min-width: 26px;
+  height: 20px;
+  padding: 0 4px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: var(--panel-raised);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.custom {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-3) 0 0;
+  border: 0;
+  border-top: 1px solid var(--line);
+}
+
+.customRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) auto;
+  align-items: start;
+  gap: var(--space-2) var(--space-3);
+}
+
+.customRow > button {
+  margin-top: 26px;
+}
+
+/* Avatar */
+
+.avatarEditor {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.avatarCurrent {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.avatarButtons {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-2);
+}
+
+.crop {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-3);
+}
+
+.cropFrame {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--panel-raised);
+  cursor: grab;
+  touch-action: none;
+}
+
+.cropFrame:active {
+  cursor: grabbing;
+}
+
+.cropImage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  max-width: none;
+  transform-origin: 0 0;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Dims everything outside the circle that will be the picture. */
+.cropMask {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow: 0 0 0 220px var(--overlay);
+  pointer-events: none;
+}
+
+.zoom {
+  display: grid;
+  gap: var(--space-1);
+  width: 220px;
+}
+
+.zoom input {
+  accent-color: var(--accent);
+}
+
+/* Email */
+
+.email {
+  display: grid;
+  gap: var(--space-3);
+  max-width: 680px;
+}
+
+.emailCurrent {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.emailAddress {
+  overflow-wrap: anywhere;
+}
+
+.emailForm {
+  display: grid;
+  gap: var(--space-1);
+}
+
+@media (max-width: 640px) {
+  .customRow {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .customRow > button {
+    margin-top: 0;
+    justify-self: start;
+  }
+}
