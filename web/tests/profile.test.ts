@@ -538,7 +538,12 @@ describe.skipIf(!hasDatabase)("profile data", () => {
     const profile = JSON.parse(text) as ProfileResponse;
     expect(profile.identity).toEqual({
       login: "octo-profile",
-      displayName: "The Octocat",
+      // The display name is the user's own choice in Settings, never GitHub's.
+      displayName: null,
+      pronouns: null,
+      bio: null,
+      links: { custom: [] },
+      avatarVersion: null,
       provider: "github",
       memberSince: expect.any(String) as string,
       githubUrl: "https://github.com/octo-profile",

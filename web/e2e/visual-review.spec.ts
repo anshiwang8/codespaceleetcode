@@ -63,9 +63,12 @@ for (const width of [375, 768, 1440]) {
     await page.goto("/profile");
     await expect(page.getByTestId("stats-total").filter({ visible: true })).toContainText("1 of 7");
     await capture("profile-populated");
+    await page.goto("/settings");
+    await expect(page.getByTestId("details-form")).toBeVisible();
+    await capture("settings");
     await page.getByTestId("delete-account-start").click();
     await expect(page.getByTestId("delete-account-confirm")).toBeVisible();
-    await capture("profile-delete-confirmation");
+    await capture("settings-delete-confirmation");
     expect(issues).toEqual([]);
     writeFileSync(path.join(directory, `gallery-${width}.json`), JSON.stringify({ localInstance: new URL(page.url()).origin, width, captures, issues }, null, 2));
     await testInfo.attach("gallery", { body: captures.join("\n"), contentType: "text/plain" });

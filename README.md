@@ -40,6 +40,10 @@ Real sign-in uses [Better Auth](https://www.better-auth.com) with GitHub. To tur
 2. Copy `web/.env.example` to `web/.env.local` and fill in `BETTER_AUTH_SECRET` (from `openssl rand -base64 32`), `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET`.
 3. Restart `pnpm local`. **Sign in** on the landing page and **Sign in with GitHub** in the header now go to GitHub. The dev login stays available on localhost.
 
+### Email
+
+Settings asks each account for a contact email and confirms it with a link. Locally nothing is sent: each message is saved as a JSON file in `web/.dev-outbox/`, and Settings says so. Open the newest file and visit the link in it while signed in as the same user. Real delivery uses Resend with `RESEND_API_KEY` and `EMAIL_FROM` ([spec.md section 14](spec.md#14-launch-checklist), M10).
+
 ### On a fresh clone
 
 Snapshots of the repos aren't committed, so build them once before `pnpm local`. This fetches and indexes all 21 repos, which takes a few minutes:

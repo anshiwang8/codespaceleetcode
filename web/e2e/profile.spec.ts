@@ -286,12 +286,11 @@ test.describe("profile", () => {
       await devLogin(page, uniqueLogin("phone"));
       await page.goto("/profile");
       const scroller = visible(page, "activity-scroll");
-      const metrics = await scroller.evaluate((element) => ({
-        overflow: element.scrollWidth - element.clientWidth,
-        left: element.scrollLeft,
-      }));
-      expect(metrics.overflow).toBeGreaterThan(0);
-      expect(metrics.left).toBeGreaterThanOrEqual(metrics.overflow - 1);
+      expect(await scroller.evaluate((element) => element.scrollWidth - element.clientWidth)).toBeGreaterThan(0);
+      // The calendar moves to its newest dates once it hydrates, so wait for that rather than read once.
+      await expect
+        .poll(() => scroller.evaluate((element) => element.scrollWidth - element.clientWidth - element.scrollLeft))
+        .toBeLessThanOrEqual(1);
       // The calendar is below the fold; once it's on screen, today is inside its visible area.
       await scroller.scrollIntoViewIfNeeded();
       const today = visible(page, "activity-grid").locator('[data-today="true"]');
