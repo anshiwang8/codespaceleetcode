@@ -23,7 +23,7 @@
 
 ## Every method on `SessionInterface`
 
-| Method | Line | Default behaviour | Must override? |
+| Method | Line | Default behavior | Must override? |
 |---|---|---|---|
 | `make_null_session` | 150 | returns `self.null_session_class()` | no |
 | `is_null_session` | 162 | `isinstance(obj, self.null_session_class)` | no |

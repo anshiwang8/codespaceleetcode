@@ -22,7 +22,7 @@ export const viewport: Viewport = {
 // The app's header and sign-in live in app/(app)/layout.tsx, so the landing page stays static.
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en">
+    <html lang="en-US">
       <body>{children}</body>
     </html>
   );

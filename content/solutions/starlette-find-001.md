@@ -52,7 +52,7 @@ The same helper is used by every piece of code that matches on paths: `Route.mat
 - **`Route.matches`** calls the function, but it does not remove the prefix itself.
 - **`Mount.matches`** is where `root_path` is *extended* for child routes, but it also reads the stripped path through `get_route_path`.
 - **`compile_path`** (`starlette/routing.py`, line 116) builds the regex that is matched, not the string it is matched against.
-- **`StaticFiles.get_path`** is another caller. It normalises the result into a filesystem path.
+- **`StaticFiles.get_path`** is another caller. It normalizes the result into a filesystem path.
 
 ## Takeaways
 

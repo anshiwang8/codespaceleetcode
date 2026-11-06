@@ -63,4 +63,4 @@ The code itself only gives the error message, not a reason. The effect is that t
 ## Takeaways
 
 - When the same function name is exported from several entry points, look for a shared helper they all import. The `_common.ts` naming is a strong hint.
-- Replacing one internal method on an instance is a cheap way to "freeze" behaviour, as long as every public path goes through that method. Verify that by checking each public method's body.
+- Replacing one internal method on an instance is a cheap way to "freeze" behavior, as long as every public path goes through that method. Verify that by checking each public method's body.

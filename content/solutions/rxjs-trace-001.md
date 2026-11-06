@@ -117,7 +117,7 @@ So subclasses customize subscription by overriding `_subscribe`, and the base ke
 
 ## Design notes
 
-- **Template method.** The base class owns the observer set and the active/terminal logic. Subclasses only add behaviour before deferring with `super._subscribe`. `BehaviorSubject` adds "emit the current value first", `ReplaySubject` adds "replay the buffer first".
+- **Template method.** The base class owns the observer set and the active/terminal logic. Subclasses only add behavior before deferring with `super._subscribe`. `BehaviorSubject` adds "emit the current value first", `ReplaySubject` adds "replay the buffer first".
 - **Current value first.** `BehaviorSubject` sends the current value to the new subscriber *before* `super._subscribe` adds it to `#observers`. After that, it receives later values through `PerSubscriptionSubjectBase.next` like any other observer.
 - **Private state.** `#observers` is a true private field, so subclasses can only add subscribers through `addSubscriber`. That is why it is a `protected` method and why `ReplaySubject` calls it as `super.addSubscriber`.
 

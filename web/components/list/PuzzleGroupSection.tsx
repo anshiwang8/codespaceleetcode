@@ -1,3 +1,4 @@
+import { ProgressFill } from "@/components/motion/ProgressFill";
 import { PuzzleTable, type OmittedColumn } from "@/components/list/PuzzleTable";
 import styles from "@/components/list/list.module.css";
 import type { BrowseState, PuzzleGroup } from "@/lib/browse";
@@ -5,7 +6,7 @@ import type { BrowseState, PuzzleGroup } from "@/lib/browse";
 interface PuzzleGroupSectionProps {
   group: PuzzleGroup;
   state: BrowseState;
-  /** Set when grouping by difficulty, so the heading takes that difficulty's colour. */
+  /** Set when grouping by difficulty, so the heading takes that difficulty's color. */
   difficulty?: string;
   omit?: OmittedColumn;
   showProgress: boolean;
@@ -28,13 +29,15 @@ export function PuzzleGroupSection({ group, state, difficulty, omit, showProgres
               : `${group.total} ${group.total === 1 ? "puzzle" : "puzzles"}`}
           </span>
           {showProgress ? (
-            <span className={styles.groupBar} aria-hidden="true">
-              <span style={{ width: `${share}%` }} />
+            <span className={`meter ${styles.groupBar}`} aria-hidden="true">
+              <ProgressFill percent={share} />
             </span>
           ) : null}
         </summary>
+        <div className={styles.groupContent}>
         {group.description ? <p className={styles.groupDescription}>{group.description}</p> : null}
         <PuzzleTable puzzles={group.puzzles} state={state} omit={omit} />
+        </div>
       </details>
     </section>
   );

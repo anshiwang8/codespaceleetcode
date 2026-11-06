@@ -2,7 +2,7 @@ id: rxjs-trace-002
 snapshot: reactivex-rxjs@54796b3
 type: trace
 difficulty: easy
-title: How forkJoin recognises a dictionary of sources
+title: How forkJoin recognizes a dictionary of sources
 prompt: |
   Start at `forkJoinImpl` in packages/rxjs/src/fork-join.ts, called with exactly one
   argument that is a plain object (not an array) whose values are observables. List the

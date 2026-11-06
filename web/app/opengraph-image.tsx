@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 // The preview shown when a link to the site is shared. Made at build time from this markup, with
-// the wordmark and colours of components/site/Logo.tsx and app/globals.css.
+// the wordmark and colors of components/site/Logo.tsx and app/globals.css.
 export const alt = "codebases: practice reading real code";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";

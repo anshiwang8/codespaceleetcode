@@ -54,7 +54,7 @@ classDiagram
 
 ## What `BlockNode` actually adds
 
-`ParentNode` is any node with children. It renders them by concatenation and handles optimisation passes. `BlockNode` adds exactly one thing, the curly braces:
+`ParentNode` is any node with children. It renders them by concatenation and handles optimization passes. `BlockNode` adds exactly one thing, the curly braces:
 
 ```ts
 // lib/compile/codegen/index.ts:212-216

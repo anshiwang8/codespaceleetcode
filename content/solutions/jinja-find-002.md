@@ -32,7 +32,7 @@
 
 1. removes all trailing whitespace from it with `str.rstrip()`, newlines included,
 2. counts how many newlines it removed, so that line numbers reported later stay correct, and
-3. replaces the first group with the stripped text, so the data token emitted afterwards has no trailing whitespace.
+3. replaces the first group with the stripped text, so the data token emitted afterward has no trailing whitespace.
 
 ```mermaid
 flowchart TD

@@ -1,5 +1,42 @@
 # DEVLOG
 
+## Restrained motion and headless visual review (2026-11-06)
+
+Type: Addition
+
+Goal: Make navigation and progress feel responsive while preserving code selection, keyboard focus, light-theme layout and server-side answer security.
+
+What should be done: Establish reusable motion rules, apply them to existing landing/list/profile/workspace UI, and complete a headless render–inspect–refine cycle with isolated fixtures.
+
+What was done (technical):
+
+- Added shared duration/easing/distance/stagger and global keyframe-name tokens. CSS handles finite entrances, state feedback and transformed progress fills. Reduced motion removes movement and delays. Landing observers enhance already-visible content and disconnect on cleanup.
+- Kept Monaco and resize targets stationary. Submission uses a synchronous request guard, cleanup cancellation and draft revision checks, so an old request cannot label a new selection. History keeps a focusable `aria-disabled` action in place, cancels pending requests and announces one appended-page summary.
+- Added `pnpm visual:review`, a separate Playwright configuration/build directory, deterministic local accounts, synthetic activity, 29 final-state captures, browser error checks and independent motion tests. Screenshot capture never completes deletion and masks unlocked solution bodies.
+- Inspection found and corrected a mobile header overlap, CSS-module keyframe references, an invalid animation fill keyword, focus loss on history exhaustion, a sign-in error message that shifted its button, and a completion wait that could hang on canceled animations. Added header overlap checks; the review waits for fonts, application content and bounded animation completion without disabling motion.
+- Run instructions, actual verification results, available before captures and remaining limits are recorded in `VISUAL_REVIEW.md`. Generated screenshots and reports remain local under `web/visual-review/`.
+
+
+## Clearer UI, a real profile, and US English everywhere
+
+Type: Change
+
+Goal: The site read small and cramped (13px text, a 38px header, no sign of which page you're on), public pages showed developer setup commands, and the profile was a narrow page with two small tables. The copy mixed British and US spelling, and "Log in" with "Sign in".
+
+What should be done: One visual system shared by every page, with the IDE kept dense. A profile built from real data: identity, progress, what to continue, activity and history, and the account controls. All project-owned English in US spelling.
+
+What was done (technical):
+
+- **Visual system.** `web/app/globals.css` now holds tokens for color, type (16px body), spacing, radii, control heights and page width, plus shared `.btn` (38px, 30px small), `.select`, `.card`, `.badge`, `.meter`, `.empty`, `.page`, `.page-header` and `.page-message`. Focus rings are 2px with an offset. `prefers-reduced-motion` turns transitions and animation off. The puzzle workspace sets a 13px base and scales `.btn`, `.chip` and `.notice` back down, so the IDE keeps its density. Its height still comes from the body's flex column: `AppShell` wraps pages in a `#main` flex column that fills the height under the header, which is also the skip link's target.
+- **Header.** 56px. `NavLinks` marks the current page with `aria-current="page"` (`"true"` for a page inside a section, such as a puzzle) and an accent underline. The account area shows an initials `Avatar`, the login cut short with an ellipsis (hidden on phones except to screen readers), and Sign out. Sign-in and sign-out errors move to a dismissible banner under the header, and the buttons show a busy state while a request runs. Before this, a long login made the header 204px too wide on a phone.
+- **Puzzle list.** A page title and lede, the signed-in user's overall progress as a bar, then one panel with the difficulty strip, the filters (labeled selects, "All types" and so on) and Group by. Rows are 15px with an icon and text for status and a dot for difficulty. Rows become cards below 860px; the table was 6px too wide at 768px. With nothing published, the page says so instead of telling the visitor to run `ingest seed`. With no matches, it offers Clear filters. URL state, grouping, sorting and history are unchanged.
+- **Error and empty states.** `app/(app)/error.tsx` no longer mentions `pnpm db`, and offers Try again and Go to puzzles. The not-found page has buttons back to the puzzles and home. The sign-in prompt no longer tells visitors sign-in "isn't available on this server yet".
+- **Profile.** `web/lib/server/profile.ts` (server-only) runs five queries in parallel, each scoped to the user's id and limited to published puzzles: identity (login, GitHub display name, whether a GitHub account is linked, `users.created_at`), every published puzzle with the user's status (aggregated in `summarizeProgress` by type, difficulty, repository and topic), up to 6 puzzles in progress with their last submission time, submissions per UTC day for 90 days, and a page of history. History pages by `(created_at, id)` with the last entry's id as the cursor, looked up only among the user's own submissions, so another user's cursor gives an empty page. New routes `GET /api/me/profile` and `GET /api/me/history` (zod-validated `before` and `limit` ≤ 50), with shapes in `web/lib/api-types.ts`. Nothing returned includes the stored email, `auth_users.image`, tokens, submitted answers or solutions. The outcome field is `passed`, so the leak checks for `"correct"` and `accept` still apply. `time_on_puzzle_ms` isn't used, since the client reports it. `/api/me/stats` is unchanged.
+- **Profile page.** An identity card (avatar, login wrapping anywhere, display name, "GitHub account" with a profile link or "Local development account", member since, solved total), four overview tiles, Continue practicing cards that say a puzzle opens fresh, progress by type, difficulty, repository and topic as named progress bars (the topic card says counts overlap), a 90-day activity grid with a text summary and a table of active days, recent submissions with Load more, and an Account card with Sign out, the legal links and, set apart, the two-step delete. It has its own loading skeleton, error page and signed-out state, and `robots: noindex`. GitHub avatars aren't loaded, because the CSP allows images from this site only.
+- **US English.** `lang="en-US"`. `web/lib/format.ts` formats every date and number with `en-US`, dates in UTC. The list's collator is `en-US`. 53 solutions, 2 puzzle files (one title: "How forkJoin recognizes a dictionary of sources"), the topic descriptions, comments, test names, `spec.md`, `README.md` and earlier DEVLOG entries were changed to US spelling (behavior, color, canceled, recognize, normalize, optimization, defenses, practicing, backward, afterward). Code spans and fences were left alone, so quoted source keeps its spelling: Click's "signalling" docstring and httpx's "behaviour" comment stay, as do `server.initialise()` (embedded-postgres) and the `LICENCE.txt` filter test. "forwards" stays where it's a verb. The landing page's "Log in" is now "Sign in". All 136 puzzles still pass `pnpm validate`. A puzzle's blind-check version changes with its wording, but its `verified_by` and published state don't.
+- **Motion.** The same branch carries motion work from a parallel session: `--motion-*` tokens and keyframes at the end of `globals.css`, `components/motion/ProgressFill.tsx` (bars that grow with a transform), `ViewportReveals` on the landing page, a `pending-track` bar on busy buttons, and a separate `pnpm visual:review` screenshot run (`playwright.visual.config.ts`, `e2e/visual-review.spec.ts`). Reduced motion turns all of it off.
+- **Tests.** `web/tests/profile.test.ts`: aggregation (zero activity, repeated submissions, a solve staying solved after a later miss, overlapping topics, completion rounding), unpublished puzzles left out, two users isolated (including a borrowed cursor), history paging with no repeats or gaps, UTC day boundaries and the window's edges, a GitHub user's profile without its email, image or token, and route auth and validation. `web/tests/profile-render.test.ts` renders the loading, error, empty and populated states and checks formatting. `web/e2e/profile.spec.ts` covers signed-out, new, populated and Load more (with a failed request), following a card to its puzzle, no private data in the HTML, a 39-character login at 375px, and the skip link. Existing e2e tests were updated for "Sign in", "Page not found", the new empty list and the profile rows.
+
 ## Legal pages approved (launch checklist M7)
 
 Type: Change
@@ -133,7 +170,7 @@ What was done (technical):
 
 - `.github/workflows/ci.yml` has five jobs on Ubuntu, with no secrets: web (lint, typecheck, vitest against a `postgres:17` service through `TEST_DATABASE_URL`); ingest (`uv sync --locked`, ruff check and format, pyright, pytest with `INGEST_TEST_DB_URL`); validate; e2e; and smoke.
 - The validate job restores `ingest/out` from a cache keyed on `content/repos.yaml`, `ingest/src/**` and `ingest/uv.lock`. On a miss it installs the pinned scip-typescript 0.6.0 and scip-python 0.6.8 and runs `snapshot-all`.
-- The e2e and smoke jobs install Chromium with its Linux libraries, and upload `web/test-results/` when they fail. On the first run, the e2e job's install hung for 30 minutes in `apt-get update` on GitHub's Azure Ubuntu mirror and was cancelled, while the same step passed in the smoke job. So each install attempt now has a 5-minute limit and up to three tries.
+- The e2e and smoke jobs install Chromium with its Linux libraries, and upload `web/test-results/` when they fail. On the first run, the e2e job's install hung for 30 minutes in `apt-get update` on GitHub's Azure Ubuntu mirror and was canceled, while the same step passed in the smoke job. So each install attempt now has a 5-minute limit and up to three tries.
 - The first run on `main` also showed that the whole pipeline works on Linux: building all 21 snapshots with the pinned indexers, validation, ingest and web tests, and the production smoke test all passed there.
 - Runs on the same branch cancel each other, and the workflow can only read the repository.
 
@@ -259,7 +296,7 @@ Still open:
 
 Type: Addition, Change
 
-Goal: With 100 puzzles, a flat table with four drop-downs made the catalogue hard to take in. You should see at a glance what's there and how much you've solved, and get to a difficulty or a subject in one click.
+Goal: With 100 puzzles, a flat table with four drop-downs made the catalog hard to take in. You should see at a glance what's there and how much you've solved, and get to a difficulty or a subject in one click.
 
 What should be done: Turn the tags into a small fixed set of topics, and organize the list page by difficulty and topic.
 
@@ -374,13 +411,13 @@ What was done (technical):
 
 - **The reference cap is explicit.** `/api/snapshots/:id/symbols` asks for 501 references, returns at most 500, and sets `referencesTruncated` when there were more, the way search does. The UI used to guess from the list length, so a symbol with exactly 500 references showed "first 500". Unit tests cover 501+ and exactly 500, and two e2e tests check the label both ways.
 - **Unknown puzzles are a 404.** The root `loading.tsx` wrapped every page, so streaming began before the puzzle page could call `notFound()`. The list page and its `loading.tsx` moved into the `app/(list)` route group, and the new `app/puzzles/[slug]/layout.tsx` looks the puzzle up before the puzzle's own `loading.tsx` streams. The layout, metadata and page share one lookup through `web/lib/server/puzzle-page.ts`, which uses React's `cache`. The e2e test now asserts 404 for a missing slug and a malformed one, and 200 for a real puzzle.
-- **`LOCALDB_PORT` is honoured everywhere.** `web/lib/server/db.ts`, `web/tests/global-setup.ts` and `ingest seed` now use it as `scripts/localdb.mjs` does, and reject a value that isn't a port. An empty value means the default in the scripts too, rather than port 0.
+- **`LOCALDB_PORT` is honored everywhere.** `web/lib/server/db.ts`, `web/tests/global-setup.ts` and `ingest seed` now use it as `scripts/localdb.mjs` does, and reject a value that isn't a port. An empty value means the default in the scripts too, rather than port 0.
 - **Two e2e races were exposed, both in the tests.** They showed up because the route change shifted page timing. Running the same tests on the commit before this change, and on that commit plus only the route move, showed the move was the trigger.
   - `clickToken` measured a line Monaco had just replaced, because re-rendering detaches a line's elements. The rectangle came back as 0,0, so the test clicked the header. It now measures again when the line is detached or has no size. The F12 test went from 10 failures in 48 to 32 passes in 32.
   - The file-retry test failed exactly one request. When the viewer mounted just as the file was clicked, development's strict mode loaded the file twice: the first load got the 500 and was thrown away, and the second succeeded, so no error showed. The test now fails every request until it clicks "Try again", like the manifest test beside it. Production mounts once, so this was never visible to users. 48 passes in 48, from 3 failures in 24.
 - 452 ingest tests (1 Windows-only skip), 464 web tests against real Postgres and 54 Playwright tests pass, twice in a row for e2e. All 85 puzzles validate.
 
-This closes "`LOCALDB_PORT` is only honoured by the scripts", "The `/symbols` route caps references at 500 with no `truncated` flag" and "Unknown puzzle URLs return HTTP 200". The detached-line race in `clickToken` probably also explains the `cursor-symbol` timeouts in the entry below, though those runs weren't traced.
+This closes "`LOCALDB_PORT` is only honored by the scripts", "The `/symbols` route caps references at 500 with no `truncated` flag" and "Unknown puzzle URLs return HTTP 200". The detached-line race in `clickToken` probably also explains the `cursor-symbol` timeouts in the entry below, though those runs weren't traced.
 
 Still open:
 
@@ -453,7 +490,7 @@ What was done (technical):
 Still open:
 
 - Blindness of the second solves can't be independently confirmed, and author and solver are similar models. The key audit is the stronger evidence, and it didn't cover the 9 `file` puzzles.
-- `LOCALDB_PORT` is only honoured by the scripts, so `pnpm db` on another port needs a matching `DATABASE_URL` for `pnpm dev`.
+- `LOCALDB_PORT` is only honored by the scripts, so `pnpm db` on another port needs a matching `DATABASE_URL` for `pnpm dev`.
 - A user stays `solved` if a puzzle's key later changes.
 - The `/symbols` route caps references at 500 with no `truncated` flag. The UI infers it from the list length; 149 symbols exceed it.
 - Unknown puzzle URLs return HTTP 200 with a not-found page, because `loading.tsx` starts streaming first.
@@ -513,7 +550,7 @@ What was done (technical):
 - `content/schema/puzzle.schema.json` and `uv run ingest validate` cover the schema, existence and uniqueness checks. Error messages name fields, never values.
 - `uv run ingest seed` validates first, skips snapshots already loaded, and upserts puzzles so users keep their progress. 15 synthetic repos of 100k lines took 70 seconds to load and 1.1 seconds to re-seed.
 - `blind-export` writes only what a solver may see, with a test that fails if any answer value appears. `blind-check` prints pass or fail only, and won't record a solver who is also the puzzle's author.
-- Breaking 18 critical behaviours one at a time, the tests caught all 18.
+- Breaking 18 critical behaviors one at a time, the tests caught all 18.
 
 Fixes after review:
 

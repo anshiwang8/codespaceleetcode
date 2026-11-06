@@ -15,10 +15,10 @@ test.describe("landing page", () => {
     await expect(visible(page, "puzzle-row-e2e-find-file")).toBeVisible();
   });
 
-  test("Log in starts GitHub sign-in, and says so when this server has no GitHub app", async ({ page }) => {
+  test("Sign in starts GitHub sign-in, and says so when this server has no GitHub app", async ({ page }) => {
     // The e2e server runs without GitHub OAuth credentials, so Better Auth refuses the provider.
     await page.goto("/");
-    const login = page.getByRole("button", { name: "Log in" });
+    const login = page.getByRole("button", { name: "Sign in" });
     await expect(login).toBeEnabled();
     await expect(login).toHaveAccessibleDescription("with GitHub");
 

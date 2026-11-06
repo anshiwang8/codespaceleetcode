@@ -8,7 +8,7 @@ prompt: |
   two jobs, in this order: job A with id 2, then job B with id 5. Both are flagged QUEUED
   and neither has the PRE flag. No flush is in progress (`flushIndex` is -1). `queueJob`
   is now called once with job P, which has id 5, the PRE flag, and is not flagged QUEUED.
-  What is the order of the queue afterwards?
+  What is the order of the queue afterward?
 answer:
   kind: choice
   option: b

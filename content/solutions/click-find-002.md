@@ -61,5 +61,5 @@ Command.parse_args(ctx, args)                         line 1396
 ## Takeaways
 
 - Searching for a user-visible error message is often the fastest way to find the check that produces it.
-- Parsing code is usually a pipeline: parse, process each parameter, normalise, validate what's left, store. Knowing the stages tells you where each kind of check must be.
+- Parsing code is usually a pipeline: parse, process each parameter, normalize, validate what's left, store. Knowing the stages tells you where each kind of check must be.
 - Watch for flags like `resilient_parsing`. A single context flag that disables errors is how Click reuses the normal parsing code for shell completion.

@@ -67,4 +67,4 @@ The reaction scheduler is pluggable (`setReactionScheduler`, line 311), which is
 ## Takeaways
 
 - A named limit constant near a loop is often the fastest way to find a safety guard. Search for its uses.
-- Distinguish re-entrancy guards (stop a function from running while it is already running) from convergence guards (stop a loop that never settles). They often sit in neighbouring functions.
+- Distinguish re-entrancy guards (stop a function from running while it is already running) from convergence guards (stop a loop that never settles). They often sit in neighboring functions.

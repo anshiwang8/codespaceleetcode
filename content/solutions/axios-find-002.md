@@ -64,7 +64,7 @@ if (!response.status || !validateStatus || validateStatus(response.status)) {
 
 So `axios.get(url, { validateStatus: undefined })` means "never reject on status". With the ordinary strategies, an explicit `undefined` would be ignored like an omitted key, and the default 2xx check would still apply.
 
-The block after the loop (lines 224-234) lets you opt out of this: when the merged transitional option `validateStatusUndefinedResolves` is `false`, an explicit `undefined` falls back to the default again. Its default in `lib/defaults/transitional.js` is `true`, which keeps the behaviour above.
+The block after the loop (lines 224-234) lets you opt out of this: when the merged transitional option `validateStatusUndefinedResolves` is `false`, an explicit `undefined` falls back to the default again. Its default in `lib/defaults/transitional.js` is `true`, which keeps the behavior above.
 
 ## Why the other candidates are wrong
 

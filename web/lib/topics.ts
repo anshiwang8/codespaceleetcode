@@ -62,7 +62,7 @@ export const TOPICS = {
   },
   "auth-and-security": {
     label: "Auth and security",
-    description: "Sessions, credentials, and defences against unsafe requests.",
+    description: "Sessions, credentials, and defenses against unsafe requests.",
   },
   "code-structure": {
     label: "Code structure",

@@ -4,7 +4,7 @@
 
 ## How a strong engineer would navigate there
 
-Follow registration from the class downwards, one import at a time.
+Follow registration from the class downward, one import at a time.
 
 1. `lib/ajv.ts` defines `class Ajv extends AjvCore` and overrides one method, `_addVocabularies`:
 

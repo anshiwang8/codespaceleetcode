@@ -1,8 +1,40 @@
+/*
+ * The workspace is an IDE, so it keeps a denser base size than general pages (16px). Shared
+ * controls from app/globals.css are scaled back down here to match.
+ */
 .workspace {
   display: flex;
   flex: 1;
   flex-direction: column;
   min-height: 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.workspace :global(.btn) {
+  min-height: 28px;
+  padding: 0 10px;
+  font-size: 13px;
+}
+
+.workspace :global(.btn-small) {
+  min-height: 22px;
+  padding: 0 7px;
+  font-size: 12px;
+}
+
+.workspace :global(.chip) {
+  padding: 0 7px;
+  font-size: 11px;
+  line-height: 18px;
+}
+
+.workspace :global(.notice) {
+  padding: 8px 10px;
+}
+
+.workspace :focus-visible {
+  outline-offset: 1px;
 }
 
 .narrowNote {
@@ -894,3 +926,15 @@
     z-index: 10;
   }
 }
+
+/* No motion on Monaco, editor tabs, tree targets, or splitters. */
+.promptTab, .choice, .treePick, .treePickActive, .sidebarTab, .sidebarTabActive {
+  transition: background-color var(--motion-control) var(--motion-feedback), border-color var(--motion-control) var(--motion-feedback), color var(--motion-control) var(--motion-feedback);
+}
+.tabPanel:not([hidden]), .solution[data-state="ready"], .hints li {
+  animation: var(--motion-fade) var(--motion-panel) var(--motion-ease);
+}
+.tabBadge { animation: var(--motion-enter) var(--motion-panel) var(--motion-ease); }
+.answerRow, .sequenceItem { animation: var(--motion-confirm) var(--motion-panel) var(--motion-ease); }
+.resultCorrect, .resultIncorrect { animation: var(--motion-enter) var(--motion-panel) var(--motion-ease); }
+.submitRow :global(.btn) { min-width: 116px; }

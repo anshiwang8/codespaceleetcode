@@ -355,6 +355,8 @@ Hosted Supabase grants `anon` and `authenticated` everything on each new table, 
 | `/api/me` | DELETE | Deletes the signed-in user's account and everything about them, and clears the session cookies. Needs `{ "confirm": true }` and a same-origin `Origin` header |
 | `/api/auth/*` | GET, POST | Better Auth's own routes: GitHub sign-in, its callback, the session, sign-out |
 | `/api/me/stats` | GET | Solved counts by type and difficulty |
+| `/api/me/profile` | GET | The signed-in user's profile (`ProfileResponse`): identity, progress overall and by type, difficulty, repository and topic, unfinished puzzles, 90 days of activity, and the first page of history |
+| `/api/me/history?before=&limit=` | GET | One page of the signed-in user's submissions, newest first: puzzle, repository, whether it passed, and when. `limit` defaults to 10 and is at most 50; `before` is the last entry's `id` |
 | `/api/dev/login`, `/api/dev/logout` | POST | Localhost mode only: start or end a dev session |
 | `/snapshots/<name>/<path>` | GET | Localhost mode only: `manifest.json` or a raw file |
 | `/robots.txt`, `/sitemap.xml` | GET | For search engines. The sitemap lists `/`, `/puzzles`, the legal pages and every published puzzle, with absolute URLs on `BETTER_AUTH_URL`'s origin |
@@ -362,7 +364,7 @@ Hosted Supabase grants `anon` and `authenticated` everything on each new table, 
 
 Response shapes live in `web/lib/api-types.ts`. Submit validates that every submitted ID exists in the snapshot before grading. Submit and search are rate-limited in Postgres (`rate_limits`, migration 0006), so the limits hold across serverless instances. One upsert counts a request and resets an expired window, so concurrent requests can't both slip under a limit, and the database's clock is the one every instance uses. Better Auth's own limiter uses the same table through `rateLimit.customStorage`. About one request in a hundred also deletes windows older than an hour. Reading a puzzle needs no sign-in; submitting does.
 
-- Signed-out requests to `/solution` and `/api/me/stats` get 401. A signed-in user who hasn't unlocked a solution gets 403.
+- Signed-out requests to `/solution`, `/api/me/stats`, `/api/me/profile` and `/api/me/history` get 401. A signed-in user who hasn't unlocked a solution gets 403.
 - Every graded submission counts as an attempt, including ones after solving. A rejected request doesn't.
 - `solved` is final: later submissions are graded and counted, but never change the status. The one exception is a changed answer key: seeding then regrades that puzzle's submissions and recomputes each user's status, keeping each submission's recorded `correct`.
 - An unknown or malformed puzzle slug is a 404, from `/api/puzzles/:slug` and from the puzzle page. The page checks in `app/puzzles/[slug]/layout.tsx`, before its `loading.tsx` starts streaming, and the list page's `loading.tsx` sits in the `app/(list)` route group so it doesn't wrap puzzle pages.
@@ -375,8 +377,11 @@ Response shapes live in `web/lib/api-types.ts`. Submit validates that every subm
 
 The site is named **codebases**. The logo is the word in Arial, with "bases" in a blue box. The theme is a plain white background with a blue accent.
 
-- **Landing page (`/`):** the logo, a tagline, and two buttons. "Continue as guest" opens the puzzle list. "Log in" starts GitHub sign-in and returns to the puzzle list, or says so if this server has no GitHub OAuth app configured. Below the fold it explains why the product exists (interviews moving from algorithm puzzles to navigating real codebases), how it works, and the three puzzle types. It renders without the database.
-- **Puzzle list (`/puzzles`):** solved state per row. Everything below lives in the URL (`type`, `difficulty`, `repo`, `tag`, `group`, `sort`), and the defaults are left out, so the plain list stays at `/puzzles`.
+- **Visual system:** colors, type sizes, spacing, radii and shared controls (`.btn`, `.select`, `.card`, `.badge`, `.meter`, `.empty`, `.page-message`) are tokens and classes in `web/app/globals.css`. General pages use 16px body text. The puzzle workspace keeps a denser 13px base and scales the shared controls down. A status is never shown by color alone: it always has text or an icon too. Animation is off under `prefers-reduced-motion`.
+- **Copy:** everything the project writes is in US English (behavior, color, canceled, license). Auth actions are "Sign in" and "Sign out". The document is `lang="en-US"`, and dates and numbers are formatted with `en-US` (`web/lib/format.ts`). Upstream code, quoted source, identifiers and IDs keep their own spelling. Public empty and error states say what happened and what to do, never how to run the server.
+- **Header (every page but the landing page):** the logo, Puzzles and Profile links, and the account area. The current page's link has `aria-current="page"` (a puzzle page marks Puzzles with `aria-current="true"`) and an underline. Signed in, it shows an initials avatar, the login (cut short with an ellipsis, and hidden on a phone except to screen readers) and Sign out. A failed sign-in or sign-out shows in a dismissible banner under the header. A "Skip to content" link comes first.
+- **Landing page (`/`):** the logo, a tagline, and two buttons. "Continue as guest" opens the puzzle list. "Sign in" starts GitHub sign-in and returns to the puzzle list, or says so if this server has no GitHub OAuth app configured. Below the fold it explains why the product exists (interviews moving from algorithm puzzles to navigating real codebases), how it works, and the three puzzle types. It renders without the database.
+- **Puzzle list (`/puzzles`):** a title, the signed-in user's overall progress, then one panel with the difficulty strip, the filters and the grouping. Solved state per row, as an icon and text. With nothing published it says so, with no setup instructions; with no matches it offers to clear the filters. Below 860px each row becomes a card. Everything below lives in the URL (`type`, `difficulty`, `repo`, `tag`, `group`, `sort`), and the defaults are left out, so the plain list stays at `/puzzles`.
   - A difficulty strip: one bar split by difficulty, each segment's width its share of the puzzles and its filled part the share solved. Clicking a segment filters to that difficulty, and clicking it again clears the filter.
   - The strip's counts are taken under the other filters, so each says what clicking would show.
   - Type, topic and repo are drop-downs. Topics show by label.
@@ -389,8 +394,30 @@ The site is named **codebases**. The logo is the word in Arial, with "bases" in 
   - Go-to-definition (F12 / ctrl-click, cmd-click on macOS), find references, and a breadcrumb trail of visited files.
   - Repo name, SHA, license, and link back to GitHub at that SHA.
 - **Result:** correct / incorrect, attempt count. Solution unlocks on a correct answer.
-- **Profile:** solved counts by type and difficulty, and "Delete account". Deleting takes two clicks: the first shows what will be lost, the second deletes.
+- **Profile (`/profile`):** private to the signed-in user, rendered per request and marked `noindex`. Signed out, it explains what it shows and offers sign-in. All data comes from `web/lib/server/profile.ts`, scoped to the user's id, and counts only published puzzles.
+  - **Identity:** the login, the GitHub display name when it differs, "GitHub account" with a link to their GitHub page or "Local development account", and the member-since date. The avatar is initials on a color picked from the login, because the CSP allows images only from this site. It never shows the stored email, which is a placeholder. Read-only.
+  - **Progress overview:** distinct puzzles solved, attempted but not solved ("In progress"), published puzzles available, and completion (solved / available, rounded down).
+  - **Continue practicing:** up to 6 puzzles in progress, most recently submitted first, with type, difficulty, repository, attempts and last submission date. It says a puzzle opens fresh, since selections aren't saved. With none, it links to the puzzle list.
+  - **Progress by category:** by type, difficulty, repository and topic, each row a named progress bar with the counts in words. A puzzle counts under each of its topics, and the page says topic counts overlap.
+  - **Activity:** the last 90 days as a grid of days. A day's activity is the graded submissions made that day, right or wrong, grouped by the UTC calendar date. `time_on_puzzle_ms` is client-reported and isn't shown. A text summary and a table of active days carry the same data for screen readers.
+  - **Recent submissions:** 10 at a time, newest first, with the puzzle, repository, Correct or Incorrect, and the time in UTC; "Load more" fetches the next page. Submitted answers are never shown.
+  - **Account:** Sign out, the privacy and terms links, and, in a separate panel, "Delete account". Deleting takes two clicks: the first shows what will be lost, the second deletes. Cancel closes the warning. After deleting, the browser goes to `/` and drops cached pages.
 - **Privacy policy (`/privacy`) and terms (`/terms`):** static pages linked from the landing page footer and the profile. They describe what the code actually stores. M7 approved them on 2026-11-05: `web/lib/legal.ts` has `REVIEWED: true`, so the draft notice is gone, and `CONTACT` is the address each page lists for questions. While `REVIEWED` is `false` a page says it's a draft.
+
+---
+
+
+### Motion
+
+Motion uses shared CSS tokens in `web/app/globals.css`: 150ms control feedback, 220ms panel/state feedback, 400ms progress changes, 8px entrance distance and 45ms stagger. Transform and opacity carry movement; color and border transitions communicate control state. No animation library or JavaScript render loop is needed.
+
+- Landing hero and preview enter once. Lower sections reveal once on viewport entry, but remain visible before JavaScript and if observers never call back. The observer disconnects on cleanup.
+- Navigation, buttons, selections and pending states respond without shifting their targets. Difficulty-strip height stays fixed. Native collapsible groups remove closed content from keyboard navigation immediately, with a brief opening fade where supported.
+- Profile identity and summary tiles have a short entrance stagger. Progress fills use `scaleX` and transition from prior displayed values when the DOM is retained; first mount starts at zero in browsers supporting `@starting-style`. Numbers and accessible progress values render immediately. History appends in place, announces one summary, keeps its button focused through loading/exhaustion, and aborts pending requests on unmount. Deletion keeps its two steps and transfers focus between Cancel and the initial control.
+- Workspace selection feedback stays inside the answer tray; only new result messages move. Monaco, tree targets, editor tabs and splitters never translate or remount for animation. Submission begins immediately, rejects concurrent requests, cancels the client request on unmount, and does not show stale feedback when selection changes in flight. A graded attempt still updates progress. Solution fetching and server authorization stay unchanged.
+- `prefers-reduced-motion` removes movement, stagger and progress interpolation. Loading effects exist only with loading content. No permanent `will-change`, decorative loops or per-frame React updates.
+
+`pnpm visual:review` uses the existing Playwright fixtures with a throwaway database, free localhost port, `.next-visual` build directory and separate test artifacts. It captures stable states with motion enabled at 375px, 768px and 1440px, plus a 1366×800 workspace. Focused tests separately exercise motion, reduction, interruption, fallback content, focus and overflow. Fonts, explicit content readiness and bounded animation-state checks precede captures. Solution bodies are masked; synthetic activity has no submitted answers. Screenshots require actual inspection, never automatic baseline approval. See `VISUAL_REVIEW.md`.
 
 ---
 
@@ -416,7 +443,7 @@ The site is named **codebases**. The logo is the word in Arial, with "bases" in 
 
 ## 13. Open questions
 
-- Should `location` answers be dropped entirely in favour of `symbol` + `choice`? Decide after authoring the first 30 puzzles.
+- Should `location` answers be dropped entirely in favor of `symbol` + `choice`? Decide after authoring the first 30 puzzles.
 - Show set counts on every `set` puzzle, or only on easy and medium?
 - Time-based scoring, or solved/unsolved only?
 

@@ -10,7 +10,7 @@ export function LoginButton() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const logIn = async () => {
+  const signIn = async () => {
     setPending(true);
     setError(null);
     const failed = await signInWithGitHub(PUZZLES_PATH);
@@ -29,10 +29,10 @@ export function LoginButton() {
         aria-describedby="login-note"
         aria-busy={pending}
         disabled={pending}
-        onClick={() => void logIn()}
+        onClick={() => void signIn()}
         data-testid="log-in"
       >
-        {pending ? "Opening GitHub…" : "Log in"}
+        {pending ? "Opening GitHub…" : "Sign in"}
       </button>
       <span
         id="login-note"

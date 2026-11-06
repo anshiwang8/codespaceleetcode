@@ -41,7 +41,7 @@ new Function("self", "scope", sourceCode)
 
 `N.self` and `N.scope` are `Name` objects for the strings `"self"` and `"scope"` (`lib/compile/names.ts:18-19`). The first part of `sourceCode`, from `gen.scopeRefs(N.scope)`, declares local constants that read values out of `scope`, such as the schema object or compiled regular expressions. Then `return <validateCode>` returns the actual function.
 
-Calling `makeValidate(this, this.scope.get())` runs that prologue once and hands back a closure over those constants. That is how the generated validator can use non-serialisable values (regexps, user format functions, other compiled validators) without them being written into the source text.
+Calling `makeValidate(this, this.scope.get())` runs that prologue once and hands back a closure over those constants. That is how the generated validator can use non-serializable values (regexps, user format functions, other compiled validators) without them being written into the source text.
 
 ```mermaid
 sequenceDiagram
@@ -77,4 +77,4 @@ sequenceDiagram
 ## Takeaways
 
 - To find where a code generator becomes runnable, search for `new Function` or `eval`. It is usually a single, well-guarded spot.
-- "Factory that returns the function" is a common trick for injecting runtime values into generated code without serialising them.
+- "Factory that returns the function" is a common trick for injecting runtime values into generated code without serializing them.

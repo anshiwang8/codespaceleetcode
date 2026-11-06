@@ -64,7 +64,7 @@ Passing `type=SomeCallable` is a deliberate statement that "this callable turns 
 - **Lines 1372-1373** (`if guessed is str or guessed is None: return STRING`). Also returns `STRING`, but for a different case: the type is `str` itself, or nothing could be inferred (no type and a `None` or empty default). The comment in `_guess_type` about falling "through to STRING" (lines 1330-1331) refers to this branch.
 - **Lines 1375-1382** (the `int`, `float`, `bool` branches). These handle the built-in types the prompt excludes.
 - **Lines 1387-1395** (the `if __debug__:` block). It checks for a common mistake, passing a `ParamType` class instead of an instance, and raises `AssertionError`. It doesn't return a type.
-- **Line 1397** (`return FuncParamType(guessed)`). The fallback for an explicit, unrecognised type, which is the opposite of the prompt's case.
+- **Line 1397** (`return FuncParamType(guessed)`). The fallback for an explicit, unrecognized type, which is the opposite of the prompt's case.
 - **Lines 1363-1364.** They compute `is_guessed`, but the prompt asks for the `if` statement and body that returns the string type.
 
 ## Takeaways

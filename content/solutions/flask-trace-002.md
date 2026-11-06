@@ -14,7 +14,7 @@ The hint gives the best strategy: find every caller of the lookup and work out w
 
 The definition is not on `Flask`. It is on the base class `App`, in `src/flask/sansio/app.py:869`. That is why the last ID in the answer is in a different file.
 
-## The path, forwards
+## The path, forward
 
 ```mermaid
 sequenceDiagram

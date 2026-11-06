@@ -63,7 +63,7 @@ The prompt says a call inside an inline callback counts as part of the enclosing
 - `isRedirect` needs a `Location` header (line 1169). There is none, so `shouldFollowRedirect` is `false` and the redirect block starting at line 1378 is skipped.
 - `got.stream` sets `options.isStream`, and `throwHttpErrors` defaults to `true` (`options.ts:1353`). The `if` on line 1622 is true, so it calls `this._beforeError(new HTTPError(typedResponse))` and returns.
 
-**`_beforeError` → `calculateRetryDelay`.** `_beforeError` normalises the error (an `HTTPError` is already a `RequestError`), then inside its async IIFE checks `if (this.listenerCount('retry') !== 0)` (line 571). The caller attached a `retry` listener, so it parses `Retry-After` (none here) and calls `calculateRetryDelay` (line 596). That is the end.
+**`_beforeError` → `calculateRetryDelay`.** `_beforeError` normalizes the error (an `HTTPError` is already a `RequestError`), then inside its async IIFE checks `if (this.listenerCount('retry') !== 0)` (line 571). The caller attached a `retry` listener, so it parses `Retry-After` (none here) and calls `calculateRetryDelay` (line 596). That is the end.
 
 ## Why other paths are wrong
 

@@ -21,7 +21,7 @@ sequenceDiagram
     G->>A: analyze_param(param_name, annotation, value, path_param_names)
     A-->>G: ParamDetails(type_annotation, depends, field)
     Note over G: sort into dependencies, body_params, or path/query/header/cookie
-    Note over I: afterwards: self.app = request_response(self.get_route_handler())
+    Note over I: afterward: self.app = request_response(self.get_route_handler())
 ```
 
 ## Step by step
@@ -65,7 +65,7 @@ sequenceDiagram
            )
    ```
 
-4. **`get_dependant`** (`fastapi/dependencies/utils.py:300`). It reads the endpoint's signature and analyses each parameter:
+4. **`get_dependant`** (`fastapi/dependencies/utils.py:300`). It reads the endpoint's signature and analyzes each parameter:
 
    ```python
    # fastapi/dependencies/utils.py:321-329

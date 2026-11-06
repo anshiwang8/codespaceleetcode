@@ -54,7 +54,7 @@ A search for `class Depends` across `fastapi/` gives exactly one hit, this one, 
 
 ## Why split the function from the class?
 
-The hint says the split is deliberate. The public functions are where the user-facing documentation lives: every argument is wrapped in `Annotated[..., Doc("...")]`, which makes them long but gives editors and docs rich help text. The classes stay small and are what the framework actually checks. For example, `analyze_param` in `fastapi/dependencies/utils.py` recognises dependencies with `isinstance(value, params.Depends)` (line 476) and `isinstance(fastapi_annotation, params.Depends)` (line 473). Since `Depends` is a frozen dataclass, instances are hashable and immutable, so the same marker can safely appear in many signatures.
+The hint says the split is deliberate. The public functions are where the user-facing documentation lives: every argument is wrapped in `Annotated[..., Doc("...")]`, which makes them long but gives editors and docs rich help text. The classes stay small and are what the framework actually checks. For example, `analyze_param` in `fastapi/dependencies/utils.py` recognizes dependencies with `isinstance(value, params.Depends)` (line 476) and `isinstance(fastapi_annotation, params.Depends)` (line 473). Since `Depends` is a frozen dataclass, instances are hashable and immutable, so the same marker can safely appear in many signatures.
 
 ## Why the other files are wrong
 
@@ -66,6 +66,6 @@ The hint says the split is deliberate. The public functions are where the user-f
 
 ## Takeaways
 
-- A capitalised function that returns `module.SameName(...)` is a factory. "Go to definition" on the user-facing name lands on the function, so take one more jump to reach the class.
+- A capitalized function that returns `module.SameName(...)` is a factory. "Go to definition" on the user-facing name lands on the function, so take one more jump to reach the class.
 - Search for `class X` rather than `X` when a name is both a function and a class. It removes the call sites and the re-exports.
 - Watch for near-identical names (`Depends`, `Dependant`). They are often different layers of the same feature: the user-facing marker and the internal model built from it.

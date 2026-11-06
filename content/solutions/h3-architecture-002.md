@@ -53,11 +53,11 @@ flowchart TD
     P -->|"no"| R["return ret as the response value"]
 ```
 
-`next` is memoised with `nextCalled` and `nextResult` (lines 131-141). If the middleware had called `next()` and then also returned `undefined`, the second call returns the stored result instead of running the chain twice.
+`next` is memoized with `nextCalled` and `nextResult` (lines 131-141). If the middleware had called `next()` and then also returned `undefined`, the second call returns the stored result instead of running the chain twice.
 
 ## Why the other options are wrong
 
-- **a, a 500 because `next()` was never called.** Nothing in `callLayer` or `composeMiddleware` checks whether the middleware called `next`. There is no error path for it. The memoised `next` makes calling it late (by the framework) safe.
+- **a, a 500 because `next()` was never called.** Nothing in `callLayer` or `composeMiddleware` checks whether the middleware called `next`. There is no error path for it. The memoized `next` makes calling it late (by the framework) safe.
 - **c, a 404 because the middleware did not handle it.** A 404 comes from the chain ending at `NoHandler` (returned by `routeHandler` when no route matched, `src/h3.ts:136-137`), whose `kNotFound` result `prepareResponse` turns into an `HTTPError` with status 404. Returning `undefined` from a middleware just continues the chain. If a route matches, its handler runs.
 - **d, the chain stops with an empty 200.** `callLayer` never treats `undefined` as a final value. An empty response only happens later, in `src/response.ts`, if the value at the *end* of the whole chain is empty. That is a property of the route handler's return value, not of this middleware.
 
@@ -68,4 +68,4 @@ In h3, a middleware's return value *is* its decision. Returning a value short-ci
 ## Takeaways
 
 - For "what happens when X returns Y" questions, find the code that receives the return value. The name of the function that was called matters less than the caller's handling of the result.
-- Check fast paths. Here `normalizeMiddleware` returns the input unchanged, so the behaviour comes from `callLayer`, one layer further in.
+- Check fast paths. Here `normalizeMiddleware` returns the input unchanged, so the behavior comes from `callLayer`, one layer further in.

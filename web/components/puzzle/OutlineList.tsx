@@ -24,13 +24,13 @@ export function OutlineList({ snapshotId, path, onOpen, draft, pick }: OutlineLi
 
   useEffect(() => {
     if (!path) return;
-    let cancelled = false;
+    let canceled = false;
     api.outline(snapshotId, path).then(
       ({ symbols }) => {
-        if (!cancelled) setOutline({ path, state: "ready", symbols });
+        if (!canceled) setOutline({ path, state: "ready", symbols });
       },
       (error: unknown) => {
-        if (cancelled) return;
+        if (canceled) return;
         // A file the index doesn't have, like a binary, simply has no outline.
         if (error instanceof ApiRequestError && error.status === 404) {
           setOutline({ path, state: "ready", symbols: [] });
@@ -44,7 +44,7 @@ export function OutlineList({ snapshotId, path, onOpen, draft, pick }: OutlineLi
       },
     );
     return () => {
-      cancelled = true;
+      canceled = true;
     };
   }, [snapshotId, path, attempt]);
 

@@ -72,7 +72,7 @@ Every callback before the save can still change the session, and those changes a
 - **b (session first).** The session block is the last statement before `return response`, on lines 1466-1467.
 - **d (interleaved in registration order).** The two groups are separate loops over separate data structures, one list on the context and one dict on the app. Nothing merges them or sorts them by registration time. The registered functions aren't even in registration order, because of `reversed`.
 
-## Related behaviour worth knowing
+## Related behavior worth knowing
 
 - `process_response` also runs for error responses. `handle_exception` ends with `self.finalize_request(ctx, server_error, from_error_handler=True)` (line 971), which calls `process_response`. With `from_error_handler=True`, an exception raised in postprocessing is logged instead of raised (lines 1084-1089).
 - `teardown_request` functions are a different mechanism. They run when the context is popped (`ctx.pop(error)` in `wsgi_app`, line 1677), after the response has been produced, and they can't change it.
@@ -80,5 +80,5 @@ Every callback before the save can still change the session, and those changes a
 ## Takeaways
 
 - For "what order does X happen in" questions, read the method body top to bottom before reading any docs. Sequential blocks are the order.
-- Then check the order *within* each loop: look for `reversed(...)`, `chain(...)` and how the keys are ordered. That's where the subtle behaviour lives.
+- Then check the order *within* each loop: look for `reversed(...)`, `chain(...)` and how the keys are ordered. That's where the subtle behavior lives.
 - Compare a framework's request-side and response-side hooks. They are usually mirror images, and spotting the symmetry helps you remember both.

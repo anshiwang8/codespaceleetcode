@@ -65,4 +65,4 @@ ServerErrorMiddleware              <- outermost: catches anything unhandled, ret
 
 ## Takeaways
 
-For any "wrap in a loop" code, write the loop out for a small list by hand. Whether a loop iterates forwards or in reverse, and whether each step wraps inside or outside, are two separate questions, and the final order depends on both.
+For any "wrap in a loop" code, write the loop out for a small list by hand. Whether a loop iterates forward or in reverse, and whether each step wraps inside or outside, are two separate questions, and the final order depends on both.

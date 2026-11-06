@@ -15,7 +15,7 @@ flowchart LR
 ```
 
 1. **Find the real `progressbar`.** `src/click/termui.py` has three definitions of it. The first two (lines 402-419 and 422-440) are `@t.overload` stubs that end in `...`: they only exist for type checkers. The implementation starts at line 443.
-2. **Read past the docstring to the end.** The function body is just an import, one line of colour handling and a constructor call:
+2. **Read past the docstring to the end.** The function body is just an import, one line of color handling and a constructor call:
 
    ```python
    # src/click/termui.py:579-582

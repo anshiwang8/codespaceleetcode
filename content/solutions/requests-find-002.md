@@ -69,5 +69,5 @@ One consequence worth knowing: on a 301 a `PUT` keeps its method (`rebuild_metho
 ## Takeaways
 
 - To find "where X is removed", search for the assignment that removes it (`body = None`, `.pop(`). Then walk outward to the enclosing condition.
-- When a loop copies an object at the top of each iteration (`req.copy()`), the interesting logic is whatever *undoes* parts of that copy afterwards.
+- When a loop copies an object at the top of each iteration (`req.copy()`), the interesting logic is whatever *undoes* parts of that copy afterward.
 - HTTP redirect semantics are split across helpers here: method changes in `rebuild_method`, body handling inline. When reasoning about redirects in any client, check both.

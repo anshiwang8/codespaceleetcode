@@ -54,7 +54,7 @@ flowchart TD
 
 - **a, `["data:a", "data:b"]`:** this would be true if `getKeys` just put every driver's keys together. The mask exists so the result matches what `getItem` can reach: `getItem("data:a")` now goes to m2 and returns `null`, so listing `data:a` would advertise a key you can't read.
 - **b, `["b", "data:a"]`:** this mixes up two kinds of key. Drivers return keys *relative* to their mount point (`b`), and `getKeys` adds `mount.mountpoint` back, so `b` comes out as `data:b`. And `data:a` is masked, as shown above.
-- **d, `["data:a"]`:** this has the masking backwards. The parent mount is the one being masked, because the more specific mount is visited first and adds its prefix to `maskedMounts`.
+- **d, `["data:a"]`:** this has the masking backward. The parent mount is the one being masked, because the more specific mount is visited first and adds its prefix to `maskedMounts`.
 
 ## Why the code is shaped this way
 
@@ -65,4 +65,4 @@ The data isn't lost. Unmount `data` and both `getKeys()` and `getItem("data:a")`
 ## Takeaways
 
 - In a storage with mount points (like a filesystem), a mount *shadows* whatever its parent already holds under that prefix. Expect listing and reading to agree.
-- When a loop's behaviour depends on order, check where the order is set. Here it's set when mounts are added, not in `getKeys`.
+- When a loop's behavior depends on order, check where the order is set. Here it's set when mounts are added, not in `getKeys`.

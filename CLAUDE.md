@@ -16,6 +16,9 @@ The site is named **codebases**. LeetCode-style puzzles set inside real open-sou
 - `web/app/(marketing)/page.tsx` is the static landing page at `/`, and must render without the database. `web/app/(app)/` holds every page under the site header, including the puzzle list at `/puzzles`.
 - `web/components/puzzle/Markdown.tsx` renders prompts, hints and solutions: GitHub-flavored Markdown with raw HTML dropped, and fenced `mermaid` blocks drawn by `MermaidDiagram.tsx`. Mermaid runs with `securityLevel: "strict"` and a `secure` list so a diagram can't change its config or inject CSS. Never loosen either.
 - `web/lib/server/better-auth.ts` configures Better Auth (GitHub sign-in, sessions in the `auth_*` tables from migration 0005). Change its table or column names only together with a migration. `getCurrentUser` in `web/lib/server/auth.ts` is the one place pages and routes learn who's signed in: a Better Auth session first, then the localhost-only dev login. Keep the origin check on, account linking off, and the token and user-editing routes in `disabledPaths`; `web/tests/github-auth.test.ts` runs a real sign-in through the callback to check all of it.
+- `web/lib/server/profile.ts` builds the profile (`/profile`, `/api/me/profile`, `/api/me/history`). Every query is scoped to the signed-in user's id and joins `puzzles` with `published`. It never selects the stored email, `auth_users.image`, tokens, submitted answers or solutions.
+- `web/app/globals.css` holds the design tokens and shared controls. Use them instead of new hard-coded colors or sizes. The puzzle workspace keeps its denser sizing in `components/puzzle/puzzle.module.css`; check its height and nested scrolling after changing anything shared.
+- `web/lib/format.ts` formats dates and numbers, always with `en-US`, and dates in UTC, the zone the profile groups activity by.
 - `web/lib/api-types.ts` holds the API response shapes the routes and UI share.
 - `web/lib/topics.ts` holds the topic list's labels and descriptions. Its slugs must match the `tags` enum in `content/schema/puzzle.schema.json`, and a web test checks this.
 
@@ -46,6 +49,8 @@ When a checklist item lands, mark it done in section 14 in the same change, alon
 - Puzzle IDs: `<repo-short>-<type>-<nnn>`, e.g. `hono-trace-002`.
 - One concept per puzzle. If the prompt needs "and", split it.
 - A solution follows the format in spec section 4. Every quoted code line and `path:line` reference must hold at the pinned SHA, and it must not name another puzzle's answer: its symbol, file or line, or most of its set or sequence.
+- Write everything the project owns in US English: UI copy, labels, errors, puzzle titles, prompts, hints, choice labels, solutions, docs and comments (behavior, color, organize, canceled, license). Auth actions are "Sign in" and "Sign out". Leave upstream code, quoted source, identifiers, paths, slugs and IDs exactly as they are.
+- User-facing empty and error states say what happened and what to do next. They never show setup commands.
 - Rate difficulty by the rules in spec section 4, and tag each puzzle with 1 to 3 topics from the fixed list there.
 
 ## Testing
@@ -71,6 +76,7 @@ pnpm test                # all unit tests: test:ingest, then test:web. Web tests
 pnpm --filter web lint
 pnpm --filter web typecheck   # plain tsc needs next typegen first
 pnpm --filter web build
+pnpm visual:review       # isolated headless screenshot gallery + motion checks; see VISUAL_REVIEW.md
 pnpm e2e                 # Playwright. Starts its own database and server, and can run beside pnpm dev
 pnpm validate            # every check in spec section 6
 ```

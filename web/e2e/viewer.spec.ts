@@ -355,7 +355,7 @@ test.describe("puzzle page furniture", () => {
     for (const slug of ["no-such-puzzle", "Not%20A%20Slug"]) {
       const response = await page.goto(`/puzzles/${slug}`);
       expect(response?.status()).toBe(404);
-      await expect(page.getByRole("heading", { name: "Not found" })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Page not found" })).toBeVisible();
     }
   });
 

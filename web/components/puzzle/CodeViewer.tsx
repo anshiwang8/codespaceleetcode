@@ -319,13 +319,13 @@ export default function CodeViewer({
 
   useEffect(() => {
     if (!activePath) return;
-    let cancelled = false;
+    let canceled = false;
     // storeRef is set by the effect above, which runs first in the same commit.
     const store = storeRef.current;
     if (!store) return;
     store.load(activePath).then(
       (model) => {
-        if (cancelled) return;
+        if (canceled) return;
         setFailure(null);
         setShown({
           path: activePath,
@@ -334,7 +334,7 @@ export default function CodeViewer({
         });
       },
       (error: unknown) => {
-        if (cancelled) return;
+        if (canceled) return;
         setFailure({
           path: activePath,
           message: error instanceof Error ? error.message : "This file couldn't be loaded.",
@@ -343,7 +343,7 @@ export default function CodeViewer({
       },
     );
     return () => {
-      cancelled = true;
+      canceled = true;
     };
   }, [activePath, attempt, filesByPath, manifestUrl, snapshotId]);
 

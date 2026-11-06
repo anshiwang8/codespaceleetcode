@@ -55,7 +55,7 @@ if (hasValue) {
 
 It passes `sourceController.signal` as the fourth argument (line 71), so line 38 combines it with `subscriber.signal`. Calling `sourceController.abort()` then cancels the upstream immediately, while the downstream subscriber is still alive long enough to receive the error.
 
-| Caller passes `signal`? | Upstream is cancelled when |
+| Caller passes `signal`? | Upstream is canceled when |
 |---|---|
 | no | the downstream subscriber's signal aborts |
 | yes | the downstream subscriber's signal aborts, **or** the operator aborts its own controller |
@@ -75,4 +75,4 @@ It passes `sourceController.signal` as the fourth argument (line 71), so line 38
 
 - When a call has several arguments spread over many lines, sketch which lines belong to which argument. Answers often hide in a short trailing argument.
 - `AbortSignal.any([...])` is the standard way to say "cancel when any of these cancel." Seeing it tells you a component has more than one reason to stop.
-- An optional extra parameter combined with a default is a common way to let a few callers opt into stronger behaviour without changing the rest.
+- An optional extra parameter combined with a default is a common way to let a few callers opt into stronger behavior without changing the rest.

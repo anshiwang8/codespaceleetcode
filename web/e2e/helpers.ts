@@ -53,7 +53,7 @@ function editorLine(page: Page, text: string): Locator {
 
 /**
  * Where a token's text is on screen. Monaco replaces a line's elements when it re-renders it, for
- * example once tokenizing colours it, so a line found a moment ago can be detached and measure as
+ * example once tokenizing colors it, so a line found a moment ago can be detached and measure as
  * 0,0. That measurement is retried rather than clicked.
  */
 async function measureToken(line: Locator, lineText: string, token: string): Promise<{ x: number; y: number }> {

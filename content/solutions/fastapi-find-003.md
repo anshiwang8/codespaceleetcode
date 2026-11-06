@@ -47,7 +47,7 @@ flowchart TD
 Two details are easy to miss:
 
 - **The lookup falls back to the original.** `.get(original_call, original_call)` (line 687) returns the original callable when this particular dependency isn't overridden. So the `if` runs whenever *any* override is registered, and only the overridden callables actually change.
-- **A new `Dependant` is built for the replacement.** The override may have a different signature from the original, with its own parameters and sub-dependencies. So `get_dependant(...)` analyses the override from scratch, keeping the original's `path`, `name`, OAuth scopes and `scope`. Without this, FastAPI would try to call the override with the original's arguments.
+- **A new `Dependant` is built for the replacement.** The override may have a different signature from the original, with its own parameters and sub-dependencies. So `get_dependant(...)` analyzes the override from scratch, keeping the original's `path`, `name`, OAuth scopes and `scope`. Without this, FastAPI would try to call the override with the original's arguments.
 
 ## Where the provider comes from
 
