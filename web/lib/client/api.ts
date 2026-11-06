@@ -1,4 +1,8 @@
 import type {
+  EmailStatus,
+  ProfileDetails,
+  ProfileLinks,
+  SettingsResponse,
   ActivityPeriodKey,
   ActivityResponse,
   ApiError,
@@ -18,6 +22,10 @@ export class ApiRequestError extends Error {
   constructor(
     readonly status: number,
     message: string,
+    /** Per-field messages from a validation failure, keyed by field name. */
+    readonly fields: Record<string, string> = {},
+    /** A machine-readable reason, such as "reauth" or "expired". */
+    readonly code: string | null = null,
   ) {
     super(message);
     this.name = "ApiRequestError";
@@ -32,8 +40,15 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
     throw new ApiRequestError(0, "Couldn't reach the server. Check that it's running and try again.");
   }
   if (!response.ok) {
-    const body = (await response.json().catch(() => null)) as ApiError | null;
-    throw new ApiRequestError(response.status, body?.error ?? `Request failed (${response.status})`);
+    const body = (await response.json().catch(() => null)) as
+      | (ApiError & { fields?: Record<string, string>; code?: string })
+      | null;
+    throw new ApiRequestError(
+      response.status,
+      body?.error ?? `Request failed (${response.status})`,
+      body?.fields && typeof body.fields === "object" ? body.fields : {},
+      typeof body?.code === "string" ? body.code : null,
+    );
   }
   return (await response.json()) as T;
 }
@@ -48,7 +63,28 @@ function post<T>(url: string, body?: unknown): Promise<T> {
 
 const puzzlePath = (slug: string) => `/api/puzzles/${encodeURIComponent(slug)}`;
 
+function send<T>(url: string, method: "PUT" | "POST" | "DELETE", body?: unknown): Promise<T> {
+  return request<T>(url, {
+    method,
+    headers: body === undefined ? undefined : { "Content-Type": "application/json" },
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+}
+
 export const api = {
+  settings: () => request<SettingsResponse>("/api/me/settings"),
+  saveDetails: (details: ProfileDetails) => send<ProfileDetails>("/api/me/details", "PUT", details),
+  saveLinks: (links: Record<string, unknown>) => send<ProfileLinks>("/api/me/links", "PUT", links),
+  uploadAvatar: (file: Blob, crop: { x: number; y: number; size: number }) =>
+    request<{ version: string }>(
+      `/api/me/avatar?${new URLSearchParams({ x: String(crop.x), y: String(crop.y), size: String(crop.size) })}`,
+      { method: "POST", headers: { "Content-Type": "application/octet-stream" }, body: file },
+    ),
+  deleteAvatar: () => send<{ version: null }>("/api/me/avatar", "DELETE"),
+  requestEmail: (email: string) => send<EmailStatus>("/api/me/email", "POST", { email }),
+  resendEmail: () => send<EmailStatus>("/api/me/email/resend", "POST"),
+  cancelEmail: () => send<EmailStatus>("/api/me/email", "DELETE"),
+  verifyEmail: (token: string) => send<EmailStatus>("/api/me/email/verify", "POST", { token }),
   me: () => request<MeResponse>("/api/me"),
   /** A page of history. Filters apply to the whole history; `before` continues the same list. */
   history: (query: HistoryFilters & { before?: string }, signal?: AbortSignal) => {

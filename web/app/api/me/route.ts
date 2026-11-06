@@ -3,12 +3,14 @@ import type { MeResponse } from "@/lib/api-types";
 import { deleteAccount } from "@/lib/server/account";
 import { DEV_COOKIE, getCurrentUser, isDevAuthAllowed } from "@/lib/server/auth";
 import { getAuth, isGitHubAuthConfigured } from "@/lib/server/better-auth";
+import { getAccountSummary } from "@/lib/server/settings";
 import { errorResponse, isSameOriginRequest, jsonResponse, readJson, route } from "@/lib/server/http";
 
 export const GET = route("me", async (request) => {
   const user = await getCurrentUser(request.headers);
+  const summary = user ? await getAccountSummary(user.id) : null;
   return jsonResponse<MeResponse>({
-    user: user ? { login: user.login, via: user.via } : null,
+    user: user && summary ? { login: user.login, via: user.via, ...summary } : null,
     githubAuth: isGitHubAuthConfigured(),
     devAuth: isDevAuthAllowed(request.headers),
   });

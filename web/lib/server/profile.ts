@@ -19,6 +19,7 @@ import type {
 } from "@/lib/api-types";
 import { orderTags } from "@/lib/browse";
 import { getPool } from "@/lib/server/db";
+import { storedLinks } from "@/lib/server/settings";
 
 // The profile's data. Every query here is scoped to one user id, which callers take from
 // getCurrentUser, and counts only published puzzles. Nothing here reads an answer key, a submitted
@@ -206,28 +207,39 @@ export function buildTimeline(period: ActivityPeriod, firstSolves: { date: strin
 }
 
 async function getIdentity(userId: string): Promise<ProfileIdentity | null> {
+  // The display name, pronouns, bio, links and avatar are codebases' own (user_profiles,
+  // user_avatars), never Better Auth's GitHub-derived name or image, so a sign-in can't change them.
   const { rows } = await getPool().query<{
     github_login: string;
     created_at: Date;
-    name: string | null;
     has_github: boolean;
+    display_name: string | null;
+    pronouns: string | null;
+    bio: string | null;
+    links: unknown;
+    avatar_version: string | null;
   }>(
-    `select u.github_login, u.created_at, a.name,
+    `select u.github_login, u.created_at, p.display_name, p.pronouns, p.bio, p.links,
+            av.version as avatar_version,
             exists (
               select 1 from auth_accounts ac where ac.user_id = u.id and ac.provider_id = 'github'
             ) as has_github
        from users u
-       join auth_users a on a.id = u.id
+       left join user_profiles p on p.user_id = u.id
+       left join user_avatars av on av.user_id = u.id
       where u.id = $1`,
     [userId],
   );
   const row = rows[0];
   if (!row) return null;
-  const name = row.name?.trim().slice(0, 100) ?? "";
   const provider = row.has_github ? "github" : "dev";
   return {
     login: row.github_login,
-    displayName: name !== "" && name.toLowerCase() !== row.github_login.toLowerCase() ? name : null,
+    displayName: row.display_name,
+    pronouns: row.pronouns,
+    bio: row.bio,
+    links: storedLinks(row.links ?? {}),
+    avatarVersion: row.avatar_version,
     provider,
     memberSince: row.created_at.toISOString(),
     githubUrl: provider === "github" ? `https://github.com/${encodeURIComponent(row.github_login)}` : null,
