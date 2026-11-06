@@ -8,6 +8,9 @@
 // It runs `next dev` rather than a production build because dev login is refused in production.
 // scripts/smoke.mjs checks a production build.
 
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { SNAPSHOT_DIR } from "../web/e2e/fixtures/seed.mjs";
 import {
   cleanUpOnSignal,
@@ -36,6 +39,8 @@ cleanUpOnSignal(cleanUp);
 
 try {
   database = await startFixtureDatabase("codebase_puzzles_e2e");
+  // Email the app "sends" during the run lands here, where the tests read links from it.
+  const outbox = mkdtempSync(join(tmpdir(), "codebases-outbox-"));
   const webPort = await freePort();
   const cli = playwrightCli();
   if (process.env.VISUAL_REVIEW) console.log(`Visual review: isolated fixture app at http://127.0.0.1:${webPort}`);
@@ -54,6 +59,10 @@ try {
       GITHUB_CLIENT_SECRET: "",
       NEXT_TELEMETRY_DISABLED: "1",
       E2E_DIST_DIR: DIST_DIR,
+      DEV_OUTBOX_DIR: outbox,
+      // A developer's web/.env.local might configure real email delivery; the tests never send mail.
+      RESEND_API_KEY: "",
+      EMAIL_FROM: "",
     });
   }
 } finally {

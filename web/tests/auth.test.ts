@@ -198,7 +198,7 @@ describe.skipIf(!hasDatabase)("dev login", () => {
 
   it("sets an HttpOnly, SameSite=Lax cookie", async () => {
     const response = await loginRoute(makeRequest("/api/dev/login", { body: { login: "cookie-check" } }), undefined);
-    expect(await response.json()).toEqual({ user: { login: "cookie-check", via: "dev" }, githubAuth: false, devAuth: true });
+    expect(await response.json()).toEqual({ user: { login: "cookie-check", via: "dev", displayName: null, avatarVersion: null, needsEmail: true, appearance: { preference: null, favorites: [] } }, githubAuth: false, devAuth: true });
     const cookie = response.headers.get("set-cookie") ?? "";
     expect(cookie).toContain(`${DEV_COOKIE}=cookie-check`);
     expect(cookie).toMatch(/HttpOnly/i);
@@ -224,7 +224,7 @@ describe.skipIf(!hasDatabase)("dev login", () => {
 
   it("reports the signed-in user, and whether dev login is available", async () => {
     const cookie = await signIn("me-user");
-    expect(await me(cookie)).toEqual({ user: { login: "me-user", via: "dev" }, githubAuth: false, devAuth: true });
+    expect(await me(cookie)).toEqual({ user: { login: "me-user", via: "dev", displayName: null, avatarVersion: null, needsEmail: true, appearance: { preference: null, favorites: [] } }, githubAuth: false, devAuth: true });
     expect(await me()).toEqual({ user: null, githubAuth: false, devAuth: true });
     expect(await me(undefined, "example.com")).toEqual({ user: null, githubAuth: false, devAuth: false });
   });

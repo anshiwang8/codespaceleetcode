@@ -41,6 +41,13 @@
   margin-top: var(--space-4);
 }
 
+.signedOutTheme {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+}
+
 /* Identity and lifetime summary: one card, figures divided by rules rather than separate cards. */
 
 .identity {
@@ -61,8 +68,11 @@
   min-width: 0;
 }
 
-.identityAction {
+.identityActions {
+  display: flex;
+  flex-wrap: wrap;
   align-self: start;
+  gap: var(--space-2);
 }
 
 /* GitHub logins have no spaces, so a long one has to break anywhere to fit a phone. */
@@ -86,6 +96,53 @@
   gap: var(--space-2) var(--space-4);
   margin-top: var(--space-1);
   font-size: var(--text-sm);
+}
+
+.pronouns {
+  margin-left: var(--space-2);
+  color: var(--text-faint);
+  font-size: var(--text-sm);
+}
+
+.bio {
+  max-width: 640px;
+  color: var(--text-muted);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  margin-top: var(--space-1);
+  font-size: var(--text-sm);
+}
+
+.links li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.links a {
+  overflow-wrap: anywhere;
+}
+
+.linkUrl {
+  margin-left: 6px;
+  color: var(--text-faint);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.settingsLink {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
 }
 
 .devNote {
@@ -529,8 +586,12 @@
     font-size: 20px;
   }
 
-  .identityAction {
+  .identityActions {
     grid-column: 1 / -1;
+  }
+
+  .identityActions > * {
+    flex: 1 1 auto;
   }
 
   .login {

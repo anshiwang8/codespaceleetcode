@@ -1,36 +1,52 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
 import styles from "@/components/site/avatar.module.css";
 
-// Each is dark enough for white initials to pass WCAG AA.
-const TONES = ["#2563eb", "#7c3aed", "#0f766e", "#b45309", "#be185d", "#4338ca", "#15803d", "#475569"];
-
-/** One or two letters from a login: "octo-cat" gives "OC", "octocat" gives "O". */
-export function initials(login: string): string {
-  const parts = login.split(/[-_.\s]+/).filter(Boolean);
-  const letters = parts.length > 1 ? `${parts[0]?.[0] ?? ""}${parts[1]?.[0] ?? ""}` : (parts[0]?.[0] ?? "?");
-  return letters.toUpperCase();
-}
-
-/** The same login always gets the same color. */
-export function avatarTone(login: string): string {
-  let hash = 0;
-  for (const char of login) hash = (hash * 31 + (char.codePointAt(0) ?? 0)) >>> 0;
-  return TONES[hash % TONES.length] ?? TONES[0] ?? "#2563eb";
+interface AvatarProps {
+  /** The uploaded picture's version, or null for the default silhouette. */
+  version: string | null;
+  size?: "small" | "large" | "xlarge";
+  /**
+   * An accessible name, when nothing next to the avatar already names the person. Without one
+   * the avatar is decorative.
+   */
+  label?: string;
+  /** Shows this image instead (a local preview while cropping). */
+  previewSrc?: string;
 }
 
 /**
- * Initials on a colored circle. GitHub's own avatar isn't loaded: the Content Security Policy
- * allows images only from this site, so every account gets this instead, and it never fails to
- * load. Decorative, because the login is always written next to it.
+ * The user's picture, or the default: a plain white head-and-shoulders silhouette on a neutral gray
+ * circle, drawn here in SVG. A missing, removed or broken picture falls back to the silhouette.
+ * GitHub's avatar is never used.
  */
-export function Avatar({ login, size = "small" }: { login: string; size?: "small" | "large" }) {
+export function Avatar({ version, size = "small", label, previewSrc }: AvatarProps) {
+  const [failed, setFailed] = useState<string | null>(null);
+  const src = previewSrc ?? (version ? `/api/me/avatar?v=${encodeURIComponent(version)}` : null);
+  const sizeClass = size === "xlarge" ? styles.xlarge : size === "large" ? styles.large : styles.small;
+  const image = useRef<HTMLImageElement>(null);
+  // A server-rendered image can fail before React attaches onError, so check once it's mounted.
+  useEffect(() => {
+    const element = image.current;
+    if (src && element?.complete && element.naturalWidth === 0) setFailed(src);
+  }, [src]);
+  const a11y = label ? { role: "img", "aria-label": label } : { "aria-hidden": true as const };
+
+  if (src && failed !== src) {
+    return (
+      <span className={`${styles.avatar} ${sizeClass}`} {...a11y} data-testid="avatar" data-kind="picture">
+        {/* eslint-disable-next-line @next/next/no-img-element -- a private, same-origin, already-sized image */}
+        <img ref={image} src={src} alt="" className={styles.image} onError={() => setFailed(src)} draggable={false} />
+      </span>
+    );
+  }
   return (
-    <span
-      className={`${styles.avatar} ${size === "large" ? styles.large : styles.small}`}
-      style={{ background: avatarTone(login) }}
-      aria-hidden="true"
-      data-testid="avatar"
-    >
-      {initials(login)}
+    <span className={`${styles.avatar} ${sizeClass}`} {...a11y} data-testid="avatar" data-kind="silhouette">
+      <svg viewBox="0 0 64 64" className={styles.silhouette} focusable="false" aria-hidden="true">
+        <circle cx="32" cy="24.5" r="11" />
+        <path d="M11 55.5c0-11.3 9.4-19 21-19s21 7.7 21 19v2.5H11z" />
+      </svg>
     </span>
   );
 }

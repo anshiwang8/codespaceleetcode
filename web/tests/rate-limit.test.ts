@@ -98,7 +98,7 @@ describe.skipIf(!hasDatabase)("isRateLimited, kept in Postgres", () => {
 });
 
 describe("rateLimitKey", () => {
-  const user = { id: "u1", login: "someone", via: "github" as const };
+  const user = { id: "u1", login: "someone", via: "github" as const, sessionCreatedAt: null };
 
   it("prefers the user", () => {
     expect(rateLimitKey(user, new Headers({ "x-forwarded-for": "198.51.100.1" }))).toBe("user:u1");

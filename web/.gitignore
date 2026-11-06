@@ -50,3 +50,6 @@ next-env.d.ts
 /test-results-smoke/
 /.next-visual/
 /visual-review/
+
+# Local development email outbox (lib/server/email-delivery.ts)
+/.dev-outbox/

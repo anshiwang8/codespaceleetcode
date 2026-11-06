@@ -8,12 +8,13 @@ import { type LineRange, selectionToLines } from "@/lib/client/answer";
 import { api } from "@/lib/client/api";
 import {
   defineThemes,
-  LIGHT_THEME,
+  ACTIVE_THEME,
   monaco,
   monacoLanguage,
 } from "@/lib/client/monaco";
 import type { RevealTarget } from "@/lib/client/navigation";
 import { snapshotFileUrl } from "@/lib/client/snapshot-urls";
+import { THEME_EVENT } from "@/lib/themes/runtime";
 
 // Monaco comes from the bundle, so the loader must never fall back to its default CDN.
 loader.config({ monaco });
@@ -203,7 +204,7 @@ export default function CodeViewer({
   onCursor,
   onSelection,
 }: CodeViewerProps) {
-  const theme = LIGHT_THEME;
+  const theme = ACTIVE_THEME;
   const storeRef = useRef<ModelStore | null>(null);
   const editorRef = useRef<CodeEditor | null>(null);
   const [editorReady, setEditorReady] = useState(false);
@@ -370,6 +371,19 @@ export default function CodeViewer({
     }),
     [],
   );
+
+  // A theme change restyles the editor in place: the theme is redefined from the new tokens and
+  // applied, with no remount, so the open file, selection and scroll position stay.
+  useEffect(() => {
+    const restyle = () => {
+      void loader.init().then((instance) => {
+        defineThemes(instance);
+        instance.editor.setTheme(ACTIVE_THEME);
+      });
+    };
+    window.addEventListener(THEME_EVENT, restyle);
+    return () => window.removeEventListener(THEME_EVENT, restyle);
+  }, []);
 
   const handleMount = useCallback<OnMount>((editor) => {
     editorRef.current = editor;

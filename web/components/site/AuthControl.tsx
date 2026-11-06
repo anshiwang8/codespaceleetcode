@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Avatar } from "@/components/site/Avatar";
 import styles from "@/components/site/site.module.css";
@@ -13,13 +14,19 @@ export function AuthControl() {
   if (me.user) {
     return (
       <div className={styles.auth}>
-        <span className={styles.account} title={`Signed in as ${me.user.login}`}>
-          <Avatar login={me.user.login} />
+        <Link
+          href="/settings"
+          className={styles.account}
+          title={`Signed in as ${me.user.login}. Account settings`}
+          data-testid="account-link"
+        >
+          <Avatar version={me.user.avatarVersion} />
           <span className="visually-hidden">Signed in as </span>
           <span className={styles.login} data-testid="signed-in-as">
             {me.user.login}
           </span>
-        </span>
+          <span className="visually-hidden">, account settings</span>
+        </Link>
         <button
           type="button"
           className="btn btn-small"
@@ -65,6 +72,25 @@ export function AuthControl() {
           </button>
         </>
       ) : null}
+    </div>
+  );
+}
+
+/**
+ * Until a contact email is verified, account setup isn't finished. This says so under the header,
+ * with a way to finish. It doesn't block practice.
+ */
+export function EmailSetupBanner() {
+  const { me } = useAuth();
+  if (!me?.user?.needsEmail) return null;
+  return (
+    <div className={styles.setupBanner} data-testid="email-setup-banner">
+      <p>
+        <strong>Finish setting up your account:</strong> add an email address codebases can reach you at.
+      </p>
+      <Link href="/settings/email" className="btn btn-small btn-primary">
+        Add email
+      </Link>
     </div>
   );
 }

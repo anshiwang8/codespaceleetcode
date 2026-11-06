@@ -133,6 +133,10 @@ test("profile progress, appended history, confirmation focus, and reduced-motion
   await fill.evaluate((element) => element.setAttribute("style", "--progress: 0.75"));
   await expect.poll(() => fill.evaluate((element) => getComputedStyle(element).transform)).toBe("matrix(0.75, 0, 0, 1, 0, 0)");
   expect(await fill.evaluate((element) => getComputedStyle(element).transformOrigin)).toMatch(/^0px/);
+  // Deletion's confirmation lives in Settings.
+  await page.goto("/settings");
+  await ready(page);
+  await expect(page.getByTestId("delete-account-start")).toBeVisible();
   for (let n = 0; n < 3; n++) {
     await page.getByTestId("delete-account-start").click();
     await expect(page.getByTestId("delete-account-cancel")).toBeFocused();
@@ -264,12 +268,15 @@ test("a correct result's check bounces once inside a fixed box, and not at all w
   const peak = await icon.evaluate((element) => {
     const animation = element.getAnimations()[0];
     if (!animation) return 0;
+    const resumeAt = animation.currentTime;
     animation.pause();
     let highest = 0;
     for (let step = 0; step <= 30; step++) {
       animation.currentTime = (1500 * step) / 30;
       highest = Math.max(highest, new DOMMatrix(getComputedStyle(element).transform).a);
     }
+    // Return to where it was before playing on: play() from the very end would rewind and restart it.
+    animation.currentTime = resumeAt;
     animation.play();
     return highest;
   });
@@ -322,8 +329,9 @@ test("the activity tracker keeps its squares still, gives brief feedback, and st
 
   // Picking a date: the cell keeps its size and place, and the selection strip fades in once.
   const cell = grid.locator('[role=gridcell][tabindex="0"]');
-  const before = await cell.boundingBox();
+  // Focus first: focusing may scroll the page, which isn't the cell moving.
   await cell.focus();
+  const before = await cell.boundingBox();
   await page.keyboard.press("Enter");
   await expect(page.getByTestId("activity-selected")).toBeVisible();
   expect(await cell.boundingBox()).toEqual(before);

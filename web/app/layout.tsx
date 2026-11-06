@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { PREPAINT_SCRIPT } from "@/lib/themes/prepaint";
 import { siteOrigin } from "@/lib/server/site";
 
 const DESCRIPTION =
@@ -22,7 +23,13 @@ export const viewport: Viewport = {
 // The app's header and sign-in live in app/(app)/layout.tsx, so the landing page stays static.
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en-US">
+    // The pre-paint script sets a saved theme's colors on <html> before React runs, so React's
+    // copy of <html> differs from the server's in its style attribute; that's expected.
+    <html lang="en-US" suppressHydrationWarning>
+      <head>
+        {/* A fixed string, no user data: applies the theme cached in this browser before first paint. */}
+        <script dangerouslySetInnerHTML={{ __html: PREPAINT_SCRIPT }} />
+      </head>
       <body>{children}</body>
     </html>
   );

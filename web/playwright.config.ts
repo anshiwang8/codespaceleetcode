@@ -7,7 +7,7 @@ if (!port) throw new Error("Run the e2e tests with `pnpm e2e` from the repo root
 
 export default defineConfig({
   testDir: "./e2e",
-  testIgnore: /visual-review\.spec\.ts|motion\.spec\.ts/,
+  testIgnore: /visual-review\.spec\.ts|visual-themes\.spec\.ts|motion\.spec\.ts/,
   globalSetup: "./e2e/global-setup.ts",
   // Tests share one database, and one of them briefly unpublishes everything.
   workers: 1,

@@ -55,8 +55,8 @@ describe.skipIf(!hasDatabase)("GitHub sign-in through Better Auth", () => {
 
   it("turns a session into the current user and makes its users row once", async () => {
     const { userId, cookie } = await githubSession("octo-first");
-    expect(await getCurrentUser(cookieHeaders(cookie))).toEqual({ id: userId, login: "octo-first", via: "github" });
-    expect(await getCurrentUser(cookieHeaders(cookie))).toEqual({ id: userId, login: "octo-first", via: "github" });
+    expect(await getCurrentUser(cookieHeaders(cookie))).toEqual({ id: userId, login: "octo-first", via: "github", sessionCreatedAt: expect.any(Date) });
+    expect(await getCurrentUser(cookieHeaders(cookie))).toEqual({ id: userId, login: "octo-first", via: "github", sessionCreatedAt: expect.any(Date) });
     const { rows } = await getPool().query("select id, github_login from users where id = $1", [userId]);
     expect(rows).toEqual([{ id: userId, github_login: "octo-first" }]);
   });
@@ -108,7 +108,11 @@ describe.skipIf(!hasDatabase)("GitHub sign-in through Better Auth", () => {
   it("is reported by /api/me, and can submit", async () => {
     const { cookie } = await githubSession("octo-me");
     const me = await (await meRoute(makeRequest("/api/me", { cookie }), undefined)).json();
-    expect(me).toEqual({ user: { login: "octo-me", via: "github" }, githubAuth: false, devAuth: true });
+    expect(me).toEqual({
+      user: { login: "octo-me", via: "github", displayName: null, avatarVersion: null, needsEmail: true, appearance: { preference: null, favorites: [] } },
+      githubAuth: false,
+      devAuth: true,
+    });
     const submit = await submitRoute(
       makeRequest("/api/puzzles/fx-file/submit", { cookie, body: { kind: "file", path: CONFIG_FILE } }),
       params({ slug: "fx-file" }),
@@ -228,7 +232,7 @@ describe.skipIf(!hasDatabase)("a real GitHub sign-in", () => {
     const first = await signInThroughGitHub({ id: 4444, login: "renamed-before", emails: [] });
     const before = await getCurrentUser(cookieHeaders(first));
     const second = await signInThroughGitHub({ id: 4444, login: "renamed-after", emails: [] });
-    expect(await getCurrentUser(cookieHeaders(second))).toEqual({ id: before?.id, login: "renamed-after", via: "github" });
+    expect(await getCurrentUser(cookieHeaders(second))).toEqual({ id: before?.id, login: "renamed-after", via: "github", sessionCreatedAt: expect.any(Date) });
   });
 
   it("keeps two GitHub accounts with the same verified email apart", async () => {

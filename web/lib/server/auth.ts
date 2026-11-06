@@ -9,6 +9,8 @@ export interface CurrentUser {
   login: string;
   /** How this session was made: a real GitHub sign-in, or the localhost dev login. */
   via: "github" | "dev";
+  /** When this GitHub session began, for checks that need a recent sign-in. Null for dev logins. */
+  sessionCreatedAt: Date | null;
 }
 
 export type HeaderReader = Pick<Headers, "get">;
@@ -85,7 +87,7 @@ const devAuthProvider: AuthProvider = {
       [parsed.data],
     );
     const row = rows[0];
-    return row ? { id: row.id, login: row.github_login, via: "dev" } : null;
+    return row ? { id: row.id, login: row.github_login, via: "dev", sessionCreatedAt: null } : null;
   },
 };
 
@@ -124,7 +126,7 @@ export const githubAuthProvider: AuthProvider = {
       }
       throw error;
     }
-    return { id: session.user.id, login, via: "github" };
+    return { id: session.user.id, login, via: "github", sessionCreatedAt: new Date(session.session.createdAt) };
   },
 };
 
@@ -145,7 +147,7 @@ export async function devLogin(login: string): Promise<CurrentUser> {
       [login],
     );
     const found = existing.rows[0];
-    if (found) return { id: found.id, login, via: "dev" };
+    if (found) return { id: found.id, login, via: "dev", sessionCreatedAt: null };
     // Dev users have no email, so they get a placeholder on a reserved domain, as in migration 0005.
     const created = await client.query<{ id: string }>(
       `insert into auth_users (name, email, email_verified, github_login)
@@ -155,6 +157,6 @@ export async function devLogin(login: string): Promise<CurrentUser> {
     const id = created.rows[0]?.id;
     if (!id) throw new Error("auth_users insert returned no row");
     await client.query("insert into users (id, github_login) values ($1, $2)", [id, login]);
-    return { id, login, via: "dev" };
+    return { id, login, via: "dev", sessionCreatedAt: null };
   });
 }

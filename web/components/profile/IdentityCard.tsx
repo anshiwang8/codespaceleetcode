@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { ProgressFill } from "@/components/motion/ProgressFill";
 import styles from "@/components/profile/profile.module.css";
+import { ProfileLinkList } from "@/components/profile/ProfileLinkList";
 import { Avatar } from "@/components/site/Avatar";
+import { ThemeButton } from "@/components/themes/ThemeButton";
 import type { ProfileIdentity, ProfileProgress } from "@/lib/api-types";
 import { PUZZLES_PATH } from "@/lib/browse";
 import { formatDate, formatNumber } from "@/lib/format";
@@ -16,12 +18,18 @@ export function IdentityCard({ identity, progress }: { identity: ProfileIdentity
   return (
     <section className={`card ${styles.identity}`} aria-labelledby="profile-heading" data-testid="profile-identity">
       <div className={styles.identityTop}>
-        <Avatar login={identity.login} size="large" />
+        <Avatar version={identity.avatarVersion} size="large" />
         <div className={styles.identityText}>
           <h1 id="profile-heading" className={styles.login}>
             {identity.login}
           </h1>
-          {identity.displayName ? <p className={styles.displayName}>{identity.displayName}</p> : null}
+          {identity.displayName || identity.pronouns ? (
+            <p className={styles.displayName}>
+              {identity.displayName}
+              {identity.pronouns ? <span className={styles.pronouns}>{identity.pronouns}</span> : null}
+            </p>
+          ) : null}
+          {identity.bio ? <p className={styles.bio}>{identity.bio}</p> : null}
           <ul className={styles.identityMeta}>
             <li>
               {identity.provider === "github" ? (
@@ -40,6 +48,11 @@ export function IdentityCard({ identity, progress }: { identity: ProfileIdentity
                 {formatDate(identity.memberSince)}
               </time>
             </li>
+            <li>
+              <Link href="/settings#profile" data-testid="profile-edit">
+                Edit profile
+              </Link>
+            </li>
             {identity.githubUrl ? (
               <li>
                 <a href={identity.githubUrl} rel="noopener noreferrer" target="_blank" data-testid="profile-github-link">
@@ -49,13 +62,17 @@ export function IdentityCard({ identity, progress }: { identity: ProfileIdentity
               </li>
             ) : null}
           </ul>
+          <ProfileLinkList links={identity.links} />
           {identity.provider === "dev" ? (
             <p className={styles.devNote}>This account exists only on this local server. It isn&apos;t linked to GitHub.</p>
           ) : null}
         </div>
-        <Link href={PUZZLES_PATH} className={`btn btn-primary ${styles.identityAction}`} data-testid="profile-browse">
-          Browse puzzles
-        </Link>
+        <div className={styles.identityActions}>
+          <Link href={PUZZLES_PATH} className="btn btn-primary" data-testid="profile-browse">
+            Browse puzzles
+          </Link>
+          <ThemeButton />
+        </div>
       </div>
 
       <dl className={styles.summary} data-testid="profile-summary">

@@ -5,6 +5,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import type { MeResponse } from "@/lib/api-types";
 import { ApiRequestError, api } from "@/lib/client/api";
 import { signInWithGitHub, signOutOfGitHub } from "@/lib/client/auth-client";
+import { adoptAccount, adoptGuest } from "@/lib/themes/controller";
 
 const DEV_NAME_KEY = "cp-dev-login";
 
@@ -37,6 +38,8 @@ interface AuthValue {
   devSignIn: () => Promise<void>;
   /** Ends whichever kind of session this is. */
   signOut: () => Promise<void>;
+  /** Asks /api/me again, after something in the header (picture, name, email) changed. */
+  refresh: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthValue | null>(null);
@@ -47,6 +50,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [devName, setDevName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+
+  // Whoever is signed in decides the theme: their saved one, or this browser's guest choice when
+  // nobody is. Switching people replaces the theme, so one person's choice never stays for another.
+  const themeOwner = me === null ? null : (me.user?.login ?? "");
+  useEffect(() => {
+    if (themeOwner === null || !me) return;
+    if (me.user) adoptAccount(me.user.login, me.user.appearance);
+    else adoptGuest();
+    // Only a change of person re-adopts; saving a theme doesn't need a round trip.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [themeOwner]);
 
   useEffect(() => {
     let canceled = false;
@@ -103,8 +117,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
   }, [me, change]);
 
+  const refresh = useCallback(async () => {
+    try {
+      setMe(await api.me());
+    } catch {
+      // Keep what's shown; the next navigation asks again.
+    }
+  }, []);
+
   const value = useMemo<AuthValue>(
     () => ({
+      refresh,
       me,
       devName,
       error,
@@ -114,7 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       devSignIn: () => change(() => api.devLogin(devName ?? devLoginName())),
       signOut,
     }),
-    [me, devName, error, clearError, pending, change, gitHubSignIn, signOut],
+    [me, devName, error, clearError, pending, change, gitHubSignIn, signOut, refresh],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

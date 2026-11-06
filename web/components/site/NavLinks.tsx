@@ -8,6 +8,7 @@ import { PUZZLES_PATH } from "@/lib/browse";
 const LINKS = [
   { href: PUZZLES_PATH, label: "Puzzles" },
   { href: "/profile", label: "Profile" },
+  { href: "/settings", label: "Settings" },
 ] as const;
 
 /**
@@ -23,7 +24,12 @@ export function NavLinks() {
           const current = pathname === href ? "page" : pathname.startsWith(`${href}/`) ? "true" : undefined;
           return (
             <li key={href}>
-              <Link href={href} aria-current={current} data-testid={`nav-${label.toLowerCase()}`}>
+              <Link
+                href={href}
+                aria-current={current}
+                data-testid={`nav-${label.toLowerCase()}`}
+                className={href === "/settings" ? styles.wideOnly : undefined}
+              >
                 {label}
               </Link>
             </li>

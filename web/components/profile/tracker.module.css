@@ -146,33 +146,33 @@
 
 .cell {
   display: table-cell;
-  background: #eef0f3;
-  outline: 1px solid rgb(17 24 39 / 7%);
+  background: var(--heat-0);
+  outline: 1px solid var(--scrollbar);
   outline-offset: -1px;
   cursor: pointer;
 }
 
-/* Four steps up from a neutral zero, each from the accent blue. */
+/* Four steps up from a neutral zero toward the theme's accent (the --heat-* tokens). */
 .cell[data-level="1"] {
-  background: #c7d7fb;
+  background: var(--heat-1);
 }
 
 .cell[data-level="2"] {
-  background: #8eb0f5;
+  background: var(--heat-2);
 }
 
 .cell[data-level="3"] {
-  background: #4f83ee;
+  background: var(--heat-3);
 }
 
 .cell[data-level="4"] {
-  background: #1d4ed8;
+  background: var(--heat-4);
 }
 
 /* Before the history starts, or after today: no record, not a missed day. A pattern, not a shade. */
 .cell[data-state="unavailable"] {
-  background: repeating-linear-gradient(135deg, transparent 0 2px, rgb(17 24 39 / 9%) 2px 3px);
-  outline-color: rgb(17 24 39 / 5%);
+  background: repeating-linear-gradient(135deg, transparent 0 2px, var(--line-strong) 2px 3px);
+  outline-color: var(--line);
   cursor: default;
 }
 

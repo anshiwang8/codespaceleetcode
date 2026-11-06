@@ -54,6 +54,9 @@ def test_env_examples_match_the_split() -> None:
         "SNAPSHOT_DIR",
         "DEV_AUTH_TEST_HOST",
         "TEST_DATABASE_URL",
+        "RESEND_API_KEY",
+        "EMAIL_FROM",
+        "DEV_OUTBOX_DIR",
     }
     assert _env_keys(REPO_ROOT / "ingest" / ".env.example") == {
         "R2_ACCOUNT_ID",

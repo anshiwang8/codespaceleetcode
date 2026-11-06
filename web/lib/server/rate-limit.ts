@@ -71,7 +71,8 @@ export async function consumeRateLimit(
   if (!row) throw new Error("Rate limit upsert returned no row");
   if (Math.random() * PRUNE_EVERY < 1) {
     // Housekeeping only: a failure here must not fail the request that triggered it.
-    await pruneRateLimits().catch(() => undefined);
+    // It uses the same clock as this request, so a test's fixed time never prunes its own rows.
+    await pruneRateLimits(now).catch(() => undefined);
   }
   return {
     limited: row.count > limit,

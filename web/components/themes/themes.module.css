@@ -1,0 +1,335 @@
+/* The theme picker, in Settings and in the header dialog. */
+
+.picker {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3) var(--space-4);
+}
+
+.search {
+  display: grid;
+  flex: 1 1 220px;
+  gap: var(--space-1);
+}
+
+.filters {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+.filter {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.filter:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.filter[data-selected] {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-weight: 650;
+}
+
+.filter:has(input:focus-visible) {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+
+.themeButton {
+  gap: 6px;
+}
+
+.dialogHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+}
+
+.body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 300px);
+  align-items: start;
+  gap: var(--space-4);
+}
+
+.list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: var(--space-1);
+  max-height: 460px;
+  padding: var(--space-1);
+  overflow-y: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-sunken);
+}
+
+.dialogPicker .list {
+  max-height: min(52vh, 420px);
+}
+
+.option {
+  /* Anchors the visually hidden radio, which would otherwise sit outside the scrolling list and stretch the page. */
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: 6px var(--space-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.option:hover {
+  background: var(--hover);
+}
+
+.option[data-checked] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.option:has(input:focus-visible) {
+  outline: 2px solid var(--focus);
+  outline-offset: -1px;
+}
+
+.swatches {
+  display: inline-flex;
+  flex: none;
+  gap: 3px;
+}
+
+/* A theme in miniature: its page, with its accent and text colors on it. */
+.swatch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  width: 34px;
+  height: 22px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+}
+
+.swatch span {
+  display: block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.optionText {
+  display: grid;
+  min-width: 0;
+}
+
+.optionName {
+  overflow: hidden;
+  color: var(--text);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.optionDetail {
+  color: var(--text-faint);
+  font-size: var(--text-xs);
+}
+
+.star {
+  margin-left: 4px;
+  color: var(--warn);
+}
+
+.none {
+  grid-column: 1 / -1;
+  padding: var(--space-4);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.side {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.status {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+/* The preview draws with the theme's own tokens, set on this element. */
+.preview {
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  background: var(--bg);
+  color: var(--text);
+}
+
+.previewBar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 6px var(--space-3);
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+.previewLogo {
+  padding: 0 4px;
+  border-radius: 3px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 700;
+}
+
+.previewBody {
+  display: grid;
+  gap: 6px;
+  padding: var(--space-3);
+}
+
+.previewTitle {
+  font-size: var(--text-sm);
+  font-weight: 650;
+}
+
+.previewText {
+  font-size: var(--text-xs);
+}
+
+.previewEasy {
+  color: var(--easy);
+  font-weight: 600;
+}
+
+.previewMuted {
+  color: var(--text-faint);
+}
+
+.previewCode {
+  margin: 0;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--editor-bg);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  white-space: pre;
+}
+
+.previewRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+}
+
+.previewButton {
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 600;
+}
+
+.previewOk,
+.previewBad {
+  padding: 1px 6px;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+}
+
+.previewOk {
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+
+.previewBad {
+  background: var(--bad-soft);
+  color: var(--bad);
+}
+
+.previewHeat {
+  display: flex;
+  gap: 3px;
+}
+
+.previewHeat span {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+.previewName {
+  padding: 6px var(--space-3);
+  border-top: 1px solid var(--line);
+  background: var(--panel-raised);
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+@media (max-width: 760px) {
+  .body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .list {
+    max-height: 320px;
+  }
+
+  /* On a phone the dialog keeps Apply and Cancel in reach: above the preview, under a shorter list. */
+  .dialogPicker .list {
+    max-height: min(36vh, 320px);
+  }
+
+  .dialogPicker .actions {
+    order: -1;
+  }
+
+  .filters {
+    display: flex;
+    width: 100%;
+  }
+
+  .filter {
+    flex: 1;
+    justify-content: center;
+  }
+}

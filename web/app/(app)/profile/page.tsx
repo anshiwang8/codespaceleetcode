@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { SignInPrompt } from "@/components/auth/SignInPrompt";
-import { AccountSection } from "@/components/profile/AccountSection";
+import { SettingsLink } from "@/components/profile/SettingsLink";
 import { IdentityCard } from "@/components/profile/IdentityCard";
 import { ProfileActivityArea } from "@/components/profile/ProfileActivityArea";
 import styles from "@/components/profile/profile.module.css";
+import { ThemeButton } from "@/components/themes/ThemeButton";
 import { getCurrentUser } from "@/lib/server/auth";
 import { getProfile } from "@/lib/server/profile";
 
@@ -24,6 +25,10 @@ export default async function ProfilePage() {
         <div className={styles.signedOutPrompt}>
           <SignInPrompt reason="Sign in to see your profile." />
         </div>
+        <div className={styles.signedOutTheme}>
+          <p className="muted">You can choose a theme without an account. It&apos;s remembered in this browser.</p>
+          <ThemeButton />
+        </div>
       </main>
     );
   }
@@ -37,7 +42,7 @@ export default async function ProfilePage() {
           <strong>No puzzles are available right now.</strong>
           <span>Your progress will show here once puzzles are published. Check back soon.</span>
         </div>
-        <AccountSection />
+        <SettingsLink />
       </main>
     );
   }
@@ -52,7 +57,7 @@ export default async function ProfilePage() {
         progress={progress}
         unfinished={unfinished}
       />
-      <AccountSection />
+      <SettingsLink />
     </main>
   );
 }

@@ -1,6 +1,11 @@
 // Shapes shared by the API routes and the UI. Nothing here may ever carry an answer key.
 // See spec.md section 9.
 
+import type { ProfileLinks } from "@/lib/profile-fields";
+import type { ThemePreference } from "@/lib/themes/runtime";
+
+export type { ProfileLinks, ThemePreference };
+
 export type PuzzleType = "find" | "trace" | "architecture";
 export type Difficulty = "easy" | "medium" | "hard";
 export type AnswerKind = "symbol" | "file" | "location" | "sequence" | "set" | "choice";
@@ -137,9 +142,25 @@ export interface SearchResponse {
   truncated: boolean;
 }
 
+/** Appearance saved to an account. `preference` is null until one is chosen. */
+export interface AppearanceSettings {
+  preference: ThemePreference | null;
+  favorites: string[];
+}
+
 /** GET /api/me */
 export interface MeResponse {
-  user: { login: string; via: "github" | "dev" } | null;
+  user: {
+    login: string;
+    via: "github" | "dev";
+    /** The user-chosen display name, or null. */
+    displayName: string | null;
+    /** Changes with every upload; null shows the default silhouette. */
+    avatarVersion: string | null;
+    /** True until a contact email is verified. The address itself is never in this response. */
+    needsEmail: boolean;
+    appearance: AppearanceSettings;
+  } | null;
   /** True when this server has a GitHub OAuth app configured. */
   githubAuth: boolean;
   /** True when the localhost-only dev login is available. */
@@ -178,8 +199,13 @@ export interface TopicProgress extends ProgressCount {
  */
 export interface ProfileIdentity {
   login: string;
-  /** The GitHub display name, when it's set and differs from the login. */
+  /** The display name the user chose in Settings, or null. Never taken from GitHub. */
   displayName: string | null;
+  pronouns: string | null;
+  bio: string | null;
+  links: ProfileLinks;
+  /** Null shows the default silhouette. */
+  avatarVersion: string | null;
   /** "github" for a linked GitHub account, "dev" for the localhost-only dev login. */
   provider: "github" | "dev";
   /** When the account was created, as an ISO 8601 timestamp. */
@@ -323,6 +349,40 @@ export interface ProfileResponse {
   streaks: PracticeStreaks;
   timeline: SolveTimeline;
   history: HistoryPage;
+}
+
+/** Optional personal details. Every one may be null. */
+export interface ProfileDetails {
+  displayName: string | null;
+  pronouns: string | null;
+  bio: string | null;
+  /** YYYY-MM-DD, a calendar date with no time zone. Only in the settings response. */
+  birthday: string | null;
+}
+
+/** The contact email and any change waiting for verification. Only in the settings response. */
+export interface EmailStatus {
+  /** The verified address, or null if none is verified yet. */
+  address: string | null;
+  verifiedAt: string | null;
+  pending: { address: string; purpose: "setup" | "change"; expiresAt: string; expired: boolean } | null;
+  /** False when this server can't send email; nothing can be verified then. */
+  deliveryAvailable: boolean;
+  /** True in local development, where messages are saved to a folder instead of sent. */
+  localOutbox: boolean;
+  /** Whether the session is recent enough to change a verified address. */
+  recentSignIn: boolean;
+}
+
+/** GET /api/me/settings */
+export interface SettingsResponse {
+  login: string;
+  provider: "github" | "dev";
+  details: ProfileDetails;
+  links: ProfileLinks;
+  appearance: AppearanceSettings;
+  avatarVersion: string | null;
+  email: EmailStatus;
 }
 
 export interface ApiError {
