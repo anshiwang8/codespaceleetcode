@@ -865,7 +865,8 @@
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  color: #ffffff;
+  /* The page color on a status color: every theme makes that 4.5:1 or more. */
+  color: var(--bg);
   font-size: 12px;
   font-weight: 700;
   line-height: 1;

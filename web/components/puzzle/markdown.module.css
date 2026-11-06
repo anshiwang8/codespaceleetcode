@@ -245,11 +245,11 @@
   border-radius: 8px;
   background: var(--panel);
   color: var(--text);
-  box-shadow: 0 20px 50px rgb(15 23 42 / 25%);
+  box-shadow: 0 20px 50px var(--shadow);
 }
 
 .diagramDialog::backdrop {
-  background: rgb(15 23 42 / 45%);
+  background: var(--overlay);
 }
 
 .diagramDialogBar {

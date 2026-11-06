@@ -1,27 +1,33 @@
 /*
- * One light theme. Every component reads these tokens, so this is the only place colors, type
- * sizes, spacing and radii are set. General pages use 16px body text. The puzzle workspace sets its
- * own denser 13px base (components/puzzle/puzzle.module.css), like an IDE.
+ * Theme tokens. These are codebases Light, the default theme, and the fallback when JavaScript
+ * is off. Every other theme sets the same custom properties on <html> (lib/themes/), before first
+ * paint when it's saved in this browser. Components read only these tokens, never literal colors.
+ * General pages use 16px body text; the puzzle workspace sets its own denser 13px base
+ * (components/puzzle/puzzle.module.css), like an IDE.
  */
 :root {
   color-scheme: light;
 
-  /* Surfaces and lines */
+  /* Surfaces */
   --bg: #ffffff;
   --panel: #ffffff;
   --panel-raised: #f6f8fa;
   --surface-sunken: #f8fafc;
+  --input-bg: #ffffff;
   --editor-bg: #ffffff;
+  --hover: #f3f4f6;
+  --overlay: rgb(0 0 0 / 40%);
+
+  /* Lines */
   --line: #e5e7eb;
   --line-strong: #d1d5db;
-  --hover: #f3f4f6;
 
   /* Text. --text-faint is the lightest text that still passes WCAG AA (4.8:1) on white. */
   --text: #111827;
   --text-muted: #4b5563;
   --text-faint: #6b7280;
 
-  /* Accent */
+  /* Accent and states */
   --accent: #2563eb;
   --accent-hover: #1d4ed8;
   --accent-text: #1d4ed8;
@@ -32,25 +38,46 @@
 
   /* Status. Each is always shown with text or an icon too, never by color alone. */
   --ok: #15803d;
-  --ok-soft: rgb(21 128 61 / 10%);
-  --bad: #b91c1c;
-  --bad-hover: #991b1b;
-  --bad-soft: rgb(185 28 28 / 8%);
+  --ok-soft: rgb(21 128 61 / 7%);
   --warn: #b45309;
-  --warn-soft: rgb(180 83 9 / 10%);
+  --warn-soft: rgb(180 83 9 / 7%);
+  --bad: #b91c1c;
+  --bad-soft: rgb(185 28 28 / 8%);
+  --bad-fill: #b91c1c;
+  --bad-hover: #991b1b;
+  --bad-ink: #ffffff;
   --easy: #15803d;
   --medium: #b45309;
   --hard: #b91c1c;
 
-  --shadow: rgb(17 24 39 / 12%);
-  --shadow-soft: rgb(17 24 39 / 4%);
-  --shadow-card: 0 1px 2px rgb(17 24 39 / 5%);
+  /* Data: the activity heatmap's five steps, and chart lines */
+  --heat-0: #eef0f3;
+  --heat-1: #c7d7fb;
+  --heat-2: #8eb0f5;
+  --heat-3: #4f83ee;
+  --heat-4: #1d4ed8;
+  --chart-line: #2563eb;
 
-  /* Syntax colors for code drawn in HTML. lib/client/monaco.ts uses the same ones. */
+  /* Code, in HTML and in Monaco (lib/client/monaco.ts reads these) */
   --syntax-keyword: #cf222e;
   --syntax-function: #8250df;
   --syntax-type: #953800;
   --syntax-string: #0a3069;
+  --syntax-number: #0550ae;
+  --syntax-comment: #6a737d;
+  --editor-selection: rgb(37 99 235 / 20%);
+  --editor-line-highlight: #f6f8fa;
+  --editor-line-number: #6b7280;
+
+  /* The default avatar: a white silhouette on neutral gray */
+  --avatar-bg: #6b7280;
+  --avatar-fg: #ffffff;
+
+  /* Depth */
+  --shadow: rgb(17 24 39 / 12%);
+  --shadow-soft: rgb(17 24 39 / 4%);
+  --scrollbar: rgb(17 24 39 / 8%);
+  --shadow-card: 0 1px 2px var(--shadow-soft);
 
   /* Type */
   --font-ui: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -258,9 +285,9 @@ a.btn:hover {
 
 /* For actions that can't be undone, such as deleting an account. */
 .btn-danger {
-  border-color: var(--bad);
-  background: var(--bad);
-  color: #ffffff;
+  border-color: var(--bad-fill);
+  background: var(--bad-fill);
+  color: var(--bad-ink);
   font-weight: 600;
 }
 
@@ -309,9 +336,16 @@ a.btn:hover {
   padding: 0 32px 0 var(--space-3);
   border: 1px solid var(--line-strong);
   border-radius: var(--radius);
-  background: var(--panel)
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='%234b5563' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
-    no-repeat right 10px center;
+  /* The chevron is two gradient triangles in the theme's muted text color, so it follows the theme. */
+  background-color: var(--input-bg);
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--text-muted) 50%),
+    linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
+  background-position:
+    calc(100% - 15px) 52%,
+    calc(100% - 10px) 52%;
+  background-size: 5px 5px;
+  background-repeat: no-repeat;
   color: var(--text);
   font-size: 15px;
   appearance: none;
@@ -320,6 +354,60 @@ a.btn:hover {
 
 .select:hover {
   border-color: var(--text-faint);
+}
+
+/* Text inputs and text areas */
+.input {
+  width: 100%;
+  min-height: var(--control-height);
+  padding: 7px var(--space-3);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--input-bg);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.input::placeholder {
+  color: var(--text-faint);
+  opacity: 1;
+}
+
+.input:hover {
+  border-color: var(--text-faint);
+}
+
+.input[aria-invalid="true"] {
+  border-color: var(--bad);
+  box-shadow: inset 3px 0 0 var(--bad);
+}
+
+textarea.input {
+  min-height: 88px;
+  resize: vertical;
+}
+
+.input:disabled {
+  background: var(--panel-raised);
+  color: var(--text-faint);
+}
+
+/* Native dialogs, such as the header's theme picker */
+dialog {
+  max-width: min(960px, calc(100vw - 2 * var(--page-gutter)));
+  max-height: calc(100vh - 32px);
+  margin: auto;
+  padding: var(--space-5);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: 0 12px 40px var(--shadow);
+}
+
+dialog::backdrop {
+  background: var(--overlay);
 }
 
 .field-label {
