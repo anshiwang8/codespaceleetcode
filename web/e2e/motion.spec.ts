@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { browserIssues, fixtureAccount, ready, settled } from "./visual-helpers";
+import { browserIssues, denseActivity, fixtureAccount, ready, settled } from "./visual-helpers";
 
 test.skip(!process.env.VISUAL_REVIEW, "Run pnpm visual:review");
 
@@ -116,7 +116,7 @@ test("profile progress, appended history, confirmation focus, and reduced-motion
   });
   await expect.poll(() => fill.evaluate((element) => getComputedStyle(element).transform)).toBe("matrix(0.5, 0, 0, 1, 0, 0)");
   expect(await fill.locator("..").boundingBox()).toMatchObject({ x: progress.x, y: progress.y, width: progress.width, height: progress.height });
-  expect(box?.height).toBe(8);
+  expect(box?.height).toBe(6);
 
   const more = page.getByTestId("history-load-more");
   await more.scrollIntoViewIfNeeded();
@@ -296,5 +296,53 @@ test("a correct result's check bounces once inside a fixed box, and not at all w
   }));
   expect(reduced.duration).toBeLessThanOrEqual(0.001);
   expect(reduced.opacity).toBe("1");
+  expect(issues).toEqual([]);
+});
+
+test("the activity tracker keeps its squares still, gives brief feedback, and stops it under reduced motion", async ({ page }) => {
+  const issues = browserIssues(page);
+  await fixtureAccount(page, false, "motion-tracker");
+  await denseActivity("motion-tracker");
+  await recordMotion(page);
+  await page.goto("/profile");
+  await ready(page);
+  await settled(page);
+  const grid = page.getByTestId("activity-grid");
+  // No square in a year-wide grid animates, on load or when the period changes.
+  const squareAnimations = () =>
+    grid.evaluate((element) => [...element.querySelectorAll("td")].reduce((sum, cell) => sum + cell.getAnimations().length, 0));
+  expect(await squareAnimations()).toBe(0);
+  const lastYear = String(new Date().getUTCFullYear() - 1);
+  await page.getByTestId("activity-period").selectOption(lastYear);
+  await expect(page.getByTestId("activity-summary")).toHaveText(new RegExp(`^${lastYear}: `));
+  expect(await squareAnimations()).toBe(0);
+  await page.getByTestId("activity-period").selectOption("rolling");
+  await expect(page.getByTestId("activity-summary")).toHaveText(/^Last 365 days: /);
+  await settled(page);
+
+  // Picking a date: the cell keeps its size and place, and the selection strip fades in once.
+  const cell = grid.locator('[role=gridcell][tabindex="0"]');
+  const before = await cell.boundingBox();
+  await cell.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByTestId("activity-selected")).toBeVisible();
+  expect(await cell.boundingBox()).toEqual(before);
+  expect(await recorded(page)).toContain("motion-fade");
+  await settled(page);
+
+  // Reduced motion: the same steps leave nothing running.
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.getByTestId("activity-selected").getByRole("button", { name: "Clear date" }).click();
+  await cell.focus();
+  await page.keyboard.press("Enter");
+  const running = await page.evaluate(() =>
+    document.getAnimations().filter((animation) => {
+      const timing = animation.effect?.getComputedTiming();
+      return animation.playState === "running" && Number(timing?.duration ?? 0) > 1;
+    }).length,
+  );
+  expect(running).toBe(0);
+  const fade = await page.getByTestId("activity-selected").evaluate((element) => parseFloat(getComputedStyle(element).animationDuration));
+  expect(fade).toBeLessThanOrEqual(0.001);
   expect(issues).toEqual([]);
 });

@@ -8,11 +8,7 @@ export default function Loading() {
       </p>
       <div aria-hidden="true" className={styles.skeletons}>
         <div className={`skeleton ${styles.skeletonIdentity}`} />
-        <div className={styles.tiles}>
-          {Array.from({ length: 4 }, (_, index) => (
-            <div key={index} className={`skeleton ${styles.skeletonTile}`} />
-          ))}
-        </div>
+        <div className={`skeleton ${styles.skeletonTracker}`} />
         <div className={`skeleton ${styles.skeletonBlock}`} />
       </div>
     </main>

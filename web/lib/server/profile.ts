@@ -1,15 +1,20 @@
 import "server-only";
 import type {
   ActivityDay,
+  ActivityPeriodKey,
+  ActivityResponse,
   Difficulty,
   HistoryEntry,
+  HistoryFilters,
   HistoryPage,
+  PracticeStreaks,
   ProfileActivity,
   ProfileIdentity,
   ProfileProgress,
   ProfileResponse,
   ProgressCount,
   PuzzleType,
+  SolveTimeline,
   UnfinishedPuzzle,
 } from "@/lib/api-types";
 import { orderTags } from "@/lib/browse";
@@ -19,8 +24,9 @@ import { getPool } from "@/lib/server/db";
 // getCurrentUser, and counts only published puzzles. Nothing here reads an answer key, a submitted
 // answer, a solution, a token or the stored email.
 
-/** How many days the activity view covers, ending today. */
-export const ACTIVITY_DAYS = 90;
+/** How many dates the default activity period covers, ending today. */
+export const ROLLING_DAYS = 365;
+export const ROLLING_LABEL = "Last 365 days";
 /** Activity is grouped into days in this zone, so a day means the same thing for everyone. */
 export const ACTIVITY_TIME_ZONE = "UTC";
 export const HISTORY_PAGE_SIZE = 10;
@@ -54,7 +60,7 @@ export function completionPercent(solved: number, total: number): number {
 }
 
 /** Counts per type, difficulty, repo and topic. A puzzle counts once in each of its topics. */
-export function summarizeProgress(rows: ProgressRow[]): ProfileProgress {
+export function summarizeProgress(rows: ProgressRow[], submissions = 0): ProfileProgress {
   const overall = zero();
   const byType = Object.fromEntries(PUZZLE_TYPES.map((type) => [type, zero()])) as Record<PuzzleType, ProgressCount>;
   const byDifficulty = Object.fromEntries(DIFFICULTIES.map((difficulty) => [difficulty, zero()])) as Record<
@@ -88,6 +94,7 @@ export function summarizeProgress(rows: ProgressRow[]): ProfileProgress {
   return {
     ...overall,
     completionPercent: completionPercent(overall.solved, overall.total),
+    submissions,
     byType,
     byDifficulty,
     byRepo: [...repos.entries()]
@@ -97,26 +104,104 @@ export function summarizeProgress(rows: ProgressRow[]): ProfileProgress {
   };
 }
 
+const DAY_MS = 86_400_000;
+
 /** YYYY-MM-DD of a moment, in UTC. */
-function utcDate(moment: Date): string {
+export function utcDate(moment: Date): string {
   return moment.toISOString().slice(0, 10);
 }
 
-/** The days of the window ending on `now`'s UTC date, oldest first. */
-export function activityWindow(now: Date, days = ACTIVITY_DAYS): string[] {
-  const end = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
-  return Array.from({ length: days }, (_, index) => utcDate(new Date(end - (days - 1 - index) * 86_400_000)));
+/** A YYYY-MM-DD date moved by whole days. Plain UTC arithmetic, so no zone or DST can shift it. */
+export function addDays(date: string, days: number): string {
+  return utcDate(new Date(Date.parse(`${date}T00:00:00Z`) + days * DAY_MS));
 }
 
-/** Fills in the days with no submissions, so the result has one entry per day of the window. */
-export function fillActivity(window: string[], counted: ActivityDay[]): ProfileActivity {
+/** Every date from `start` to `end`, inclusive, oldest first. */
+export function datesBetween(start: string, end: string): string[] {
+  const dates: string[] = [];
+  for (let date = start; date <= end; date = addDays(date, 1)) dates.push(date);
+  return dates;
+}
+
+export interface ActivityPeriod {
+  key: ActivityPeriodKey;
+  label: string;
+  start: string;
+  end: string;
+}
+
+/** "rolling" or a four-digit year from a query string. Anything else is null. */
+export function parsePeriodKey(value: string | undefined): ActivityPeriodKey | null {
+  if (value === undefined || value === "rolling") return "rolling";
+  return /^(19|20)[0-9]{2}$/.test(value) ? (value as ActivityPeriodKey) : null;
+}
+
+/** The dates a period covers. Rolling is 365 dates ending today; a year is all of its 365 or 366. */
+export function resolvePeriod(key: ActivityPeriodKey, today: string): ActivityPeriod {
+  if (key === "rolling") {
+    return { key, label: ROLLING_LABEL, start: addDays(today, -(ROLLING_DAYS - 1)), end: today };
+  }
+  return { key, label: key, start: `${key}-01-01`, end: `${key}-12-31` };
+}
+
+/** The calendar years a user can pick: from the year their history starts through this year. */
+export function selectableYears(historyStart: string, today: string): number[] {
+  const first = Number(historyStart.slice(0, 4));
+  const last = Number(today.slice(0, 4));
+  return Array.from({ length: Math.max(last - first + 1, 1) }, (_, index) => Math.min(first, last) + index);
+}
+
+/**
+ * One entry per date of the period. A date after today, or before the account's history starts,
+ * is unavailable: there was no chance to practice, so it isn't shown as a zero.
+ */
+export function buildActivity(
+  period: ActivityPeriod,
+  today: string,
+  historyStart: string,
+  counted: { date: string; submissions: number; passed: number }[],
+): ProfileActivity {
   const byDate = new Map(counted.map((day) => [day.date, day]));
-  const days = window.map((date) => byDate.get(date) ?? { date, submissions: 0, passed: 0 });
+  const days: ActivityDay[] = datesBetween(period.start, period.end).map((date) => {
+    const available = date <= today && date >= historyStart;
+    const found = available ? byDate.get(date) : undefined;
+    return { date, submissions: found?.submissions ?? 0, passed: found?.passed ?? 0, available };
+  });
   return {
     timeZone: ACTIVITY_TIME_ZONE,
+    period: period.key,
+    label: period.label,
+    start: period.start,
+    end: period.end,
+    today,
     days,
     activeDays: days.filter((day) => day.submissions > 0).length,
     submissions: days.reduce((sum, day) => sum + day.submissions, 0),
+    years: selectableYears(historyStart, today),
+  };
+}
+
+/**
+ * Streaks from the most recent run of consecutive active dates and the longest run. The current
+ * streak survives a day with no submissions yet: if yesterday was active, today is still open.
+ */
+export function streaksFrom(
+  run: { lastDay: string | null; lastLength: number; longest: number },
+  today: string,
+  submissionsToday: number,
+): PracticeStreaks {
+  const live = run.lastDay === today || run.lastDay === addDays(today, -1);
+  return { current: live ? run.lastLength : 0, longest: run.longest, submissionsToday, today };
+}
+
+/** First solves split into those before the period (the baseline) and those inside it. */
+export function buildTimeline(period: ActivityPeriod, firstSolves: { date: string; count: number }[]): SolveTimeline {
+  const sorted = [...firstSolves].sort((a, b) => a.date.localeCompare(b.date));
+  return {
+    start: period.start,
+    end: period.end,
+    baseline: sorted.filter((day) => day.date < period.start).reduce((sum, day) => sum + day.count, 0),
+    solves: sorted.filter((day) => day.date >= period.start && day.date <= period.end),
   };
 }
 
@@ -150,16 +235,26 @@ async function getIdentity(userId: string): Promise<ProfileIdentity | null> {
 }
 
 async function getProgress(userId: string): Promise<ProfileProgress> {
-  const { rows } = await getPool().query<ProgressRow>(
-    `select p.type, p.difficulty, p.tags, r.slug as repo_slug, r.language, pr.status
-       from puzzles p
-       join snapshots s on s.id = p.snapshot_id
-       join repos r on r.id = s.repo_id
-       left join progress pr on pr.puzzle_id = p.id and pr.user_id = $1
-      where p.published`,
-    [userId],
-  );
-  return summarizeProgress(rows);
+  const pool = getPool();
+  const [puzzles, submissions] = await Promise.all([
+    pool.query<ProgressRow>(
+      `select p.type, p.difficulty, p.tags, r.slug as repo_slug, r.language, pr.status
+         from puzzles p
+         join snapshots s on s.id = p.snapshot_id
+         join repos r on r.id = s.repo_id
+         left join progress pr on pr.puzzle_id = p.id and pr.user_id = $1
+        where p.published`,
+      [userId],
+    ),
+    pool.query<{ count: number }>(
+      `select count(*)::int as count
+         from submissions s
+         join puzzles p on p.id = s.puzzle_id
+        where s.user_id = $1 and p.published`,
+      [userId],
+    ),
+  ]);
+  return summarizeProgress(puzzles.rows, submissions.rows[0]?.count ?? 0);
 }
 
 async function getUnfinished(userId: string): Promise<UnfinishedPuzzle[]> {
@@ -199,9 +294,41 @@ async function getUnfinished(userId: string): Promise<UnfinishedPuzzle[]> {
   }));
 }
 
-/** Graded submissions per UTC day over the window ending on `now`'s date. */
-export async function getActivity(userId: string, now: Date = new Date()): Promise<ProfileActivity> {
-  const window = activityWindow(now);
+/**
+ * The first date of the user's history: the account's creation date, or an earlier submission's
+ * date if one predates it (accounts carried over from before migration 0005). Null if no user.
+ */
+async function getHistoryStart(userId: string): Promise<string | null> {
+  const { rows } = await getPool().query<{ start: string }>(
+    `select to_char(
+              least(
+                u.created_at,
+                coalesce(
+                  (select min(s.created_at)
+                     from submissions s
+                     join puzzles p on p.id = s.puzzle_id
+                    where s.user_id = u.id and p.published),
+                  u.created_at
+                )
+              ) at time zone 'UTC',
+              'YYYY-MM-DD'
+            ) as start
+       from users u
+      where u.id = $1`,
+    [userId],
+  );
+  return rows[0]?.start ?? null;
+}
+
+/** Graded submissions per UTC date from `start` to `end`, never past `today`. One query. */
+async function getDailyCounts(
+  userId: string,
+  start: string,
+  end: string,
+  today: string,
+): Promise<{ date: string; submissions: number; passed: number }[]> {
+  const last = end < today ? end : today;
+  if (last < start) return [];
   const { rows } = await getPool().query<{ date: string; submissions: number; passed: number }>(
     `select to_char(s.created_at at time zone 'UTC', 'YYYY-MM-DD') as date,
             count(*)::int as submissions,
@@ -213,9 +340,96 @@ export async function getActivity(userId: string, now: Date = new Date()): Promi
         and s.created_at >= ($2::date)::timestamp at time zone 'UTC'
         and s.created_at < ($3::date + 1)::timestamp at time zone 'UTC'
       group by 1`,
-    [userId, window[0], window[window.length - 1]],
+    [userId, start, last],
   );
-  return fillActivity(window, rows);
+  return rows;
+}
+
+/**
+ * Lifetime streaks in one query: distinct active UTC dates up to today, grouped into runs of
+ * consecutive dates (a date minus its row number is constant along a run).
+ */
+async function getStreaks(userId: string, today: string): Promise<PracticeStreaks> {
+  const { rows } = await getPool().query<{
+    longest: number | null;
+    last_day: string | null;
+    last_length: number | null;
+    today_count: number;
+  }>(
+    `with active as (
+       select distinct (s.created_at at time zone 'UTC')::date as day
+         from submissions s
+         join puzzles p on p.id = s.puzzle_id
+        where s.user_id = $1
+          and p.published
+          and s.created_at < ($2::date + 1)::timestamp at time zone 'UTC'
+     ), runs as (
+       select max(day) as last_day, count(*)::int as length
+         from (select day, day - (row_number() over (order by day))::int as run from active) numbered
+        group by run
+     )
+     select (select max(length) from runs) as longest,
+            (select to_char(last_day, 'YYYY-MM-DD') from runs order by last_day desc limit 1) as last_day,
+            (select length from runs order by last_day desc limit 1) as last_length,
+            (select count(*)::int
+               from submissions s
+               join puzzles p on p.id = s.puzzle_id
+              where s.user_id = $1
+                and p.published
+                and s.created_at >= ($2::date)::timestamp at time zone 'UTC'
+                and s.created_at < ($2::date + 1)::timestamp at time zone 'UTC') as today_count`,
+    [userId, today],
+  );
+  const row = rows[0];
+  return streaksFrom(
+    { lastDay: row?.last_day ?? null, lastLength: row?.last_length ?? 0, longest: row?.longest ?? 0 },
+    today,
+    row?.today_count ?? 0,
+  );
+}
+
+/**
+ * Each solved, published puzzle once, dated by its first correct submission. Counting only
+ * puzzles whose status is solved keeps the chart's total equal to the solved count; a solve with
+ * no recorded correct submission falls back to `progress.solved_at`.
+ */
+async function getFirstSolves(userId: string, today: string): Promise<{ date: string; count: number }[]> {
+  const { rows } = await getPool().query<{ date: string; count: number }>(
+    `select to_char(coalesce(first.at, pr.solved_at) at time zone 'UTC', 'YYYY-MM-DD') as date,
+            count(*)::int as count
+       from progress pr
+       join puzzles p on p.id = pr.puzzle_id
+       left join lateral (
+         select min(s.created_at) as at
+           from submissions s
+          where s.user_id = pr.user_id and s.puzzle_id = pr.puzzle_id and s.correct
+       ) first on true
+      where pr.user_id = $1
+        and pr.status = 'solved'
+        and p.published
+        and coalesce(first.at, pr.solved_at) < ($2::date + 1)::timestamp at time zone 'UTC'
+      group by 1`,
+    [userId, today],
+  );
+  return rows;
+}
+
+/** The activity calendar and first-solve timeline for one period, or null for a year the user can't pick. */
+export async function getActivity(
+  userId: string,
+  key: ActivityPeriodKey,
+  now: Date = new Date(),
+): Promise<ActivityResponse | null> {
+  const today = utcDate(now);
+  const historyStart = await getHistoryStart(userId);
+  if (!historyStart) return null;
+  if (key !== "rolling" && !selectableYears(historyStart, today).includes(Number(key))) return null;
+  const period = resolvePeriod(key, today);
+  const [counts, firstSolves] = await Promise.all([
+    getDailyCounts(userId, period.start, period.end, today),
+    getFirstSolves(userId, today),
+  ]);
+  return { activity: buildActivity(period, today, historyStart, counts), timeline: buildTimeline(period, firstSolves) };
 }
 
 /**
@@ -226,7 +440,7 @@ export async function getActivity(userId: string, now: Date = new Date()): Promi
  */
 export async function getHistory(
   userId: string,
-  options: { before?: string | null; limit?: number } = {},
+  options: { before?: string | null; limit?: number } & HistoryFilters = {},
 ): Promise<HistoryPage> {
   const limit = Math.min(Math.max(Math.trunc(options.limit ?? HISTORY_PAGE_SIZE), 1), HISTORY_MAX_PAGE_SIZE);
   const { rows } = await getPool().query<{
@@ -253,9 +467,29 @@ export async function getHistory(
             select c.created_at, c.id from submissions c where c.id = $2::bigint and c.user_id = $1
           )
         )
+        and ($4::text is null or p.type = $4)
+        and ($5::text is null or p.difficulty = $5)
+        and ($6::text is null or r.slug = $6)
+        and ($7::boolean is null or s.correct = $7)
+        and (
+          $8::date is null
+          or (
+            s.created_at >= ($8::date)::timestamp at time zone 'UTC'
+            and s.created_at < ($8::date + 1)::timestamp at time zone 'UTC'
+          )
+        )
       order by s.created_at desc, s.id desc
       limit $3`,
-    [userId, options.before ?? null, limit + 1],
+    [
+      userId,
+      options.before ?? null,
+      limit + 1,
+      options.type ?? null,
+      options.difficulty ?? null,
+      options.repo ?? null,
+      options.outcome === undefined ? null : options.outcome === "passed",
+      options.date ?? null,
+    ],
   );
   const page = rows.slice(0, limit);
   const entries: HistoryEntry[] = page.map((row) => ({
@@ -273,13 +507,15 @@ export async function getHistory(
 
 /** Everything the profile page shows, or null if the user no longer exists. */
 export async function getProfile(userId: string, now: Date = new Date()): Promise<ProfileResponse | null> {
-  const [identity, progress, unfinished, activity, history] = await Promise.all([
+  const today = utcDate(now);
+  const [identity, progress, unfinished, activity, streaks, history] = await Promise.all([
     getIdentity(userId),
     getProgress(userId),
     getUnfinished(userId),
-    getActivity(userId, now),
+    getActivity(userId, "rolling", now),
+    getStreaks(userId, today),
     getHistory(userId),
   ]);
-  if (!identity) return null;
-  return { identity, progress, unfinished, activity, history };
+  if (!identity || !activity) return null;
+  return { identity, progress, unfinished, activity: activity.activity, streaks, timeline: activity.timeline, history };
 }

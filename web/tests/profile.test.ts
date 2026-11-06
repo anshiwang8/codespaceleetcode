@@ -1,18 +1,24 @@
 import { makeSignature } from "better-auth/crypto";
 import { beforeAll, describe, expect, it } from "vitest";
+import { GET as activityRoute } from "@/app/api/me/activity/route";
 import { GET as historyRoute } from "@/app/api/me/history/route";
 import { GET as profileRoute } from "@/app/api/me/profile/route";
 import { POST as submitRoute } from "@/app/api/puzzles/[slug]/submit/route";
-import type { HistoryPage, ProfileResponse, Submission } from "@/lib/api-types";
+import type { ActivityResponse, HistoryPage, ProfileResponse, Submission } from "@/lib/api-types";
 import { getAuth } from "@/lib/server/better-auth";
 import { getPool } from "@/lib/server/db";
 import {
-  activityWindow,
+  addDays,
+  buildActivity,
+  buildTimeline,
   completionPercent,
-  fillActivity,
   getActivity,
   getHistory,
   getProfile,
+  parsePeriodKey,
+  resolvePeriod,
+  selectableYears,
+  streaksFrom,
   summarizeProgress,
   type ProgressRow,
 } from "@/lib/server/profile";
@@ -69,28 +75,102 @@ describe("summarizeProgress", () => {
   });
 });
 
-describe("activity window", () => {
-  it("is the 90 UTC days ending on today's UTC date, oldest first", () => {
-    const window = activityWindow(new Date("2026-03-02T00:30:00Z"));
-    expect(window).toHaveLength(90);
-    expect(window.at(-1)).toBe("2026-03-02");
-    expect(window[0]).toBe("2025-12-03");
-    // 23:59 UTC is still the same day, whatever the server's own zone.
-    expect(activityWindow(new Date("2026-03-01T23:59:59Z")).at(-1)).toBe("2026-03-01");
+describe("activity periods", () => {
+  it("rolling is the 365 UTC dates ending today, today included", () => {
+    const period = resolvePeriod("rolling", "2026-03-02");
+    expect(period).toEqual({ key: "rolling", label: "Last 365 days", start: "2025-03-03", end: "2026-03-02" });
+    const activity = buildActivity(period, "2026-03-02", "2020-01-01", []);
+    expect(activity.days).toHaveLength(365);
+    expect(activity.days.at(-1)?.date).toBe("2026-03-02");
   });
 
-  it("fills empty days and totals the rest", () => {
-    const window = ["2026-01-01", "2026-01-02", "2026-01-03"];
-    const activity = fillActivity(window, [{ date: "2026-01-02", submissions: 3, passed: 1 }]);
-    expect(activity).toEqual({
-      timeZone: "UTC",
-      days: [
-        { date: "2026-01-01", submissions: 0, passed: 0 },
-        { date: "2026-01-02", submissions: 3, passed: 1 },
-        { date: "2026-01-03", submissions: 0, passed: 0 },
+  it("a calendar year has 365 or 366 dates, leap day included", () => {
+    expect(buildActivity(resolvePeriod("2025", "2026-11-06"), "2026-11-06", "2020-01-01", []).days).toHaveLength(365);
+    const leap = buildActivity(resolvePeriod("2024", "2026-11-06"), "2026-11-06", "2020-01-01", []);
+    expect(leap.days).toHaveLength(366);
+    expect(leap.days.map((day) => day.date)).toContain("2024-02-29");
+    expect(leap.days[0]?.date).toBe("2024-01-01");
+    expect(leap.days.at(-1)?.date).toBe("2024-12-31");
+    // A rolling window across a leap day still has 365 dates.
+    expect(buildActivity(resolvePeriod("rolling", "2024-12-31"), "2024-12-31", "2020-01-01", []).days).toHaveLength(365);
+  });
+
+  it("adds days across month, year and leap boundaries in UTC", () => {
+    expect(addDays("2024-02-28", 1)).toBe("2024-02-29");
+    expect(addDays("2024-02-29", 1)).toBe("2024-03-01");
+    expect(addDays("2025-12-31", 1)).toBe("2026-01-01");
+    expect(addDays("2026-01-01", -1)).toBe("2025-12-31");
+  });
+
+  it("marks dates after today and before the history starts as unavailable, not zero", () => {
+    const activity = buildActivity(resolvePeriod("2026", "2026-11-06"), "2026-11-06", "2026-03-10", [
+      { date: "2026-03-10", submissions: 2, passed: 1 },
+      { date: "2026-11-06", submissions: 1, passed: 1 },
+    ]);
+    const day = (date: string) => activity.days.find((entry) => entry.date === date);
+    expect(day("2026-03-09")).toEqual({ date: "2026-03-09", submissions: 0, passed: 0, available: false });
+    expect(day("2026-03-10")).toEqual({ date: "2026-03-10", submissions: 2, passed: 1, available: true });
+    expect(day("2026-06-01")).toEqual({ date: "2026-06-01", submissions: 0, passed: 0, available: true });
+    expect(day("2026-11-06")?.available).toBe(true);
+    expect(day("2026-11-07")?.available).toBe(false);
+    expect(activity).toMatchObject({ activeDays: 2, submissions: 3, today: "2026-11-06", years: [2026] });
+  });
+
+  it("offers each year from the history's first through today's, and reads period keys strictly", () => {
+    expect(selectableYears("2024-12-31", "2026-01-01")).toEqual([2024, 2025, 2026]);
+    expect(selectableYears("2026-05-01", "2026-11-06")).toEqual([2026]);
+    expect(parsePeriodKey(undefined)).toBe("rolling");
+    expect(parsePeriodKey("rolling")).toBe("rolling");
+    expect(parsePeriodKey("2025")).toBe("2025");
+    for (const bad of ["25", "20256", "1899", "abc", "2025 ", "-2025"]) expect(parsePeriodKey(bad)).toBeNull();
+  });
+});
+
+describe("streaks", () => {
+  const today = "2026-11-06";
+
+  it("counts the run ending today, or ending yesterday while today is still open", () => {
+    expect(streaksFrom({ lastDay: today, lastLength: 4, longest: 9 }, today, 2)).toEqual({
+      current: 4,
+      longest: 9,
+      submissionsToday: 2,
+      today,
+    });
+    expect(streaksFrom({ lastDay: "2026-11-05", lastLength: 4, longest: 9 }, today, 0).current).toBe(4);
+  });
+
+  it("is zero when neither today nor yesterday is active, or with no history", () => {
+    expect(streaksFrom({ lastDay: "2026-11-04", lastLength: 4, longest: 9 }, today, 0).current).toBe(0);
+    expect(streaksFrom({ lastDay: null, lastLength: 0, longest: 0 }, today, 0)).toEqual({
+      current: 0,
+      longest: 0,
+      submissionsToday: 0,
+      today,
+    });
+  });
+
+  it("handles a run that ended yesterday across a year boundary", () => {
+    expect(streaksFrom({ lastDay: "2025-12-31", lastLength: 3, longest: 3 }, "2026-01-01", 0).current).toBe(3);
+  });
+});
+
+describe("first-solve timeline", () => {
+  it("carries solves before the period in as a baseline and leaves out later ones", () => {
+    const period = resolvePeriod("2025", "2026-11-06");
+    const timeline = buildTimeline(period, [
+      { date: "2026-01-02", count: 1 },
+      { date: "2025-06-01", count: 2 },
+      { date: "2024-12-31", count: 3 },
+      { date: "2025-01-01", count: 1 },
+    ]);
+    expect(timeline).toEqual({
+      start: "2025-01-01",
+      end: "2025-12-31",
+      baseline: 3,
+      solves: [
+        { date: "2025-01-01", count: 1 },
+        { date: "2025-06-01", count: 2 },
       ],
-      activeDays: 1,
-      submissions: 3,
     });
   });
 });
@@ -157,7 +237,14 @@ describe.skipIf(!hasDatabase)("profile data", () => {
     expect(profile.progress).toMatchObject({ solved: 0, attempted: 0, total: PUBLISHED_PUZZLE_COUNT, completionPercent: 0 });
     expect(profile.unfinished).toEqual([]);
     expect(profile.activity).toMatchObject({ timeZone: "UTC", activeDays: 0, submissions: 0 });
-    expect(profile.activity.days).toHaveLength(90);
+    expect(profile.activity.days).toHaveLength(365);
+    expect(profile.activity.label).toBe("Last 365 days");
+    // Dates before the account was created are unavailable, not missed practice.
+    expect(profile.activity.days[0]?.available).toBe(false);
+    expect(profile.activity.days.at(-1)?.available).toBe(true);
+    expect(profile.streaks).toMatchObject({ current: 0, longest: 0, submissionsToday: 0 });
+    expect(profile.timeline).toMatchObject({ baseline: 0, solves: [] });
+    expect(profile.progress.submissions).toBe(0);
     expect(profile.history).toEqual({ entries: [], nextCursor: null });
   });
 
@@ -265,23 +352,162 @@ describe.skipIf(!hasDatabase)("profile data", () => {
     expect((await getHistory(id, { limit: 0 })).entries).toHaveLength(1);
   });
 
-  it("puts a submission on its UTC day, and leaves out days outside the window", async () => {
+  it("puts a submission on its UTC date, and leaves out dates outside the period", async () => {
     await signIn("profile-days");
     const id = await userIdFor("profile-days");
     const now = new Date("2026-03-02T12:00:00Z");
     await insertSubmission(id, "fx-file", false, "2026-03-01T23:59:59.999Z");
     await insertSubmission(id, "fx-file", true, "2026-03-02T00:00:00Z");
-    await insertSubmission(id, "fx-symbol", false, "2025-12-03T00:00:00Z"); // first day of the window
-    await insertSubmission(id, "fx-symbol", false, "2025-12-02T23:59:59Z"); // the day before it
-    await insertSubmission(id, "fx-symbol", false, "2026-03-03T00:00:00Z"); // after "now"'s day
+    await insertSubmission(id, "fx-symbol", false, "2025-03-03T00:00:00Z"); // first date of the rolling period
+    await insertSubmission(id, "fx-symbol", false, "2025-03-02T23:59:59Z"); // the date before it
+    await insertSubmission(id, "fx-symbol", false, "2026-03-03T00:00:00Z"); // after "now"'s date
 
-    const activity = await getActivity(id, now);
-    const day = (date: string) => activity.days.find((entry) => entry.date === date);
-    expect(day("2026-03-01")).toEqual({ date: "2026-03-01", submissions: 1, passed: 0 });
-    expect(day("2026-03-02")).toEqual({ date: "2026-03-02", submissions: 1, passed: 1 });
-    expect(day("2025-12-03")).toEqual({ date: "2025-12-03", submissions: 1, passed: 0 });
-    expect(day("2025-12-02")).toBeUndefined();
-    expect(activity).toMatchObject({ submissions: 3, activeDays: 3 });
+    const response = await getActivity(id, "rolling", now);
+    const activity = response?.activity;
+    const day = (date: string) => activity?.days.find((entry) => entry.date === date);
+    expect(day("2026-03-01")).toEqual({ date: "2026-03-01", submissions: 1, passed: 0, available: true });
+    expect(day("2026-03-02")).toEqual({ date: "2026-03-02", submissions: 1, passed: 1, available: true });
+    expect(day("2025-03-03")).toEqual({ date: "2025-03-03", submissions: 1, passed: 0, available: true });
+    expect(day("2025-03-02")).toBeUndefined();
+    expect(activity).toMatchObject({ submissions: 3, activeDays: 3, today: "2026-03-02" });
+    // The earlier submission predates the account, so the history starts there and 2025 is offered.
+    expect(activity?.years).toEqual([2025, 2026]);
+  });
+
+  it("counts lifetime streaks from distinct UTC dates, longer than any one period", async () => {
+    await signIn("profile-streaks");
+    const id = await userIdFor("profile-streaks");
+    // 400 consecutive dates ending 2025-12-31: longer than a year, so it can't come from one period.
+    await getPool().query(
+      `insert into submissions (user_id, puzzle_id, answer_json, correct, created_at)
+       select $1, p.id, '{}'::jsonb, false, ('2025-12-31'::date - n + time '23:30') at time zone 'UTC'
+         from puzzles p cross join generate_series(0, 399) n
+        where p.slug = 'fx-file'`,
+      [id],
+    );
+    // Then a gap, and three dates ending yesterday, with two submissions on one of them.
+    for (const at of ["2026-11-03T00:00:00Z", "2026-11-04T08:00:00Z", "2026-11-04T09:00:00Z", "2026-11-05T23:59:59Z"]) {
+      await insertSubmission(id, "fx-symbol", false, at);
+    }
+    // Unpublished puzzles never count, even on today's date.
+    await insertSubmission(id, "fx-hidden", true, "2026-11-06T01:00:00Z");
+
+    const open = await getProfile(id, new Date("2026-11-06T12:00:00Z"));
+    expect(open?.streaks).toEqual({ current: 3, longest: 400, submissionsToday: 0, today: "2026-11-06" });
+
+    await insertSubmission(id, "fx-symbol", true, "2026-11-06T00:00:00Z");
+    const practiced = await getProfile(id, new Date("2026-11-06T12:00:00Z"));
+    expect(practiced?.streaks).toEqual({ current: 4, longest: 400, submissionsToday: 1, today: "2026-11-06" });
+
+    // Two days later with nothing new, the current streak has ended; the longest hasn't changed.
+    const later = await getProfile(id, new Date("2026-11-08T00:00:00Z"));
+    expect(later?.streaks).toMatchObject({ current: 0, longest: 400 });
+    // The year picker doesn't change lifetime streaks: they aren't part of the period response.
+    const year = (await getActivity(id, "2025", new Date("2026-11-06T12:00:00Z"))) as ActivityResponse;
+    expect(year.activity.activeDays).toBe(365);
+    expect(Object.keys(year)).toEqual(["activity", "timeline"]);
+  });
+
+  it("dates each solved puzzle once, by its first correct submission", async () => {
+    await signIn("profile-solves");
+    const id = await userIdFor("profile-solves");
+    const now = new Date("2026-11-06T12:00:00Z");
+    // fx-file: wrong, then right, then right again. Only the first right one counts.
+    await insertSubmission(id, "fx-file", false, "2025-12-30T10:00:00Z");
+    await insertSubmission(id, "fx-file", true, "2025-12-31T10:00:00Z");
+    await insertSubmission(id, "fx-file", true, "2026-02-01T10:00:00Z");
+    await insertSubmission(id, "fx-symbol", true, "2026-02-01T11:00:00Z");
+    await insertSubmission(id, "fx-hidden", true, "2026-02-01T12:00:00Z");
+    await getPool().query(
+      `insert into progress (user_id, puzzle_id, status, attempts, solved_at)
+       select $1, id, 'solved', 1, now() from puzzles where slug in ('fx-file', 'fx-symbol', 'fx-hidden')`,
+      [id],
+    );
+    const year = (await getActivity(id, "2026", now)) as ActivityResponse;
+    expect(year.timeline).toEqual({
+      start: "2026-01-01",
+      end: "2026-12-31",
+      baseline: 1,
+      solves: [{ date: "2026-02-01", count: 1 }],
+    });
+    const before = (await getActivity(id, "2025", now)) as ActivityResponse;
+    expect(before.timeline.solves).toEqual([{ date: "2025-12-31", count: 1 }]);
+    // The chart's total matches the solved count.
+    const profile = await getProfile(id, now);
+    const total =
+      (profile?.timeline.baseline ?? 0) + (profile?.timeline.solves.reduce((sum, day) => sum + day.count, 0) ?? 0);
+    expect(total).toBe(profile?.progress.solved);
+    expect(profile?.progress.submissions).toBe(4);
+  });
+
+  it("serves a period on /api/me/activity, and refuses a year outside the user's history", async () => {
+    const cookie = await signIn("profile-period");
+    const get = (query: string, withCookie = true) =>
+      activityRoute(makeRequest(`/api/me/activity${query}`, withCookie ? { cookie } : {}), undefined);
+    expect((await get("", false)).status).toBe(401);
+    const rolling = await get("?period=rolling");
+    expect(rolling.status).toBe(200);
+    expect(rolling.headers.get("cache-control")).toBe("no-store");
+    const body = (await rolling.json()) as ActivityResponse;
+    expect(body.activity.label).toBe("Last 365 days");
+    const thisYear = body.activity.today.slice(0, 4);
+    expect((await get(`?period=${thisYear}`)).status).toBe(200);
+    for (const bad of ["?period=1999", `?period=${Number(thisYear) + 1}`, "?period=abc", "?period=2025&x=1"]) {
+      expect((await get(bad)).status, bad).toBe(400);
+    }
+    expectNoAnswerData(JSON.stringify(body));
+  });
+
+  it("filters history on the server, across pages, by type, difficulty, repository, result and date", async () => {
+    const cookie = await signIn("profile-filters");
+    const id = await userIdFor("profile-filters");
+    for (let index = 0; index < 14; index++) {
+      const at = new Date(Date.UTC(2026, 9, 1 + (index % 2), 12, index)).toISOString();
+      await insertSubmission(id, index % 2 === 0 ? "fx-file" : "fx-sequence", index % 3 === 0, at);
+    }
+    await insertSubmission(id, "fx-other", true, "2026-10-01T23:59:59Z");
+    await insertSubmission(id, "fx-hidden", true, "2026-10-01T13:00:00Z");
+
+    const pages = async (query: string) => {
+      const seen: HistoryPage["entries"] = [];
+      let before = "";
+      for (;;) {
+        const response = await historyFor(cookie, `?limit=3${query}${before ? `&before=${before}` : ""}`);
+        expect(response.status).toBe(200);
+        const page = (await response.json()) as HistoryPage;
+        seen.push(...page.entries);
+        if (!page.nextCursor) return seen;
+        before = page.nextCursor;
+      }
+    };
+    const trace = await pages("&type=trace");
+    expect(trace).toHaveLength(7);
+    expect(new Set(trace.map((entry) => entry.id)).size).toBe(7);
+    expect(trace.every((entry) => entry.type === "trace")).toBe(true);
+    const medium = await pages("&difficulty=medium");
+    expect(medium.every((entry) => entry.difficulty === "medium")).toBe(true);
+    expect((await pages("&repo=other-lib")).map((entry) => entry.slug)).toEqual(["fx-other"]);
+    const failed = await pages("&outcome=failed");
+    expect(failed.every((entry) => !entry.passed)).toBe(true);
+    const passed = await pages("&outcome=passed");
+    expect(passed.every((entry) => entry.passed)).toBe(true);
+    expect(failed.length + passed.length).toBe(15);
+    // A UTC date: 23:59:59 belongs to Oct 1; the unpublished submission never shows.
+    const first = await pages("&date=2026-10-01");
+    expect(first).toHaveLength(8);
+    expect(first.every((entry) => entry.submittedAt.startsWith("2026-10-01"))).toBe(true);
+    expect(first.map((entry) => entry.slug)).not.toContain("fx-hidden");
+    expect(await pages("&date=2026-10-03")).toEqual([]);
+    expect(await pages("&date=2026-10-01&type=trace&outcome=passed")).toEqual(
+      (await pages("&type=trace&outcome=passed")).filter((entry) => entry.submittedAt.startsWith("2026-10-01")),
+    );
+    for (const bad of ["?date=2026-02-30", "?date=2026-1-01", "?outcome=correct", "?type=quiz", "?difficulty=x"]) {
+      expect((await historyFor(cookie, bad)).status, bad).toBe(400);
+    }
+    // Another user's filters see none of this.
+    const other = await signIn("profile-filters-other");
+    const response = await historyRoute(makeRequest("/api/me/history?date=2026-10-01", { cookie: other }), undefined);
+    expect(((await response.json()) as HistoryPage).entries).toEqual([]);
   });
 
   it("describes a GitHub account without its email, image, tokens or answers", async () => {
