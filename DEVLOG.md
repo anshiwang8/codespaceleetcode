@@ -1,5 +1,38 @@
 # DEVLOG
 
+## Design audit: an honest landing page, clearer gates, and one bounce
+
+Type: Change
+
+Goal: The site should read as built for practicing code reading in real repositories, not as a generic template. The landing page claimed interviews were "replacing LeetCode" and implied codebase puzzles were harder to hand to an AI assistant. Its demo was invented code with a button that did nothing. An example answer used a kind that doesn't exist. A heading was misaligned. Signed-out visitors found out they couldn't submit only after pressing Submit.
+
+What should be done: Audit the whole experience (composition, copy, evidence, trust, hierarchy, interaction, responsiveness, motion, performance), fix what's concretely wrong, keep what serves the product, and add one restrained bounce to a real interaction. The full audit is in `DESIGN_AUDIT.md`.
+
+What was done (technical):
+
+- **Landing page** (`app/(marketing)/page.tsx`, rewritten):
+  - The hero says what the product is, with no trend claim. "Browse puzzles" is the primary action; "Sign in with GitHub" is described as "to submit answers and save progress". A line says reading needs no account.
+  - `components/landing/CodeDemo.tsx` replaces `IdePreview.tsx` with a worked example from `psf/requests` at the pinned commit `3c7baaa`: a question, verbatim lines from `src/requests/structures.py`, how you'd navigate there, the answer as a canonical ID, and the feedback. It's captioned static and not a puzzle, has no control-like elements, and links to the file on GitHub at that commit.
+  - "How a puzzle works" is four steps beside "What it doesn't do", which lists no code execution, no partial credit, no early solutions, a laptop-size workspace, and agent-only blind solves so far.
+  - "Three kinds of puzzle" quotes one real published puzzle per type from `components/landing/examples.ts`, with the correct answer shapes and placeholder ID formats.
+  - "Why practice this" hedges the interview point. The page ends with "Try an easy Find puzzle", which goes to `/puzzles?type=find&difficulty=easy`.
+  - Removed: the second hero logo, the uppercase eyebrows, the comparison cards with the AI claim, and the old `.tinted > *` rule that misaligned the "How it works" heading.
+  - `landing.module.css` was rewritten on the global tokens. Code lines in the example wrap on a phone instead of scrolling.
+- **App:**
+  - Signed out, the answer tray says "Anyone can read this puzzle. Sign in to submit an answer." before Submit.
+  - The list's signed-out hint mentions submitting.
+  - The header's dev sign-in label is one span, which fixes a doubled space caused by `.btn`'s flex gap.
+  - List status glyphs are centered, so card rows don't run "○Not started" together.
+  - Results show a ✓ or ✗ icon in a fixed 20px circle.
+- **Motion:** a `motion-bounce` keyframe (one overshoot to 1.2 scale) and the `--motion-bounce`, `--motion-bounce-time` (320ms) and `--motion-bounce-ease` tokens in `globals.css`, used only by the correct-result ✓ (`.resultCheck`). The result is keyed by attempt, so the bounce plays once per new result. Reduced motion sets its time to 0. The landing hero stagger is capped at 90ms.
+- **Tests:**
+  - `web/tests/landing.test.ts` checks that each quoted puzzle exists, is published and is quoted word for word, and that the worked example's answer and file aren't any requests puzzle's answer.
+  - `e2e/motion.spec.ts` gains a bounce test: it runs once, peaks between 1.1 and 1.3, leaves the layout unmoved, ends at rest, doesn't play for a wrong answer, and has no duration under reduced motion.
+  - `e2e/landing.spec.ts` checks the new copy, the absence of "replacing LeetCode", the static example's single real link and no buttons, the real puzzle links, and the easy-Find link.
+  - `e2e/solve.spec.ts` checks the signed-out note.
+- **Docs:** `spec.md` sections 10 and Motion, `CLAUDE.md` (copy and motion rules), `VISUAL_REVIEW.md` (inspection record and checks).
+- **Results:** `pnpm visual:review` 10 passed. `pnpm e2e` 95 passed. Web unit 592 passed and ingest 516 passed (2 platform skips), both on a throwaway Postgres. `pnpm validate` 136 of 136. ruff, pyright, lint and typecheck clean. Build and `pnpm smoke` 7 of 7.
+
 ## Restrained motion and headless visual review (2026-11-06)
 
 Type: Addition

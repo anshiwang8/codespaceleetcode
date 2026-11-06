@@ -43,8 +43,8 @@ test("motion-enabled entrances, once-only reveals, no-JS fallback, and reduced m
   try {
     const staticPage = await noJs.newPage();
     await staticPage.goto(page.url());
-    await expect(staticPage.getByRole("heading", { name: "A real repo, a real editor, and one right answer." })).toBeVisible();
-    await expect(staticPage.getByRole("link", { name: "Continue as guest" }).first()).toBeVisible();
+    await expect(staticPage.getByRole("heading", { name: "How a puzzle works" })).toBeVisible();
+    await expect(staticPage.getByRole("link", { name: "Browse puzzles" })).toBeVisible();
     expect(await staticPage.locator("#how").evaluate((element) => getComputedStyle(element).opacity)).toBe("1");
   } finally { await noJs.close(); }
   const noObserver = await browser.newContext();
@@ -92,7 +92,7 @@ test("rapid group toggles, keyboard focus, filter pending, and navigation interr
   await page.unrouteAll({ behavior: "wait" });
   // Leave while the next entrance is still running.
   await page.goto("/");
-  await page.getByRole("link", { name: "Continue as guest" }).first().click();
+  await page.getByRole("link", { name: "Browse puzzles" }).click();
   await expect(page.getByRole("heading", { name: "Puzzles", exact: true })).toBeVisible();
   await settled(page);
   expect(issues).toEqual([]);
@@ -219,4 +219,82 @@ test("landing sign-in keeps its dimensions and finishes feedback on a refused pr
     await settled(page);
     expect(exceptions).toEqual([]);
   } finally { release(); await page.unrouteAll({ behavior: "ignoreErrors" }); }
+});
+
+test("a correct result's check bounces once inside a fixed box, and not at all with reduced motion", async ({ page }) => {
+  const issues = browserIssues(page);
+  await fixtureAccount(page, false, "motion-bounce");
+  await recordMotion(page);
+  await page.goto("/puzzles/e2e-arch-choice");
+  await ready(page);
+  await settled(page);
+
+  // A wrong answer shows an ✗ with no bounce.
+  await page.getByRole("radio", { name: "The router module" }).check();
+  await page.getByTestId("submit").click();
+  await expect(page.getByTestId("result")).toHaveAttribute("data-correct", "false");
+  await settled(page);
+  expect(await recorded(page)).not.toContain("motion-bounce");
+
+  // Slow the bounce down so it can be measured while it runs; the keyframes are unchanged.
+  await page.addStyleTag({ content: ":root { --motion-bounce-time: 1500ms; }" });
+  await page.getByRole("radio", { name: "The config module" }).check();
+  await page.getByTestId("submit").click();
+  const icon = page.getByTestId("result-icon");
+  await expect(icon).toHaveText("✓");
+  const running = await icon.evaluate((element) => {
+    const animation = element.getAnimations().find((item) => (item as CSSAnimation).animationName === "motion-bounce");
+    return animation ? { state: animation.playState, iterations: animation.effect?.getTiming().iterations } : null;
+  });
+  expect(running).toEqual({ state: "running", iterations: 1 });
+
+  // The scale peaks once above 1 and nothing around it moves or resizes. The result box has its own
+  // short entrance, so measure once that has ended, while the slowed bounce is still running.
+  const box = page.getByTestId("result");
+  await expect.poll(() => box.evaluate((element) => element.getAnimations().length)).toBe(0);
+  expect(await icon.evaluate((element) => element.getAnimations()[0]?.playState)).toBe("running");
+  const viewSolution = page.getByTestId("view-solution");
+  const boxBefore = await box.boundingBox();
+  const buttonBefore = await viewSolution.boundingBox();
+  const wrapper = await icon.evaluate((element) => {
+    const rect = element.parentElement?.getBoundingClientRect();
+    return rect ? { width: rect.width, height: rect.height } : null;
+  });
+  expect(wrapper).toEqual({ width: 20, height: 20 });
+  const peak = await icon.evaluate((element) => {
+    const animation = element.getAnimations()[0];
+    if (!animation) return 0;
+    animation.pause();
+    let highest = 0;
+    for (let step = 0; step <= 30; step++) {
+      animation.currentTime = (1500 * step) / 30;
+      highest = Math.max(highest, new DOMMatrix(getComputedStyle(element).transform).a);
+    }
+    animation.play();
+    return highest;
+  });
+  expect(peak).toBeGreaterThan(1.1);
+  expect(peak).toBeLessThan(1.3);
+  expect(await box.boundingBox()).toEqual(boxBefore);
+  expect(await viewSolution.boundingBox()).toEqual(buttonBefore);
+
+  // It ends, at rest, and doesn't replay on its own.
+  await settled(page);
+  expect(await icon.evaluate((element) => getComputedStyle(element).transform)).toMatch(/^(none|matrix\(1, 0, 0, 1, 0, 0\))$/);
+  expect((await recorded(page)).filter((name) => name === "motion-bounce")).toHaveLength(1);
+
+  // Reduced motion: the ✓ shows at once, at full size.
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.reload();
+  await ready(page);
+  await page.getByRole("radio", { name: "The config module" }).check();
+  await page.getByTestId("submit").click();
+  await expect(page.getByTestId("result-icon")).toHaveText("✓");
+  const reduced = await page.getByTestId("result-icon").evaluate((element) => ({
+    duration: parseFloat(getComputedStyle(element).animationDuration),
+    opacity: getComputedStyle(element).opacity,
+  }));
+  expect(reduced.duration).toBeLessThanOrEqual(0.001);
+  expect(reduced.opacity).toBe("1");
+  expect(issues).toEqual([]);
 });

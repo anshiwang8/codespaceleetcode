@@ -852,6 +852,45 @@
   color: var(--bad);
 }
 
+.resultHead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.resultIcon {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.resultCorrect .resultIcon {
+  background: var(--ok);
+}
+
+.resultIncorrect .resultIcon {
+  background: var(--bad);
+}
+
+/* The one bounce in the app: a single overshoot when a correct result first appears. The result
+   is keyed by attempt, so it plays once per new result and never loops. */
+.resultCheck {
+  display: inline-block;
+  animation: var(--motion-bounce) var(--motion-bounce-time) var(--motion-bounce-ease) both;
+}
+
+.gateNote {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
 /* Attribution */
 
 .attribution {

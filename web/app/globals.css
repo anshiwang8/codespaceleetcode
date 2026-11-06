@@ -547,6 +547,10 @@ a.chip:hover {
   --motion-enter: motion-enter;
   --motion-fade: motion-fade;
   --motion-confirm: motion-confirm;
+  --motion-bounce: motion-bounce;
+  --motion-bounce-time: 320ms;
+  /* Eases out of the overshoot; the keyframes give the single bounce. */
+  --motion-bounce-ease: cubic-bezier(0.3, 0.7, 0.4, 1);
   --motion-control: 150ms;
   --motion-panel: 220ms;
   --motion-progress: 400ms;
@@ -564,6 +568,13 @@ a.chip:hover {
 @keyframes motion-fade {
   from { opacity: 0.6; }
   to { opacity: 1; }
+}
+
+/* Scale only, from the element's center, inside a fixed-size box: nothing around it moves. */
+@keyframes motion-bounce {
+  0% { opacity: 0; transform: scale(0.4); }
+  60% { opacity: 1; transform: scale(1.2); }
+  100% { opacity: 1; transform: scale(1); }
 }
 
 @keyframes motion-confirm {
@@ -616,6 +627,7 @@ a.chip:hover {
     --motion-control: 0ms;
     --motion-panel: 0ms;
     --motion-progress: 0ms;
+    --motion-bounce-time: 0ms;
     --motion-stagger: 0ms;
     --motion-distance: 0px;
   }

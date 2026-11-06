@@ -51,6 +51,8 @@ When a checklist item lands, mark it done in section 14 in the same change, alon
 - A solution follows the format in spec section 4. Every quoted code line and `path:line` reference must hold at the pinned SHA, and it must not name another puzzle's answer: its symbol, file or line, or most of its set or sequence.
 - Write everything the project owns in US English: UI copy, labels, errors, puzzle titles, prompts, hints, choice labels, solutions, docs and comments (behavior, color, organize, canceled, license). Auth actions are "Sign in" and "Sign out". Leave upstream code, quoted source, identifiers, paths, slugs and IDs exactly as they are.
 - User-facing empty and error states say what happened and what to do next. They never show setup commands.
+- Landing and marketing copy states only what the product does and what's true now. No trend claims, counts, testimonials or logos without a source. Examples quote real puzzles but never show a puzzle's answer; the worked example's answer must not be any puzzle's answer (`web/tests/landing.test.ts`).
+- Motion goes through the tokens and global keyframes in `app/globals.css`, stays finite, and is off under reduced motion. The single bounce is the correct-result ✓ (`.resultCheck`). Don't add looping, floating or bouncing elsewhere, and never animate Monaco, tree targets, editor tabs or splitters.
 - Rate difficulty by the rules in spec section 4, and tag each puzzle with 1 to 3 topics from the fixed list there.
 
 ## Testing

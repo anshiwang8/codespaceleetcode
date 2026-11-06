@@ -56,6 +56,13 @@ export function AnswerTray({
       </p>
       <TraySelection puzzle={puzzle} draft={draft} pick={pick} />
 
+      {/* Said before the click, not only after: reading is open, submitting needs an account. */}
+      {!signedIn && !waitingForAuth && !signInReason ? (
+        <p className={styles.gateNote} data-testid="submit-gate">
+          Anyone can read this puzzle. Sign in to submit an answer.
+        </p>
+      ) : null}
+
       <div className={styles.submitRow}>
         <button
           type="button"
@@ -88,7 +95,15 @@ export function AnswerTray({
             data-testid="result"
             data-correct={result.correct}
           >
-            <strong>{result.correct ? "Correct" : "Incorrect"}</strong>
+            <p className={styles.resultHead}>
+              {/* A fixed box, so the ✓'s bounce never moves the text or the button below it. */}
+              <span className={styles.resultIcon} aria-hidden="true">
+                <span className={result.correct ? styles.resultCheck : undefined} data-testid="result-icon">
+                  {result.correct ? "✓" : "✗"}
+                </span>
+              </span>
+              <strong>{result.correct ? "Correct" : "Incorrect"}</strong>
+            </p>
             <span>
               {result.attempts === 1 ? "Attempt 1" : `Attempt ${result.attempts}`}
               {result.correct ? ". The solution and its explanation are unlocked." : null}

@@ -115,7 +115,7 @@ export default async function PuzzleListPage({ searchParams }: PageProps<"/puzzl
             </div>
           </div>
         ) : (
-          <p className={styles.progressHint}>Sign in to keep track of what you&apos;ve solved.</p>
+          <p className={styles.progressHint}>Anyone can read the puzzles. Sign in to submit answers and keep track of what you&apos;ve solved.</p>
         )}
       </div>
 

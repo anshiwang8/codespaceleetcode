@@ -335,10 +335,13 @@ details[open] > .groupSummary::before {
   white-space: nowrap;
 }
 
+/* Centered in its own box, so card rows (right-aligned) keep a gap before the label. */
 .glyph {
   display: inline-block;
   width: 18px;
+  margin-right: 2px;
   font-weight: 700;
+  text-align: center;
 }
 
 .statusText {
