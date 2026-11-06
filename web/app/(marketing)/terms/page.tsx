@@ -7,7 +7,7 @@ export const dynamic = "force-static";
 
 export default function TermsPage() {
   return (
-    <LegalPage title="Terms">
+    <LegalPage page="terms" title="Terms">
       <p>By using codebases you agree to these terms. If you don&apos;t agree, please don&apos;t use the site.</p>
 
       <h2>The service</h2>
