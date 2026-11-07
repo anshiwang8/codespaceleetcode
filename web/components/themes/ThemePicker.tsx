@@ -14,6 +14,7 @@ import {
 } from "@/lib/themes/controller";
 import { DEFAULT_PREFERENCE, SYSTEM_THEMES, type ThemePreference } from "@/lib/themes/runtime";
 import { DEFAULT_LIGHT_ID, type ThemeDefinition } from "@/lib/themes/tokens";
+import { Icon } from "@/components/site/Icon";
 
 type Filter = "all" | "light" | "dark" | "favorites";
 const FILTERS: { value: Filter; label: string }[] = [
@@ -225,7 +226,7 @@ export function ThemePicker({ variant, onClose }: ThemePickerProps) {
               }
               data-testid="theme-favorite"
             >
-              <span aria-hidden="true">{favorites.has(candidate.id) ? "★" : "☆"}</span>
+              <Icon name={favorites.has(candidate.id) ? "star-filled" : "star"} />
               {favorites.has(candidate.id) ? "Remove from favorites" : "Add to favorites"}
             </button>
           ) : null}
@@ -290,8 +291,8 @@ function ThemeOption({ name, value, label, detail, checked, saved, favorite, swa
         <span className={styles.optionName}>
           {label}
           {favorite ? (
-            <span className={styles.star} aria-label="favorite">
-              ★
+            <span className={styles.star} role="img" aria-label="favorite">
+              <Icon name="star-filled" />
             </span>
           ) : null}
         </span>
@@ -330,8 +331,8 @@ function ThemePreview({ theme, label }: { theme: ThemeDefinition; label: string 
         </pre>
         <div className={styles.previewRow}>
           <span className={styles.previewButton}>Submit answer</span>
-          <span className={styles.previewOk}>✓ Correct</span>
-          <span className={styles.previewBad}>✗ Incorrect</span>
+          <span className={styles.previewOk}><Icon name="check" /> Correct</span>
+          <span className={styles.previewBad}><Icon name="x" /> Incorrect</span>
         </div>
         <div className={styles.previewHeat}>
           {(["heat-0", "heat-1", "heat-2", "heat-3", "heat-4"] as const).map((step) => (

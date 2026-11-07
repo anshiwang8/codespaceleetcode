@@ -56,7 +56,7 @@ export function ContinuePracticing({ unfinished, hasSubmissions, allSolved }: Co
               <p className={styles.unfinishedMeta}>
                 <span className="chip">{TYPE_LABELS[puzzle.type]}</span>
                 <span className={`chip difficulty-${puzzle.difficulty}`}>{DIFFICULTY_LABELS[puzzle.difficulty]}</span>
-                <span className="mono faint">{puzzle.repoSlug}</span>
+                <span className="muted">{puzzle.repoSlug}</span>
               </p>
               <p className={styles.unfinishedStats}>
                 {plural(puzzle.attempts, "attempt", "attempts")}

@@ -7,7 +7,7 @@ export function Attribution({ snapshot }: { snapshot: SnapshotInfo }) {
   return (
     <footer className={styles.attribution} data-testid="attribution">
       <span>
-        Code from <span className="mono">{snapshot.repoSlug}</span>
+        Code from {snapshot.repoSlug}
       </span>
       <span className="mono" title={snapshot.sha} data-testid="attribution-sha">
         {snapshot.sha.slice(0, 12)}

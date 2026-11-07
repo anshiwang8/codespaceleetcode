@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import styles from "@/components/themes/themes.module.css";
 import { ThemePicker } from "@/components/themes/ThemePicker";
+import { Icon } from "@/components/site/Icon";
 
 /**
  * The profile page's way into the theme picker, in a dialog. Closing it any way other than Apply
@@ -29,10 +30,7 @@ export function ThemeButton({ className = "" }: { className?: string }) {
         aria-haspopup="dialog"
         data-testid="theme-button"
       >
-        <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false">
-          <circle cx="8" cy="8" r="6.25" fill="none" stroke="currentColor" strokeWidth="1.5" />
-          <path d="M8 1.75a6.25 6.25 0 0 1 0 12.5z" fill="currentColor" />
-        </svg>
+        <Icon name="theme" />
         Theme
       </button>
       <dialog
@@ -50,7 +48,7 @@ export function ThemeButton({ className = "" }: { className?: string }) {
             Theme
           </h2>
           <button type="button" className="btn btn-small btn-quiet" onClick={close} aria-label="Close">
-            <span aria-hidden="true">✕</span>
+            <Icon name="x" />
           </button>
         </div>
         {open ? <ThemePicker variant="dialog" onClose={close} /> : null}

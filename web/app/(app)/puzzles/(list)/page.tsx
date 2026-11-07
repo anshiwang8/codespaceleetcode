@@ -150,7 +150,7 @@ export default async function PuzzleListPage({ searchParams }: PageProps<"/puzzl
           ) : null}
         </div>
       ) : state.group === "none" ? (
-        <PuzzleTable puzzles={shown} state={state} />
+        <PuzzleTable puzzles={shown} state={state} showStatus={showProgress} />
       ) : (
         groups.map((group) => (
           <PuzzleGroupSection

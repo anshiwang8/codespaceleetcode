@@ -5,6 +5,7 @@ import styles from "@/components/puzzle/puzzle.module.css";
 import type { SymbolInfo } from "@/lib/api-types";
 import { type Draft, type DraftAction, symbolPick } from "@/lib/client/answer";
 import { ApiRequestError, api } from "@/lib/client/api";
+import { Icon } from "@/components/site/Icon";
 
 type OutlineState =
   | { path: string; state: "ready"; symbols: SymbolInfo[] }
@@ -101,7 +102,7 @@ export function OutlineList({ snapshotId, path, onOpen, draft, pick }: OutlineLi
                       data-symbol={symbol.symbolId}
                       onClick={() => pick({ type: "pick-symbol", id: symbol.symbolId })}
                     >
-                      {action.active ? "✓" : "+"}
+                      <Icon name={action.active ? "check" : "plus"} />
                     </button>
                   ) : null}
                 </li>

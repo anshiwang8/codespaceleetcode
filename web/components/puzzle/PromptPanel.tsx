@@ -12,6 +12,7 @@ import {
   TYPE_LABELS,
 } from "@/lib/client/labels";
 import { topicLabel } from "@/lib/topics";
+import { Icon } from "@/components/site/Icon";
 
 export type PromptTab = "description" | "solution";
 
@@ -92,7 +93,7 @@ export function PromptPanel({
             data-testid={`prompt-tab-${name}`}
             onClick={() => onTabChange(name)}
           >
-            {name === "solution" && !unlocked ? <LockIcon /> : null}
+            {name === "solution" && !unlocked ? <Icon name="lock" className={styles.lockIcon} /> : null}
             {TAB_LABELS[name]}
             {name === "solution" && !unlocked ? <span className="visually-hidden"> (locked)</span> : null}
             {name === "solution" && solutionIsNew ? (
@@ -147,9 +148,13 @@ function DescriptionTab({ puzzle, status }: { puzzle: PuzzleDetail; status: Puzz
         <span className={`chip difficulty-${puzzle.difficulty}`}>
           {DIFFICULTY_LABELS[puzzle.difficulty]}
         </span>
-        <span className={`chip status-${status}`} data-testid="puzzle-status">
-          {STATUS_LABELS[status]}
-        </span>
+        {/* Only a status worth saying: an untouched puzzle doesn't need a "Not started" chip. */}
+        {status === "unsolved" ? null : (
+          <span className={`chip status-${status} ${styles.statusChip}`} data-testid="puzzle-status">
+            <Icon name={status === "solved" ? "status-solved" : "status-attempted"} />
+            {STATUS_LABELS[status]}
+          </span>
+        )}
         {puzzle.tags.map((tag) => (
           <span key={tag} className="chip">
             {topicLabel(tag)}
@@ -198,26 +203,10 @@ function DescriptionTab({ puzzle, status }: { puzzle: PuzzleDetail; status: Puzz
 function SolutionLocked({ signedOut }: { signedOut: boolean }) {
   return (
     <div className={styles.solutionLocked} data-testid="solution-locked">
-      <LockIcon large />
+      <Icon name="lock" className={styles.lockIconLarge} />
       <p>Solve this puzzle to see the solution and a full explanation.</p>
       {signedOut ? <p className="muted">Sign in to submit an answer.</p> : null}
     </div>
   );
 }
 
-function LockIcon({ large = false }: { large?: boolean }) {
-  const size = large ? 22 : 12;
-  return (
-    <svg
-      className={large ? styles.lockIconLarge : styles.lockIcon}
-      width={size}
-      height={size}
-      viewBox="0 0 16 16"
-      aria-hidden="true"
-      focusable="false"
-    >
-      <rect x="3" y="7" width="10" height="7" rx="1.5" fill="none" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" fill="none" stroke="currentColor" strokeWidth="1.5" />
-    </svg>
-  );
-}

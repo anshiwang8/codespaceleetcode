@@ -34,7 +34,7 @@ export default async function SettingsPage() {
           <SignInPrompt reason="Sign in to see your settings." />
         </div>
         <p className={styles.hint}>
-          You can still pick a theme for this browser with the Theme button at the top of the page.
+          You can still pick a theme for this browser from the Theme button on the profile page.
         </p>
       </main>
     );
@@ -47,7 +47,7 @@ export default async function SettingsPage() {
         <div>
           <h1 className="page-title">Settings</h1>
           <p className="page-lede">
-            Signed in as <span className="mono">{user.login}</span> with {user.via === "github" ? "GitHub" : "the local dev login"}.
+            Signed in as <strong>{user.login}</strong> with {user.via === "github" ? "GitHub" : "the local dev login"}.
             Your progress is on your <Link href="/profile">profile</Link>.
           </p>
         </div>

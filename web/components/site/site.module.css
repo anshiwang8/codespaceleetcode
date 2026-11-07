@@ -135,13 +135,13 @@ a.account:hover .login {
   min-width: 0;
   max-width: 220px;
   overflow: hidden;
-  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
   font-size: var(--text-sm);
   text-overflow: ellipsis;
 }
 
 .devLabel {
-  color: var(--text-faint);
+  color: var(--text-muted);
   font-size: var(--text-xs);
 }
 
@@ -159,9 +159,9 @@ a.account:hover .login {
   font-size: var(--text-sm);
 }
 
-.authBanner span {
+.authBannerIcon {
+  margin-right: 0.35em;
   color: var(--bad);
-  font-weight: 700;
 }
 
 /*

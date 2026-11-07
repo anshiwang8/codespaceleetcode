@@ -11,6 +11,7 @@
   min-width: 220px;
   color: var(--text-muted);
   font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
 }
 
 .progress strong {
@@ -80,6 +81,7 @@
 .strip {
   display: flex;
   gap: var(--space-2);
+  font-variant-numeric: tabular-nums;
 }
 
 .segment {
@@ -183,11 +185,12 @@
   font-weight: 500;
 }
 
+/* Inner radius = outer radius - the 3px padding - the 1px border. */
 .segmented {
   display: inline-flex;
   padding: 3px;
   border: 1px solid var(--line-strong);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   background: var(--panel);
 }
 
@@ -196,7 +199,7 @@
   align-items: center;
   min-height: 30px;
   padding: 0 var(--space-3);
-  border-radius: var(--radius-sm);
+  border-radius: calc(var(--radius-lg) - 4px);
   color: var(--text-muted);
   font-size: var(--text-sm);
   font-weight: 500;
@@ -289,12 +292,10 @@ details[open] > .groupSummary::before {
 .table th {
   padding: var(--space-2) var(--space-3);
   border-bottom: 1px solid var(--line-strong);
-  color: var(--text-faint);
-  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.04em;
   text-align: left;
-  text-transform: uppercase;
   white-space: nowrap;
 }
 
@@ -337,11 +338,9 @@ details[open] > .groupSummary::before {
 
 /* Centered in its own box, so card rows (right-aligned) keep a gap before the label. */
 .glyph {
-  display: inline-block;
   width: 18px;
-  margin-right: 2px;
-  font-weight: 700;
-  text-align: center;
+  margin-right: 4px;
+  font-size: 15px;
 }
 
 .statusText {
@@ -389,7 +388,7 @@ details[open] > .groupSummary::before {
 
 .language {
   margin-left: 6px;
-  color: var(--text-faint);
+  color: var(--text-muted);
   font-size: var(--text-xs);
 }
 

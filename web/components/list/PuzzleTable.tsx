@@ -2,17 +2,18 @@ import Link from "next/link";
 import styles from "@/components/list/list.module.css";
 import type { PuzzleStatus, PuzzleSummary } from "@/lib/api-types";
 import { browseHref, DEFAULT_GROUPING, nextSort, type BrowseState, type SortColumn } from "@/lib/browse";
-import { DIFFICULTY_LABELS, STATUS_LABELS, TYPE_LABELS } from "@/lib/client/labels";
+import { DIFFICULTY_LABELS, languageLabel, STATUS_LABELS, TYPE_LABELS } from "@/lib/client/labels";
 import { topicLabel } from "@/lib/topics";
+import { Icon, type IconName } from "@/components/site/Icon";
 
 /** A column a group heading already states, so each row doesn't repeat it. */
 export type OmittedColumn = "difficulty" | "repo";
 
 // Shapes as well as colors, so the status reads without color. The text is always there too.
-const STATUS_GLYPHS: Record<PuzzleStatus, string> = {
-  unsolved: "○",
-  attempted: "◐",
-  solved: "✓",
+const STATUS_ICONS: Record<PuzzleStatus, IconName> = {
+  unsolved: "status-unsolved",
+  attempted: "status-attempted",
+  solved: "status-solved",
 };
 
 interface PuzzleTableProps {
@@ -20,6 +21,8 @@ interface PuzzleTableProps {
   /** The list's state, which the column headers link from to sort. */
   state: BrowseState;
   omit?: OmittedColumn;
+  /** False when signed out: every row would say Not started, so the column is left out. */
+  showStatus: boolean;
 }
 
 /**
@@ -37,19 +40,19 @@ function SortHeader({ state, column, label }: { state: BrowseState; column: Sort
       <Link href={browseHref({ ...state, sort: nextSort(state.sort, column) })} data-testid={`sort-${column}`}>
         {label}
         <span aria-hidden="true" className={styles.sortMark}>
-          {active ? (active.descending ? "▼" : "▲") : ""}
+          {active ? <Icon name={active.descending ? "sort-down" : "sort-up"} /> : null}
         </span>
       </Link>
     </th>
   );
 }
 
-export function PuzzleTable({ puzzles, state, omit }: PuzzleTableProps) {
+export function PuzzleTable({ puzzles, state, omit, showStatus }: PuzzleTableProps) {
   return (
     <table className={styles.table}>
       <thead>
         <tr>
-          <SortHeader state={state} column="status" label="Status" />
+          {showStatus ? <SortHeader state={state} column="status" label="Status" /> : null}
           <SortHeader state={state} column="title" label="Puzzle" />
           <SortHeader state={state} column="type" label="Type" />
           {omit === "difficulty" ? null : <SortHeader state={state} column="difficulty" label="Difficulty" />}
@@ -60,12 +63,12 @@ export function PuzzleTable({ puzzles, state, omit }: PuzzleTableProps) {
       <tbody>
         {puzzles.map((puzzle) => (
           <tr key={puzzle.slug} data-testid={`puzzle-row-${puzzle.slug}`}>
-            <td className={`${styles.status} status-${puzzle.status}`}>
-              <span aria-hidden="true" className={styles.glyph}>
-                {STATUS_GLYPHS[puzzle.status]}
-              </span>
-              <span className={styles.statusText}>{STATUS_LABELS[puzzle.status]}</span>
-            </td>
+            {showStatus ? (
+              <td className={`${styles.status} status-${puzzle.status}`}>
+                <Icon name={STATUS_ICONS[puzzle.status]} className={styles.glyph} />
+                <span className={styles.statusText}>{STATUS_LABELS[puzzle.status]}</span>
+              </td>
+            ) : null}
             <td className={styles.title}>
               <Link href={`/puzzles/${puzzle.slug}`}>{puzzle.title}</Link>
             </td>
@@ -78,8 +81,8 @@ export function PuzzleTable({ puzzles, state, omit }: PuzzleTableProps) {
             )}
             {omit === "repo" ? null : (
               <td className={styles.repo}>
-                <span className="mono">{puzzle.repoSlug}</span>
-                <span className={styles.language}>{puzzle.language}</span>
+                <span>{puzzle.repoSlug}</span>
+                <span className={styles.language}>{languageLabel(puzzle.language)}</span>
               </td>
             )}
             <td className={styles.tags}>

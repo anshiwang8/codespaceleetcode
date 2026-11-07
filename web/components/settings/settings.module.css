@@ -91,15 +91,7 @@
   max-width: 220px;
 }
 
-.optional {
-  color: var(--text-faint);
-  font-weight: 400;
-}
 
-.required {
-  color: var(--text-faint);
-  font-weight: 400;
-}
 
 .hint {
   color: var(--text-muted);
@@ -116,7 +108,15 @@
 }
 
 .fieldError::before {
-  content: "⚠ ";
+  content: "";
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  margin-right: 0.35em;
+  background: currentcolor;
+  vertical-align: -0.125em;
+  -webkit-mask: var(--icon-alert) center / contain no-repeat;
+  mask: var(--icon-alert) center / contain no-repeat;
 }
 
 .actions {
@@ -138,27 +138,7 @@
 
 /* Links */
 
-.linkLabel {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-}
 
-.mark {
-  display: inline-grid;
-  place-items: center;
-  min-width: 26px;
-  height: 20px;
-  padding: 0 4px;
-  border: 1px solid var(--line-strong);
-  border-radius: var(--radius-sm);
-  background: var(--panel-raised);
-  color: var(--text-muted);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 1;
-}
 
 .custom {
   display: grid;
@@ -282,4 +262,15 @@
     margin-top: 0;
     justify-self: start;
   }
+}
+
+/* A save that just landed: the check and the word fade in once, so the change is noticed. */
+.saveDone {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  color: var(--ok);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  animation: var(--motion-enter) var(--motion-panel) var(--motion-ease);
 }

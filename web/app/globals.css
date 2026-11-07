@@ -110,6 +110,9 @@
   --page-width: 1120px;
   --page-gutter: 24px;
   --header-height: 56px;
+
+  /* Icons used from CSS. Same drawing as Icon.tsx's "alert". */
+  --icon-alert: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 2.5l6 11H2z'/%3E%3Cpath d='M8 6.75v3'/%3E%3Ccircle cx='8' cy='11.75' r='0.4' fill='black'/%3E%3C/svg%3E");
 }
 
 @media (max-width: 640px) {
@@ -160,6 +163,38 @@ code,
 kbd,
 pre {
   font-family: var(--font-mono);
+}
+
+/* Headlines break into even lines, and paragraphs avoid a lone last word. */
+h1,
+h2,
+h3,
+.page-title,
+.section-title {
+  text-wrap: balance;
+}
+
+p,
+li,
+dd,
+figcaption {
+  text-wrap: pretty;
+}
+
+/* Numbers that sit in rows or change in place keep their width. */
+table,
+time,
+.badge,
+.chip,
+.meter,
+[role="progressbar"] {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Icons from components/site/Icon.tsx: sized in em, nudged so they center on the text's x-height. */
+.icon {
+  flex: none;
+  vertical-align: -0.125em;
 }
 
 ul,
@@ -554,10 +589,17 @@ a.chip:hover {
   color: var(--text);
 }
 
+/* The same alert icon as components/site/Icon.tsx, drawn as a mask so it takes the theme's color. */
 .notice-error::before {
-  content: "⚠ ";
-  color: var(--bad);
-  font-weight: 700;
+  content: "";
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  margin-right: 0.4em;
+  background: var(--bad);
+  vertical-align: -0.125em;
+  -webkit-mask: var(--icon-alert) center / contain no-repeat;
+  mask: var(--icon-alert) center / contain no-repeat;
 }
 
 /* A page's message when there's nothing to show, or something went wrong. */

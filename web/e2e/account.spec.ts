@@ -16,7 +16,7 @@ test.describe("account deletion", () => {
 
     await page.goto("/profile");
     await expect(visible(page, "stats-total")).toContainText("1 of 8");
-    await visible(page, "settings-link").getByRole("link", { name: "Open settings" }).click();
+    await visible(page, "nav-settings").click();
     await expect(page).toHaveURL(/\/settings$/);
 
     // The first click only opens the warning; Cancel closes it without deleting.

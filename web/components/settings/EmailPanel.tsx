@@ -7,6 +7,7 @@ import type { EmailStatus } from "@/lib/api-types";
 import { ApiRequestError, api } from "@/lib/client/api";
 import { signInWithGitHub } from "@/lib/client/auth-client";
 import { formatDateTime } from "@/lib/format";
+import { Icon } from "@/components/site/Icon";
 
 /**
  * The contact email: set it for the first time, confirm it, or change it. The verified address
@@ -49,7 +50,7 @@ export function EmailPanel({ initial, provider }: { initial: EmailStatus; provid
       {status.address ? (
         <p className={styles.emailCurrent} data-testid="email-current">
           <span className="badge badge-ok">
-            <span aria-hidden="true">✓</span> Verified
+            <Icon name="check" /> Verified
           </span>{" "}
           <strong className={styles.emailAddress}>{status.address}</strong>
         </p>
@@ -130,8 +131,7 @@ export function EmailPanel({ initial, provider }: { initial: EmailStatus; provid
           }}
         >
           <label htmlFor="email-address" className="field-label">
-            {status.address ? "New email address" : "Email address"}{" "}
-            {status.address ? null : <span className={styles.required}>(required)</span>}
+            {status.address ? "New email address" : "Email address"}
           </label>
           <div className={styles.inline}>
             <input

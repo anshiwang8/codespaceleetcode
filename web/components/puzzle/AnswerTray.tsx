@@ -5,6 +5,7 @@ import { SignInPrompt } from "@/components/auth/SignInPrompt";
 import styles from "@/components/puzzle/puzzle.module.css";
 import type { PuzzleDetail, SubmitResponse } from "@/lib/api-types";
 import { type Draft, type DraftAction, isReadyToSubmit, type SequenceItem } from "@/lib/client/answer";
+import { Icon } from "@/components/site/Icon";
 
 const INSTRUCTIONS: Record<Draft["kind"], string> = {
   symbol: "Put the cursor on a symbol and choose Select as answer below the editor, or use + on an outline row.",
@@ -96,10 +97,10 @@ export function AnswerTray({
             data-correct={result.correct}
           >
             <p className={styles.resultHead}>
-              {/* A fixed box, so the ✓'s bounce never moves the text or the button below it. */}
+              {/* A fixed box, so the check's bounce never moves the text or the button below it. */}
               <span className={styles.resultIcon} aria-hidden="true">
                 <span className={result.correct ? styles.resultCheck : undefined} data-testid="result-icon">
-                  {result.correct ? "✓" : "✗"}
+                  <Icon name={result.correct ? "check" : "x"} />
                 </span>
               </span>
               <strong>{result.correct ? "Correct" : "Incorrect"}</strong>
@@ -295,7 +296,7 @@ function SequenceList({ items, pick }: { items: SequenceItem[]; pick: (action: D
                 disabled={index === 0}
                 onClick={() => move(item, index - 1, "up")}
               >
-                ↑
+                <Icon name="arrow-up" />
               </button>
               <button
                 type="button"
@@ -305,7 +306,7 @@ function SequenceList({ items, pick }: { items: SequenceItem[]; pick: (action: D
                 disabled={index === items.length - 1}
                 onClick={() => move(item, index + 1, "down")}
               >
-                ↓
+                <Icon name="arrow-down" />
               </button>
               <button
                 type="button"
@@ -313,7 +314,7 @@ function SequenceList({ items, pick }: { items: SequenceItem[]; pick: (action: D
                 aria-label={`Remove ${item.id}`}
                 onClick={() => pick({ type: "remove-item", key: item.key })}
               >
-                ×
+                <Icon name="x" />
               </button>
             </span>
           </li>

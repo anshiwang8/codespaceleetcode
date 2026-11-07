@@ -77,7 +77,7 @@
 
 /* GitHub logins have no spaces, so a long one has to break anywhere to fit a phone. */
 .login {
-  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
   font-size: var(--text-2xl);
   font-weight: 700;
   line-height: 1.2;
@@ -132,17 +132,24 @@
 
 .linkUrl {
   margin-left: 6px;
-  color: var(--text-faint);
-  font-family: var(--font-mono);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
   font-size: var(--text-xs);
 }
 
+/* Only on a phone, where the header leaves Settings out. Wider, the header's Settings link is enough. */
 .settingsLink {
-  display: flex;
+  display: none;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
+}
+
+@media (max-width: 640px) {
+  .settingsLink {
+    display: flex;
+  }
 }
 
 .devNote {
@@ -154,6 +161,7 @@
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(0, 0.8fr);
   border-top: 1px solid var(--line);
+  font-variant-numeric: tabular-nums;
 }
 
 .summary > div {
@@ -173,10 +181,8 @@
 
 .summary dt {
   color: var(--text-muted);
-  font-size: var(--text-xs);
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
+  font-size: var(--text-sm);
+  font-weight: 500;
 }
 
 .summaryValue {
@@ -219,6 +225,7 @@
 
 .rows {
   display: grid;
+  font-variant-numeric: tabular-nums;
 }
 
 .row {
@@ -245,7 +252,7 @@
 }
 
 .rowDetail {
-  color: var(--text-faint);
+  color: var(--text-muted);
   font-size: var(--text-xs);
 }
 
@@ -306,6 +313,7 @@
   gap: var(--space-2);
   padding: var(--space-4);
   transition: border-color 120ms ease;
+  font-variant-numeric: tabular-nums;
 }
 
 .unfinishedCard:hover,
@@ -371,6 +379,7 @@
   gap: var(--space-3);
   padding: 10px 0;
   border-top: 1px solid var(--line);
+  font-variant-numeric: tabular-nums;
 }
 
 .historyItem:first-child {
@@ -408,7 +417,7 @@
 }
 
 .historyTime {
-  color: var(--text-faint);
+  color: var(--text-muted);
   font-size: var(--text-xs);
   text-align: right;
   white-space: nowrap;
@@ -475,7 +484,7 @@
 }
 
 .historyEnd {
-  color: var(--text-faint);
+  color: var(--text-muted);
   font-size: var(--text-xs);
   text-align: center;
 }

@@ -1,5 +1,28 @@
 # DEVLOG
 
+## Design polish: one icon set, real screenshots, quieter labels
+
+Type: Change
+
+Goal: Apply a 20-point design checklist across the site: fewer filler badges and repeated labels, monospace only for code, one consistent icon set, the real product on the landing page, a stronger call to action, nested radii that run parallel, better contrast, balanced headlines, tabular numbers, and loading and save feedback.
+
+What should be done: Go through each page and apply each point where it fits, keep every rule in `CLAUDE.md` (motion, US English, no answers on the landing page), and capture before and after screenshots.
+
+What was done (technical):
+
+- **Icons.** `components/site/Icon.tsx` is one SVG set on a 16-unit grid with a 1.5 stroke, sized in em. It replaces every text glyph used as an icon: the list's status circles and sort arrows, the result check and cross (the one bounce is unchanged), the tree caret and + buttons, the outline +, tab and sequence close and move buttons, history badges, the verified and confirmed badges, theme favorites and preview, the auth banner and the Theme button. Error notices and field errors draw the same alert icon as a CSS mask (`--icon-alert`), since `⚠` drew differently in every font. `e2e/motion.spec.ts` now checks for the check icon instead of the ✓ character.
+- **Labels.** The six all-caps labels (table headers, the summary and streak labels, "Your answer", "Hints", "Outline", the landing demo's "Your answer") are sentence case with no tracking. Monospace is gone from logins, dates, chart ticks, sequence numbers, profile link URLs and repository names; it stays on code, paths, IDs and SHAs. Languages read TypeScript and Python (`languageLabel` in `lib/client/labels.ts`).
+- **Filler removed.** The two-letter link badges (in, gh, www…) on Settings and the profile are deleted (`LinkMark.tsx`). "(optional)" is no longer repeated on every field of a section that already says everything is optional, nor "(required)" on the email form's one field. The landing sign-in button's note moved into the hero line under both buttons, which now describes the button. Signed out, the puzzle list leaves out its status column (every row said "Not started"), and the workspace shows a status badge only once a puzzle is attempted or solved. The profile's Settings card shows only on a phone, where the header leaves Settings out.
+- **Landing.** The hero now shows the real workspace: `public/landing/workspace-light.png` and `-dark.png`, captured from `hono-trace-002` with only the chain's start, which the prompt names, added to the answer. The dark capture shows when the theme's scheme is dark. The screenshot is wider than the text column (up to 1232px, sized with container query units so a scrollbar can't cause sideways scroll). "Browse puzzles" is the largest, heaviest button. The worked example moved into "How a puzzle works", replacing four steps that repeated it, and its caption no longer repeats what the screenshot shows. "What it doesn't do" lost its side stripe and dash bullets; the type cards lost their inner dividers and group by spacing. "Why practice this" became "Most engineering work happens in code someone else wrote".
+- **Craft.** Segmented controls and the theme list use an inner radius of the outer radius minus the inset. Small text that used the faint color now uses the muted one. Headlines wrap balanced and paragraphs avoid a lone last word, globally. Tables, badges, chips, meters and the stat and count blocks use tabular numbers. Icons sit 0.125em low to center on the text.
+- **Loading and feedback.** The list, puzzle and profile pages already had loading skeletons, and every async button already said what it was doing ("Saving…", "Submitting…"). A `loading.tsx` skeleton for Settings was tried and removed: Settings refreshes after a save, and the loading boundary re-mounted the forms, so inline errors vanished (two `e2e/settings.spec.ts` tests caught it). A save that lands shows a check and "Saved." fading in once in the success color (`.saveDone`), for details, links and the picture. The signed-out Settings page now points to the Theme button on the profile page, where it moved.
+- **Accent.** The theme accent already marks the primary actions, links, selection and the logo; this pass concentrates it on the call to action rather than adding a new color, since a new brand color would change the default theme and all 189 derived ones.
+- Docs: `spec.md` section 10 (visual system, landing, list, result, motion), `CLAUDE.md` (the icon set and the landing captures), `VISUAL_REVIEW.md`.
+
+Still open:
+
+- The landing captures are PNGs (about 640 KB each at 2x); `next/image` serves them as WebP or AVIF. They're recaptured with `node scripts/capture-landing.mjs` against a local site with the real puzzles, not automatically, so a workspace change can leave them stale until someone reruns it.
+
 ## Design puzzles, and a v2 plan for Build puzzles
 
 Type: Addition

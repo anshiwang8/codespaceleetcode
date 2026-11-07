@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { CodeDemo } from "@/components/landing/CodeDemo";
 import { LANDING_EXAMPLES } from "@/components/landing/examples";
@@ -7,6 +8,8 @@ import { LoginButton } from "@/components/landing/LoginButton";
 import { ViewportReveals } from "@/components/landing/ViewportReveals";
 import { Logo } from "@/components/site/Logo";
 import { browseHref, DEFAULT_GROUPING, PUZZLES_PATH } from "@/lib/browse";
+import workspaceDark from "@/public/landing/workspace-dark.png";
+import workspaceLight from "@/public/landing/workspace-light.png";
 
 export const metadata: Metadata = {
   title: { absolute: "codebases: practice reading real code" },
@@ -16,25 +19,6 @@ export const metadata: Metadata = {
 export const dynamic = "force-static";
 
 const EASY_FIND = browseHref({ filters: { type: "find", difficulty: "easy" }, group: DEFAULT_GROUPING });
-
-const STEPS = [
-  {
-    title: "Pick a puzzle",
-    body: "Filter by difficulty, topic or repository. Each puzzle names its repository and the commit it's pinned to, so the code never changes under you.",
-  },
-  {
-    title: "Read the code",
-    body: "The workspace has a file tree, search, go-to-definition and find references, all from a code index of that commit.",
-  },
-  {
-    title: "Select your answer",
-    body: "Depending on the question, click a function or class, a file, a range of lines, or one of the listed options. Answers are never typed.",
-  },
-  {
-    title: "Submit and see the result",
-    body: "The server checks your answer against the puzzle's one correct answer. Every submission counts as an attempt. A correct answer unlocks a written solution that shows where to look and why.",
-  },
-] as const;
 
 const LIMITS = [
   "No code runs. Puzzles are about reading, not executing or fixing.",
@@ -78,39 +62,48 @@ export default function LandingPage() {
               </Link>
               <LoginButton />
             </div>
-            <p className={styles.gate}>
-              Reading puzzles needs no account. Signing in is free.
+            <p id="hero-gate" className={styles.gate}>
+              Reading puzzles needs no account. Sign in, free, to submit answers and save your progress.
             </p>
           </div>
-          <CodeDemo />
+          <figure className={styles.shot} data-testid="workspace-shot">
+            <div className={styles.shotFrame}>
+              {/* The real workspace, captured from the site. The theme's scheme picks the matching capture. */}
+              <Image
+                src={workspaceLight}
+                alt="The puzzle workspace: the prompt on the left, then the file tree and outline, the code of src/context.ts at line 768, and the answer tray with Context.redirect added as the first step."
+                className={styles.shotLight}
+                sizes="(max-width: 1280px) 100vw, 1232px"
+                priority
+              />
+              <Image
+                src={workspaceDark}
+                alt=""
+                className={styles.shotDark}
+                sizes="(max-width: 1280px) 100vw, 1232px"
+              />
+            </div>
+            <figcaption className={styles.shotCaption}>
+              The workspace on{" "}
+              <Link href="/puzzles/hono-trace-002">From c.redirect to the response builder</Link>, a Trace puzzle in
+              Hono. The start of the chain, which the prompt names, is already added to the answer.
+            </figcaption>
+          </figure>
         </section>
 
         <section className={styles.section} id="how" data-reveal aria-labelledby="how-heading">
           <h2 id="how-heading" className={styles.h2}>
             How a puzzle works
           </h2>
-          <div className={styles.howGrid}>
-            <ol className={styles.steps}>
-              {STEPS.map((step, index) => (
-                <li key={step.title} className={styles.step}>
-                  <span className={styles.stepNumber} aria-hidden="true">
-                    {index + 1}
-                  </span>
-                  <div>
-                    <h3 className={styles.h3}>{step.title}</h3>
-                    <p>{step.body}</p>
-                  </div>
-                </li>
+          <p className={styles.lede}>One question, worked from start to finish.</p>
+          <CodeDemo />
+          <div className={styles.limits}>
+            <h3 className={styles.h3}>What it doesn&apos;t do</h3>
+            <ul>
+              {LIMITS.map((limit) => (
+                <li key={limit}>{limit}</li>
               ))}
-            </ol>
-            <div className={styles.limits}>
-              <h3 className={styles.h3}>What it doesn&apos;t do</h3>
-              <ul>
-                {LIMITS.map((limit) => (
-                  <li key={limit}>{limit}</li>
-                ))}
-              </ul>
-            </div>
+            </ul>
           </div>
         </section>
 
@@ -128,9 +121,7 @@ export default function LandingPage() {
                   <h3 className={styles.typeName}>{example.type}</h3>
                   <p className={styles.typeSummary}>{example.summary}</p>
                   <div className={styles.example}>
-                    <p className={styles.exampleRepo}>
-                      <span className="mono">{example.repo}</span>
-                    </p>
+                    <p className={styles.exampleRepo}>{example.repo}</p>
                     <p className={styles.exampleTitle}>
                       <Link href={`/puzzles/${example.slug}`}>{example.title}</Link>
                     </p>
@@ -153,13 +144,12 @@ export default function LandingPage() {
         <section className={styles.section} id="why" data-reveal aria-labelledby="why-heading">
           <div className={styles.why}>
             <h2 id="why-heading" className={styles.h2}>
-              Why practice this
+              Most engineering work happens in code someone else wrote
             </h2>
             <div className={styles.prose}>
               <p>
-                Most engineering work happens in code someone else wrote. Before you can change it, you have to find
-                where a behavior lives, follow a request through its layers, and see where a new piece would belong.
-                It&apos;s a skill, and it improves with practice.
+                Before you can change that code, you have to find where a behavior lives, follow a request through its
+                layers, and see where a new piece would belong. It&apos;s a skill, and it improves with practice.
               </p>
               <p>
                 Some interviews now test it directly: you get an unfamiliar repository and questions about it. Plenty

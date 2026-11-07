@@ -74,6 +74,15 @@ After review the Theme button moved from the header to the profile page, beside 
 
 Checked by eye: every theme's text, secondary text, buttons, status chips and syntax are readable and visibly its own palette; Monaco, the tracker, the chart and the banner follow the theme; the silhouette avatar reads on every background; and nothing overflows at 375px. The gallery's own pages also moved: the deletion confirmation is now captured on Settings (`settings-delete-confirmation-*.png`), with a new `settings-*.png`.
 
+## Inspection record: design polish, November 7, 2026
+
+`VISUAL_PHASE=before pnpm visual:review --grep gallery` captured `before/`, then the full `pnpm visual:review` captured `after/` (24 passed). The landing page, puzzle list and signed-in Settings were also captured against a local site with the real puzzles, at 1440px and 375px in light and dark. That review found and fixed:
+
+- The workspace's new Solved badge was taller than the chips beside it; it's now a chip with the status icon.
+- A Settings `loading.tsx` made the forms re-mount after a save, dropping inline errors (caught by `e2e/settings.spec.ts`). It was removed.
+
+Checked by eye: the landing screenshot in both themes with no sideways scroll at 375px, the list without a status column when signed out, sentence-case labels and the icon set on the list, workspace, profile and Settings, the profile without monospace names and dates, and the animated "Saved." confirmation.
+
 ## Actual checks
 
 | Check | Result |

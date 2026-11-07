@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { FormActions } from "@/components/settings/DetailsForm";
-import { LinkMark } from "@/components/settings/LinkMark";
 import styles from "@/components/settings/settings.module.css";
 import { useUnsavedChanges, type SaveState } from "@/components/settings/useUnsavedChanges";
 import type { ProfileLinks } from "@/lib/api-types";
@@ -66,8 +65,7 @@ export function LinksForm({ initial }: { initial: ProfileLinks }) {
       </p>
       {LINK_PLATFORMS.map((platform) => (
         <div key={platform} className={styles.field}>
-          <label htmlFor={`link-${platform}`} className={`field-label ${styles.linkLabel}`}>
-            <LinkMark platform={platform} />
+          <label htmlFor={`link-${platform}`} className="field-label">
             {LINK_LABELS[platform]}
           </label>
           <div className={styles.inline}>

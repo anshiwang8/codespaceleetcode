@@ -21,12 +21,10 @@ interface ProgressBreakdownProps {
   id: string;
   rows: BreakdownRow[];
   note?: string;
-  /** Show the label in the monospace font, as for repository slugs. */
-  mono?: boolean;
 }
 
 /** One slice of progress, a row per value, each with a bar and the same numbers in words. */
-export function ProgressBreakdown({ title, id, rows, note, mono }: ProgressBreakdownProps) {
+export function ProgressBreakdown({ title, id, rows, note }: ProgressBreakdownProps) {
   const headingId = `breakdown-${id}`;
   return (
     <section className={`card ${styles.breakdown}`} aria-labelledby={headingId} data-testid={`stats-${id}`}>
@@ -45,12 +43,12 @@ export function ProgressBreakdown({ title, id, rows, note, mono }: ProgressBreak
                 {row.href ? (
                   <Link
                     href={row.href}
-                    className={[styles.rowLink, row.tone, mono ? "mono" : undefined].filter(Boolean).join(" ")}
+                    className={[styles.rowLink, row.tone].filter(Boolean).join(" ")}
                   >
                     {row.label}
                   </Link>
                 ) : (
-                  <span className={[row.tone, mono ? "mono" : undefined].filter(Boolean).join(" ") || undefined}>
+                  <span className={row.tone}>
                     {row.label}
                   </span>
                 )}
