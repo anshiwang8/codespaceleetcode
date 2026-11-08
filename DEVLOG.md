@@ -1,5 +1,17 @@
 # DEVLOG
 
+## First production deploy (launch checklist M2, M3, M4, M5)
+
+Type: Addition
+
+Goal: Put codebases on the internet with its real database, code storage and GitHub sign-in.
+
+What should be done: Create the hosted database, the R2 bucket, the production GitHub OAuth app and the Vercel project; apply the migrations, seed, upload the snapshots, and check the live site.
+
+What was done (technical): Supabase project `mnmsewqcgqrtwlfwneni`: all 7 migrations applied with `ingest migrate`, then `ingest seed` loaded 21 snapshots and 136 published puzzles. R2 bucket `codebases-snapshot` with public read on its `r2.dev` URL and a CORS rule for the site, filled by `ingest upload-all` (about 14,600 files). Vercel project at `https://codespaceleetcode.vercel.app` with root `web`, the env vars from M4 plus `ENABLE_EXPERIMENTAL_COREPACK=1` for pnpm 12, and a GitHub OAuth app on that address. Checked live: `robots.txt` and the sitemap use the right origin, `/api/me` reports GitHub sign-in on and dev login off, the dev login is 404, the bucket allows the site's origin, and a puzzle page loads its tree and files from R2 with no console errors. Spec section 14 marks M2 to M5 done and notes the Session pooler and password encoding for M2.
+
+Still open: M1 (a custom domain; everything above then moves to it), M6, M8, M9 and C8, M10, M11.
+
 ## Database errors never print part of a password
 
 Type: Fix
