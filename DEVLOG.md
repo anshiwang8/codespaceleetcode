@@ -1,5 +1,24 @@
 # DEVLOG
 
+## A more rigorous and detailed privacy policy
+
+Type: Change
+
+Goal: Make `/privacy` complete and exact, so every statement holds against what the code stores, for how long, and who sees it.
+
+What should be done: Check each claim against the migrations, Better Auth's configuration and the server code, fix the ones that were wrong, and add what a full policy covers: purposes and legal bases, retention, cookies and storage by name, providers, security, rights, children and changes.
+
+What was done (technical):
+
+- Rewrote `web/app/(marketing)/privacy/page.tsx` into 16 numbered sections with a short summary, plus tables for retention, providers, and cookies and local storage (new `.tableWrap` and `.table` styles in `legal.module.css`, using tokens, scrolling inside their box at phone width).
+- Fixed three claims that didn't match the code. GitHub sign-in does read the user's email addresses (Better Auth's default `read:user` and `user:email` scopes and its `/user/emails` call); the page now says so and that they aren't stored. Email verification rows aren't deleted after 30 minutes: the link stops working then, but a used link's row (address and hash) stays until account deletion. Session rows that expire without a sign-out can stay too. Submitting requires sign-in, so the signed-out section no longer mentions submissions.
+- Named every cookie and storage key (`better-auth.state` for 5 minutes, `better-auth.session_token` for 7 days after its last refresh, `cb-theme`, `cb-theme-guest`, `cb-theme-favorites`), the 15-minute recent sign-in rule for email changes, the same-origin check on account routes, and what deletion removes.
+- `lib/legal.ts`: the privacy page's date is now 2026-11-08 and it stays a draft. Spec section 14's M11 lists the open decisions for the reviewer.
+
+Decided: used email links and expired sessions stay until account deletion, with no scheduled cleanup; the page says so.
+
+Still open: M11 (review of the new text). The terms page still says account deletion is on the profile, though it moved to Settings.
+
 ## Protect main (launch checklist M8)
 
 Type: Addition
