@@ -5,8 +5,8 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import styles from "@/components/settings/settings.module.css";
 import { Avatar } from "@/components/site/Avatar";
 import { ApiRequestError, api } from "@/lib/client/api";
+import { AVATAR_MAX_BYTES, AVATAR_MAX_MB, AVATAR_TOO_LARGE } from "@/lib/profile-fields";
 
-const MAX_BYTES = 5 * 1024 * 1024;
 const FRAME = 220;
 const TYPES = ["image/jpeg", "image/png", "image/webp"];
 
@@ -49,8 +49,8 @@ export function AvatarEditor({ initialVersion }: { initialVersion: string | null
   function choose(file: File | undefined) {
     setMessage(null);
     if (!file) return;
-    if (file.size > MAX_BYTES) {
-      setMessage({ kind: "error", text: "Pictures can be at most 5 MB." });
+    if (file.size > AVATAR_MAX_BYTES) {
+      setMessage({ kind: "error", text: AVATAR_TOO_LARGE });
       return;
     }
     if (!TYPES.includes(file.type)) {
@@ -222,7 +222,7 @@ export function AvatarEditor({ initialVersion }: { initialVersion: string | null
                 Remove picture
               </button>
             ) : null}
-            <p className={styles.hint}>JPEG, PNG or WebP, up to 5 MB. Only you see it.</p>
+            <p className={styles.hint}>JPEG, PNG or WebP, up to {AVATAR_MAX_MB} MB. Only you see it.</p>
           </div>
         </div>
       )}

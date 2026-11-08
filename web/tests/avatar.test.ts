@@ -72,9 +72,14 @@ describe("avatar processing", () => {
     expect(await processAvatar(animated, null)).toEqual({ ok: false, error: "Animated pictures aren't supported. Use a still image." });
   });
 
+  it("keeps the upload limit under Vercel's 4.5 MB request body limit", () => {
+    // Vercel refuses a larger body before the route runs, with its own error instead of ours.
+    expect(AVATAR_MAX_BYTES).toBeLessThan(4_500_000);
+  });
+
   it("refuses empty, oversized, undecodable and too-large-dimension files, and crops that don't fit", async () => {
     expect((await processAvatar(Buffer.alloc(0), null)).ok).toBe(false);
-    expect((await processAvatar(Buffer.alloc(AVATAR_MAX_BYTES + 1), null)).ok).toBe(false);
+    expect(await processAvatar(Buffer.alloc(AVATAR_MAX_BYTES + 1), null)).toEqual({ ok: false, error: "Pictures can be at most 4 MB." });
     expect((await processAvatar(Buffer.from("not an image at all"), null)).ok).toBe(false);
     const wide = await solid(8100, 10).png().toBuffer();
     expect(await processAvatar(wide, null)).toEqual({ ok: false, error: "Pictures can be at most 8000 pixels on a side." });

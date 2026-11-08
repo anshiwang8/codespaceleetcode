@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/server/auth";
-import { AVATAR_MAX_BYTES, deleteAvatar, getAvatar, processAvatar, saveAvatar } from "@/lib/server/avatar";
+import { AVATAR_MAX_BYTES, AVATAR_TOO_LARGE } from "@/lib/profile-fields";
+import { deleteAvatar, getAvatar, processAvatar, saveAvatar } from "@/lib/server/avatar";
 import { errorResponse, isSameOriginRequest, jsonResponse, queryParams, readBytes, route } from "@/lib/server/http";
 import { consumeRateLimit } from "@/lib/server/rate-limit";
 
@@ -47,7 +48,7 @@ export const POST = route("me.avatar.upload", async (request) => {
   const limited = await consumeRateLimit(`avatar:user:${user.id}`, AVATAR_LIMIT);
   if (limited.limited) return errorResponse(429, "Too many uploads. Try again later.");
   const bytes = await readBytes(request, AVATAR_MAX_BYTES);
-  if (bytes === undefined) return errorResponse(413, "Pictures can be at most 5 MB.");
+  if (bytes === undefined) return errorResponse(413, AVATAR_TOO_LARGE);
   const result = await processAvatar(Buffer.from(bytes), crop.data);
   if (!result.ok) return errorResponse(400, result.error);
   await saveAvatar(user.id, result.image, result.version);

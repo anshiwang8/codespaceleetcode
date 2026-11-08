@@ -57,6 +57,9 @@ try {
       // OAuth app. An empty value here wins over the file.
       GITHUB_CLIENT_ID: "",
       GITHUB_CLIENT_SECRET: "",
+      // web/.env.local's BETTER_AUTH_URL names the developer's own port. Without it, emailed links
+      // point at this server's host and port.
+      BETTER_AUTH_URL: "",
       NEXT_TELEMETRY_DISABLED: "1",
       E2E_DIST_DIR: DIST_DIR,
       DEV_OUTBOX_DIR: outbox,

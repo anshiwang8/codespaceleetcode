@@ -1,5 +1,25 @@
 # DEVLOG
 
+## Picture uploads fit under Vercel's request body limit
+
+Type: Fix
+
+Goal: Someone uploading a large picture in production should see the app's own message, not a Vercel error page.
+
+What should be done: Uploads allowed up to 5 MB, but Vercel refuses request bodies over 4.5 MB before the route runs. Lower the limit below that, in the browser and on the server.
+
+What was done (technical): `AVATAR_MAX_MB` (4), `AVATAR_MAX_BYTES` and the `AVATAR_TOO_LARGE` message now live in `web/lib/profile-fields.ts`, shared by `AvatarEditor.tsx`, `/api/me/avatar` and `lib/server/avatar.ts`, so the two sides can't drift. `web/tests/avatar.test.ts` checks the limit stays under 4,500,000 bytes. Spec section on pictures updated.
+
+## Tests pass on a Windows checkout with a local GitHub sign-in set up
+
+Type: Fix
+
+Goal: The full suite should pass on a developer's Windows machine, not only in CI.
+
+What should be done: The theme catalog test compared generated files byte for byte, but Git with `core.autocrlf=true` checks them out with CRLF endings, so it failed. The email e2e test followed a confirmation link to port 3000 because the developer's `web/.env.local` set `BETTER_AUTH_URL`, which the e2e server also loaded.
+
+What was done (technical): `.gitattributes` marks `web/lib/themes/catalog.generated.ts` and `docs/themes/MAPPING.md` as `text eol=lf`. `scripts/e2e.mjs` sets `BETTER_AUTH_URL` to an empty value, like it already does for the GitHub and Resend values, so `linkOrigin` in `web/lib/server/email.ts` uses the e2e server's own host and port.
+
 ## Themes, and editable profile and account settings
 
 Type: Addition

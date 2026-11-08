@@ -1,6 +1,7 @@
 import "server-only";
 import { createHash } from "node:crypto";
 import sharp, { type Metadata } from "sharp";
+import { AVATAR_MAX_BYTES, AVATAR_TOO_LARGE } from "@/lib/profile-fields";
 import { getPool } from "@/lib/server/db";
 
 // Profile pictures. An upload is decoded from its bytes (never trusting a file name or declared
@@ -8,7 +9,7 @@ import { getPool } from "@/lib/server/db";
 // metadata. The result is stored in Postgres (user_avatars, at most 128 KB), so it survives
 // deployments without a separate store, and served only to its owner by /api/me/avatar.
 
-export const AVATAR_MAX_BYTES = 5 * 1024 * 1024;
+export { AVATAR_MAX_BYTES } from "@/lib/profile-fields";
 export const AVATAR_SIZE = 256;
 /** Decoded dimensions allowed, each side. */
 export const AVATAR_MAX_SIDE = 8000;
@@ -31,7 +32,7 @@ export type ProcessResult = { ok: true; image: Buffer; version: string } | { ok:
  */
 export async function processAvatar(input: Buffer, crop: Crop | null): Promise<ProcessResult> {
   if (input.length === 0) return { ok: false, error: "That file is empty." };
-  if (input.length > AVATAR_MAX_BYTES) return { ok: false, error: "Pictures can be at most 5 MB." };
+  if (input.length > AVATAR_MAX_BYTES) return { ok: false, error: AVATAR_TOO_LARGE };
   let meta: Metadata;
   try {
     meta = await sharp(input, { limitInputPixels: MAX_PIXELS, failOn: "error", animated: true }).metadata();

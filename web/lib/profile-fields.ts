@@ -3,6 +3,14 @@
 
 export const LIMITS = { displayName: 60, pronouns: 40, bio: 280, linkUrl: 300, linkLabel: 40, customLinks: 3 } as const;
 
+/**
+ * The largest picture upload. Vercel refuses request bodies over 4.5 MB before the route runs, so
+ * this stays under that, and the app's own message is what people see.
+ */
+export const AVATAR_MAX_MB = 4;
+export const AVATAR_MAX_BYTES = AVATAR_MAX_MB * 1024 * 1024;
+export const AVATAR_TOO_LARGE = `Pictures can be at most ${AVATAR_MAX_MB} MB.`;
+
 export const LINK_PLATFORMS = ["linkedin", "github", "website", "x", "bluesky", "mastodon"] as const;
 export type LinkPlatform = (typeof LINK_PLATFORMS)[number];
 
