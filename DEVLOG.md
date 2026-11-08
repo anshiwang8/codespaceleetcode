@@ -19,6 +19,16 @@ Decided: used email links and expired sessions stay until account deletion, with
 
 Still open: M11 (review of the new text). The terms page still says account deletion is on the profile, though it moved to Settings.
 
+## Protect main (launch checklist M8)
+
+Type: Addition
+
+Goal: Nothing lands on `main` without going through a pull request with CI passing.
+
+What should be done: A branch protection rule on `main` requiring a pull request and the five CI checks from `.github/workflows/ci.yml`.
+
+What was done (technical): Set through the GitHub API (`PUT /repos/.../branches/main/protection`). Requires a pull request with 0 approvals, since teammates can't approve their own work and the team is small. Requires "Web lint, typecheck and unit tests", "Ingest ruff, pyright and tests", "Content validation", "End-to-end (Playwright, next dev)" and "Production smoke test (next build, next start)", strict (branch up to date with `main`). No force pushes or deletion. `enforce_admins` is off, so an admin can still push a fix in an emergency. The check names were confirmed against a real CI run. Raise the approval count once more people review.
+
 ## First production deploy (launch checklist M2, M3, M4, M5)
 
 Type: Addition
@@ -29,7 +39,7 @@ What should be done: Create the hosted database, the R2 bucket, the production G
 
 What was done (technical): Supabase project `mnmsewqcgqrtwlfwneni`: all 7 migrations applied with `ingest migrate`, then `ingest seed` loaded 21 snapshots and 136 published puzzles. R2 bucket `codebases-snapshot` with public read on its `r2.dev` URL and a CORS rule for the site, filled by `ingest upload-all` (about 14,600 files). Vercel project at `https://codespaceleetcode.vercel.app` with root `web`, the env vars from M4 plus `ENABLE_EXPERIMENTAL_COREPACK=1` for pnpm 12, and a GitHub OAuth app on that address. Checked live: `robots.txt` and the sitemap use the right origin, `/api/me` reports GitHub sign-in on and dev login off, the dev login is 404, the bucket allows the site's origin, and a puzzle page loads its tree and files from R2 with no console errors. Spec section 14 marks M2 to M5 done and notes the Session pooler and password encoding for M2.
 
-Still open: M1 (a custom domain; everything above then moves to it), M6, M8, M9 and C8, M10, M11.
+Still open: M1 (a custom domain; everything above then moves to it), M6, M9 and C8, M10, M11.
 
 ## Database errors never print part of a password
 
