@@ -3,6 +3,7 @@
 import hashlib
 import json
 import os
+import re
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -513,4 +514,19 @@ def describe_target(url: str) -> str:
         info = conninfo_to_dict(url)
     except psycopg.ProgrammingError as error:
         raise IngestError("The database URL isn't valid.") from error
-    return f"{info.get('host', 'localhost')}:{info.get('port', '5432')}/{info.get('dbname', '')}"
+    host = str(info.get("host", "localhost"))
+    port = str(info.get("port", "5432"))
+    dbname = str(info.get("dbname", ""))
+    # An unencoded @ or / in the password ends it early, and the rest is parsed as the host, port
+    # or database name. Echo each part only when it looks like one, or it could print the password.
+    if not (
+        re.fullmatch(r"[A-Za-z0-9.,-]+", host)
+        and re.fullmatch(r"[0-9,]+", port)
+        and re.fullmatch(r"[A-Za-z0-9_.-]*", dbname)
+    ):
+        raise IngestError(
+            "The database URL's password has a character that must be percent-encoded "
+            "(@ as %40, : as %3A, / as %2F, # as %23, ? as %3F, [ ] as %5B %5D). "
+            "Encode it, or reset the password to letters and numbers only."
+        )
+    return f"{host}:{port}/{dbname}"

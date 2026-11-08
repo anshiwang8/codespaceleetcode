@@ -1,5 +1,15 @@
 # DEVLOG
 
+## Database errors never print part of a password
+
+Type: Fix
+
+Goal: `ingest migrate` and `ingest seed` should never show any part of the database password, even when the URL is malformed.
+
+What should be done: An unencoded `@` or `/` in the password ends it early, and libpq parses the rest as the host, port or database name. `describe_target`, which builds the "Could not connect to ..." message, printed those parts as they were, so the error showed the end of the password.
+
+What was done (technical): `describe_target` in `ingest/src/ingest/seed.py` prints the host, port and database name only when each looks like one (hostname characters, digits, identifier characters). Otherwise it raises an `IngestError` that names the characters to percent-encode and echoes nothing from the URL. `ingest/tests/test_describe_target.py` covers a normal URL and passwords with `@`, brackets and `/`.
+
 ## Picture uploads fit under Vercel's request body limit
 
 Type: Fix
