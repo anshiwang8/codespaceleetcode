@@ -48,6 +48,46 @@
   margin-top: 4px;
 }
 
+.page p + .tableWrap,
+.page .tableWrap + p {
+  margin-top: 10px;
+}
+
+/* Wide tables scroll inside their box, so the page itself never scrolls sideways on a phone. */
+.tableWrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+.table th,
+.table td {
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.table th {
+  background: var(--surface-sunken);
+  font-weight: 600;
+}
+
+.table tr + tr td,
+.table thead + tbody tr:first-child td {
+  border-top: 1px solid var(--line);
+}
+
+.table td:first-child {
+  min-width: 96px;
+}
+
 .footer {
   margin-top: 40px;
   padding-top: 12px;
