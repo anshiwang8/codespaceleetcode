@@ -69,7 +69,8 @@ export default function LandingPage() {
             <p className={styles.subline}>
               Each puzzle puts you in a real open-source repository, such as requests, Flask, Hono or Zod, pinned to
               one commit. It asks one precise question: where a behavior lives, which calls a request passes through,
-              or how the modules divide the work. You find the answer in a browser IDE and click it to submit.
+              how the modules divide the work, or how the code meets a system-design requirement. You find the answer
+              in a browser IDE and click it to submit.
             </p>
             <div className={styles.actions}>
               <Link href={PUZZLES_PATH} className={`${styles.button} ${styles.primary}`} data-testid="browse-puzzles">
@@ -116,7 +117,7 @@ export default function LandingPage() {
         <section className={`${styles.section} ${styles.tinted}`} id="types" data-reveal aria-labelledby="types-heading">
           <div className={styles.sectionInner}>
             <h2 id="types-heading" className={styles.h2}>
-              Three kinds of puzzle
+              Four kinds of puzzle
             </h2>
             <p className={styles.lede}>
               Each one below is a real puzzle on the site. Open it to read the full prompt and the code.

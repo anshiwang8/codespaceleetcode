@@ -136,7 +136,7 @@ function puzzle(fields) {
   };
 }
 
-/** Every answer kind appears, across all three types. */
+/** Every answer kind appears, across all four types. */
 export const PUZZLES = [
   puzzle({
     slug: "e2e-find-symbol",
@@ -207,6 +207,23 @@ export const PUZZLES = [
       { id: "views", label: "The views module" },
     ],
     tags: ["code-structure"],
+  }),
+  puzzle({
+    slug: "e2e-design-choice",
+    type: "design",
+    difficulty: "medium",
+    title: "Where a cached limit is read",
+    prompt:
+      "Interview question: design a request handler that reads its limits once and keeps them. " +
+      "Following `start` in `src/index.ts`, where do the limits come from? Select one option.",
+    kind: "choice",
+    key: { kind: "choice", option: "module" },
+    choices: [
+      { id: "request", label: "They are read again on every request" },
+      { id: "module", label: "A module-level constant in the config module" },
+      { id: "env", label: "Environment variables read by the router" },
+    ],
+    tags: ["caching-and-storage"],
   }),
   puzzle({
     slug: "e2e-sentinel",

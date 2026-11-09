@@ -4,7 +4,7 @@
 // checks each slug, title and prompt against content/puzzles.
 
 export interface LandingExample {
-  type: "Find" | "Trace" | "Architecture";
+  type: "Find" | "Trace" | "Architecture" | "Design";
   summary: string;
   slug: string;
   /** The repository as `owner/name` on GitHub. */
@@ -50,5 +50,16 @@ export const LANDING_EXAMPLES: readonly LandingExample[] = [
       "In packages/toolkit/src/ (ignore the query/ folder and tests), exactly 4 classes are declared. Select all 4 classes.",
     answer: "A set of files and symbols, in any order, or one of several listed options.",
     format: "{ a.ts#ClassA, b.ts#ClassB, … }",
+  },
+  {
+    type: "Design",
+    summary: "How a real system meets a design requirement.",
+    slug: "jinja-design-001",
+    repo: "pallets/jinja",
+    title: "Reading a key in an LRU cache",
+    prompt:
+      "Interview question: design a least-recently-used (LRU) cache with a fixed capacity, where reading a key makes it the most recently used one. Jinja keeps loaded templates in such a cache, LRUCache in src/jinja2/utils.py. …",
+    answer: "One of several listed options, a function or class, a range of lines, or a set of them.",
+    format: "<option-id>, or path/to/file.py#Class.method",
   },
 ];

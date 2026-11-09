@@ -40,7 +40,7 @@ test.describe("profile", () => {
     await expect(visible(page, "profile-identity").getByRole("heading", { level: 1 })).toHaveText(login);
     await expect(visible(page, "profile-provider")).toHaveText(/Local development account/);
     await expect(page.getByTestId("profile-github-link")).toHaveCount(0);
-    await expect(visible(page, "stats-total")).toContainText("0 of 7");
+    await expect(visible(page, "stats-total")).toContainText("0 of 8");
     await expect(visible(page, "summary-completion")).toContainText("0%");
     await expect(visible(page, "summary-submissions")).toContainText("0");
     await expect(visible(page, "streak-current")).toHaveText("0 days");
@@ -91,7 +91,7 @@ test.describe("profile", () => {
     await answerChoice(page, "config");
     await answerChoice(page, "router");
     await page.goto("/profile");
-    await expect(visible(page, "stats-total")).toContainText("1 of 7");
+    await expect(visible(page, "stats-total")).toContainText("1 of 8");
     await expect(page.getByTestId("unfinished-e2e-arch-choice")).toHaveCount(0);
     await expect(visible(page, "continue-empty")).toContainText("Every puzzle you've attempted is solved");
   });
@@ -275,7 +275,7 @@ test.describe("profile", () => {
     }
     await page.goto("/profile");
     await expect(visible(page, "summary-completion")).toContainText("100%");
-    await expect(visible(page, "stats-total")).toContainText("7 of 7");
+    await expect(visible(page, "stats-total")).toContainText("8 of 8");
     await expect(visible(page, "continue-empty")).toContainText("solved every available puzzle");
   });
 

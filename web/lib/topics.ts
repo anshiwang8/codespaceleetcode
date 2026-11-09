@@ -56,6 +56,10 @@ export const TOPICS = {
     label: "State management",
     description: "Stores, reducers, actions and thunks.",
   },
+  "caching-and-storage": {
+    label: "Caching and storage",
+    description: "Keeping data to use later: caches, key-value stores, eviction and expiry.",
+  },
   observables: {
     label: "Observables",
     description: "Streams of values, the operators that transform them, and subscriptions.",

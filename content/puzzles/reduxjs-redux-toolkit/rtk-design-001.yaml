@@ -1,0 +1,33 @@
+id: rtk-design-001
+snapshot: reduxjs-redux-toolkit@0fd611c
+type: design
+difficulty: hard
+title: Coming back before a cache entry expires
+prompt: |
+  Interview question: design a client-side cache for API responses that keeps
+  an entry for a grace period after its last user goes away, and then frees it.
+
+  In RTK Query this is `buildCacheCollectionHandler` in
+  packages/toolkit/src/query/core/buildMiddleware/cacheCollection.ts. A query's
+  only subscriber unsubscribes, and `keepUnusedDataFor` is 60 seconds for that
+  endpoint. 30 seconds later a new component subscribes to the same query, with
+  the same cache key, and stays subscribed. What happens to the cache entry at
+  the 60-second mark? Select one option.
+answer:
+  kind: choice
+  option: c
+choices:
+  - id: a
+    label: It is removed, because the removal timer started when the last subscriber left and nothing stops it.
+  - id: b
+    label: Nothing happens then, because adding the new subscription canceled the pending removal timer.
+  - id: c
+    label: The removal timer still fires, finds a subscription for the cache key, and leaves the entry in place.
+  - id: d
+    label: Nothing happens then, because the entry was removed as soon as the last subscriber left and the new subscriber's request filled it again.
+hints:
+  - Look at which actions make the handler call handleUnsubscribe, and at what the timer's callback checks before it removes anything.
+solution: solutions/rtk-design-001.md
+tags: [caching-and-storage, state-management]
+authors: [agent-author-design]
+verified_by: [agent:blind-design-1]

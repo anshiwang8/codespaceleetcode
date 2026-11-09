@@ -53,7 +53,7 @@ test.describe("puzzle list", () => {
     await expect(visible(page, "difficulty-hard")).toHaveAttribute("aria-current", "true");
     await expect(visible(page, "puzzle-row-e2e-arch-set")).toBeVisible();
     await expect(visible(page, "puzzle-row-e2e-find-symbol")).toHaveCount(0);
-    await expect(visible(page, "puzzle-count")).toHaveText("2 of 7 puzzles");
+    await expect(visible(page, "puzzle-count")).toHaveText("2 of 8 puzzles");
 
     // The other filters narrow the strip's counts, so each says what clicking it would show.
     await page.goto("/puzzles?difficulty=hard&type=find");
@@ -68,7 +68,7 @@ test.describe("puzzle list", () => {
   test("the topic drop-down filters by topic, by its label", async ({ page }) => {
     await page.goto("/puzzles");
     const topic = page.getByRole("combobox", { name: "Topic" });
-    await expect(topic.locator("option")).toHaveText(["All topics", "Routing", "Configuration and defaults", "Auth and security", "Code structure"]);
+    await expect(topic.locator("option")).toHaveText(["All topics", "Routing", "Configuration and defaults", "Caching and storage", "Auth and security", "Code structure"]);
 
     await topic.selectOption({ label: "Code structure" });
     await expect(page).toHaveURL(/tag=code-structure/);
@@ -92,6 +92,7 @@ test.describe("puzzle list", () => {
       "From start to match",
       "The byte limits",
       "What the router needs",
+      "Where a cached limit is read",
       "Where a path is matched",
       "Where limits live",
       "Who owns the port",
@@ -106,7 +107,7 @@ test.describe("puzzle list", () => {
     // Difficulty goes easiest first, not alphabetically.
     await visible(page, "sort-difficulty").click();
     await expect(page.locator("tbody tr td:nth-child(4)")).toHaveText([
-      "Easy", "Easy", "Easy", "Medium", "Medium", "Hard", "Hard",
+      "Easy", "Easy", "Easy", "Medium", "Medium", "Medium", "Hard", "Hard",
     ]);
 
     // In groups, each section is sorted, and changing the grouping keeps the sort.
@@ -150,7 +151,7 @@ test.describe("puzzle list", () => {
 
     await page.goto("/puzzles?group=none");
     await expect(page.locator("section[data-testid^='group-']")).toHaveCount(0);
-    await expect(page.getByRole("row")).toHaveCount(8); // Header and seven puzzles.
+    await expect(page.getByRole("row")).toHaveCount(9); // Header and eight puzzles.
 
     await page.goto("/puzzles?group=bogus");
     await expect(visible(page, "group-by-difficulty")).toHaveAttribute("aria-current", "true");
@@ -171,7 +172,7 @@ test.describe("puzzle list", () => {
     await page.goto("/puzzles");
     await expect(visible(page, "puzzle-row-e2e-arch-choice")).toContainText("Solved");
     await expect(visible(page, "puzzle-row-e2e-find-file")).toContainText("Not started");
-    await expect(visible(page, "puzzle-count")).toHaveText("7 puzzles, 1 solved");
+    await expect(visible(page, "puzzle-count")).toHaveText("8 puzzles, 1 solved");
     await expect(visible(page, "difficulty-easy")).toContainText("1 of 3 solved");
     await expect(visible(page, "group-easy")).toContainText("1 of 3 solved");
   });
@@ -231,7 +232,7 @@ test.describe("dev sign-in and profile", () => {
     await page.goto("/profile");
     await expect(visible(page, "profile-signed-out")).toBeVisible();
     await visible(page, "profile-signed-out").getByRole("button", { name: /Local dev sign-in/ }).click();
-    await expect(visible(page, "stats-total")).toContainText("0 of 7");
+    await expect(visible(page, "stats-total")).toContainText("0 of 8");
 
     await openPuzzle(page, "e2e-find-file");
     await openFile(page, FILES.config);
@@ -239,7 +240,7 @@ test.describe("dev sign-in and profile", () => {
     await submitAndExpect(page, true);
 
     await page.goto("/profile");
-    await expect(visible(page, "stats-total")).toContainText("1 of 7");
+    await expect(visible(page, "stats-total")).toContainText("1 of 8");
     await expect(visible(page, "stats-row-find").getByTestId("solved-count")).toHaveText("1");
     await expect(visible(page, "stats-row-trace").getByTestId("solved-count")).toHaveText("0");
     await expect(visible(page, "stats-row-easy").getByTestId("solved-count")).toHaveText("1");

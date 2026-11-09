@@ -1,0 +1,34 @@
+id: unstorage-design-001
+snapshot: unjs-unstorage@5781aae
+type: design
+difficulty: medium
+title: Batch writes across two backends
+prompt: |
+  Interview question: design a key-value store that sends each key to one of
+  several storage backends by its prefix, and lets a caller write many keys in
+  one call.
+
+  unstorage does this with mounts. A storage made by `createStorage` in
+  src/storage.ts has two mounts, at `a` and at `b`. The driver mounted at `a`
+  implements `setItems`. The driver mounted at `b` implements `setItem` but not
+  `setItems`. A caller passes the storage's `setItems` a list of keys, each one
+  under `a:` or under `b:`, with some of each. Which describes the driver calls
+  that follow? Select one option.
+answer:
+  kind: choice
+  option: c
+choices:
+  - id: a
+    label: One setItems call on the `a` driver with every key in the list, the `b:` keys included.
+  - id: b
+    label: One setItem call per key on both drivers, because the `b` driver has no setItems.
+  - id: c
+    label: One setItems call on the `a` driver with the `a:` keys, and one setItem call per `b:` key on the `b` driver, with both drivers' writes in flight at the same time.
+  - id: d
+    label: One setItems call on the `a` driver with the `a:` keys, then, once it resolves, one setItem call per `b:` key on the `b` driver, one after another.
+hints:
+  - Read the helper inside createStorage that setItems hands its list to, and how it groups the items before calling back.
+solution: solutions/unstorage-design-001.md
+tags: [caching-and-storage]
+authors: [agent-author-design]
+verified_by: [agent:blind-design-1]

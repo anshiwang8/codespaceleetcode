@@ -21,14 +21,14 @@
     "id": {
       "description": "<repo-short>-<type>-<nnn>",
       "type": "string",
-      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*-(find|trace|architecture)-[0-9]{3}$"
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*-(find|trace|architecture|design)-[0-9]{3}$"
     },
     "snapshot": {
       "description": "<slug>@<sha or sha prefix of at least 7>, which must exist in content/repos.yaml",
       "type": "string",
       "pattern": "^[a-z0-9][a-z0-9._-]*@[0-9a-f]{7,40}$"
     },
-    "type": { "enum": ["find", "trace", "architecture"] },
+    "type": { "enum": ["find", "trace", "architecture", "design"] },
     "difficulty": { "enum": ["easy", "medium", "hard"] },
     "title": { "$ref": "#/$defs/text" },
     "prompt": { "$ref": "#/$defs/text" },
@@ -70,6 +70,7 @@
           "extension-points",
           "configuration",
           "state-management",
+          "caching-and-storage",
           "observables",
           "auth-and-security",
           "code-structure",
@@ -126,6 +127,10 @@
       "then": { "$ref": "#/$defs/architectureAnswers" }
     },
     {
+      "if": { "$ref": "#/$defs/isDesign" },
+      "then": { "$ref": "#/$defs/designAnswers" }
+    },
+    {
       "if": { "$ref": "#/$defs/isChoice" },
       "then": { "required": ["choices"] },
       "else": { "not": { "required": ["choices"] } }
@@ -158,6 +163,10 @@
       "required": ["type"],
       "properties": { "type": { "const": "architecture" } }
     },
+    "isDesign": {
+      "required": ["type"],
+      "properties": { "type": { "const": "design" } }
+    },
     "isChoice": {
       "required": ["answer"],
       "properties": {
@@ -180,6 +189,11 @@
     "architectureAnswers": {
       "properties": {
         "answer": { "properties": { "kind": { "enum": ["set", "symbol", "file", "choice"] } } }
+      }
+    },
+    "designAnswers": {
+      "properties": {
+        "answer": { "properties": { "kind": { "enum": ["choice", "symbol", "location", "set"] } } }
       }
     },
     "answer": {

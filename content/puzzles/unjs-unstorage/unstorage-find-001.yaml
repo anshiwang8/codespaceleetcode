@@ -16,6 +16,6 @@ answer:
 hints:
   - Open getKeys in src/storage.ts and look at what happens to allKeys just before it is returned.
 solution: solutions/unstorage-find-001.md
-tags: [code-structure]
+tags: [code-structure, caching-and-storage]
 authors: [agent-author-unstorage-axios]
 verified_by: [agent:blind-11]

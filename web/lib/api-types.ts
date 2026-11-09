@@ -6,7 +6,9 @@ import type { ThemePreference } from "@/lib/themes/runtime";
 
 export type { ProfileLinks, ThemePreference };
 
-export type PuzzleType = "find" | "trace" | "architecture";
+/** In the order the site lists them. */
+export const PUZZLE_TYPES = ["find", "trace", "architecture", "design"] as const;
+export type PuzzleType = (typeof PUZZLE_TYPES)[number];
 export type Difficulty = "easy" | "medium" | "hard";
 export type AnswerKind = "symbol" | "file" | "location" | "sequence" | "set" | "choice";
 export type PuzzleStatus = "unsolved" | "attempted" | "solved";

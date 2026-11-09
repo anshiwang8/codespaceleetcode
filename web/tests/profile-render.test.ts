@@ -24,7 +24,7 @@ const progress: ProfileProgress = {
   total: 10,
   completionPercent: 30,
   submissions: 12,
-  byType: { find: emptyCount, trace: emptyCount, architecture: emptyCount },
+  byType: { find: emptyCount, trace: emptyCount, architecture: emptyCount, design: emptyCount },
   byDifficulty: { easy: emptyCount, medium: emptyCount, hard: emptyCount },
   byRepo: [],
   byTopic: [],

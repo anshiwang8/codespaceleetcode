@@ -1,5 +1,24 @@
 # DEVLOG
 
+## Design puzzles, and a v2 plan for Build puzzles
+
+Type: Addition
+
+Goal: Practice the system-design side of coding interviews ("design an LRU cache", "design a key-value store") with puzzles that still have one checkable answer, and write down how a hands-on "build the system" round could work later.
+
+What should be done: Add a fourth puzzle type, Design, that takes an interview-style design question and asks how a real implementation meets one requirement of it, graded by ID like every other puzzle. Write the first Design puzzles. Plan Build puzzles, where users write code that hidden tests grade, as v2 in the spec, since v1 runs no code.
+
+What was done (technical):
+
+- New type `design` in `content/schema/puzzle.schema.json` (IDs `<repo>-design-<nnn>`; answer kinds `choice`, `symbol`, `location` and `set`), and migration `0008_design_puzzles.sql`, which replaces the check on `puzzles.type`. Grading, the validator and the blind solve are unchanged.
+- The web app keeps the type list in one place, `PUZZLE_TYPES` in `web/lib/api-types.ts`, used by the list page's and API routes' zod filters, stats and the profile's breakdowns. `TYPE_LABELS` adds "Design". The landing page says "Four kinds of puzzle", quotes `jinja-design-001`, lays the cards out two by two, and its hero names design requirements.
+- New topic `caching-and-storage` ("Caching and storage") in the schema and `web/lib/topics.ts`. The six earlier unstorage puzzles and `ajv-architecture-003` (the schema cache) are tagged with it, which closes the known issue that unstorage didn't fit the topics.
+- Five Design puzzles with solutions: `jinja-design-001` (the cost of a read in Jinja's LRU cache), `unstorage-design-001` (a batch write across two backends), `rtk-design-001` (a subscriber returning before RTK Query's cache entry expires), `vue-design-001` (which deps run when a reactive array is shortened) and `rxjs-design-001` (subscribing while a Subject delivers a value). A separate agent solved all five blind from `blind-export` and the snapshot files only, and passed each on its first attempt (`agent:blind-design-1`).
+- Tests: a must-pass validator fixture for a Design location puzzle and a must-fail one for a Design puzzle with a sequence answer; an e2e Design puzzle solved from its options, with the fixture counts moved from 7 to 8; the stats test expects a `design` count.
+- Spec: section 2 defines Design and how it differs from Architecture; section 15 is the v2 plan for Build puzzles (levels, a fixed interface, hidden tests, a separate sandbox, limits, data model, validator checks, work items B1 to B8, open decisions). Sections 1, 4, 8, 10, 11 and 14 updated. CLAUDE.md describes the four types, the Design prompt convention, and that Build stays unbuilt until rules 2, 3 and 8 change.
+
+Still open: Build puzzles (spec section 15, starting with decision B1). The new puzzles' blind solves were done by an agent, like the rest, so they're part of M6.
+
 ## A more rigorous and detailed privacy policy
 
 Type: Change

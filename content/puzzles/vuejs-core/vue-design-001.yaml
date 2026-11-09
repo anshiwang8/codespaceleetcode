@@ -1,0 +1,26 @@
+id: vue-design-001
+snapshot: vuejs-core@24c9d0b
+type: design
+difficulty: medium
+title: Truncating a reactive array
+prompt: |
+  Interview question: design a reactive state system where an effect runs again
+  only when data it read has changed. One requirement: shortening an array by
+  assigning a smaller `length` must run again the effects that read the length,
+  iterated over the array, or read an index that was removed, but not effects
+  that only read indexes that are still there.
+
+  In packages/reactivity/src/dep.ts, `trigger` chooses which deps to run for a
+  change. Select the lines in `trigger` that choose the deps to run when an
+  array's `length` is assigned. Select the lines.
+answer:
+  kind: location
+  path: packages/reactivity/src/dep.ts
+  anchor: [339, 344]
+  window: [333, 347]
+hints:
+  - Deps are stored per key, and an array's indexes are keys too. Find the branch that compares keys with the new length.
+solution: solutions/vue-design-001.md
+tags: [reactivity]
+authors: [agent-author-design]
+verified_by: [agent:blind-design-1]

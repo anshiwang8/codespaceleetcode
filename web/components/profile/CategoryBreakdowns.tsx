@@ -1,11 +1,10 @@
 import { ProgressBreakdown } from "@/components/profile/ProgressBreakdown";
 import styles from "@/components/profile/profile.module.css";
-import type { Difficulty, ProfileProgress, PuzzleType } from "@/lib/api-types";
+import { PUZZLE_TYPES, type Difficulty, type ProfileProgress } from "@/lib/api-types";
 import { browseHref, DEFAULT_GROUPING } from "@/lib/browse";
 import { DIFFICULTY_LABELS, TYPE_LABELS } from "@/lib/client/labels";
 import { topicLabel } from "@/lib/topics";
 
-const TYPES: PuzzleType[] = ["find", "trace", "architecture"];
 const DIFFICULTIES: Difficulty[] = ["easy", "medium", "hard"];
 
 /** Progress by type, difficulty, repository and topic. Each category links to the filtered list. */
@@ -15,7 +14,7 @@ export function CategoryBreakdowns({ progress }: { progress: ProfileProgress }) 
       <ProgressBreakdown
         id="type"
         title="By type"
-        rows={TYPES.map((type) => ({
+        rows={PUZZLE_TYPES.map((type) => ({
           key: type,
           label: TYPE_LABELS[type],
           href: browseHref({ filters: { type }, group: DEFAULT_GROUPING }),

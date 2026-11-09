@@ -4,6 +4,7 @@ export const TYPE_LABELS: Record<PuzzleType, string> = {
   find: "Find",
   trace: "Trace",
   architecture: "Architecture",
+  design: "Design",
 };
 
 export const DIFFICULTY_LABELS: Record<Difficulty, string> = {

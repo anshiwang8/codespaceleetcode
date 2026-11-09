@@ -10,7 +10,7 @@ import {
   visible,
 } from "./helpers";
 
-// One test per answer kind, across all three puzzle types, solved only by clicking.
+// One test per answer kind, across all four puzzle types, solved only by clicking.
 
 test.describe("solving", () => {
   test("Find with a symbol, from the symbol under the cursor", async ({ page }) => {
@@ -166,6 +166,15 @@ test.describe("solving", () => {
     await page.getByRole("radio", { name: "The config module" }).check();
     await submitAndExpect(page, true);
     await expect(page.getByTestId("result")).toContainText("Attempt 2");
+  });
+
+  test("Design with a choice, from radio options", async ({ page }) => {
+    await openPuzzle(page, "e2e-design-choice");
+    await signIn(page);
+    await expect(page.locator(".chip").filter({ hasText: /^Design$/ })).toBeVisible();
+    await page.getByRole("radio", { name: "A module-level constant in the config module" }).check();
+    await submitAndExpect(page, true);
+    await expect(page.getByTestId("puzzle-status")).toHaveText("Solved");
   });
 });
 

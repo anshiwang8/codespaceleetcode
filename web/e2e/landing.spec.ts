@@ -41,10 +41,10 @@ test.describe("landing page", () => {
     await expect(page.locator("input[type='password']")).toHaveCount(0);
   });
 
-  test("explains the three puzzle types with real puzzles, and ends with a specific next step", async ({ page }) => {
+  test("explains the four puzzle types with real puzzles, and ends with a specific next step", async ({ page }) => {
     await page.goto("/");
     const types = page.locator("#types");
-    for (const name of ["Find", "Trace", "Architecture"]) {
+    for (const name of ["Find", "Trace", "Architecture", "Design"]) {
       await expect(types.getByRole("heading", { name, level: 3, exact: true })).toBeVisible();
     }
     await expect(types.getByRole("link", { name: "The strict-routing switch" })).toHaveAttribute("href", "/puzzles/hono-find-001");
