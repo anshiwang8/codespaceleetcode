@@ -32,6 +32,6 @@ answer:
 hints:
   - getItem asks for the binding before it touches the key-value store. Follow that call into src/drivers/utils/.
 solution: solutions/unstorage-trace-001.md
-tags: [errors, validation]
+tags: [errors, validation, caching-and-storage]
 authors: [agent-author-unstorage-axios]
 verified_by: [agent:blind-12]

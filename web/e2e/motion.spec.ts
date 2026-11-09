@@ -86,7 +86,7 @@ test("rapid group toggles, keyboard focus, filter pending, and navigation interr
   await expect(page.locator("[aria-busy=true]")).toBeVisible();
   expect(await select.boundingBox()).toEqual(before);
   release();
-  await expect(page.getByTestId("puzzle-count").filter({ visible: true })).toContainText("1 of 7");
+  await expect(page.getByTestId("puzzle-count").filter({ visible: true })).toContainText("1 of 8");
   await expect(page.locator("[aria-busy=true]")).toHaveCount(0);
   await settled(page);
   await page.unrouteAll({ behavior: "wait" });
@@ -104,7 +104,7 @@ test("profile progress, appended history, confirmation focus, and reduced-motion
   await fixtureAccount(page, true, "motion-profile");
   await page.goto("/profile");
   await ready(page);
-  await expect(page.getByTestId("stats-total").filter({ visible: true })).toContainText("1 of 7");
+  await expect(page.getByTestId("stats-total").filter({ visible: true })).toContainText("1 of 8");
   await settled(page);
   expect(await recorded(page)).toContain("motion-enter");
   const fill = page.getByRole("progressbar", { name: "Completion", exact: true }).locator(".progress-fill");

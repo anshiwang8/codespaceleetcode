@@ -34,6 +34,6 @@ choices:
 hints:
   - Work out the order in which getKeys visits the two mounts, and what maskedMounts holds when it reaches the second one.
 solution: solutions/unstorage-architecture-001.md
-tags: [routing, code-structure]
+tags: [routing, code-structure, caching-and-storage]
 authors: [agent-author-unstorage-axios]
 verified_by: [agent:blind-11]

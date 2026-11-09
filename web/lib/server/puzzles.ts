@@ -1,15 +1,16 @@
 import "server-only";
 import { z } from "zod";
-import type {
-  AnswerKind,
-  ChoiceOption,
-  Difficulty,
-  PuzzleDetail,
-  PuzzleListResponse,
-  PuzzleStatus,
-  PuzzleSummary,
-  PuzzleType,
-  StatsResponse,
+import {
+  PUZZLE_TYPES,
+  type AnswerKind,
+  type ChoiceOption,
+  type Difficulty,
+  type PuzzleDetail,
+  type PuzzleListResponse,
+  type PuzzleStatus,
+  type PuzzleSummary,
+  type PuzzleType,
+  type StatsResponse,
 } from "@/lib/api-types";
 import { getPool } from "@/lib/server/db";
 
@@ -185,7 +186,6 @@ export async function getSolution(userId: string, slug: string): Promise<Solutio
   return body === undefined ? { state: "not_found" } : { state: "ok", bodyMd: body };
 }
 
-const PUZZLE_TYPES: PuzzleType[] = ["find", "trace", "architecture"];
 const DIFFICULTIES: Difficulty[] = ["easy", "medium", "hard"];
 
 /** Counts puzzles with status `solved`. */

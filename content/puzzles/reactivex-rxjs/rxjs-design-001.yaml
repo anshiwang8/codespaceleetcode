@@ -1,0 +1,32 @@
+id: rxjs-design-001
+snapshot: reactivex-rxjs@54796b3
+type: design
+difficulty: easy
+title: Subscribing during delivery
+prompt: |
+  Interview question: design a publish/subscribe event bus. One edge case to
+  handle: a subscriber's handler adds another subscriber while a value is being
+  delivered.
+
+  In packages/rxjs/src/subject.ts, a `Subject` has two subscribers, A and B,
+  subscribed in that order. When A receives a value, its handler subscribes a
+  third subscriber, C, to the same Subject. Then `next(1)` is called once. Which
+  subscribers receive 1? Select one option.
+answer:
+  kind: choice
+  option: b
+choices:
+  - id: a
+    label: Only A, because subscribing during next stops delivery of the current value.
+  - id: b
+    label: A and B. C is not sent 1, because next loops over a copy of the subscribers made before the loop starts.
+  - id: c
+    label: A, B and C, because next loops over the Set of subscribers itself, and a Set's iterator also visits entries added during the loop.
+  - id: d
+    label: A, B and then C, because subscribers added during next are queued and sent the current value once the loop ends.
+hints:
+  - Read the loop in Subject.next, and what it loops over.
+solution: solutions/rxjs-design-001.md
+tags: [observables]
+authors: [agent-author-design]
+verified_by: [agent:blind-design-1]

@@ -230,5 +230,27 @@
       "passed": true,
       "version": "d006325935df59ce8f2dfe1dfd65016b44ffab3e2927f3dc14d07eb9bb6add21"
     }
+  },
+  "agent:blind-design-1": {
+    "jinja-design-001": {
+      "passed": true,
+      "version": "207be3cbfd8f4fe979b55220ca7ef07c4fc263efba0448a9f2552b66a387ffa9"
+    },
+    "rtk-design-001": {
+      "passed": true,
+      "version": "a188943d5e0c5850ba15b35b0af0ea52572fb630c939afc86578f538cbf4d366"
+    },
+    "rxjs-design-001": {
+      "passed": true,
+      "version": "0f7251d341fe905a9301659325396f77a890a7279f66534966ec5bce68f4642f"
+    },
+    "unstorage-design-001": {
+      "passed": true,
+      "version": "5c62e567f40bb107420ee520c9c8f9e029e81ba1ffc0296ff968c7d31112c992"
+    },
+    "vue-design-001": {
+      "passed": true,
+      "version": "306ef6715fce7db24da4a5dc25a36079261279e3dcbb260e30cd71cc4a084175"
+    }
   }
 }

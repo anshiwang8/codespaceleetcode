@@ -281,6 +281,7 @@ describe.skipIf(!hasDatabase)("puzzle reads", () => {
           find: { solved: 1, total: 4 },
           trace: { solved: 0, total: 1 },
           architecture: { solved: 0, total: 2 },
+          design: { solved: 0, total: 0 },
         },
         byDifficulty: {
           easy: { solved: 1, total: 3 },

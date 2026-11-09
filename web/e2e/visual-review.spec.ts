@@ -47,7 +47,7 @@ for (const width of [375, 768, 1440]) {
     await page.goto("/"); await capture("landing");
     await page.goto("/puzzles"); await capture("puzzles");
     await page.getByRole("combobox", { name: "Type" }).selectOption("trace");
-    await expect(page.getByTestId("puzzle-count").filter({ visible: true })).toContainText("1 of 7");
+    await expect(page.getByTestId("puzzle-count").filter({ visible: true })).toContainText("1 of 8");
     await capture("puzzles-filtered");
     await page.goto("/puzzles?repo=visual-empty");
     await expect(page.getByTestId("no-matches").filter({ visible: true })).toBeVisible();
@@ -57,11 +57,11 @@ for (const width of [375, 768, 1440]) {
     await capture("profile-signed-out");
     await fixtureAccount(page);
     await page.goto("/profile");
-    await expect(page.getByTestId("stats-total").filter({ visible: true })).toContainText("0 of 7");
+    await expect(page.getByTestId("stats-total").filter({ visible: true })).toContainText("0 of 8");
     await capture("profile-new");
     await fixtureAccount(page, true, "visual-username-with-39-charactersxxxxx");
     await page.goto("/profile");
-    await expect(page.getByTestId("stats-total").filter({ visible: true })).toContainText("1 of 7");
+    await expect(page.getByTestId("stats-total").filter({ visible: true })).toContainText("1 of 8");
     await capture("profile-populated");
     await page.goto("/settings");
     await expect(page.getByTestId("details-form")).toBeVisible();
@@ -146,7 +146,7 @@ for (const width of [375, 768, 1440]) {
     await solveEverything(allLogin);
     await withLongRepository(allLogin, async () => {
       await page.goto("/profile");
-      await expect(page.getByTestId("profile-summary").filter({ visible: true })).toContainText("87%"); // 7 of 8, rounded down
+      await expect(page.getByTestId("profile-summary").filter({ visible: true })).toContainText("88%"); // 8 of 9, rounded down
       await expect(page.getByText(LONG_REPO).first()).toBeVisible();
       await capture("profile-long-names-sparse");
     });

@@ -17,6 +17,6 @@ answer:
 hints:
   - Look outside src/.
 solution: solutions/unstorage-architecture-003.md
-tags: [extension-points, code-structure]
+tags: [extension-points, code-structure, caching-and-storage]
 authors: [agent-author-unstorage-axios]
 verified_by: [agent:blind-11]

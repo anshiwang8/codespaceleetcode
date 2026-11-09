@@ -1,0 +1,31 @@
+id: jinja-design-001
+snapshot: pallets-jinja@5ef7011
+type: design
+difficulty: easy
+title: Reading a key in an LRU cache
+prompt: |
+  Interview question: design a least-recently-used (LRU) cache with a fixed
+  capacity, where reading a key makes it the most recently used one.
+
+  Jinja keeps loaded templates in such a cache, `LRUCache` in src/jinja2/utils.py.
+  Its `__getitem__` is called for a key that is in the cache but is not the most
+  recently used one. With n keys in the cache, what does that call cost, and why?
+  Select one option.
+answer:
+  kind: choice
+  option: b
+choices:
+  - id: a
+    label: "O(1): the deque moves the key to its right end in constant time."
+  - id: b
+    label: "O(n): the key is found and removed from the deque by a linear scan, then appended at the right end."
+  - id: c
+    label: "O(log n): the deque is kept sorted by last access time, so the key is found by binary search."
+  - id: d
+    label: "O(1) amortized: the key is appended again, and its stale earlier entry is skipped later, when the cache evicts."
+hints:
+  - "`_postinit` gives some of the deque's methods short names. Find out which deque method `_remove` is."
+solution: solutions/jinja-design-001.md
+tags: [caching-and-storage]
+authors: [agent-author-design]
+verified_by: [agent:blind-design-1]

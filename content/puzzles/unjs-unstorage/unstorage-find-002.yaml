@@ -20,6 +20,6 @@ answer:
 hints:
   - The order is not fixed at lookup time. Look at what happens when a driver is added.
 solution: solutions/unstorage-find-002.md
-tags: [routing]
+tags: [routing, caching-and-storage]
 authors: [agent-author-unstorage-axios]
 verified_by: [agent:blind-11]

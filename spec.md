@@ -2,7 +2,7 @@
 
 A LeetCode-style site where every puzzle is set in a real open-source repository, pinned to a commit. Users read the code in a browser IDE and submit a precise answer, which is graded automatically. Each puzzle comes with a written solution.
 
-Scope for v1: **Find**, **Trace**, and **Architecture** puzzles. No code execution, no bug fixing, no AI mode.
+Scope for v1: **Find**, **Trace**, **Architecture** and **Design** puzzles. No code execution, no bug fixing, no AI mode. **Build** puzzles, where users write and run code, are a v2 plan (section 15), not part of v1.
 
 ---
 
@@ -36,6 +36,14 @@ Follow execution or data flow between two fixed points.
 Understand structure: module responsibilities, boundaries, dependencies, extension points.
 - Examples: "Select every module that imports the session store directly." "To add a new compression codec, which single file would you register it in?"
 - Answer kinds: `set`, `symbol`, `file`, `choice`.
+
+### Design
+Take a system-design question of the kind asked in coding interviews, and answer one requirement of it from a real implementation: which data structure the code uses and what an operation costs, what happens in an edge case, or which lines enforce an invariant.
+- Examples: "Design an LRU cache. What does reading a key that isn't the most recent one cost in Jinja's `LRUCache`, and why?" "Design a key-value store that spreads keys over several backends. When a batch write spans two backends, which driver calls does unstorage make?" "Design a reactive state system. Select the lines that decide which effects run again when an array is shortened."
+- Answer kinds: `choice`, `symbol`, `location`, `set`.
+- The prompt opens with `Interview question:`, the system to design and the one requirement the puzzle is about, then names where the real implementation lives and asks one question about it. Users still select their answer, and it's still graded by ID: a Design puzzle never asks the user to write a design or code.
+- Where Architecture asks how modules divide the work (who imports what, where a new piece is registered), Design asks how a mechanism behaves and what it costs. The answer must follow from the code, plus documented behavior of the language and its standard library (that `deque.remove` scans, that a `Set`'s iterator visits entries added during the loop). A choice that turns on anything else, such as a benchmark or a guess about intent, doesn't belong.
+- A solution explains the code and also what a strong interview answer would say: the trade-off this implementation makes and the usual alternative.
 
 ---
 
@@ -93,7 +101,7 @@ Difficulty measures how much navigation and reasoning the answer takes, not how 
 
 `tags` holds 1 to 3 topics from a fixed list, and the schema rejects anything else. The site groups and filters by topic, so a tag used on one puzzle would be a filter with one result. Each topic's label and description are in `web/lib/topics.ts`, and a web test checks that list against the schema's enum. To add a topic, add it to both and retag the puzzles it covers.
 
-`routing`, `middleware`, `request-lifecycle`, `errors`, `http-clients`, `retries-and-timeouts`, `reactivity`, `compilers`, `validation`, `dependency-injection`, `extension-points`, `configuration`, `state-management`, `observables`, `auth-and-security`, `code-structure`, `command-line`.
+`routing`, `middleware`, `request-lifecycle`, `errors`, `http-clients`, `retries-and-timeouts`, `reactivity`, `compilers`, `validation`, `dependency-injection`, `extension-points`, `configuration`, `state-management`, `caching-and-storage`, `observables`, `auth-and-security`, `code-structure`, `command-line`.
 
 ### Puzzle file format
 
@@ -102,7 +110,7 @@ One YAML file per puzzle at `content/puzzles/<repo-slug>/<puzzle-id>.yaml`, vali
 ```yaml
 id: hono-find-003
 snapshot: honojs-hono@17ad0e2                # must exist in content/repos.yaml
-type: find                                    # find | trace | architecture
+type: find                                    # find | trace | architecture | design
 difficulty: easy                              # easy | medium | hard
 title: Trailing slash decision
 prompt: |
@@ -317,7 +325,7 @@ email_verifications (id, user_id, email, purpose, token_hash, expires_at,
                      consumed_at, created_at)                                     -- purpose: setup | change
 ```
 
-Migration 0007 adds the five settings tables. Each row belongs to one user and is deleted with them; every table has row-level security on and no client grants, since only the server reads them.
+Migration 0007 adds the five settings tables. Migration 0008 adds `design` to the check on `puzzles.type`. Each row belongs to one user and is deleted with them; every table has row-level security on and no client grants, since only the server reads them.
 
 Hosted migrations are applied by `python -m ingest migrate`, which records each file and its SHA-256 in `migrations.applied`, a schema clients can't reach. It refuses to continue if an applied file changed, if files would apply out of order, or if the database has a migration the checkout doesn't. Locally, `scripts/localdb.mjs` does the same job with `public.schema_migrations`.
 
@@ -424,7 +432,7 @@ The site is named **codebases**. The logo is the word in Arial, with "bases" in 
 - **Landing page (`/`):** static, and renders without the database. The top bar has the logo once. The hero says what the product is ("Practice reading code you didn't write") and what a puzzle asks, with no claim about interview trends. "Browse puzzles" opens the list. "Sign in with GitHub" (described as "to submit answers and save progress") starts GitHub sign-in and returns to the list, or says so if this server has no GitHub OAuth app. A line says reading needs no account.
   - Right below is a worked example (`components/landing/CodeDemo.tsx`): a question, verbatim lines of `psf/requests` at the pinned commit `3c7baaa`, how you'd get there, the answer as a canonical ID, and the feedback. It's captioned as a static example that isn't a puzzle, has no control-like elements, and links to the file on GitHub at that commit. Its answer, `CaseInsensitiveDict`, and its file must not be any puzzle's answer; `web/tests/landing.test.ts` checks this.
   - "How a puzzle works" is four numbered steps beside "What it doesn't do": no code runs, no partial credit, no solution before solving, a laptop-size workspace, and blind second solves done so far by an agent.
-  - "Three kinds of puzzle" quotes one real published puzzle per type (`components/landing/examples.ts`), linking to it, with the answer shape and an ID format written with placeholders, never a real answer. The test checks each slug, title and quote against `content/puzzles`.
+  - "Four kinds of puzzle" quotes one real published puzzle per type, two by two (`components/landing/examples.ts`), linking to it, with the answer shape and an ID format written with placeholders, never a real answer. The test checks each slug, title and quote against `content/puzzles`.
   - "Why practice this" says some interviews test code reading and plenty still ask algorithm questions. It ends with "Try an easy Find puzzle", which opens the list filtered to easy Find puzzles.
 - **Puzzle list (`/puzzles`):** a title, the signed-in user's overall progress, then one panel with the difficulty strip, the filters and the grouping. Solved state per row, as an icon and text. With nothing published it says so, with no setup instructions; with no matches it offers to clear the filters. Below 860px each row becomes a card. Everything below lives in the URL (`type`, `difficulty`, `repo`, `tag`, `group`, `sort`), and the defaults are left out, so the plain list stays at `/puzzles`.
   - A difficulty strip: one bar split by difficulty, each segment's width its share of the puzzles and its filled part the share solved. Clicking a segment filters to that difficulty, and clicking it again clears the filter.
@@ -477,7 +485,7 @@ Motion uses shared CSS tokens in `web/app/globals.css`: 150ms control feedback, 
 
 ## 11. Non-goals for v1
 
-- Bug-fix puzzles and any code execution
+- Bug-fix puzzles and any code execution, including Build puzzles (section 15 is their v2 plan)
 - AI-assisted mode
 - User-submitted puzzles or private repos
 - Partial credit, leaderboards, contests
@@ -555,4 +563,69 @@ What's left before a public launch, as of 2026-11-06. When an item lands, mark i
 - A user stays `solved` if a puzzle's key later changes.
 - If a GitHub login is freed by a rename and someone else then takes that name, the new owner stays signed out until the old holder signs in again.
 - `hono-architecture-001`'s solution points at `hono-find-003`'s answer file. Fixing it needs a different scenario for one of the two puzzles.
-- Rich and unstorage don't fit the 17 topics well.
+- Rich doesn't fit the 18 topics well.
+
+---
+
+## 15. v2 plan: Build puzzles
+
+Not part of v1, and nothing here is built yet. Building any of it needs the decisions under "Open decisions" first, then changes to CLAUDE.md rules 2, 3 and 8 and to section 11, made in the same change that adds the first piece.
+
+### What a Build puzzle is
+
+The practical coding round some companies run: build a small working system from a written spec, in about 60 to 90 minutes, with the requirements arriving in levels. Each level builds on the code from the one before, so a design that was quick but messy gets harder to extend. Examples:
+
+- **In-memory database.** Level 1: `set`, `get` and `delete` on records with fields. Level 2: scan a record's fields, and filter them by prefix. Level 3: timestamps and TTL, so a field can expire. Level 4: backups and restores to an earlier point in time.
+- **Bank system.** Accounts, deposits and transfers; then ranking accounts by activity; then scheduled payments; then merging accounts.
+- **File storage.** Add, copy and get file sizes; then listing by prefix and largest files; then per-user quotas; then backup and restore.
+- **Rate limiter, LRU cache with TTL, task scheduler, simple order book.**
+
+A Build puzzle isn't set in a snapshot. It may name a real repository as further reading, for example a Design puzzle on the same system, and its solution may compare the reference solution with that repository's code.
+
+### How it works
+
+- **One fixed interface.** Each puzzle ships a starter file per language that declares a class and its method signatures, such as `InMemoryDB.set(timestamp, key, field, value)`. Tests call only that interface. Time is always a parameter, never the clock, so every test is deterministic.
+- **Levels unlock in order.** Level n + 1's spec is shown once level n passes. The user keeps one file and edits it.
+- **Run and submit.** "Run" runs the level's sample tests, which the user can read. "Submit" runs that level's hidden tests too, and the level passes only when all of them pass. A run reports how many tests passed and, for sample tests only, the expected and actual values. A hidden test's inputs are never shown, just as an answer key never is.
+- **Grading stays objective.** Tests compare return values exactly. No LLM grading, no style scoring, and no credit inside a level. A puzzle's score is the number of levels passed.
+- **Languages.** Python and TypeScript first, the two the site already covers.
+
+### Running untrusted code
+
+This is the reason Build isn't in v1. Users' code never runs on Vercel or on the database host.
+
+- **A separate sandbox service** runs each submission in a fresh, disposable microVM or gVisor container: either a hosted service (such as E2B, Modal sandboxes or a hosted Judge0) or a self-hosted runner on its own machine. Recommendation: start with a hosted microVM service, because it needs no machine to maintain, and keep the interface narrow (code, language, tests in; results out) so the provider can change.
+- **Limits per run:** no network, a read-only filesystem except a small temporary directory, an unprivileged user, 256 MB of memory, 10 seconds of CPU per level, 64 KB of output, and 64 KB of source. A run that hits a limit fails with that limit named.
+- **The test runner is ours.** It loads the user's file as a module, calls the interface, and reports results as structured data. Nothing the user's code prints can be mistaken for a result.
+- **Abuse.** Running needs sign-in. Runs are rate-limited in `rate_limits` (for example 10 a minute and 200 a day per user), and the sandbox call has its own timeout, so a stuck provider can't hold a serverless function open.
+
+### Data and content
+
+- `content/build/<id>/`: `puzzle.yaml` (title, difficulty, tags, languages, level count), `levels/<n>.md`, `starter/<lang>/`, `tests/<lang>/level_<n>_{sample,hidden}.*`, `reference/<lang>/` and `solution.md`.
+- New tables, following the RLS rule in section 8: `build_levels (puzzle_id, level, spec_md, sample_tests)` readable by the server only, and `build_runs (id, user_id, puzzle_id, level, language, source, passed, tests_passed, tests_total, duration_ms, created_at)`. Hidden tests and reference solutions are answer data under rule 1: they stay server-side like `answer_json`. A user's source is theirs: it's shown only to them, and deleted with the account. The privacy policy has to say so before launch.
+- **Validator checks for Build:** the reference solution passes every level in every language, and the reference for level n alone fails level n + 1, so each level asks for something new; an empty starter file fails every level; each test passes three runs in a row with the reference; each level has at least one sample and five hidden tests; the starter and the tests use the same interface.
+- Blind second solves still apply: a second person or agent builds the system from the specs alone, and their solution must pass. A level whose spec allowed two readings gets its spec fixed, never its tests loosened.
+
+### UI
+
+An editable Monaco editor with the starter file, the level spec beside it, level tabs locked until the earlier ones pass, Run and Submit, and per-test results. An optional timer counts the elapsed time but never stops the user. The workspace keeps its laptop-size minimum.
+
+### Work items
+
+| # | Task | Kind |
+|---|---|---|
+| B1 | Choose the sandbox provider, create the account and its billing, and decide the languages. | Manual |
+| B2 | A server-only runner client in `web/lib/server/` that calls the sandbox with limits and a timeout, with tests against a fake sandbox. | Code |
+| B3 | The test-runner harness per language, which loads user code and reports structured results. | Code |
+| B4 | The migration for `build_levels` and `build_runs`, with RLS and account deletion covering `build_runs`. | Code |
+| B5 | The content format, the validator checks above, and `ingest seed` support. | Code |
+| B6 | The editor workspace and level flow. | Code |
+| B7 | The first three puzzles: an in-memory database, a bank system and a file storage system, each with four levels. | Code |
+| B8 | Review the privacy policy and terms for stored source code and the sandbox provider. | Manual |
+
+### Open decisions
+
+- Which sandbox provider, and what it may cost per month at the expected number of runs.
+- Whether Build puzzles are free for everyone or need a limit per day.
+- Whether to show sample test failures only, or also the name of each failing hidden test (more helpful, but it leaks part of the key).
+- Whether a Build puzzle can be timed as a mock interview, and whether its time is shown on the profile.

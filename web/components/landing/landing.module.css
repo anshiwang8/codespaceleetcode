@@ -474,11 +474,11 @@
   color: var(--text-faint);
 }
 
-/* Puzzle types: three real puzzles, side by side for comparison. */
+/* Puzzle types: four real puzzles, two by two for comparison. */
 
 .types {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-4);
   margin-top: var(--space-5);
 }

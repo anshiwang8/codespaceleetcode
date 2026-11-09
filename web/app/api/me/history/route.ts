@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { HistoryPage } from "@/lib/api-types";
+import { PUZZLE_TYPES, type HistoryPage } from "@/lib/api-types";
 import { getCurrentUser } from "@/lib/server/auth";
 import { errorResponse, jsonResponse, positiveIntParam, queryParams, route, textValue } from "@/lib/server/http";
 import { getHistory, HISTORY_MAX_PAGE_SIZE } from "@/lib/server/profile";
@@ -17,7 +17,7 @@ const querySchema = z.strictObject({
   // A cursor from an earlier page: a submission id.
   before: z.string().regex(/^[1-9][0-9]{0,17}$/).optional(),
   limit: positiveIntParam.refine((value) => value <= HISTORY_MAX_PAGE_SIZE).optional(),
-  type: z.enum(["find", "trace", "architecture"]).optional(),
+  type: z.enum(PUZZLE_TYPES).optional(),
   difficulty: z.enum(["easy", "medium", "hard"]).optional(),
   repo: textValue(200).optional(),
   outcome: z.enum(["passed", "failed"]).optional(),

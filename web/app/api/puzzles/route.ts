@@ -1,10 +1,11 @@
 import { z } from "zod";
+import { PUZZLE_TYPES } from "@/lib/api-types";
 import { getCurrentUser } from "@/lib/server/auth";
 import { errorResponse, jsonResponse, queryParams, route, textValue } from "@/lib/server/http";
 import { listPuzzles } from "@/lib/server/puzzles";
 
 const filtersSchema = z.object({
-  type: z.enum(["find", "trace", "architecture"]).optional(),
+  type: z.enum(PUZZLE_TYPES).optional(),
   difficulty: z.enum(["easy", "medium", "hard"]).optional(),
   repo: textValue(200).optional(),
   tag: textValue(200).optional(),

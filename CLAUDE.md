@@ -4,7 +4,7 @@ Operational rules for working in this repo. Read `spec.md` before any non-trivia
 
 ## Project
 
-The site is named **codebases**. LeetCode-style puzzles set inside real open-source repos pinned to a commit. v1 has three puzzle types: Find, Trace, Architecture. Users navigate code in a browser IDE and submit a precise answer, which is graded server-side against a canonical answer key.
+The site is named **codebases**. LeetCode-style puzzles set inside real open-source repos pinned to a commit. v1 has four puzzle types: Find, Trace, Architecture, and Design (a system-design interview question answered from a real implementation, spec section 2). Users navigate code in a browser IDE and submit a precise answer, which is graded server-side against a canonical answer key.
 
 ## Layout
 
@@ -42,7 +42,7 @@ When a checklist item lands, mark it done in section 14 in the same change, alon
 5. **Every puzzle passes `pnpm validate`.** Never weaken a validator check to get a puzzle through. Use `validator_overrides` with a written reason, and only when the check is a false positive.
 6. **Uniqueness is fixed in the prompt, not the key.** If a puzzle has two plausible answers, tighten the prompt's scope. Only add to `accept` for truly equivalent answers (e.g. a re-export of the same function), with a reason in `accept_reasons`.
 7. **Code intelligence comes from SCIP.** Don't substitute name-based matching for definitions, references, or call edges. One narrow exception: scip-typescript leaves top-level `root.name = function () {}` undefined, so `ingest/src/ingest/convert.py` promotes those methods using SCIP's resolved root and the assignment syntax at that exact position. References still come only from SCIP's own locals, never from a name lookup. tree-sitter also answers position-only questions: whether a reference at a given spot is a type, decorator or base class, and whether a Python reference sits on a `def` or `class` name.
-8. **v1 scope only.** No code execution, bug-fix puzzles, or AI mode. If a task needs them, stop and flag it.
+8. **v1 scope only.** No code execution, bug-fix puzzles, or AI mode. If a task needs them, stop and flag it. Build puzzles (users write code that tests grade) are the v2 plan in spec section 15; build none of it until its open decisions are made and this rule and rules 2 and 3 are changed in the same change.
 
 ## Conventions
 
@@ -51,6 +51,7 @@ When a checklist item lands, mark it done in section 14 in the same change, alon
 - Python: type hints, `ruff` + `pyright` clean. Run with `uv run`.
 - Puzzle IDs: `<repo-short>-<type>-<nnn>`, e.g. `hono-trace-002`.
 - One concept per puzzle. If the prompt needs "and", split it.
+- A Design prompt opens with `Interview question:`, the system and the one requirement, then names the file or function and asks one question whose answer follows from the code (spec section 2). Its solution also says what a strong interview answer would add: the trade-off and the usual alternative.
 - A solution follows the format in spec section 4. Every quoted code line and `path:line` reference must hold at the pinned SHA, and it must not name another puzzle's answer: its symbol, file or line, or most of its set or sequence.
 - Write everything the project owns in US English: UI copy, labels, errors, puzzle titles, prompts, hints, choice labels, solutions, docs and comments (behavior, color, organize, canceled, license). Auth actions are "Sign in" and "Sign out". Leave upstream code, quoted source, identifiers, paths, slugs and IDs exactly as they are.
 - User-facing empty and error states say what happened and what to do next. They never show setup commands.

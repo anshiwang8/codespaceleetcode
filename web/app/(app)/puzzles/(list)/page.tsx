@@ -8,6 +8,7 @@ import { GroupBy } from "@/components/list/GroupBy";
 import { PuzzleGroupSection } from "@/components/list/PuzzleGroupSection";
 import { PuzzleTable } from "@/components/list/PuzzleTable";
 import styles from "@/components/list/list.module.css";
+import { PUZZLE_TYPES } from "@/lib/api-types";
 import {
   browseHref,
   DEFAULT_GROUPING,
@@ -29,7 +30,7 @@ const textFilter = textValue(200);
 
 // A bad or repeated value in the URL is ignored rather than failing the whole page.
 function parseFilters(params: Record<string, string | string[] | undefined>): BrowseFilters {
-  const type = z.enum(["find", "trace", "architecture"]).safeParse(params.type);
+  const type = z.enum(PUZZLE_TYPES).safeParse(params.type);
   const difficulty = z.enum(["easy", "medium", "hard"]).safeParse(params.difficulty);
   const repo = textFilter.safeParse(params.repo);
   const tag = textFilter.safeParse(params.tag);

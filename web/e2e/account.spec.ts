@@ -6,7 +6,7 @@ test.describe("account deletion", () => {
   test("deleting from settings removes progress and signs out", async ({ page }) => {
     await page.goto("/profile");
     await visible(page, "profile-signed-out").getByRole("button", { name: /Local dev sign-in/ }).click();
-    await expect(visible(page, "stats-total")).toContainText("0 of 7");
+    await expect(visible(page, "stats-total")).toContainText("0 of 8");
     const login = await visible(page, "signed-in-as").textContent();
 
     await openPuzzle(page, "e2e-find-file");
@@ -15,7 +15,7 @@ test.describe("account deletion", () => {
     await submitAndExpect(page, true);
 
     await page.goto("/profile");
-    await expect(visible(page, "stats-total")).toContainText("1 of 7");
+    await expect(visible(page, "stats-total")).toContainText("1 of 8");
     await visible(page, "settings-link").getByRole("link", { name: "Open settings" }).click();
     await expect(page).toHaveURL(/\/settings$/);
 
@@ -35,7 +35,7 @@ test.describe("account deletion", () => {
     // Signing in again under the same dev name starts an empty account.
     await visible(page, "profile-signed-out").getByRole("button", { name: /Local dev sign-in/ }).click();
     await expect(visible(page, "signed-in-as")).toHaveText(login ?? "");
-    await expect(visible(page, "stats-total")).toContainText("0 of 7");
+    await expect(visible(page, "stats-total")).toContainText("0 of 8");
   });
 });
 

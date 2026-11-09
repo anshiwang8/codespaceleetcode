@@ -1,21 +1,22 @@
 import "server-only";
-import type {
-  ActivityDay,
-  ActivityPeriodKey,
-  ActivityResponse,
-  Difficulty,
-  HistoryEntry,
-  HistoryFilters,
-  HistoryPage,
-  PracticeStreaks,
-  ProfileActivity,
-  ProfileIdentity,
-  ProfileProgress,
-  ProfileResponse,
-  ProgressCount,
-  PuzzleType,
-  SolveTimeline,
-  UnfinishedPuzzle,
+import {
+  PUZZLE_TYPES,
+  type ActivityDay,
+  type ActivityPeriodKey,
+  type ActivityResponse,
+  type Difficulty,
+  type HistoryEntry,
+  type HistoryFilters,
+  type HistoryPage,
+  type PracticeStreaks,
+  type ProfileActivity,
+  type ProfileIdentity,
+  type ProfileProgress,
+  type ProfileResponse,
+  type ProgressCount,
+  type PuzzleType,
+  type SolveTimeline,
+  type UnfinishedPuzzle,
 } from "@/lib/api-types";
 import { orderTags } from "@/lib/browse";
 import { getPool } from "@/lib/server/db";
@@ -34,7 +35,6 @@ export const HISTORY_PAGE_SIZE = 10;
 export const HISTORY_MAX_PAGE_SIZE = 50;
 export const UNFINISHED_LIMIT = 6;
 
-const PUZZLE_TYPES: PuzzleType[] = ["find", "trace", "architecture"];
 const DIFFICULTIES: Difficulty[] = ["easy", "medium", "hard"];
 
 const zero = (): ProgressCount => ({ solved: 0, attempted: 0, total: 0 });
