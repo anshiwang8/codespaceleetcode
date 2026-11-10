@@ -1,5 +1,15 @@
 # DEVLOG
 
+## Visual review fixtures date activity in UTC
+
+Type: Fix
+
+Goal: `pnpm visual:review` should pass at any time of day.
+
+What should be done: The profile activity fixtures dated submissions from Postgres's `current_date`, which follows the database's local time zone, while the profile counts days in UTC. In the evening west of UTC the newest seeded day was two UTC days back, so the current streak read "0 days" and the profile activity gallery failed.
+
+What was done (technical): `web/e2e/visual-helpers.ts` dates every seeded row from `(now() at time zone 'UTC')::date`.
+
 ## Design polish: one icon set, real screenshots, quieter labels
 
 Type: Change
