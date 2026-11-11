@@ -19,7 +19,10 @@ export function HowChallengesWork() {
           Solve a challenge&apos;s puzzle while it&apos;s open to complete it and earn its bonus: +{formatNumber(daily)}{" "}
           points for daily, +{formatNumber(weekly)} for weekly and +{formatNumber(monthly)} for monthly, once each.
         </li>
-        <li>A correct answer counts even if you solved the puzzle before the challenge began.</li>
+        <li>
+          Only a first solve counts. If you solved the puzzle before the challenge began, its solution is already open
+          to you, so solving it again doesn&apos;t complete the challenge.
+        </li>
         <li>After a challenge ends, its puzzle stays open to practice, but it no longer earns the bonus.</li>
       </ul>
     </section>

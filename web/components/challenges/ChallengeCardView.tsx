@@ -29,7 +29,7 @@ function stateNote(card: ChallengeCard): string {
     case "completed":
       return card.completedAt ? `Completed ${formatDateTime(card.completedAt)}.` : "Completed.";
     case "solved-elsewhere":
-      return `You solved this puzzle before. Solve it again this ${noun} to complete the challenge.`;
+      return `You solved this puzzle before this ${noun} began, so it doesn't count toward this challenge.`;
     case "attempted":
       return `You've attempted this puzzle. Solve it this ${noun} to complete the challenge.`;
     case "not-started":
@@ -118,7 +118,7 @@ export function ChallengeCardView({ card, now, signedIn }: ChallengeCardViewProp
             : state === "completed"
               ? "Open puzzle"
               : state === "solved-elsewhere"
-                ? "Solve again"
+                ? "Open puzzle"
                 : "Continue"}
         </Link>
       ) : null}

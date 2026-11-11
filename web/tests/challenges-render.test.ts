@@ -66,11 +66,11 @@ describe("challenge cards", () => {
     expect(markup).toContain("Open puzzle");
   });
 
-  it("tells a user who solved the puzzle earlier how to complete the challenge", () => {
+  it("tells a user who solved the puzzle earlier that it doesn't count this time", () => {
     const markup = html(createElement(ChallengeCardView, { card: card({ status: "solved" }), now: NOW, signedIn: true }));
     expect(markup).toContain('data-state="solved-elsewhere"');
-    expect(markup).toContain("Solve it again this day to complete the challenge.");
-    expect(markup).toContain("Solve again");
+    expect(markup).toContain("You solved this puzzle before this day began, so it doesn&#x27;t count toward this challenge.");
+    expect(markup).not.toContain("Solve again");
   });
 
   it("explains a withdrawn puzzle instead of linking to it", () => {

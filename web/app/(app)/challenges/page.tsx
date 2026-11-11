@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { TooManyRequests } from "@/components/site/TooManyRequests";
 import Link from "next/link";
 import { SignInPrompt } from "@/components/auth/SignInPrompt";
 import { ChallengeCardView } from "@/components/challenges/ChallengeCardView";
@@ -7,6 +8,7 @@ import { ChallengeStreakPanel } from "@/components/challenges/ChallengeStreakPan
 import { HowChallengesWork } from "@/components/challenges/HowChallengesWork";
 import { PUZZLES_PATH } from "@/lib/browse";
 import { getCurrentUser } from "@/lib/server/auth";
+import { isPageRateLimited } from "@/lib/server/rate-limit";
 import { getChallenges } from "@/lib/server/challenges";
 
 // Public, and read-only when signed out. Reading the session makes it render per request, so
@@ -18,6 +20,7 @@ export const metadata: Metadata = {
 
 export default async function ChallengesPage() {
   const user = await getCurrentUser();
+  if (await isPageRateLimited(user)) return <TooManyRequests />;
   const challenges = await getChallenges(user?.id ?? null);
   const signedIn = user !== null;
 

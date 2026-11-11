@@ -12,7 +12,7 @@ import { challengeStreakFrom, ensureAssignments, getChallengeArchive, getChallen
 import { getPool } from "@/lib/server/db";
 import { seedFixtures } from "./fixtures";
 import { hasDatabase, signIn } from "./helpers";
-import { CORRECT, submitOk, userIdFor } from "./progress-helpers";
+import { CORRECT, pastSubmission, submitOk, userIdFor } from "./progress-helpers";
 
 const at = (iso: string) => new Date(iso);
 
@@ -257,6 +257,22 @@ describe.skipIf(!hasDatabase)("challenge completion", () => {
     expect(rows).toEqual([]);
     const archive = await getChallengeArchive(id, "daily", null);
     expect(archive.items[0]).toMatchObject({ periodStart: previousPeriodStart("daily", today.daily), completed: false, status: "solved" });
+  });
+
+  it("gives no reward for resubmitting a puzzle solved before the period began", async () => {
+    await signIn("veteran-solver");
+    const id = await userIdFor("veteran-solver");
+    // Solved last week: its solution is already open to this user.
+    await pastSubmission(id, "fx-choice", true, new Date(Date.now() - 8 * 86_400_000).toISOString());
+    const cookie = await signIn("veteran-solver");
+    const again = await submitOk("fx-choice", cookie);
+    expect(again).toMatchObject({ correct: true, challenges: [], pointsAwarded: 0 });
+    const { rows } = await getPool().query("select 1 from challenge_completions where user_id = $1", [id]);
+    expect(rows).toEqual([]);
+    expect((await getChallenges(id)).current.find((c) => c.kind === "daily")).toMatchObject({
+      completed: false,
+      status: "solved",
+    });
   });
 
   it("gives no reward for a wrong answer to a challenge", async () => {

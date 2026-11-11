@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { TooManyRequests } from "@/components/site/TooManyRequests";
 import Link from "next/link";
 import { z } from "zod";
 import { ArchiveList } from "@/components/challenges/ArchiveList";
@@ -8,6 +9,7 @@ import { KindTabs } from "@/components/challenges/KindTabs";
 import { formatLongDay } from "@/lib/format";
 import { isPeriodStart, PERIOD_KINDS, PERIOD_LABELS } from "@/lib/periods";
 import { getCurrentUser } from "@/lib/server/auth";
+import { isPageRateLimited } from "@/lib/server/rate-limit";
 import { getChallengeArchive } from "@/lib/server/challenges";
 
 export const metadata: Metadata = {
@@ -25,6 +27,7 @@ export default async function ChallengeArchivePage({ searchParams }: PageProps<"
   const before = typeof params.before === "string" && isPeriodStart(kind, params.before) ? params.before : null;
 
   const user = await getCurrentUser();
+  if (await isPageRateLimited(user)) return <TooManyRequests />;
   const archive = await getChallengeArchive(user?.id ?? null, kind, before);
   const noun = PERIOD_NOUNS[kind];
   const label = PERIOD_LABELS[kind].toLowerCase();

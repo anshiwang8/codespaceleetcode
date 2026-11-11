@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { TooManyRequests } from "@/components/site/TooManyRequests";
 import Link from "next/link";
 import styles from "@/components/leaderboard/leaderboard.module.css";
 import { PERIOD_PHRASES, VISIBILITY_SETTINGS_HREF, leaderboardHref, parsePage, parsePeriod } from "@/components/leaderboard/links";
@@ -11,6 +12,7 @@ import type { LeaderboardResponse } from "@/lib/api-types";
 import { formatNumber, plural } from "@/lib/format";
 import { LEADERBOARD_PERIOD_LABELS, describePeriod, formatTimeLeft, type LeaderboardPeriod } from "@/lib/periods";
 import { getCurrentUser } from "@/lib/server/auth";
+import { isPageRateLimited } from "@/lib/server/rate-limit";
 import { MAX_LEADERBOARD_PAGE, getLeaderboard } from "@/lib/server/leaderboard";
 
 // Public, and rendered per request: the signed-in user's own standing comes from their session.
@@ -69,6 +71,7 @@ export default async function LeaderboardPage({ searchParams }: PageProps) {
   const period = parsePeriod(params.period);
   const page = parsePage(params.page, MAX_LEADERBOARD_PAGE);
   const user = await getCurrentUser();
+  if (await isPageRateLimited(user)) return <TooManyRequests />;
   const board = await getLeaderboard(user?.id ?? null, period, page);
 
   const totalPages = Math.max(1, Math.ceil(board.totalEntries / board.pageSize));

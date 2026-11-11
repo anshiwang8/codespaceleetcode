@@ -1,4 +1,5 @@
 import "server-only";
+import { headers as nextHeaders } from "next/headers";
 import type { CurrentUser, HeaderReader } from "@/lib/server/auth";
 import { getPool } from "@/lib/server/db";
 
@@ -124,6 +125,14 @@ export function rateLimitKey(user: CurrentUser | null, headers: HeaderReader): s
   if (user) return `user:${user.id}`;
   const ip = headers.get("x-forwarded-for")?.split(",").at(-1)?.trim().slice(0, 64);
   return `ip:${ip || "unknown"}`;
+}
+
+/**
+ * For server-rendered pages that aggregate over many rows (the leaderboard, challenges): the same
+ * budget as their API routes, so reloading a page can't do what the API refuses.
+ */
+export async function isPageRateLimited(user: CurrentUser | null): Promise<boolean> {
+  return isRateLimited(`board:${rateLimitKey(user, await nextHeaders())}`, BOARD_LIMIT);
 }
 
 /** Tests only: forgets every count. */

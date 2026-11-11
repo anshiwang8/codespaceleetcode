@@ -24,7 +24,8 @@ import {
   type Grouping,
 } from "@/lib/browse";
 import type { ChallengesResponse } from "@/lib/api-types";
-import { getCurrentUser } from "@/lib/server/auth";
+import { getCurrentUser, type CurrentUser } from "@/lib/server/auth";
+import { isPageRateLimited } from "@/lib/server/rate-limit";
 import { getChallenges } from "@/lib/server/challenges";
 import { textValue } from "@/lib/server/http";
 import { listPuzzles } from "@/lib/server/puzzles";
@@ -51,9 +52,11 @@ function parseGrouping(value: string | string[] | undefined): Grouping {
 }
 
 /** Today's challenge for the strip above the filters. The list never fails because of it. */
-async function loadChallenges(userId: string | null): Promise<ChallengesResponse | null> {
+async function loadChallenges(user: CurrentUser | null): Promise<ChallengesResponse | null> {
   try {
-    return await getChallenges(userId);
+    // Over the limit, the strip is left out and the list itself still loads.
+    if (await isPageRateLimited(user)) return null;
+    return await getChallenges(user?.id ?? null);
   } catch (error) {
     console.error("[puzzles] challenges failed to load:", error instanceof Error ? error.message : error);
     return null;
@@ -74,7 +77,7 @@ export default async function PuzzleListPage({ searchParams }: PageProps<"/puzzl
   // Every published puzzle, filtered here, so each control can count what it would show.
   const [{ puzzles: all, repos, tags }, challenges] = await Promise.all([
     listPuzzles(user?.id ?? null, {}),
-    loadChallenges(user?.id ?? null),
+    loadChallenges(user),
   ]);
 
   // `repos` ignores the filters, so empty means nothing is published at all.

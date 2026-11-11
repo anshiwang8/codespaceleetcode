@@ -235,9 +235,11 @@ export async function getChallengeArchive(
 }
 
 /**
- * Inside a correct submission's transaction: records a completion for every open period whose
- * puzzle this is. `now` is when the submission was graded, from the database's clock. A period
- * that has closed never matches, so practicing an old challenge earns no challenge reward.
+ * Inside a correct submission's transaction, after the progress upsert: records a completion for
+ * every open period whose puzzle this is, if the user's first solve of it falls inside that period.
+ * `now` is when the submission was graded, from the database's clock. A closed period never
+ * matches, so practicing an old challenge earns no challenge reward, and resubmitting a puzzle
+ * solved before the period began (whose solution is already unlocked) earns nothing either.
  */
 export async function recordChallengeCompletions(
   client: PoolClient,
@@ -251,7 +253,9 @@ export async function recordChallengeCompletions(
     `insert into challenge_completions (user_id, period_kind, period_start, completed_at)
      select $1, a.period_kind, a.period_start, $5
        from challenge_assignments a
+       join progress pr on pr.user_id = $1 and pr.puzzle_id = a.puzzle_id
       where a.puzzle_id = $2
+        and pr.solved_at >= (a.period_start::timestamp at time zone 'UTC')
         and (a.period_kind, a.period_start) in (select u.kind, u.start from unnest($3::text[], $4::date[]) as u(kind, start))
      on conflict do nothing
      returning period_kind, to_char(period_start, 'YYYY-MM-DD') as period_start`,

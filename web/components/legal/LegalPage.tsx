@@ -7,15 +7,7 @@ import { formatLongDay } from "@/lib/format";
 import { LEGAL, type LegalPageKey } from "@/lib/legal";
 
 /** The frame both legal pages share: the logo home, the title, the date, and the draft notice. */
-export function LegalPage({
-  page,
-  title,
-  children,
-}: {
-  page: LegalPageKey;
-  title: string;
-  children: React.ReactNode;
-}) {
+export function LegalPage({ page, title, children }: { page: LegalPageKey; title: string; children: React.ReactNode }) {
   const { reviewed, lastUpdated } = LEGAL.PAGES[page];
   return (
     <>
@@ -25,18 +17,12 @@ export function LegalPage({
         </Link>
         <h1>{title}</h1>
         <p className={styles.updated}>
-          Last updated{" "}
-          <time dateTime={lastUpdated}>{formatLongDay(lastUpdated)}</time>
+          Last updated <time dateTime={lastUpdated}>{formatLongDay(lastUpdated)}</time>
         </p>
         {reviewed ? null : (
-          <p
-            className={`notice ${styles.draft}`}
-            role="note"
-            data-testid="legal-draft"
-          >
-            Draft: this page hasn&apos;t been reviewed yet and may change before
-            launch. Notes marked &quot;Needs review&quot; are open questions for
-            the reviewer.
+          <p className={`notice ${styles.draft}`} role="note" data-testid="legal-draft">
+            Draft: this page hasn&apos;t been reviewed yet and may change before launch. Notes marked &quot;Needs
+            review&quot; are open questions for the reviewer.
           </p>
         )}
         {children}
@@ -51,9 +37,7 @@ export function ContactLine() {
   return LEGAL.CONTACT ? (
     <a href={`mailto:${LEGAL.CONTACT}`}>{LEGAL.CONTACT}</a>
   ) : (
-    <span data-testid="legal-contact-missing">
-      the contact address that will be listed here before launch
-    </span>
+    <span data-testid="legal-contact-missing">the contact address that will be listed here before launch</span>
   );
 }
 
@@ -79,11 +63,7 @@ export interface LegalSection {
 }
 
 /** The page's contents, numbered to match its headings. */
-export function LegalContents({
-  sections,
-}: {
-  sections: readonly LegalSection[];
-}) {
+export function LegalContents({ sections }: { sections: readonly LegalSection[] }) {
   return (
     <nav className={styles.contents} aria-labelledby="contents-heading">
       <h2 id="contents-heading" className={styles.contentsHeading}>
@@ -101,13 +81,7 @@ export function LegalContents({
 }
 
 /** A numbered section heading whose number and text come from the same list as the contents. */
-export function SectionHeading({
-  sections,
-  id,
-}: {
-  sections: readonly LegalSection[];
-  id: string;
-}) {
+export function SectionHeading({ sections, id }: { sections: readonly LegalSection[]; id: string }) {
   const index = sections.findIndex((section) => section.id === id);
   const section = sections[index];
   if (!section) throw new Error(`No legal section ${id}`);

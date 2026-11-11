@@ -17,6 +17,15 @@ describe("publicNameField", () => {
     expect(publicNameField("José_99")).toEqual({ ok: true, value: "José_99" });
   });
 
+  it("refuses names that mix alphabets, and folds look-alike forms", () => {
+    expect(publicNameField("\u0410lice").ok).toBe(false); // Cyrillic А
+    expect(publicNameField("Ad\u03b1").ok).toBe(false); // Greek alpha
+    expect(publicNameField("Ｊｏｓé").ok && publicNameField("Ｊｏｓé")).toEqual({ ok: true, value: "José" });
+    expect(publicNameField("Борис").ok).toBe(true);
+    expect(publicNameField("山田たろう").ok).toBe(true);
+    expect(publicNameField("Ada 42").ok).toBe(true);
+  });
+
   it("refuses short, long, empty and unusual names", () => {
     for (const value of ["", "a", "x".repeat(31), "<script>", "a\nb", "-dash", "name!", "‮evil", 42, null]) {
       expect(publicNameField(value).ok, String(value)).toBe(false);

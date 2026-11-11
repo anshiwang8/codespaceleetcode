@@ -145,7 +145,7 @@ export async function submitAnswer(
       [userId, puzzle.id, JSON.stringify(answer), correct, elapsedMs ?? null, now],
     );
     // One statement, so concurrent submissions can't lose a count. `solved` is final.
-    const { rows } = await client.query<{ attempts: number }>(
+    const { rows } = await client.query<{ attempts: number; solved_now: boolean }>(
       `insert into progress (user_id, puzzle_id, status, attempts, solved_at)
        values ($1, $2, case when $3::boolean then 'solved' else 'attempted' end, 1,
                case when $3::boolean then $4::timestamptz end)
@@ -160,12 +160,14 @@ export async function submitAnswer(
                when progress.status = 'attempted' and $3::boolean then $4::timestamptz
                else progress.solved_at
              end
-       returning attempts`,
+       returning attempts, coalesce(solved_at = $4::timestamptz, false) as solved_now`,
       [userId, puzzle.id, correct, now],
     );
     const count = rows[0]?.attempts;
     if (count === undefined) throw new Error("progress upsert returned no row");
-    if (!correct) return { attempts: count, pointsAwarded: 0, challenges: [] };
+    // Only the submission that solves a puzzle scores it. A puzzle solved earlier without a points
+    // row (a key changed during seeding) gets one from reconcileSolves, dated by its real solve.
+    if (!correct || rows[0]?.solved_now !== true) return { attempts: count, pointsAwarded: 0, challenges: [] };
 
     // The progress row is locked by the upsert above, so `count` is this submission's place in
     // line: 1 means no graded submission to this puzzle came before it.
