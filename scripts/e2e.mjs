@@ -65,6 +65,9 @@ try {
       DEV_OUTBOX_DIR: outbox,
       // A developer's web/.env.local might configure real email delivery; the tests never send mail.
       RESEND_API_KEY: "",
+      SMTP_HOST: "",
+      SMTP_USER: "",
+      SMTP_PASSWORD: "",
       EMAIL_FROM: "",
     });
   }

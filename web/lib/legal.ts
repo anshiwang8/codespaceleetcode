@@ -7,6 +7,7 @@ export const LEGAL = {
     // Back to draft on 2026-11-06: the policy now describes newly collected data (a verified email,
     // optional profile details, a picture, theme choices), which needs a fresh review (M11).
     // Rewritten in full on 2026-11-08 (legal bases, retention, cookies, rights); still a draft.
+    // Updated on 2026-11-10: emails are now sent through Gmail over SMTP (M10).
     // Audited against the code on 2026-11-11 for hints, points, challenges, achievements, the
     // opt-in leaderboard and deletion from Settings → Danger zone; still a draft (M11).
     privacy: { reviewed: false, lastUpdated: "2026-11-11" },

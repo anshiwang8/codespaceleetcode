@@ -4,7 +4,7 @@ import { z } from "zod";
 import type { EmailStatus } from "@/lib/api-types";
 import type { CurrentUser, HeaderReader } from "@/lib/server/auth";
 import { getPool, withTransaction } from "@/lib/server/db";
-import { emailSender } from "@/lib/server/email-delivery";
+import { EmailDeliveryError, emailSender } from "@/lib/server/email-delivery";
 import { consumeRateLimit, type RateLimit } from "@/lib/server/rate-limit";
 import { siteOrigin } from "@/lib/server/site";
 
@@ -158,10 +158,10 @@ export async function requestEmail(user: CurrentUser, rawAddress: string, origin
       const link = `${origin}/settings/email/verify?token=${encodeURIComponent(token)}`;
       await sender.send({ to: address, subject: "Confirm your codebases email", text: verificationText(link, purpose) });
     }
-  } catch {
+  } catch (error) {
     // Not sent, so not pending: the user can try again.
     await getPool().query("delete from email_verifications where id = $1", [id]);
-    console.error("[email] delivery failed");
+    console.error("[email] delivery failed", deliveryReason(error));
     return { ok: false, status: 502, error: "The email couldn't be sent. Try again in a moment." };
   }
   return { ok: true, status: await getEmailStatus(user, now) };
@@ -247,11 +247,16 @@ export async function verifyEmail(user: CurrentUser, token: string, now: Date = 
           "If you didn't make this change, sign in to codebases with GitHub and change it back in Settings.",
         ].join("\n"),
       });
-    } catch {
-      console.error("[email] change notice failed");
+    } catch (error) {
+      console.error("[email] change notice failed", deliveryReason(error));
     }
   }
   return { ok: true, status: await getEmailStatus(user, now) };
+}
+
+/** Why a send failed, for the server log: only a reason the sender vouches has no address in it. */
+function deliveryReason(error: unknown): string {
+  return error instanceof EmailDeliveryError ? error.message : "unexpected error";
 }
 
 /** "j***@example.com": enough to recognize, not enough to copy. */

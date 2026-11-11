@@ -8,10 +8,11 @@ import { seedFixtures } from "./fixtures";
 import { hasDatabase, signIn } from "./helpers";
 import { pastSubmission, puzzleId, reveal, submitOk, userIdFor, WRONG_FILE } from "./progress-helpers";
 
+// Windows checkouts have CRLF endings; the backfill statement below is found by its LF text.
 const MIGRATION = readFileSync(
   path.join(import.meta.dirname, "../../supabase/migrations/0009_hints_scores_challenges.sql"),
   "utf8",
-);
+).replace(/\r\n/g, "\n");
 
 describe("scoreSolve", () => {
   it("gives base points by difficulty, the first-try bonus and the hint deduction", () => {

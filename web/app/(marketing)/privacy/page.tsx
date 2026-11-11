@@ -399,7 +399,7 @@ export default function PrivacyPage() {
       </div>
       <ReviewNote>
         Confirm with each provider, for the plans in use, how long Vercel keeps request and error logs, how long
-        Supabase keeps database backups, and how long Resend keeps sent messages, and state those periods here. Also
+        Supabase keeps database backups, and how long Gmail keeps sent messages, and state those periods here. Also
         decide how long messages to the contact address are kept.
       </ReviewNote>
 
@@ -419,7 +419,7 @@ export default function PrivacyPage() {
           ["Supabase", "Hosts our database", "All the account data described above"],
           ["Cloudflare", "Stores and serves the source files shown in the editor", "IP address, user agent and which file was requested"],
           ["GitHub", "Handles sign-in", "That you signed in to codebases, under GitHub's own privacy statement"],
-          ["Resend", "Sends our emails", "The recipient address and the message, including any confirmation link"],
+          ["Google (Gmail)", "Sends our emails", "The recipient address and the message, including any confirmation link"],
         ]}
       />
       <p>
@@ -433,8 +433,8 @@ export default function PrivacyPage() {
         safeguards for these transfers.
       </p>
       <ReviewNote>
-        Email sending (M10) isn&apos;t set up in production yet, so no email is sent there today; confirm Resend is the
-        provider once it is. Confirm the region of the Supabase project and of Vercel&apos;s functions, and that a
+        Email is sent through Gmail over SMTP with an app password (M10); confirm Google&apos;s terms allow that use,
+        or move to a dedicated sender. Confirm the region of the Supabase project and of Vercel&apos;s functions, and that a
         data processing agreement with standard contractual clauses is in place with each provider before relying on
         the paragraph above.
       </ReviewNote>
