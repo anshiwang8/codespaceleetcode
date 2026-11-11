@@ -566,28 +566,25 @@ def _hint_findings(puzzle: Puzzle) -> list[Finding]:
     """
     exact, names = _answer_tokens(puzzle)
     prompt = puzzle.prompt
+    fold = isinstance(puzzle.answer, ChoiceAnswer)
+
+    def says_exact(token: str, hint: str) -> bool:
+        if not token or token in prompt:
+            return False
+        return token.lower() in hint.lower() if fold else token in hint
+
+    def says_name(name: str, hint: str, code: str) -> bool:
+        if _names_word(name, prompt):
+            return False
+        identifier_like = name != name.lower() or "_" in name or any(c.isdigit() for c in name)
+        return _names_word(name, code) or (identifier_like and _names_word(name, hint))
+
     findings: list[Finding] = []
-    for number, hint in enumerate(puzzle.hints, start=1):
+    for number, hint in enumerate(puzzle.hints):
         code = " ".join(_CODE_SPAN.findall(hint))
-        leaked = any(
-            token not in prompt and token.lower() in hint.lower()
-            if isinstance(puzzle.answer, ChoiceAnswer)
-            else token not in prompt and token in hint
-            for token in exact
-            if token
-        ) or any(
-            not _names_word(name, prompt)
-            and (
-                _names_word(name, code)
-                or (name != name.lower() or "_" in name or any(c.isdigit() for c in name))
-                and _names_word(name, hint)
-            )
-            for name in names
-        )
-        if leaked:
-            findings.append(
-                Finding("hint-leak", f"hints[{number - 1}] names part of the answer the prompt doesn't")
-            )
+        if any(says_exact(t, hint) for t in exact) or any(says_name(n, hint, code) for n in names):
+            message = f"hints[{number}] names part of the answer the prompt doesn't"
+            findings.append(Finding("hint-leak", message))
     return findings
 
 
