@@ -42,6 +42,11 @@ try {
       [id, scheme, tokens],
     );
     const page = await context.newPage();
+    // Show what a visitor to the real site sees: signed out, with GitHub sign-in and no dev login.
+    // Locally, /api/me offers the dev login, whose button would otherwise appear in the hint panel.
+    await page.route("**/api/me", (route) =>
+      route.fulfill({ json: { user: null, githubAuth: true, devAuth: false } }),
+    );
     await page.goto(`${base}/puzzles/${SLUG}`);
     await page.getByTestId("file-tree").waitFor();
     const parts = FILE.split("/");
