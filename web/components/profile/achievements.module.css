@@ -1,0 +1,180 @@
+/* Achievements on /profile. One card, a category per band, divided by rules. Earned and locked
+   differ by the medal's fill and outline, the icon beside the state, and its words, not only color. */
+
+.section {
+  scroll-margin-top: var(--space-4);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* The puzzle list's segmented control, as toggle buttons. Inner radius = outer - 3px - 1px. */
+.filter {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  background: var(--panel);
+}
+
+.filter button {
+  display: flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 var(--space-4);
+  border: 0;
+  border-radius: calc(var(--radius-lg) - 4px);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color var(--motion-control) var(--motion-feedback),
+    color var(--motion-control) var(--motion-feedback);
+}
+
+.filter button:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+.filter button[aria-pressed="true"] {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-weight: 650;
+}
+
+.card {
+  display: grid;
+  padding: 0 var(--space-5);
+}
+
+.group {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4) 0 var(--space-5);
+  border-top: 1px solid var(--line);
+}
+
+.group:first-child {
+  border-top: 0;
+}
+
+.groupTitle {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-3);
+}
+
+.badge {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font-variant-numeric: tabular-nums;
+}
+
+.badge[data-earned="true"] {
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--line));
+  background: var(--accent-softer);
+}
+
+.medal {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: var(--radius-pill);
+}
+
+.badge[data-earned="true"] .medal {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.badge[data-earned="false"] .medal {
+  border: 1.5px dashed var(--line-strong);
+  color: var(--text-faint);
+}
+
+.body {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.title {
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.description {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.earned,
+.lockedLabel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: var(--space-1);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+
+.earned {
+  color: var(--ok);
+}
+
+.lockedLabel {
+  color: var(--text-muted);
+}
+
+.progressText {
+  margin-left: auto;
+  font-weight: 500;
+}
+
+.locked {
+  display: grid;
+  gap: 6px;
+}
+
+.meter {
+  height: 6px;
+}
+
+@media (max-width: 640px) {
+  .card {
+    padding: 0 var(--space-4);
+  }
+
+  .filter {
+    display: flex;
+    width: 100%;
+  }
+
+  .filter button {
+    flex: 1;
+    justify-content: center;
+    padding: 0 var(--space-2);
+  }
+}
