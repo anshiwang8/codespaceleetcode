@@ -1,5 +1,15 @@
 # DEVLOG
 
+## Remove the agent-only note from puzzle pages
+
+Type: Removal
+
+Goal: Stop showing "No person has checked this puzzle yet. Its second solve was done by an automated agent." at the bottom of every puzzle's description.
+
+What should be done: Drop the note and what only it used, and keep the disclosure true elsewhere.
+
+What was done (technical): `DescriptionTab` in `web/components/puzzle/PromptPanel.tsx` no longer renders the `agent-only-note` paragraph or computes whether every `verifiedBy` name starts with `agent:`. The `.unverified` style is gone from `puzzle.module.css`, and the e2e test "the unverified note follows verifiedBy" is removed from `web/e2e/viewer.spec.ts`. `verifiedBy` stays in the puzzle API. The landing page's limits list still says the blind second solves were done by an automated agent, but no longer claims every puzzle page says so. Spec section 6 now says the landing page carries that disclosure, not the puzzle page.
+
 ## Email delivery is live in production (launch checklist M10 done)
 
 Type: Change
