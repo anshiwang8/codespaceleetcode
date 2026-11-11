@@ -14,7 +14,9 @@ answer:
   accept: []
   accept_reasons: []
 hints:
-  - Each runtime entry point's `serve` calls one shared helper before starting the server.
+  - "The restriction isn't a check inside the router. It is installed on the app instance when a runtime adapter starts serving it, by replacing the internal method that every route registration goes through."
+  - "The per-runtime `serve` functions live in `src/_entries/`, one file per runtime, such as `node.ts`, `bun.ts` and `deno.ts`."
+  - "Each runtime entry point's `serve` calls one shared helper before starting the server. Follow that helper's import to the file that defines it."
 solution: solutions/h3-architecture-001.md
 tags: [routing, code-structure]
 authors: [agent-author-2]

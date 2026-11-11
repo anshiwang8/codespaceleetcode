@@ -17,7 +17,9 @@ answer:
     - packages/zod/src/v4/core/checks.ts#$ZodCheckOverwrite~2
     - packages/zod/src/v4/core/checks.ts#$ZodCheckLowerCase~2
 hints:
-  - The `checks` that `_ZodString`'s methods call is the classic checks module, which only renames functions from the core layer.
+  - "The classic API is a thin layer over the core one: each chained method adds a check built by a core factory function, so trace each method to the function that actually constructs its check."
+  - "The `checks` that `_ZodString`'s methods call is the classic checks module, which only renames functions from the core layer."
+  - "Follow each renamed function to `packages/zod/src/v4/core/api.ts` and read its `new` expression. One of the three delegates to a more general helper first, so follow that helper too."
 solution: solutions/zod-architecture-003.md
 tags: [validation, code-structure]
 authors: [agent-author-4]

@@ -16,7 +16,9 @@ answer:
   anchor: [250, 258]
   window: [246, 262]
 hints:
-  - Look for the Content-Length header being popped.
+  - HTTP requires 307 and 308 redirects to repeat the method and body, while other redirects may be followed without a body. This block applies that rule.
+  - Inside `resolve_redirects`, look after the new URL has been set on `prepared_request` and the method has been adjusted, for a condition built from `codes` constants.
+  - Look for the `Content-Length` header being popped. Select from the `if` whose condition lists two status codes through the line that clears `prepared_request.body`.
 solution: solutions/requests-find-002.md
 tags: [http-clients]
 authors: [agent-author-3]

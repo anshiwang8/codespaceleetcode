@@ -15,7 +15,9 @@ answer:
   anchor: [517, 518]
   window: [515, 519]
 hints:
-  - The check is a single `if` whose other branch collects constraints from the members.
+  - "A merged object can reject unknown keys only when every member rejects them, so the check you want looks at all of the members together, not at one of them."
+  - "The check is a single `if` whose other branch collects constraints from the members."
+  - "Look just after `folded` is created and `required` is copied onto it: the condition calls an array method on `objects`, and the assignment is the first statement in its block."
 solution: solutions/zod-find-002.md
 tags: [validation, compilers]
 authors: [agent-author-1]

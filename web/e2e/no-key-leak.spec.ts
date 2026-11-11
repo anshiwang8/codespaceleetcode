@@ -109,7 +109,13 @@ test.describe("no answer key on the client", () => {
 
     const submit = captured.find((item) => item.url.endsWith("/submit"));
     expect(submit).toBeDefined();
-    expect(Object.keys(JSON.parse(submit?.body ?? "{}") as object).sort()).toEqual(["attempts", "correct"]);
+    expect(Object.keys(JSON.parse(submit?.body ?? "{}") as object).sort()).toEqual([
+      "achievements",
+      "attempts",
+      "challenges",
+      "correct",
+      "pointsAwarded",
+    ]);
     for (const item of captured) {
       expect(item.body, item.url).not.toContain(KEY_SENTINEL);
       expect(item.body, item.url).not.toContain(SOLUTION_SENTINEL);

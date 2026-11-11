@@ -11,7 +11,7 @@ test.describe("landing page", () => {
     await expect(page.locator("main")).not.toContainText("replacing LeetCode");
     await expect(hero).toContainText("Reading puzzles needs no account.");
     await expect(page.getByRole("button", { name: "Sign in with GitHub" })).toHaveAccessibleDescription(
-      "to submit answers and save progress",
+      "Reading puzzles needs no account. Sign in, free, to submit answers and save your progress.",
     );
 
     await hero.getByRole("link", { name: "Browse puzzles" }).click();
@@ -25,7 +25,9 @@ test.describe("landing page", () => {
     await page.goto("/");
     const login = page.getByRole("button", { name: "Sign in with GitHub" });
     await expect(login).toBeEnabled();
-    await expect(login).toHaveAccessibleDescription("to submit answers and save progress");
+    await expect(login).toHaveAccessibleDescription(
+      "Reading puzzles needs no account. Sign in, free, to submit answers and save your progress.",
+    );
 
     const started = page.waitForRequest((request) => request.url().endsWith("/api/auth/sign-in/social"));
     await login.click();
@@ -55,7 +57,7 @@ test.describe("landing page", () => {
   test("the worked example is a labeled static figure from the real pinned source", async ({ page }) => {
     await page.goto("/");
     const demo = page.getByTestId("code-demo");
-    await expect(demo).toContainText("A static example, not one of the puzzles");
+    await expect(demo).toContainText("An example written for this page, not one of the puzzles");
     await expect(demo).toContainText("psf/requests");
     await expect(demo).toContainText("src/requests/structures.py#CaseInsensitiveDict");
     // Nothing in it looks like a control except the one real link, to the file at that commit.

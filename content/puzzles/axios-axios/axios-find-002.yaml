@@ -20,7 +20,9 @@ answer:
   accept: []
   accept_reasons: []
 hints:
-  - Most strategies only ever see the two values. Look for one that is handed more than that.
+  - "Inside the loop, `b` is `undefined` both when `config2` omits the key and when it sets it to `undefined`, so only a strategy that checks whether the key is present can tell those apart."
+  - "Most strategies only ever see the two values. Look for one that is handed more than that."
+  - "In the loop in `mergeConfig`, read the line that computes `configValue`: one strategy is compared by identity and called with extra arguments, and the same comparison decides whether an `undefined` result is stored."
 solution: solutions/axios-find-002.md
 tags: [configuration]
 authors: [agent-author-unstorage-axios]

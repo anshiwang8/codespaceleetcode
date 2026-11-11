@@ -16,16 +16,27 @@ test.describe("account deletion", () => {
 
     await page.goto("/profile");
     await expect(visible(page, "stats-total")).toContainText("1 of 8");
-    await visible(page, "settings-link").getByRole("link", { name: "Open settings" }).click();
+    await visible(page, "nav-settings").click();
     await expect(page).toHaveURL(/\/settings$/);
 
-    // The first click only opens the warning; Cancel closes it without deleting.
+    // The first click only opens the warning, with Cancel focused; Cancel closes it without deleting.
     await visible(page, "delete-account-start").click();
     await expect(visible(page, "delete-account")).toContainText("can't be undone");
+    await expect(visible(page, "delete-account")).toContainText("Your leaderboard entry and public name");
+    await expect(visible(page, "delete-account-cancel")).toBeFocused();
     await visible(page, "delete-account-cancel").click();
     await expect(visible(page, "delete-account-confirm")).toHaveCount(0);
+    await expect(visible(page, "delete-account-start")).toBeFocused();
 
+    // Deleting needs DELETE typed exactly, case included.
     await visible(page, "delete-account-start").click();
+    await expect(visible(page, "delete-account-confirm")).toBeDisabled();
+    await expect(visible(page, "delete-account-input")).toHaveAttribute("autocomplete", "off");
+    await visible(page, "delete-account-input").fill("delete");
+    await expect(visible(page, "delete-account-confirm")).toBeDisabled();
+    await visible(page, "delete-account-input").fill("DELETE");
+    await expect(visible(page, "delete-account-confirm")).toBeEnabled();
+    // A dev-login session always counts as a recent sign-in, so no GitHub sign-in is asked for.
     await visible(page, "delete-account-confirm").click();
     await expect(page).toHaveURL(/\/$/);
 
@@ -59,8 +70,9 @@ test.describe("legal pages", () => {
       } else {
         await expect(page.getByTestId("legal-contact-missing")).toBeVisible();
       }
-      await expect(page.getByRole("link", { name: "Privacy policy", exact: true })).toHaveAttribute("href", "/privacy");
-      await expect(page.getByRole("link", { name: "Terms", exact: true })).toHaveAttribute("href", "/terms");
+      const footer = page.getByRole("navigation", { name: "Footer" });
+      await expect(footer.getByRole("link", { name: "Privacy", exact: true })).toHaveAttribute("href", "/privacy");
+      await expect(footer.getByRole("link", { name: "Terms", exact: true })).toHaveAttribute("href", "/terms");
     });
   }
 

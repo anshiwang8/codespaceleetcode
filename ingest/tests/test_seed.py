@@ -403,6 +403,25 @@ def test_removed_puzzle_with_only_progress_keeps_that_progress(db_url: str, tmp_
     assert _one(db_url, b"select count(*) from progress") == 1
 
 
+def test_removed_puzzle_featured_in_a_challenge_is_unpublished(db_url: str, tmp_path: Path) -> None:
+    # Nobody tried it, but a challenge period showed it: deleting it would give that period a
+    # different puzzle than the one people already saw.
+    _seed(db_url)
+    with psycopg.connect(db_url) as connection:
+        connection.execute(
+            b"insert into challenge_assignments (period_kind, period_start, puzzle_id)"
+            b" select 'daily', date '2026-11-11', id from puzzles where slug = 'widgets-find-002'"
+        )
+    content = _copy_content(tmp_path)
+    (content / "puzzles" / "acme-widgets" / "widgets-find-002.yaml").unlink()
+
+    lines = _seed(db_url, content)
+
+    assert any("0 deleted, 1 unpublished" in line for line in lines)
+    assert _one(db_url, b"select published from puzzles where slug = 'widgets-find-002'") is False
+    assert _one(db_url, b"select count(*) from challenge_assignments") == 1
+
+
 def test_refuses_when_validation_fails_and_writes_nothing(db_url: str, tmp_path: Path) -> None:
     content = _copy_content(tmp_path)
     path = content / "puzzles" / "acme-widgets" / "widgets-find-002.yaml"

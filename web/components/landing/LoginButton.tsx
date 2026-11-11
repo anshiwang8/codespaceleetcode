@@ -26,7 +26,7 @@ export function LoginButton() {
       <button
         type="button"
         className={`${styles.button} ${styles.secondary}`}
-        aria-describedby="login-note"
+        aria-describedby={error ? "login-note" : "hero-gate"}
         aria-busy={pending}
         disabled={pending}
         onClick={() => void signIn()}
@@ -34,14 +34,12 @@ export function LoginButton() {
       >
         {pending ? "Opening GitHub…" : "Sign in with GitHub"}
       </button>
-      <span
-        id="login-note"
-        className={error ? styles.loginError : styles.soon}
-        role={error ? "alert" : undefined}
-        data-testid="log-in-note"
-      >
-        {error ?? "to submit answers and save progress"}
-      </span>
+      {/* The hero's line under the buttons says what signing in is for; this slot only reports a failure. */}
+      {error ? (
+        <span id="login-note" className={styles.loginError} role="alert" data-testid="log-in-note">
+          {error}
+        </span>
+      ) : null}
     </span>
   );
 }

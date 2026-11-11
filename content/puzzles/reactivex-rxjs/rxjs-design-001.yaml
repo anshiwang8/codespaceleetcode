@@ -25,7 +25,9 @@ choices:
   - id: d
     label: A, B and then C, because subscribers added during next are queued and sent the current value once the loop ends.
 hints:
-  - Read the loop in Subject.next, and what it loops over.
+  - "This edge case is about iterating a collection that changes during the loop, so find where the Subject stores its subscribers and how delivery walks them."
+  - "Subscribers are kept in a private `Set` field, and the callback the constructor passes to `super` adds each new subscriber to it."
+  - "Read the loop in `Subject.next`, and what it loops over."
 solution: solutions/rxjs-design-001.md
 tags: [observables]
 authors: [agent-author-design]

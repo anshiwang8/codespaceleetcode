@@ -13,7 +13,9 @@ answer:
   anchor: [449, 449]
   window: [447, 470]
 hints:
-  - The fast path is an `if` that appears before the call to `compose` in the same method.
+  - "Building a composed chain costs work on every request, so `#dispatch` skips it when no chaining is needed. The condition inspects what the router's match returned."
+  - "The fast path is an `if` that appears before the call to `compose` in the same method."
+  - "Track the variable that receives `this.router.match(...)` and find the first condition that inspects it. Select only that condition line, not the block under it."
 solution: solutions/hono-find-002.md
 tags: [routing, middleware]
 authors: [agent-author-1]

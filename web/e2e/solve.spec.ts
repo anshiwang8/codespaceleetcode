@@ -251,7 +251,8 @@ test.describe("results", () => {
     // The tray says sign-in is needed before the button is pressed, not only after.
     await expect(page.getByTestId("submit-gate")).toHaveText("Anyone can read this puzzle. Sign in to submit an answer.");
     await page.getByTestId("submit").click();
-    const prompt = page.getByTestId("sign-in-prompt");
+    // The hint panel has its own sign-in prompt; this is the tray's.
+    const prompt = page.getByTestId("answer-tray").getByTestId("sign-in-prompt");
     await expect(page.getByTestId("submit-gate")).toHaveCount(0);
     await expect(prompt).toContainText("Sign in to submit");
     await expect(page.getByTestId("result")).toHaveCount(0);

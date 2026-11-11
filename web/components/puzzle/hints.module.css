@@ -1,0 +1,173 @@
+/* The Description tab's hint panel. Sized for the workspace's dense 13px base (puzzle.module.css). */
+
+.hints {
+  display: grid;
+  gap: 8px;
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px 8px;
+}
+
+.heading {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.headingIcon {
+  color: var(--text-faint);
+}
+
+.count {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-faint);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* One pip per level that exists. The count beside them says the same in words. */
+.pips {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.pip,
+.pipOn {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.pip {
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+
+.pipOn {
+  background: var(--accent);
+}
+
+.list {
+  display: grid;
+  gap: 6px;
+}
+
+.hint {
+  display: grid;
+  gap: 2px;
+  padding: 6px 8px 7px;
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--accent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--surface-sunken);
+}
+
+/* Focus arrives here from the reveal button; the panel scrolls, so the ring stays inside. */
+.hint:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+
+.hint:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.hintNew {
+  animation: var(--motion-enter) var(--motion-panel) var(--motion-ease);
+}
+
+.label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 6px;
+  font-size: 11px;
+  line-height: 16px;
+}
+
+.level {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.name {
+  color: var(--accent-text);
+  font-weight: 600;
+}
+
+.body {
+  min-width: 0;
+}
+
+.note {
+  color: var(--text-faint);
+  font-size: 11px;
+  line-height: 16px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.error {
+  font-size: 12px;
+}
+
+/* "Today's daily challenge": a quiet link under the meta chips, to /challenges. */
+.featured {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: -4px;
+}
+
+a.featuredChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
+  color: var(--accent-text);
+}
+
+a.featuredChip:hover {
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+
+/* In the answer tray's result box: what the solve earned. Laid out with the box, never animated
+   on its own, so the box doesn't shift and only the check bounces. */
+.points {
+  margin-left: auto;
+  color: var(--ok);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.resultChallenges {
+  display: grid;
+  gap: 1px;
+  margin-top: 2px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.resultChallenges li {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.resultChallenges :global(.icon) {
+  color: var(--ok);
+}

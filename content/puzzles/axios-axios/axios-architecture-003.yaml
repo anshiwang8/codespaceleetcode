@@ -15,7 +15,9 @@ answer:
   accept: []
   accept_reasons: []
 hints:
-  - dispatchRequest does not resolve the name itself; it hands it to a helper.
+  - "A string name becomes an adapter only through a table keyed by name, so follow where a string `config.adapter` is resolved rather than where each adapter is implemented."
+  - "The function that dispatches the request does not resolve the name itself; it hands it to a helper."
+  - "Follow that helper's import to its module and find the object it indexes with the lowercased name. Ignore `lib/defaults/`, which only lists the names in their default order."
 solution: solutions/axios-architecture-003.md
 tags: [extension-points, http-clients]
 authors: [agent-author-unstorage-axios]

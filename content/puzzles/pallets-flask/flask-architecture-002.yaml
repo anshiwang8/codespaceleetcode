@@ -22,7 +22,9 @@ choices:
   - id: d
     label: Context callbacks and registered functions are interleaved in registration order, and the session is saved last.
 hints:
-  - Read the method top to bottom.
+  - "The order is fixed by statement order in this one method; registration order only matters within a single step."
+  - "Tell the steps apart by what they read: one loop goes over `self.after_request_funcs` per blueprint name, one block calls `self.session_interface`, and another loop goes over a list stored on `ctx`."
+  - "Read the method top to bottom. Label each block with its step using what it reads; nothing in the method reorders them."
 solution: solutions/flask-architecture-002.md
 tags: [request-lifecycle, middleware]
 authors: [agent-author-3]

@@ -1,7 +1,10 @@
 import Link from "next/link";
 import styles from "@/components/profile/profile.module.css";
 
-/** Where the account controls went: Settings has the theme, profile details, links, email and account. */
+/**
+ * The way to Settings on a phone, where the header leaves its link out. Settings has the theme,
+ * profile details, links, email and account.
+ */
 export function SettingsLink() {
   return (
     <section className={`card ${styles.settingsLink}`} aria-labelledby="settings-link-heading" data-testid="settings-link">

@@ -16,7 +16,9 @@ answer:
   anchor: [745, 756]
   window: [731, 758]
 hints:
-  - Just before this statement, a loop over the fields records whether any of them has a validator or a converter.
+  - "The hook is only worth keeping if some field gives it work, so think about which per-field settings the default hook and its validate-only and convert-only variants use."
+  - "The decision sits in the `elif` after the frozen branch of `_ClassBuilder.__init__`, which runs only for the default hook, `setters.validate` or `setters.convert`."
+  - "Just before this statement, a loop over the fields records whether any of them has a validator or a converter. The `if` you want tests those two flags against each kind of hook."
 solution: solutions/attrs-find-002.md
 tags: [validation, configuration]
 authors: [agent-author-rich-rhf]

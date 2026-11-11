@@ -44,7 +44,7 @@ export function IdentityCard({ identity, progress }: { identity: ProfileIdentity
             </li>
             <li className="muted" data-testid="profile-member-since">
               Member since{" "}
-              <time className="mono" dateTime={identity.memberSince}>
+              <time dateTime={identity.memberSince}>
                 {formatDate(identity.memberSince)}
               </time>
             </li>

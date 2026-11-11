@@ -14,7 +14,9 @@ answer:
   accept: []
   accept_reasons: []
 hints:
-  - Look at the last line of the inner function that `_safeParse` returns.
+  - "Lazy construction in plain JavaScript usually means a getter on the returned object that builds the value on first access and caches it."
+  - "`_safeParse` is curried: it takes the error class first and returns the function that runs the schema, so the result object is produced inside that inner arrow function."
+  - "Look at the last line of the inner function that `_safeParse` returns."
 solution: solutions/zod-find-001.md
 tags: [validation, errors]
 authors: [agent-author-1]

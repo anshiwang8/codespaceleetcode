@@ -5,6 +5,7 @@ import styles from "@/components/puzzle/puzzle.module.css";
 import type { ManifestFile } from "@/lib/api-types";
 import { type Draft, type DraftAction, filePick } from "@/lib/client/answer";
 import { buildTree, type TreeNode } from "@/lib/client/file-tree";
+import { Icon } from "@/components/site/Icon";
 
 const FILTER_RESULT_LIMIT = 200;
 
@@ -141,7 +142,7 @@ function TreeItems({ nodes, depth, activePath, expanded, onToggleDir, onOpenFile
                 onClick={() => onToggleDir(node.path)}
               >
                 <span className={styles.treeCaret} aria-hidden="true">
-                  {open ? "▾" : "▸"}
+                  <Icon name={open ? "chevron-down" : "chevron-right"} />
                 </span>
                 {node.name}
               </button>
@@ -206,7 +207,7 @@ const FileRow = memo(function FileRow({ path, label, depth, active, onOpenFile, 
             data-path={path}
             onClick={() => pick({ type: "pick-file", path })}
           >
-            {action.active ? "✓" : "+"}
+            <Icon name={action.active ? "check" : "plus"} />
           </button>
         ) : null}
       </div>

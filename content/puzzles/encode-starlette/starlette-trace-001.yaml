@@ -24,6 +24,8 @@ answer:
   accept_reasons: []
 hints:
   - The 304 decision needs the response's own ETag, so it happens after the file response has been created.
+  - In `StaticFiles.__call__`, skip `check_config`, which runs once, and `get_path`, which only normalizes the path. Follow the call that produces the response object.
+  - In that method, open the call made in the regular-file (`stat.S_ISREG`) branch, then see what that call checks right after it constructs the `FileResponse`.
 solution: solutions/starlette-trace-001.md
 tags: [request-lifecycle]
 authors: [agent-author-jinja-starlette]

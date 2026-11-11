@@ -26,7 +26,9 @@ choices:
   - id: d
     label: Nothing happens then, because the entry was removed as soon as the last subscriber left and the new subscriber's request filled it again.
 hints:
-  - Look at which actions make the handler call handleUnsubscribe, and at what the timer's callback checks before it removes anything.
+  - "Model the grace period as a timer per cache key, and ask two things: what can cancel or replace that timer, and what does it look at when it finally fires?"
+  - "In cacheCollection.ts, follow `currentRemovalTimeouts`: find every `clearTimeout` call and work out which incoming actions lead to each one."
+  - "Look at which actions make the handler call `handleUnsubscribe`, and at what the timer's callback checks before it removes anything."
 solution: solutions/rtk-design-001.md
 tags: [caching-and-storage, state-management]
 authors: [agent-author-design]

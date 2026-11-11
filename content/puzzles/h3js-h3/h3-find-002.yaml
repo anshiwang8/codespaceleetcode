@@ -14,7 +14,9 @@ answer:
   accept: []
   accept_reasons: []
 hints:
-  - Search src/utils/ for the header name that is not Content-Length.
+  - "Request smuggling is a framing problem: the guard has to look at the request headers before any body bytes are read, so it belongs with the code that handles incoming request bodies."
+  - "Look among the body-reading utilities in `src/utils/`. The prompt wants the function that holds the header check itself, not a small helper it calls."
+  - "Search `src/utils/` for the header name that is not Content-Length, then open the function around the hit that throws a 400."
 solution: solutions/h3-find-002.md
 tags: [auth-and-security, request-lifecycle]
 authors: [agent-author-2]

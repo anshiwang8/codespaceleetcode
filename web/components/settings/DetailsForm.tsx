@@ -7,6 +7,7 @@ import { useUnsavedChanges, type SaveState } from "@/components/settings/useUnsa
 import type { ProfileDetails } from "@/lib/api-types";
 import { ApiRequestError, api } from "@/lib/client/api";
 import { LIMITS } from "@/lib/profile-fields";
+import { Icon } from "@/components/site/Icon";
 
 type Draft = { displayName: string; pronouns: string; bio: string; birthday: string };
 
@@ -76,7 +77,7 @@ export function DetailsForm({ initial }: { initial: ProfileDetails }) {
     <form className={styles.form} onSubmit={(event) => void save(event)} noValidate data-testid="details-form">
       <div className={styles.field}>
         <label htmlFor="details-displayName" className="field-label">
-          Display name <span className={styles.optional}>(optional)</span>
+          Display name
         </label>
         <input className="input" maxLength={LIMITS.displayName * 2} autoComplete="nickname" {...field("displayName")} />
         <p id="details-displayName-hint" className={styles.hint}>
@@ -86,7 +87,7 @@ export function DetailsForm({ initial }: { initial: ProfileDetails }) {
       </div>
       <div className={styles.field}>
         <label htmlFor="details-pronouns" className="field-label">
-          Pronouns <span className={styles.optional}>(optional)</span>
+          Pronouns
         </label>
         <input className="input" maxLength={LIMITS.pronouns * 2} {...field("pronouns")} />
         <p id="details-pronouns-hint" className={styles.hint}>
@@ -96,7 +97,7 @@ export function DetailsForm({ initial }: { initial: ProfileDetails }) {
       </div>
       <div className={styles.field}>
         <label htmlFor="details-bio" className="field-label">
-          Short bio <span className={styles.optional}>(optional)</span>
+          Short bio
         </label>
         <textarea className="input" rows={3} maxLength={LIMITS.bio * 2} {...field("bio")} />
         <p id="details-bio-hint" className={styles.hint} aria-live="polite">
@@ -106,7 +107,7 @@ export function DetailsForm({ initial }: { initial: ProfileDetails }) {
       </div>
       <div className={styles.field}>
         <label htmlFor="details-birthday" className="field-label">
-          Birthday <span className={styles.optional}>(optional)</span>
+          Birthday
         </label>
         <div className={styles.inline}>
           <input type="date" className={`input ${styles.date}`} min="1900-01-01" max={today} {...field("birthday")} />
@@ -156,10 +157,11 @@ export function FormActions({
         Cancel
       </button>
       <p
-        className={state.kind === "error" ? styles.saveError : styles.saveNote}
+        className={state.kind === "error" ? styles.saveError : state.kind === "saved" ? styles.saveDone : styles.saveNote}
         role={state.kind === "error" ? "alert" : "status"}
         data-testid={`${testId}-status`}
       >
+        {state.kind === "saved" ? <Icon name="check" /> : null}
         {state.kind === "saved" || state.kind === "error" ? state.text : dirty ? "Unsaved changes." : ""}
       </p>
     </div>

@@ -14,7 +14,9 @@ answer:
     - packages/toolkit/src/listenerMiddleware/exceptions.ts#TaskAbortError
     - packages/toolkit/src/utils.ts#Tuple
 hints:
-  - Most of the toolkit is written as functions, so a search for the `class` keyword narrows this down quickly.
+  - "Think about where a plain function or object literal can't do the job, such as a value the code must recognize with `instanceof`, or a subclass of a built-in type."
+  - "Most of the toolkit is written as functions, so a search for the `class` keyword narrows this down quickly."
+  - "Search for `class` as a whole word, then drop hits under query/ and tests/ and words inside comments. Don't stop at `export class` or the public exports, since some classes aren't exported."
 solution: solutions/rtk-architecture-003.md
 tags: [state-management, code-structure]
 authors: [agent-author-2]

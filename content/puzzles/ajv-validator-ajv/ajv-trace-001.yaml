@@ -25,7 +25,9 @@ answer:
     - lib/compile/validate/index.ts#validateFunctionCode
   accept_sequences: []
 hints:
-  - The method that turns a schema into a validation function is on the same class and shares its name with an option you pass to it.
+  - "Ajv compiles before it validates: `validate` needs a validation function for the schema first, so follow the path that builds one for a schema it has never seen."
+  - "The schema-object branch of `validate` calls a public method on the same class that turns a schema into a validation function; `getSchema` belongs to the string-key branch."
+  - "At each step, skip calls that only register or look up the schema, such as `_addSchema`, and follow the one that compiles; where the code branches on `sch.meta`, take the non-meta path out of `lib/core.ts`."
 validator_overrides:
   - check: sequence-alternate-path
     reason: The equal-length alternate paths all go through Ajv.getSchema, which is the branch of validate taken only when the first argument is a string key. The prompt fixes the runtime path to a schema object, so that branch is not taken.

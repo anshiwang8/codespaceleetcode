@@ -20,7 +20,9 @@ answer:
   accept_sequences: []
   accept_reasons: []
 hints:
-  - "`emit` is a thin wrapper that delegates to two functions imported from to-json-schema.ts."
+  - "JSON Schema output is built in passes: one walks the Zod schema, and later passes rewrite the emitted JSON. Merging intersection members is cleanup in a later pass, not done while each schema is processed."
+  - "`emit` is a thin wrapper that delegates to two functions imported from `to-json-schema.ts`."
+  - "Of those two, take the one that runs after `$defs` are extracted. Inside it, find the loop over `ctx.intersections`, follow the call made for each carrier, then the branch taken when no member is a union."
 solution: solutions/zod-trace-001.md
 tags: [validation, compilers]
 authors: [agent-author-1]

@@ -46,7 +46,12 @@
         }
       }
     },
-    "hints": { "type": "array", "items": { "$ref": "#/$defs/text" } },
+    "hints": {
+      "description": "Up to three, in order: a conceptual direction, then a narrower search, then guided reasoning. None may name the answer (spec section 4, Hints).",
+      "type": "array",
+      "maxItems": 3,
+      "items": { "$ref": "#/$defs/text" }
+    },
     "solution": {
       "description": "Relative to content/.",
       "type": "string",
@@ -105,7 +110,8 @@
             "enum": [
               "symbol-unique",
               "sequence-edges",
-              "sequence-alternate-path"
+              "sequence-alternate-path",
+              "hint-leak"
             ]
           },
           "reason": { "$ref": "#/$defs/text" }

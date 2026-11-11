@@ -15,7 +15,9 @@ answer:
   accept: []
   accept_reasons: []
 hints:
-  - Look at what `removeObserver` does once the observer set becomes empty.
+  - "This is a deferred work queue: one function enqueues an observable and another drains the queue at batch end. You want the enqueue side, so start from the removal, not the batch code."
+  - "Look at what `removeObserver` does once the observer set becomes empty."
+  - "The batch-end processor is `runPendingUnobservations`, which is the decoy. The function you want pushes onto `globalState.pendingUnobservations` after checking and setting `isPendingUnobservation`."
 solution: solutions/mobx-find-003.md
 tags: [reactivity]
 authors: [agent-author-4]

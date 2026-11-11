@@ -22,7 +22,9 @@ choices:
   - id: d
     label: attrs generates a field-based `__hash__` and caches its result on each instance.
 hints:
-  - Work out what `eq` ends up as first, then follow the `hash is None` branch.
+  - "attrs turns the `eq`, `frozen` and `hash` settings into one `ClassProps.Hashability` value, and the builder acts on that value; the question is which value this class gets."
+  - "Check which defaults `define` forwards for `hash`, `unsafe_hash`, `eq` and `auto_detect`, and how the inner `wrap` combines them for a class that isn't frozen."
+  - "Work out what `eq` ends up as first, then follow the `hash is None` branch. Then see which builder call that value triggers near the end of `wrap`."
 solution: solutions/attrs-architecture-001.md
 tags: [configuration]
 authors: [agent-author-rich-rhf]

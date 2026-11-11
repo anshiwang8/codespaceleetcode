@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { clickToken, cursorOnSymbol, expectOpenFile, FILES, openFile, openPuzzle, visible } from "./helpers";
+import { clickToken, cursorOnSymbol, expectOpenFile, FILES, openFile, openPuzzle, signIn, visible } from "./helpers";
 
 test.describe("code viewer", () => {
   test("F12 jumps across files, and the tree, tabs and trail follow", async ({ page }) => {
@@ -302,12 +302,14 @@ test.describe("puzzle page furniture", () => {
 
   test("hints come one at a time", async ({ page }) => {
     await openPuzzle(page, "e2e-find-symbol");
-    await expect(page.getByTestId("hint")).toHaveCount(0);
-    await page.getByRole("button", { name: "Show a hint" }).click();
-    await expect(page.getByTestId("hint")).toHaveCount(1);
-    await page.getByRole("button", { name: "Show the next hint" }).click();
-    await expect(page.getByTestId("hint")).toHaveCount(2);
-    await expect(page.getByRole("button", { name: /hint/ })).toHaveCount(0);
+    await signIn(page);
+    const hints = page.getByTestId("hint");
+    await expect(hints).toHaveCount(0);
+    await page.getByRole("button", { name: "Reveal hint 1" }).click();
+    await expect(hints).toHaveCount(1);
+    await page.getByRole("button", { name: "Reveal hint 2" }).click();
+    await expect(hints).toHaveCount(2);
+    await expect(page.getByRole("button", { name: /^Reveal hint/ })).toHaveCount(0);
   });
 
   test("the page and Monaco are white, whatever the system's light or dark setting", async ({ page }) => {

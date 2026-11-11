@@ -18,7 +18,9 @@ answer:
     - src/attr/_make.py#_ClassBuilder.add_attrs_init
     - src/attr/_make.py#_ClassBuilder.add_eq
 hints:
-  - Find the method that compiles the queue, then find every place the queue is appended to.
+  - "Compare the two styles: a function assigned straight into `self._cls_dict`, versus a script string and a hook stored for later. Only the second style counts."
+  - "The queue is set up in `_ClassBuilder.__init__` as a list of `(script, globs, hook)` tuples; note its attribute name."
+  - "Find the method that compiles the queue, then find every place the queue is appended to and note the `_ClassBuilder` method each append sits in."
 solution: solutions/attrs-architecture-002.md
 tags: [compilers]
 authors: [agent-author-rich-rhf]

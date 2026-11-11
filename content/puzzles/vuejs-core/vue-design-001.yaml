@@ -19,7 +19,9 @@ answer:
   anchor: [339, 344]
   window: [333, 347]
 hints:
-  - Deps are stored per key, and an array's indexes are keys too. Find the branch that compares keys with the new length.
+  - "Picture a target's deps as a map from key to dep, plus special keys for reads that cover the whole collection, such as iteration. Shortening an array affects more than one key at once."
+  - "Deps are stored per key, and an array's indexes are keys too. Find the branch that compares keys with the new length."
+  - "In `trigger`, the branch for an array's `length` doesn't look up a single key but visits every dep in the map. Select the condition that decides which of those to run, together with the call it guards."
 solution: solutions/vue-design-001.md
 tags: [reactivity]
 authors: [agent-author-design]

@@ -36,7 +36,7 @@ export function PuzzleGroupSection({ group, state, difficulty, omit, showProgres
         </summary>
         <div className={styles.groupContent}>
         {group.description ? <p className={styles.groupDescription}>{group.description}</p> : null}
-        <PuzzleTable puzzles={group.puzzles} state={state} omit={omit} />
+        <PuzzleTable puzzles={group.puzzles} state={state} omit={omit} showStatus={showProgress} />
         </div>
       </details>
     </section>

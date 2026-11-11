@@ -14,7 +14,9 @@ answer:
   anchor: [38, 38]
   window: [32, 40]
 hints:
-  - The line is inside the argument list of the `source.subscribe` call.
+  - "The function's `signal` parameter is optional, so look for the one expression that branches on whether it was supplied."
+  - "The line is inside the argument list of the `source.subscribe` call."
+  - "That call's first argument is the observer object with `next`, `error` and `complete`; the choice is made in the second argument, the options object."
 solution: solutions/rxjs-find-002.md
 tags: [observables]
 authors: [agent-author-1]

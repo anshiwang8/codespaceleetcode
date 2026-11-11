@@ -12,6 +12,77 @@ What was done (technical): The five SMTP values (`SMTP_HOST`, `SMTP_PORT`, `SMTP
 
 Still open: Move to Resend once M1 gives the site a domain (remove the SMTP values, set `RESEND_API_KEY` and `EMAIL_FROM`, and update the providers table on `/privacy`). Gmail caps a free account at about 500 recipients a day. M11 still needs to review `/privacy`.
 
+## Progressive hints, points, challenges, achievements, an opt-in leaderboard, safer deletion and a new logo
+
+Type: Addition
+
+Goal: Make practice more engaging and give it structure, without weakening grading or privacy: hints that escalate in three levels, points and a leaderboard people choose to join, daily, weekly and monthly challenges, achievements, a deletion flow that can't happen by accident, an accurate privacy policy, and a real visual identity.
+
+What should be done: Replace the single hint with up to three recorded levels, score solves on the server from verified activity only, schedule challenges per UTC period on the server, evaluate achievements from recorded activity (including for older accounts), rank only people who opt in under a public name, move deletion to a Danger zone that needs the typed word DELETE and a recent GitHub sign-in, bring `/privacy` and `/terms` up to date, and design a logo. Leaderboards were a v1 non-goal in spec section 11; the product owner asked for them, so that section changed.
+
+What was done (technical):
+
+- **Migration 0009** adds `hint_reveals`, `challenge_assignments`, `challenge_completions`, `score_events`, `user_achievements` and `leaderboard_entries`, all server-only with row-level security and no client grants, each user-owned row deleted with its user. It backfills a `score_events` row for every earlier solve (base points, the first-try bonus where the history shows it, no hint deduction, marked `backfilled`) and revokes the client grant on `puzzles.hints`.
+- **Hints.** The schema allows at most three; every puzzle now has three (Direction, Narrow the search, Guided reasoning), written by five agents that checked each identifier against the pinned snapshot and kept the existing hint at its level. A new validator check, `hint-leak`, fails a hint that names an answer ID, qualified symbol, path, file name, `path:L`, the correct choice's label, or the answer symbol's name as code, unless the prompt names it; it can take an override. Two existing hints failed it and were reworded. `POST /api/puzzles/:slug/hints` records a level (only the next one, even under concurrent requests) before returning its text; pages carry only the count and the revealed levels. `components/puzzle/HintPanel.tsx` shows them, with the cost explained; signed out, it asks to sign in, since reveals count in scoring.
+- **Points** (`lib/scoring.ts`): 100, 200 or 300 by difficulty, +25 for a correct first submission, −20 per hint revealed before the solve, at least 25; challenge bonuses 50, 100 and 200. Written once per puzzle (and once per challenge period) inside the submission's transaction, guarded by partial unique indexes, on the database's clock. The submit response adds `pointsAwarded`, `achievements` and `challenges`; the result box shows points and completed challenges, and achievements appear as toasts (`components/site/Toast.tsx`).
+- **Challenges** (`lib/server/challenges.ts`, `lib/periods.ts`): UTC days, Monday weeks and months. The first request for a period picks the least recently featured published puzzle from the kind's difficulties under an advisory lock, stores it, and fills skipped periods. A correct submission completes every open period featuring the puzzle; closed periods earn nothing. Daily challenge streak, completions by kind. `/challenges`, `/challenges/archive`, a strip on `/puzzles`, and a chip on featured puzzles.
+- **Achievements** (`lib/achievements.ts`): 18 badges defined as a metric and a threshold (solves, by difficulty, repositories, types, first-try, hint-free, activity streak, challenge completions, daily challenge streak). Evaluated after every graded submission and whenever shown, dated by when they were actually reached, awarded once by the primary key; backfilled solves never count as hint-free. The profile's Achievements section has a filter and progress bars.
+- **Leaderboard** (`lib/server/leaderboard.ts`, `/leaderboard`): all time, today, this week, this month; points, then whoever reached the total first, then name and id. Only users who joined under a public name in Settings → Leaderboard visibility appear; leaving or deleting removes them at once. Rows never carry a login, id, email or picture; everyone shows the default silhouette.
+- **Deletion.** `DELETE /api/me` needs `{ "confirm": "DELETE" }`, a GitHub sign-in in the last 15 minutes (403 with `reauth: true` otherwise), and is limited to 10 an hour; it removes the new tables too, in one transaction. Settings → Danger zone (`components/settings/DangerZone.tsx`) lists what's removed from `lib/account-deletion.ts`, says it doesn't delete the GitHub account and how to revoke access, and shows success only after a 200.
+- **Privacy and terms.** The policy no longer says there are no leaderboards, and covers hint reveals, points, challenges, achievements, the opt-in leaderboard, the new deletion flow, corrected retention for rate-limit counters and sign-in checks, error logs and cookies. Open questions are visible "Needs review" notes. Both pages are drafts again (M11). The contact address is a personal Gmail mailbox, flagged for review; emails are sent through Gmail over SMTP (M10).
+- **Brand.** A mark (a curly brace drawn as a branching node path on an accent square) beside the lowercase word, in theme tokens; one geometry in `components/site/mark.ts`, from which `scripts/brand-icons.mjs` writes the favicon, apple icon, manifest icons and `public/brand/` lockups. The share image uses it. The header adds Challenges and Leaderboard and wraps on a phone; a site footer with Privacy and Terms ends every page but the workspace. The landing workspace screenshots were recaptured with the hint panel, showing what production shows (no dev login).
+- **Fixes from an independent security review** (no critical or high findings): a user could resubmit a puzzle solved before a challenge's period, whose solution was already unlocked, to collect the bonus and a streak day; now only the submission that first solves a puzzle scores it or completes a challenge, and only if that solve falls inside the period (a test proves the old behavior is gone). Public names are NFKC-normalized and may not mix alphabets. `/leaderboard`, `/challenges` and its archive are rate-limited like their API routes (`isPageRateLimited`, `components/site/TooManyRequests.tsx`). Seeding unpublishes instead of deleting a removed puzzle that a challenge featured or that has hint reveals or points (`ingest/src/ingest/seed.py`, with a seed test).
+- **Fixes found on the way.** Two accounts confirming the same contact email at once returned a 500 and logged the address from the unique-violation detail; it now refuses like any taken address (a racing test fails without the fix). The auth provider no longer stores a dev login name in localStorage on sites without the dev login. `web/tests/scoring.test.ts` reads migration 0009 with LF endings, so its backfill test also passes on a Windows checkout.
+- **Merged with M10.** Main gained SMTP email (Gmail) while this branch was open. The providers table on `/privacy` names Google (Gmail) in the new table layout, its "Needs review" notes ask about Gmail instead of Resend, and spec M10 keeps main's Gmail steps.
+- **Tests.** New web tests for hints, scoring (including the migration's own backfill statement), periods across week, month, year and leap boundaries and server time zones, scheduling and expired challenges, achievements (once only, retroactive dates), the leaderboard (private by default, ties, pagination, leaving, deletion), RLS on the new tables and `puzzles.hints`, deletion of every new table, and the typed confirmation and recent sign-in. New e2e specs for hints, challenges, achievements, the leaderboard and the legal pages. `TEST_DATABASE_NAME` lets parallel test runs use their own database.
+- Docs: `spec.md` sections 4, 6, 8, 9, 10, 11, 13 and 14 (M11), `CLAUDE.md` layout, rule 1 and commands.
+
+Still open:
+
+- **Deploy steps (manual):** apply migration 0009 to the hosted database (`cd ingest && uv run --env-file .env python -m ingest migrate`, `--dry-run` first), then reseed (`uv run --env-file .env python -m ingest seed`) so the three-level hints load. Hints don't change blind-solve versions.
+- **M11:** both legal pages need a person to resolve each "Needs review" note and mark them reviewed.
+- The hints were written by agents; like the blind solves, a person should read them (part of M6) for paraphrased giveaways the `hint-leak` check can't see.
+- Someone who solved a challenge's puzzle before its period can't complete that challenge (see the review fixes below). As puzzles get featured again, long-time users will see more "Solved before" cards; a larger pool or a per-user fallback puzzle would be a product decision.
+- Look-alike names written entirely in another alphabet ("Аlісе" in Cyrillic only) can still resemble Latin ones; only mixing alphabets is refused.
+- Someone can read hints with a second account. Recorded reveals stop casual skipping, not that.
+- There's no moderation tool for public names yet; removing one means deleting the `leaderboard_entries` row.
+- The leaderboard sums the ledger on each request, with indexes on `earned_at` and `user_id`. If it grows large, keep running totals per period.
+- `/puzzles` and `/challenges` write a period's assignments on the first view of each period.
+- `pnpm visual:review` wasn't run for this change; the new pages were checked by hand at 375 and 1440 pixels in light and dark.
+
+## Visual review fixtures date activity in UTC
+
+Type: Fix
+
+Goal: `pnpm visual:review` should pass at any time of day.
+
+What should be done: The profile activity fixtures dated submissions from Postgres's `current_date`, which follows the database's local time zone, while the profile counts days in UTC. In the evening west of UTC the newest seeded day was two UTC days back, so the current streak read "0 days" and the profile activity gallery failed.
+
+What was done (technical): `web/e2e/visual-helpers.ts` dates every seeded row from `(now() at time zone 'UTC')::date`.
+
+## Design polish: one icon set, real screenshots, quieter labels
+
+Type: Change
+
+Goal: Apply a 20-point design checklist across the site: fewer filler badges and repeated labels, monospace only for code, one consistent icon set, the real product on the landing page, a stronger call to action, nested radii that run parallel, better contrast, balanced headlines, tabular numbers, and loading and save feedback.
+
+What should be done: Go through each page and apply each point where it fits, keep every rule in `CLAUDE.md` (motion, US English, no answers on the landing page), and capture before and after screenshots.
+
+What was done (technical):
+
+- **Icons.** `components/site/Icon.tsx` is one SVG set on a 16-unit grid with a 1.5 stroke, sized in em. It replaces every text glyph used as an icon: the list's status circles and sort arrows, the result check and cross (the one bounce is unchanged), the tree caret and + buttons, the outline +, tab and sequence close and move buttons, history badges, the verified and confirmed badges, theme favorites and preview, the auth banner and the Theme button. Error notices and field errors draw the same alert icon as a CSS mask (`--icon-alert`), since `⚠` drew differently in every font. `e2e/motion.spec.ts` now checks for the check icon instead of the ✓ character.
+- **Labels.** The six all-caps labels (table headers, the summary and streak labels, "Your answer", "Hints", "Outline", the landing demo's "Your answer") are sentence case with no tracking. Monospace is gone from logins, dates, chart ticks, sequence numbers, profile link URLs and repository names; it stays on code, paths, IDs and SHAs. Languages read TypeScript and Python (`languageLabel` in `lib/client/labels.ts`).
+- **Filler removed.** The two-letter link badges (in, gh, www…) on Settings and the profile are deleted (`LinkMark.tsx`). "(optional)" is no longer repeated on every field of a section that already says everything is optional, nor "(required)" on the email form's one field. The landing sign-in button's note moved into the hero line under both buttons, which now describes the button. Signed out, the puzzle list leaves out its status column (every row said "Not started"), and the workspace shows a status badge only once a puzzle is attempted or solved. The profile's Settings card shows only on a phone, where the header leaves Settings out.
+- **Landing.** The hero now shows the real workspace: `public/landing/workspace-light.png` and `-dark.png`, captured from `hono-trace-002` with only the chain's start, which the prompt names, added to the answer. The dark capture shows when the theme's scheme is dark. The screenshot is wider than the text column (up to 1232px, sized with container query units so a scrollbar can't cause sideways scroll). "Browse puzzles" is the largest, heaviest button. The worked example moved into "How a puzzle works", replacing four steps that repeated it, and its caption no longer repeats what the screenshot shows. "What it doesn't do" lost its side stripe and dash bullets; the type cards lost their inner dividers and group by spacing. "Why practice this" became "Most engineering work happens in code someone else wrote".
+- **Craft.** Segmented controls and the theme list use an inner radius of the outer radius minus the inset. Small text that used the faint color now uses the muted one. Headlines wrap balanced and paragraphs avoid a lone last word, globally. Tables, badges, chips, meters and the stat and count blocks use tabular numbers. Icons sit 0.125em low to center on the text.
+- **Loading and feedback.** The list, puzzle and profile pages already had loading skeletons, and every async button already said what it was doing ("Saving…", "Submitting…"). A `loading.tsx` skeleton for Settings was tried and removed: Settings refreshes after a save, and the loading boundary re-mounted the forms, so inline errors vanished (two `e2e/settings.spec.ts` tests caught it). A save that lands shows a check and "Saved." fading in once in the success color (`.saveDone`), for details, links and the picture. The signed-out Settings page now points to the Theme button on the profile page, where it moved.
+- **Accent.** The theme accent already marks the primary actions, links, selection and the logo; this pass concentrates it on the call to action rather than adding a new color, since a new brand color would change the default theme and all 189 derived ones.
+- Docs: `spec.md` section 10 (visual system, landing, list, result, motion), `CLAUDE.md` (the icon set and the landing captures), `VISUAL_REVIEW.md`.
+
+Still open:
+
+- The landing captures are PNGs (about 640 KB each at 2x); `next/image` serves them as WebP or AVIF. They're recaptured with `node scripts/capture-landing.mjs` against a local site with the real puzzles, not automatically, so a workspace change can leave them stale until someone reruns it.
+
 ## Send email through Gmail over SMTP (launch checklist M10)
 
 Type: Addition

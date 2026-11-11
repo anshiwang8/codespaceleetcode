@@ -25,7 +25,9 @@ answer:
   accept_sequences: []
   accept_reasons: []
 hints:
-  - Batches nest. Count `batchDepth` at every `startBatch` and `endBatch` call; only the call that brings it back to zero runs anything.
+  - "Notifying an effect and invoking it are separate steps: subscribers are queued while the change is announced and invoked when the outermost batch closes. Only frames still active then belong in the answer."
+  - "Batches nest. Track `batchDepth` through every `startBatch` call and every call that closes a batch; only the call that brings it back to zero runs anything."
+  - "The dep's own methods open and close a nested batch and return before any effect is invoked, so they aren't on the stack. From the call that brings the depth to zero, follow how a queued effect with no scheduler reaches `fn`."
 solution: solutions/vue-trace-002.md
 tags: [reactivity]
 authors: [agent-author-4]

@@ -23,7 +23,9 @@ answer:
     - src/utils/internal/object.ts#isJSONSerializable
   accept_sequences: []
 hints:
-  - After the handler runs, "~request" passes the result to a function in src/response.ts.
+  - "This is the response side of the request lifecycle: follow what happens to the handler's return value, not how the route or middleware was chosen."
+  - "After the handler runs, `\"~request\"` passes the result to a function in `src/response.ts`."
+  - "Stay in that file and, at each function, take the branch for a plain synchronous object, skipping the Promise, error and `Response` branches, until a call decides JSON serialization."
 solution: solutions/h3-trace-001.md
 tags: [request-lifecycle]
 authors: [agent-author-2]

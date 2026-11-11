@@ -14,7 +14,9 @@ answer:
   accept: []
   accept_reasons: []
 hints:
-  - Look at the first line of the http branch of Route.matches.
+  - "ASGI servers report a mount prefix separately as `root_path`, so trimming it is a shared job: every route type needs the same prefix-free path before matching."
+  - The same helper is also called from `Mount.matches`, `WebSocketRoute.matches`, `Router.app` and `StaticFiles`, so it is defined outside `starlette/routing.py`.
+  - Look at the first line of the http branch of `Route.matches`, then jump to the definition of the function it calls.
 solution: solutions/starlette-find-001.md
 tags: [routing]
 authors: [agent-author-jinja-starlette]

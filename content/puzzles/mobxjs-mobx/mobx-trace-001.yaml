@@ -23,7 +23,9 @@ answer:
     - packages/mobx/src/core/reaction.ts#runReactions
   accept_sequences: []
 hints:
-  - ObservableValue extends Atom, and the method that announces a change lives on the base class.
+  - "Split the write into two jobs: deciding whether the value really changed, then storing it and announcing the change. Only the second job leads to reactions."
+  - "`set` first calls `prepareNewValue_`, which only returns the value to store, so skip it and follow the call made after the `UNCHANGED` check."
+  - "`ObservableValue` extends `Atom`, and the method that announces a change lives on the base class. Inside it, the change is propagated between a pair of batch calls; follow the closing one."
 solution: solutions/mobx-trace-001.md
 tags: [reactivity]
 authors: [agent-author-2]

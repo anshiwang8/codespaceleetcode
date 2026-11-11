@@ -20,7 +20,9 @@ answer:
   accept_sequences: []
   accept_reasons: []
 hints:
+  - "Real servers hand each request to one entry point on the app, and a test helper should join that path quickly. The middleware composer only comes into play after routing."
   - "`request` is a thin wrapper for tests. Find what it hands the built `Request` to."
+  - "From there, follow the private method that runs the router match and builds the `Context`, and take the branch for two or more handlers rather than the single-handler fast path."
 solution: solutions/hono-trace-001.md
 tags: [request-lifecycle, middleware]
 authors: [agent-author-1]

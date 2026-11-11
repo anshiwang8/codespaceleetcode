@@ -19,7 +19,9 @@ answer:
   accept_sequences: []
   accept_reasons: []
 hints:
+  - "The input's shape is settled when `forkJoinImpl` is called, not per subscription, so the code inside `ObservableCtor[create]`, including `createResultObject`, is off this path."
   - "`forkJoinImpl` splits its arguments into keys and sources before it subscribes to anything."
+  - "Follow the call that produces `keys` and `sources` to its definition in the same file, then read which check runs for a single argument that `Array.isArray` rejects."
 solution: solutions/rxjs-trace-002.md
 tags: [observables]
 authors: [agent-author-1]

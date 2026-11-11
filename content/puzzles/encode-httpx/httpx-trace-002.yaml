@@ -25,7 +25,9 @@ answer:
   accept_sequences: []
   accept_reasons: []
 hints:
-  - The total length is needed to decide which header describes the body.
+  - Each body encoder in httpx returns a pair of default headers and a stream. The total length is needed to decide which header describes the body.
+  - "The encoders live in `httpx/_content.py` and the multipart stream in `httpx/_multipart.py`. Skip `DataField` and `FileField`: their length methods size one part, not the whole body."
+  - From `Request.__init__`, follow the call that receives `files=`, take its `files` branch, then find the stream method that chooses between `Content-Length` and `Transfer-Encoding`.
 solution: solutions/httpx-trace-002.md
 tags: [http-clients]
 authors: [agent-author-6]

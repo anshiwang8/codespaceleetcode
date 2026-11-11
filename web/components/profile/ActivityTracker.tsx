@@ -191,7 +191,7 @@ export function ActivityTracker({
 
       <p className={styles.summary} data-testid="activity-summary" aria-live="polite">
         {activity.label}: {plural(activity.submissions, "submission", "submissions")},{" "}
-        <span className="mono">{formatDay(activity.start)}</span> to <span className="mono">{formatDay(activity.end)}</span>.
+        <time dateTime={activity.start}>{formatDay(activity.start)}</time> to <time dateTime={activity.end}>{formatDay(activity.end)}</time>.
       </p>
 
       <div

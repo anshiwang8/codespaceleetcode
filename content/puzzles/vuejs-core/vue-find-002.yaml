@@ -14,7 +14,9 @@ answer:
   anchor: [334, 336]
   window: [331, 337]
 hints:
-  - Both removals are calls to two small helper functions in the same file.
+  - "Each dependency link sits in two doubly linked lists at once: the dep's list of subscribers and the effect's list of deps. Unlinking a stale link means updating both."
+  - "Both removals are calls to two small helper functions in the same file."
+  - "`cleanupDeps` walks backward from the effect's `depsTail`. Find the branch taken when `link.version === -1` and select the two helper calls in it, each of which takes the link."
 solution: solutions/vue-find-002.md
 tags: [reactivity]
 authors: [agent-author-1]

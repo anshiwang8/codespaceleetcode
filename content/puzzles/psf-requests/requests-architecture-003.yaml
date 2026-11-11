@@ -17,7 +17,9 @@ answer:
     - src/requests/exceptions.py#ProxyError
     - src/requests/exceptions.py#SSLError
 hints:
-  - Check every base class in each class header, not just the first one.
+  - "An `except` clause also catches every subclass of the class it names, so this is an inheritance question: which raised classes have `ConnectionError` among their ancestors?"
+  - List each `raise` in `HTTPAdapter.send`; many sit in the `except` handlers for `MaxRetryError` and for urllib3's SSL and HTTP errors. Then look each class up in `src/requests/exceptions.py`.
+  - Check every base class in each class header, not just the first one. Classes that share only `RequestException` with `ConnectionError` don't count.
 solution: solutions/requests-architecture-003.md
 tags: [http-clients, errors]
 authors: [agent-author-6]

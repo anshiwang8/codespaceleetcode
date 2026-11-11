@@ -70,7 +70,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .then((response) => {
         if (canceled) return;
         setMe(response);
-        setDevName(devLoginName());
+        // Only where the dev login exists, so the real site never stores a dev name.
+        setDevName(response.devAuth ? devLoginName() : null);
       });
     return () => {
       canceled = true;

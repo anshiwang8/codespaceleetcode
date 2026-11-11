@@ -22,7 +22,9 @@ choices:
   - id: d
     label: The parameter's own default.
 hints:
-  - The method works through the sources one after another, each guarded by a check that the value is still unset.
+  - "Click can take a parameter's value from several places and records which one won as a `ParameterSource`; the precedence is simply the order in which the method tries them."
+  - "The method works through the sources one after another, each guarded by a check that the value is still unset."
+  - "Read the guarded blocks top to bottom and match each one to a source by the helper it calls and the `ParameterSource` member it assigns; the first block whose source is present wins."
 solution: solutions/click-architecture-001.md
 tags: [command-line, configuration]
 authors: [agent-author-3]

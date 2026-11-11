@@ -2,6 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { LANDING_EXAMPLES } from "@/components/landing/examples";
+import { MARK_NODES, MARK_PATH, markSvgBody } from "@/components/site/mark";
 
 // The landing page quotes real puzzles and shows one worked example. These checks keep both honest:
 // the quoted puzzles exist and are published, the quotes match, and the worked example's answer
@@ -61,6 +62,39 @@ describe("landing page examples", () => {
       const answer = text.slice(text.indexOf("\nanswer:"), text.indexOf("\nchoices:") === -1 ? undefined : text.indexOf("\nchoices:"));
       expect(answer, file).not.toContain("CaseInsensitiveDict");
       expect(answer, file).not.toContain("src/requests/structures.py");
+    }
+  });
+});
+
+// The static brand files are written from components/site/mark.ts by scripts/brand-icons.mjs, so
+// the favicon, the brand SVGs and the inline logo can't drift apart.
+describe("brand files", () => {
+  const WEB = path.resolve(import.meta.dirname, "..");
+  const svgs = [
+    "app/icon.svg",
+    "public/brand/mark-light.svg",
+    "public/brand/mark-dark.svg",
+    "public/brand/logo-light.svg",
+    "public/brand/logo-dark.svg",
+  ];
+
+  for (const file of svgs) {
+    it(`${file} draws the current mark`, () => {
+      const text = readFileSync(path.join(WEB, file), "utf8");
+      expect(text).toContain(`d="${MARK_PATH}"`);
+      for (const { cx, cy } of MARK_NODES) expect(text).toContain(`cx="${cx}" cy="${cy}"`);
+      expect(text).toContain("<title>codebases</title>");
+    });
+  }
+
+  it("the favicon is codebases Light's mark", () => {
+    const text = readFileSync(path.join(WEB, "app/icon.svg"), "utf8");
+    expect(text).toContain(markSvgBody({ tile: "#2563eb", ink: "#ffffff" }));
+  });
+
+  it("the lockups spell the name in lowercase", () => {
+    for (const file of ["public/brand/logo-light.svg", "public/brand/logo-dark.svg"]) {
+      expect(readFileSync(path.join(WEB, file), "utf8")).toMatch(/>codebases<\/text>/);
     }
   });
 });

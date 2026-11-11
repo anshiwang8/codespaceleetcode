@@ -210,11 +210,23 @@ export async function verifyEmail(user: CurrentUser, token: string, now: Date = 
     await client.query("update email_verifications set consumed_at = $2 where id = $1", [row.id, now]);
     if (taken.rows[0]?.taken) return { kind: "invalid" as const };
     const previous = await client.query<{ email: string }>("select email from user_emails where user_id = $1", [user.id]);
-    await client.query(
-      `insert into user_emails (user_id, email, verified_at) values ($1, $2, $3)
-       on conflict (user_id) do update set email = excluded.email, verified_at = excluded.verified_at`,
-      [user.id, row.email, now],
-    );
+    // Two accounts confirming the same address at once both pass the check above, and the second
+    // insert breaks the unique index. Its error detail quotes the address, so it must never reach
+    // the logs: treat it as taken, keeping the token consumed.
+    await client.query("savepoint claim_address");
+    try {
+      await client.query(
+        `insert into user_emails (user_id, email, verified_at) values ($1, $2, $3)
+         on conflict (user_id) do update set email = excluded.email, verified_at = excluded.verified_at`,
+        [user.id, row.email, now],
+      );
+    } catch (error) {
+      if (typeof error === "object" && error !== null && "code" in error && error.code === "23505") {
+        await client.query("rollback to savepoint claim_address");
+        return { kind: "invalid" as const };
+      }
+      throw error;
+    }
     await client.query("delete from email_verifications where user_id = $1 and consumed_at is null", [user.id]);
     return { kind: "verified" as const, previous: previous.rows[0]?.email ?? null, address: row.email };
   });

@@ -1,6 +1,8 @@
 import { makeSignature } from "better-auth/crypto";
 import { beforeAll, describe, expect, it } from "vitest";
 import { DELETE as deleteMe, GET as getMe } from "@/app/api/me/route";
+import { PUT as leaderboardRoute } from "@/app/api/me/leaderboard/route";
+import { POST as hintRoute } from "@/app/api/puzzles/[slug]/hints/route";
 import { POST as submitRoute } from "@/app/api/puzzles/[slug]/submit/route";
 import type { MeResponse } from "@/lib/api-types";
 import { getCurrentUser } from "@/lib/server/auth";
@@ -18,7 +20,7 @@ function deleteRequest(cookie: string | undefined, options: { origin?: string | 
   const origin = options.origin === undefined ? ORIGIN : options.origin;
   if (origin !== null) headers.origin = origin;
   return deleteMe(
-    makeRequest("/api/me", { method: "DELETE", cookie, headers, body: "body" in options ? options.body : { confirm: true } }),
+    makeRequest("/api/me", { method: "DELETE", cookie, headers, body: "body" in options ? options.body : { confirm: "DELETE" } }),
     undefined,
   );
 }
@@ -53,10 +55,58 @@ async function traces(id: string) {
     submissions: await count("select count(*) as n from submissions where user_id = $1", id),
     progress: await count("select count(*) as n from progress where user_id = $1", id),
     rateLimits: await count("select count(*) as n from rate_limits where key like '%user:' || $1", id),
+    hintReveals: await count("select count(*) as n from hint_reveals where user_id = $1", id),
+    scoreEvents: await count("select count(*) as n from score_events where user_id = $1", id),
+    challengeCompletions: await count("select count(*) as n from challenge_completions where user_id = $1", id),
+    achievements: await count("select count(*) as n from user_achievements where user_id = $1", id),
+    leaderboard: await count("select count(*) as n from leaderboard_entries where user_id = $1", id),
+    profile: await count("select count(*) as n from user_profiles where user_id = $1", id),
   };
 }
 
-const NOTHING = { authUsers: 0, users: 0, sessions: 0, accounts: 0, submissions: 0, progress: 0, rateLimits: 0 };
+const NOTHING = {
+  authUsers: 0,
+  users: 0,
+  sessions: 0,
+  accounts: 0,
+  submissions: 0,
+  progress: 0,
+  rateLimits: 0,
+  hintReveals: 0,
+  scoreEvents: 0,
+  challengeCompletions: 0,
+  achievements: 0,
+  leaderboard: 0,
+  profile: 0,
+};
+
+/** Gives a user a row in every table migration 0009 added, through the real code paths. */
+async function useEveryFeature(cookie: string, id: string): Promise<void> {
+  const hint = await hintRoute(
+    makeRequest("/api/puzzles/fx-file/hints", { cookie, headers: { origin: ORIGIN }, body: { level: 1 } }),
+    params({ slug: "fx-file" }),
+  );
+  expect(hint.status).toBe(200);
+  await submitOnce(cookie);
+  const join = await leaderboardRoute(
+    makeRequest("/api/me/leaderboard", { method: "PUT", cookie, headers: { origin: ORIGIN }, body: { publicName: `Leaver ${id.slice(0, 6)}` } }),
+    undefined,
+  );
+  expect(join.status).toBe(200);
+  await getPool().query(
+    `insert into challenge_assignments (period_kind, period_start, puzzle_id)
+     select 'daily', date '2020-01-01', id from puzzles where slug = 'fx-file' on conflict do nothing`,
+  );
+  await getPool().query(
+    "insert into challenge_completions (user_id, period_kind, period_start) values ($1, 'daily', date '2020-01-01')",
+    [id],
+  );
+  await getPool().query("insert into user_profiles (user_id, display_name) values ($1, 'Leaving')", [id]);
+  const left = await traces(id);
+  for (const key of ["hintReveals", "scoreEvents", "challengeCompletions", "achievements", "leaderboard", "profile"] as const) {
+    expect(left[key], key).toBeGreaterThan(0);
+  }
+}
 
 describe("isSameOriginRequest", () => {
   const headers = (values: Record<string, string>) => new Headers(values);
@@ -81,9 +131,8 @@ describe.skipIf(!hasDatabase)("DELETE /api/me", () => {
   it("deletes a user's account, submissions, progress and counters, and signs them out", async () => {
     const cookie = await signIn("leaving-dev");
     const id = await userIdFor("leaving-dev");
-    await submitOnce(cookie);
+    await useEveryFeature(cookie, id);
     expect((await traces(id)).submissions).toBe(1);
-    expect((await traces(id)).rateLimits).toBe(1);
 
     const response = await deleteRequest(cookie);
     expect(response.status).toBe(200);
@@ -137,6 +186,37 @@ describe.skipIf(!hasDatabase)("DELETE /api/me", () => {
     expect(await getCurrentUser(new Headers({ host: "localhost:3000", cookie }))).toBeNull();
   });
 
+  it("needs a recent GitHub sign-in, and deletes nothing without one", async () => {
+    const context = await getAuth().$context;
+    const user = await context.internalAdapter.createUser(
+      { name: "octo-stale", email: "octo-stale@example.test", emailVerified: true, githubLogin: "octo-stale" },
+      { method: "oauth", oauth: { providerId: "github", profile: { login: "octo-stale" } } },
+    );
+    const session = await context.internalAdapter.createSession(user.id);
+    await getPool().query("update auth_sessions set created_at = now() - interval '1 hour' where token = $1", [session.token]);
+    const cookie = `${context.authCookies.sessionToken.name}=${session.token}.${await makeSignature(session.token, context.secret)}`;
+    expect(await getCurrentUser(new Headers({ host: "localhost:3000", cookie }))).toMatchObject({ id: user.id });
+
+    const response = await deleteRequest(cookie);
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ reauth: true });
+    expect((await traces(user.id)).authUsers).toBe(1);
+    expect(response.headers.getSetCookie()).toEqual([]);
+  });
+
+  it("a second delete with the old cookie finds no one, and still deletes nothing else", async () => {
+    const cookie = await signIn("twice-dev");
+    const id = await userIdFor("twice-dev");
+    const bystander = await signIn("bystander-dev");
+    const bystanderId = await userIdFor("bystander-dev");
+    await submitOnce(bystander);
+    expect((await deleteRequest(cookie)).status).toBe(200);
+    // The dev login's cookie names a login, which no longer exists.
+    expect((await deleteRequest(cookie)).status).toBe(401);
+    expect(await traces(id)).toEqual(NOTHING);
+    expect((await traces(bystanderId)).submissions).toBe(1);
+  });
+
   it("refuses a request from another site, or with no Origin, and deletes nothing", async () => {
     const cookie = await signIn("targeted-dev");
     const id = await userIdFor("targeted-dev");
@@ -150,7 +230,16 @@ describe.skipIf(!hasDatabase)("DELETE /api/me", () => {
   it("needs the confirmation in the body", async () => {
     const cookie = await signIn("hesitant-dev");
     const id = await userIdFor("hesitant-dev");
-    for (const body of [undefined, {}, { confirm: false }, { confirm: "true" }, { confirm: true, extra: 1 }]) {
+    for (const body of [
+      undefined,
+      {},
+      { confirm: false },
+      { confirm: true },
+      { confirm: "true" },
+      { confirm: "delete" },
+      { confirm: " DELETE" },
+      { confirm: "DELETE", extra: 1 },
+    ]) {
       expect((await deleteRequest(cookie, { body })).status).toBe(400);
     }
     expect((await traces(id)).authUsers).toBe(1);

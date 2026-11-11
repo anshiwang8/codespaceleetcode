@@ -17,7 +17,9 @@ answer:
     - src/jinja2/loaders.py#ChoiceLoader
     - src/jinja2/loaders.py#ModuleLoader
 hints:
-  - Two of them hold other loaders. The third never has source text to compile.
+  - "For each loader class, ask whether `load` resolves to `BaseLoader` or to a definition in the class's own body; overriding `get_source` alone doesn't count."
+  - "Skip classes that define only `__init__`, `get_source`, `list_templates` or small helpers, and skip the module type in the file that isn't a loader at all."
+  - "Two of them hold other loaders. The third never has source text to compile."
 solution: solutions/jinja-architecture-001.md
 tags: [extension-points]
 authors: [agent-author-jinja-starlette]

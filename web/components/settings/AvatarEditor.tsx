@@ -6,6 +6,7 @@ import styles from "@/components/settings/settings.module.css";
 import { Avatar } from "@/components/site/Avatar";
 import { ApiRequestError, api } from "@/lib/client/api";
 import { AVATAR_MAX_BYTES, AVATAR_MAX_MB, AVATAR_TOO_LARGE } from "@/lib/profile-fields";
+import { Icon } from "@/components/site/Icon";
 
 const FRAME = 220;
 const TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -238,10 +239,11 @@ export function AvatarEditor({ initialVersion }: { initialVersion: string | null
       />
       {message ? (
         <p
-          className={message.kind === "error" ? "notice notice-error" : styles.saveNote}
+          className={message.kind === "error" ? "notice notice-error" : styles.saveDone}
           role={message.kind === "error" ? "alert" : "status"}
           data-testid="avatar-status"
         >
+          {message.kind === "saved" ? <Icon name="check" /> : null}
           {message.text}
         </p>
       ) : null}

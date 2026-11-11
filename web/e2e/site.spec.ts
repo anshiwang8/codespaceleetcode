@@ -15,7 +15,7 @@ test.describe("puzzle list", () => {
     await expect(row).toContainText("Trace");
     await expect(row).toContainText("Medium");
     await expect(row).toContainText("acme-tiny");
-    await expect(row).toContainText("typescript");
+    await expect(row).toContainText("TypeScript");
   });
 
   test("filters live in the URL, and survive a reload", async ({ page }) => {
@@ -82,7 +82,8 @@ test.describe("puzzle list", () => {
   });
 
   test("clicking a column header sorts every group, and clicking it again reverses", async ({ page }) => {
-    const titles = (testId: string) => visible(page, testId).locator("tbody tr td:nth-child(2)");
+    // Signed out, the list has no status column, so the title is the first cell.
+    const titles = (testId: string) => visible(page, testId).locator("tbody tr td:nth-child(1)");
     await page.goto("/puzzles?group=none");
     await visible(page, "sort-title").click();
     await expect(page).toHaveURL(/sort=title/);
@@ -97,16 +98,16 @@ test.describe("puzzle list", () => {
       "Where limits live",
       "Who owns the port",
     ];
-    await expect(page.locator("tbody tr td:nth-child(2)")).toHaveText(ascending);
+    await expect(page.locator("tbody tr td:nth-child(1)")).toHaveText(ascending);
 
     await visible(page, "sort-title").click();
     await expect(page).toHaveURL(/sort=-title/);
     await expect(page.getByRole("columnheader", { name: "Puzzle" })).toHaveAttribute("aria-sort", "descending");
-    await expect(page.locator("tbody tr td:nth-child(2)")).toHaveText([...ascending].reverse());
+    await expect(page.locator("tbody tr td:nth-child(1)")).toHaveText([...ascending].reverse());
 
     // Difficulty goes easiest first, not alphabetically.
     await visible(page, "sort-difficulty").click();
-    await expect(page.locator("tbody tr td:nth-child(4)")).toHaveText([
+    await expect(page.locator("tbody tr td:nth-child(3)")).toHaveText([
       "Easy", "Easy", "Easy", "Medium", "Medium", "Medium", "Hard", "Hard",
     ]);
 

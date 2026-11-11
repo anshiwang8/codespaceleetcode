@@ -1,4 +1,5 @@
 import styles from "@/components/puzzle/puzzle.module.css";
+import { Icon } from "@/components/site/Icon";
 
 function baseName(path: string): string {
   return path.slice(path.lastIndexOf("/") + 1);
@@ -35,7 +36,7 @@ export function EditorTabs({ tabs, activePath, onSelect, onClose }: EditorTabsPr
             className={styles.tabClose}
             onClick={() => onClose(path)}
           >
-            ×
+            <Icon name="x" />
           </button>
         </div>
       ))}

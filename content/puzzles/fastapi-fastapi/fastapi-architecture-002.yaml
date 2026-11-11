@@ -15,7 +15,9 @@ answer:
     - fastapi/params.py#Header
     - fastapi/params.py#Cookie
 hints:
-  - The base class is named in the class headers; the body-side base is Body.
+  - The parameter classes form a small inheritance tree, with one branch for values read from the request body and one for everything else. Find the root of the other branch.
+  - The base class is named in the class headers; the body-side base is `Body`.
+  - Each direct subclass of that base sets a class attribute `in_` to a `ParamTypes` member. Keep the classes whose header names the base, not `Body` or its subclasses.
 solution: solutions/fastapi-architecture-002.md
 tags: [validation, code-structure]
 authors: [agent-author-3]

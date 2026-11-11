@@ -15,7 +15,9 @@ answer:
   anchor: [553, 556]
   window: [550, 560]
 hints:
-  - The statement is nested inside the origin comparison.
+  - "This is a credential-safety rule with two tests: first whether the redirect target shares the original origin, and only then whether it is a plain http-to-https upgrade."
+  - Both tests are module-level helpers near the top of `httpx/_client.py`. Read them, then find where `_redirect_headers` calls each one.
+  - The statement is nested inside the origin comparison. Stop at the line that pops `Authorization`; the `Host` update below it belongs to the outer block.
 solution: solutions/httpx-find-002.md
 tags: [http-clients, auth-and-security]
 authors: [agent-author-3]

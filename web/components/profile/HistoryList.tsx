@@ -8,6 +8,7 @@ import { PUZZLES_PATH } from "@/lib/browse";
 import { ApiRequestError, api } from "@/lib/client/api";
 import { DIFFICULTY_LABELS, TYPE_LABELS } from "@/lib/client/labels";
 import { formatDateTime, formatLongDay } from "@/lib/format";
+import { Icon } from "@/components/site/Icon";
 
 type ListFilters = Omit<HistoryFilters, "date">;
 
@@ -229,7 +230,7 @@ export function HistoryList({ initial, repos, date, onClearDate }: HistoryListPr
             {entries.map((entry) => (
               <li key={entry.id} className={styles.historyItem} data-testid="history-entry">
                 <span className={`badge ${entry.passed ? "badge-ok" : "badge-bad"} ${styles.historyResult}`}>
-                  <span aria-hidden="true">{entry.passed ? "✓" : "✗"}</span>
+                  <Icon name={entry.passed ? "check" : "x"} />
                   {entry.passed ? "Correct" : "Incorrect"}
                 </span>
                 <span className={styles.historyMain}>
@@ -237,14 +238,14 @@ export function HistoryList({ initial, repos, date, onClearDate }: HistoryListPr
                     {entry.title}
                   </Link>
                   <span className={styles.historyMeta}>
-                    <span className="mono">{entry.repoSlug}</span>
+                    <span>{entry.repoSlug}</span>
                     <span aria-hidden="true"> · </span>
                     {TYPE_LABELS[entry.type]}
                     <span aria-hidden="true"> · </span>
                     <span className={`difficulty-${entry.difficulty}`}>{DIFFICULTY_LABELS[entry.difficulty]}</span>
                   </span>
                 </span>
-                <time className={`${styles.historyTime} mono`} dateTime={entry.submittedAt}>
+                <time className={styles.historyTime} dateTime={entry.submittedAt}>
                   {formatDateTime(entry.submittedAt)}
                 </time>
               </li>

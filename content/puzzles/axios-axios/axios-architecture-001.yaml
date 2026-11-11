@@ -35,7 +35,9 @@ choices:
   - id: e
     label: C, A, dispatchRequest, E, D
 hints:
-  - Check the default value of every transitional flag that _request reads while it builds the request chain.
+  - "Think about how `_request` turns the registered interceptors into one chain around `dispatchRequest`: which ones get filtered out, and whether each list keeps registration order."
+  - "Look at the two `forEach` callbacks in `_request` that fill `requestInterceptorChain` and `responseInterceptorChain`, and at how each one adds an interceptor to its array."
+  - "Check the default value of every transitional flag that `_request` reads while it builds the request chain; `transitionalDefaults` comes from `lib/defaults/transitional.js`."
 solution: solutions/axios-architecture-001.md
 tags: [middleware, request-lifecycle]
 authors: [agent-author-unstorage-axios]

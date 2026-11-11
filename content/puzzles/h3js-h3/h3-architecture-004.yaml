@@ -32,7 +32,9 @@ choices:
   - id: d
     label: The `/late` handler runs, because the parent's router reads the child's `~routes` array again on every request.
 hints:
+  - "Read `mount` as registration-time code: ask what it takes from the child at the moment it runs, and what, if anything, is looked up again on the child when a request arrives."
   - "`mount` has two branches. Check which one an `H3` instance takes, and when each piece of the child is read."
+  - "In that branch, compare when the wrapper pushed onto the parent's `~middleware` reads the child's middleware with when the `for` loop copies the child's `~routes` into the parent's router."
 solution: solutions/h3-architecture-004.md
 tags: [routing, middleware]
 authors: [agent-author-5]

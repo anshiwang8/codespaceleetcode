@@ -14,7 +14,9 @@ answer:
     - src/click/exceptions.py#Abort
     - src/click/exceptions.py#Exit
 hints:
-  - Command.main has separate except clauses for these two, apart from the one for ClickException.
+  - "Not every exception in Click reports a user-facing error: some exist only to end a run early, and those don't need `ClickException`'s message formatting."
+  - "Each class's bases are on its `class` line; follow each base up through the file until you reach either `ClickException` or a built-in exception type."
+  - "`Command.main` has separate except clauses for these two, apart from the one for `ClickException`."
 solution: solutions/click-architecture-002.md
 tags: [command-line, errors]
 authors: [agent-author-3]

@@ -69,10 +69,28 @@ describe.skipIf(!hasDatabase)("row-level security", () => {
     it("allows the public columns of published puzzles", async () => {
       const { rows } = await client.query(
         `select id, snapshot_id, slug, type, difficulty, title, prompt, answer_kind, set_count,
-                choices, hints, tags, verified_by, published
+                choices, tags, verified_by, published
            from puzzles where slug = 'fx-symbol'`,
       );
       expect(rows).toHaveLength(1);
+    });
+
+    it("denies puzzles.hints, which are revealed one level at a time through the server", async () => {
+      await expectDenied("select hints from puzzles");
+      await expectDenied("select slug from puzzles where hints is not null");
+    });
+
+    it("denies every table migration 0009 added", async () => {
+      for (const table of [
+        "hint_reveals",
+        "challenge_assignments",
+        "challenge_completions",
+        "score_events",
+        "user_achievements",
+        "leaderboard_entries",
+      ]) {
+        await expectDenied(`select count(*) from ${table}`);
+      }
     });
 
     it("allows reading the code index", async () => {

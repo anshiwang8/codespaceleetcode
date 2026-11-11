@@ -22,7 +22,9 @@ answer:
   accept_sequences: []
   accept_reasons: []
 hints:
-  - Scanning first finds the modules, then reads each module's metadata in a separate pass.
+  - "Scanning first finds the modules, then reads each module's metadata in a separate pass."
+  - "In `scan`, skip the calls that register the core module, discover modules or bind globals. The later pass loops over the container's modules and reads each kind of metadata with its own method."
+  - "In the providers loop, the call that registers the provider runs before `reflectDynamicMetadata`, which only collects the class's enhancers. Follow the former; a plain class takes its first early `return`."
 solution: solutions/nest-trace-001.md
 tags: [dependency-injection]
 authors: [agent-author-1]

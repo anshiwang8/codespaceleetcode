@@ -22,7 +22,9 @@ answer:
   accept_sequences: []
   accept_reasons: []
 hints:
+  - "A plain string is turned into a rich text object that renders itself through the console protocol, and wrapping happens while it lays out its lines. Calls that already returned, like `Console.render_str`, don't count."
   - "`Console.render` has a separate branch for a `str`. Look at what it does with the object that branch builds."
+  - "Follow the method the `str` branch calls on the new object into `rich/text.py`, and from there keep following calls until one goes into `rich/_wrap.py`; skip `Text.split` and `Text.divide`."
 solution: solutions/rich-trace-001.md
 tags: [code-structure]
 authors: [agent-author-rich-rhf]

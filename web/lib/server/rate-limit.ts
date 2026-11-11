@@ -1,4 +1,5 @@
 import "server-only";
+import { headers as nextHeaders } from "next/headers";
 import type { CurrentUser, HeaderReader } from "@/lib/server/auth";
 import { getPool } from "@/lib/server/db";
 
@@ -21,6 +22,14 @@ export const SEARCH_LIMIT: RateLimit = { limit: 240, windowMs: 60_000 };
  */
 export const SHORT_SEARCH_LIMIT: RateLimit = { limit: 30, windowMs: 60_000 };
 export const SHORT_SEARCH_CHARS = 3;
+/** Revealing hints: a person reads each one, so this is generous and only stops scripts. */
+export const HINT_LIMIT: RateLimit = { limit: 30, windowMs: 60_000 };
+/** Leaderboard and challenge reads, which aggregate over many rows. */
+export const BOARD_LIMIT: RateLimit = { limit: 120, windowMs: 60_000 };
+/** Joining, renaming or leaving the leaderboard. */
+export const LEADERBOARD_CHANGE_LIMIT: RateLimit = { limit: 20, windowMs: 60 * 60_000 };
+/** Account deletion attempts, which each check a recent sign-in. */
+export const DELETE_ACCOUNT_LIMIT: RateLimit = { limit: 10, windowMs: 60 * 60_000 };
 
 /** Rows whose window started longer ago than this are deleted. Every window must be shorter. */
 const MAX_WINDOW_MS = 60 * 60_000;
@@ -116,6 +125,14 @@ export function rateLimitKey(user: CurrentUser | null, headers: HeaderReader): s
   if (user) return `user:${user.id}`;
   const ip = headers.get("x-forwarded-for")?.split(",").at(-1)?.trim().slice(0, 64);
   return `ip:${ip || "unknown"}`;
+}
+
+/**
+ * For server-rendered pages that aggregate over many rows (the leaderboard, challenges): the same
+ * budget as their API routes, so reloading a page can't do what the API refuses.
+ */
+export async function isPageRateLimited(user: CurrentUser | null): Promise<boolean> {
+  return isRateLimited(`board:${rateLimitKey(user, await nextHeaders())}`, BOARD_LIMIT);
 }
 
 /** Tests only: forgets every count. */

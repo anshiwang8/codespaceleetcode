@@ -7,8 +7,9 @@ import { Attribution } from "@/components/puzzle/Attribution";
 import { CodePanel } from "@/components/puzzle/CodePanel";
 import { PromptPanel, type PromptTab } from "@/components/puzzle/PromptPanel";
 import { Splitter } from "@/components/puzzle/Splitter";
+import { type ToastMessage, ToastRegion } from "@/components/site/Toast";
 import styles from "@/components/puzzle/puzzle.module.css";
-import type { Manifest, PuzzleDetail, PuzzleStatus, SubmitResponse } from "@/lib/api-types";
+import type { AchievementUnlock, Manifest, PuzzleDetail, PuzzleStatus, SubmitResponse } from "@/lib/api-types";
 import { type DraftAction, draftReducer, elapsedMs, emptyDraft, toSubmission } from "@/lib/client/answer";
 import { ApiRequestError, api } from "@/lib/client/api";
 import { initialNavigation, navigationReducer } from "@/lib/client/navigation";
@@ -18,6 +19,17 @@ type ManifestState =
   | { state: "loading" }
   | { state: "error"; message: string }
   | { state: "ready"; manifest: Manifest };
+
+function achievementToast(achievement: AchievementUnlock): ToastMessage {
+  return {
+    id: `achievement-${achievement.id}`,
+    eyebrow: "Achievement unlocked",
+    title: achievement.title,
+    body: achievement.description,
+    icon: "award",
+    link: { href: "/profile#achievements", label: "See your achievements" },
+  };
+}
 
 function nextStatus(current: PuzzleStatus, correct: boolean): PuzzleStatus {
   // Mirrors what the server records: solved is final. See spec section 9.
@@ -51,6 +63,12 @@ export function PuzzleWorkspace({ puzzle }: { puzzle: PuzzleDetail }) {
     attempts: number;
   } | null>(null);
   const [startedAt] = useState(() => Date.now());
+  // Achievement toasts, tied to the person who earned them like the result is.
+  const [toasts, setToasts] = useState<{ login: string; items: ToastMessage[] }>({ login: "", items: [] });
+  const dismissToast = useCallback(
+    (id: string) => setToasts((current) => ({ ...current, items: current.items.filter((item) => item.id !== id) })),
+    [],
+  );
 
   // Which tab the prompt panel shows. Lifted here so the answer tray's "View solution" can switch it.
   const [promptTab, setPromptTab] = useState<PromptTab>("description");
@@ -128,6 +146,16 @@ export function PuzzleWorkspace({ puzzle }: { puzzle: PuzzleDetail }) {
       const response = await api.submit(puzzle.slug, submission, controller.signal);
       if (controller.signal.aborted) return;
       if (revision === draftRevision.current) setResult(response);
+      if (login && response.achievements.length > 0) {
+        const added = response.achievements.map(achievementToast);
+        setToasts((current) => ({
+          login,
+          items: [
+            ...(current.login === login ? current.items : []).filter((item) => !added.some((next) => next.id === item.id)),
+            ...added,
+          ],
+        }));
+      }
       if (login) {
         setLocalProgress({
           login,
@@ -230,6 +258,11 @@ export function PuzzleWorkspace({ puzzle }: { puzzle: PuzzleDetail }) {
         />
       </div>
       <Attribution snapshot={puzzle.snapshot} />
+      <ToastRegion
+        toasts={toasts.login === login ? toasts.items : []}
+        onDismiss={dismissToast}
+        label="Achievements"
+      />
     </main>
   );
 }

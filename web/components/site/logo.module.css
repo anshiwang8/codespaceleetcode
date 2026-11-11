@@ -1,34 +1,51 @@
+/*
+ * The logo: the mark (an accent tile with a brace drawn as a branching path) and the word. Sizes
+ * are in em from the size class, so the mark and the word scale together. Colors are tokens.
+ */
+
 .logo {
   position: relative;
   display: inline-flex;
   align-items: center;
-  font-family: var(--font-logo);
-  font-size: 15px;
+  gap: 0.42em;
+  font-family: var(--font-ui);
+  font-size: 17px;
   font-weight: 700;
   line-height: 1;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.03em;
   white-space: nowrap;
 }
 
-.word {
-  display: inline-flex;
-  align-items: center;
+.mark {
+  display: block;
+  flex: none;
+  width: 1.4em;
+  height: 1.4em;
 }
 
-.code {
+.tile {
+  fill: var(--accent);
+}
+
+.glyph {
+  fill: none;
+  stroke: var(--accent-ink);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.node {
+  fill: var(--accent-ink);
+}
+
+/* Optical alignment: the lowercase word sits a touch high against the square mark. */
+.word {
+  padding-bottom: 0.06em;
   color: var(--text);
 }
 
-.bases {
-  margin-left: 0.05em;
-  padding: 0.06em 0.14em 0.1em;
-  border-radius: 0.14em;
-  background: var(--accent);
-  color: var(--accent-ink);
-}
-
 .small {
-  font-size: 15px;
+  font-size: 17px;
 }
 
 .medium {
@@ -37,5 +54,5 @@
 
 .large {
   font-size: clamp(40px, 11vw, 72px);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.04em;
 }
