@@ -2,7 +2,7 @@ import { ProgressBreakdown } from "@/components/profile/ProgressBreakdown";
 import styles from "@/components/profile/profile.module.css";
 import { PUZZLE_TYPES, type Difficulty, type ProfileProgress } from "@/lib/api-types";
 import { browseHref, DEFAULT_GROUPING } from "@/lib/browse";
-import { DIFFICULTY_LABELS, TYPE_LABELS } from "@/lib/client/labels";
+import { DIFFICULTY_LABELS, languageLabel, TYPE_LABELS } from "@/lib/client/labels";
 import { topicLabel } from "@/lib/topics";
 
 const DIFFICULTIES: Difficulty[] = ["easy", "medium", "hard"];
@@ -35,11 +35,10 @@ export function CategoryBreakdowns({ progress }: { progress: ProfileProgress }) 
       <ProgressBreakdown
         id="repo"
         title="By repository"
-        mono
         rows={progress.byRepo.map((repo) => ({
           key: repo.repo,
           label: repo.repo,
-          detail: repo.language,
+          detail: languageLabel(repo.language),
           href: browseHref({ filters: { repo: repo.repo }, group: DEFAULT_GROUPING }),
           solved: repo.solved,
           attempted: repo.attempted,

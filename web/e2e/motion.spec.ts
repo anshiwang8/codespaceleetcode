@@ -245,7 +245,7 @@ test("a correct result's check bounces once inside a fixed box, and not at all w
   await page.getByRole("radio", { name: "The config module" }).check();
   await page.getByTestId("submit").click();
   const icon = page.getByTestId("result-icon");
-  await expect(icon).toHaveText("✓");
+  await expect(icon.locator('svg[data-icon="check"]')).toHaveCount(1);
   const running = await icon.evaluate((element) => {
     const animation = element.getAnimations().find((item) => (item as CSSAnimation).animationName === "motion-bounce");
     return animation ? { state: animation.playState, iterations: animation.effect?.getTiming().iterations } : null;
@@ -296,7 +296,7 @@ test("a correct result's check bounces once inside a fixed box, and not at all w
   await ready(page);
   await page.getByRole("radio", { name: "The config module" }).check();
   await page.getByTestId("submit").click();
-  await expect(page.getByTestId("result-icon")).toHaveText("✓");
+  await expect(page.getByTestId("result-icon").locator('svg[data-icon="check"]')).toHaveCount(1);
   const reduced = await page.getByTestId("result-icon").evaluate((element) => ({
     duration: parseFloat(getComputedStyle(element).animationDuration),
     opacity: getComputedStyle(element).opacity,

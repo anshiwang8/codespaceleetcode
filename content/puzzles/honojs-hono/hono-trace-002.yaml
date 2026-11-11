@@ -19,7 +19,9 @@ answer:
   accept_sequences: []
   accept_reasons: []
 hints:
+  - "Treat each response helper on `Context` as a thin layer: what matters is the call that produces what `redirect` returns, not the work it does before that."
   - "`redirect` makes two calls on `this`. Only one of them builds the response it returns."
+  - "The header call only stages the `Location` header. Jump to the definition of the call in the `return` statement, and keep following calls until you reach a `#`-prefixed method."
 solution: solutions/hono-trace-002.md
 tags: [request-lifecycle]
 authors: [agent-author-5]

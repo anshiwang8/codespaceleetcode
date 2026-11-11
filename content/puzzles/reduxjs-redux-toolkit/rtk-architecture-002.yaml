@@ -22,7 +22,9 @@ choices:
   - id: d
     label: action-creator check, thunk, immutable-state check, serializable-state check
 hints:
-  - Pay attention to whether each one is added with push or unshift.
+  - "Treat the function as building the array one statement at a time: the order the blocks appear in the source isn't necessarily the order of the result."
+  - "In `getDefaultMiddleware`, find the blocks guarded by `thunk`, `immutableCheck`, `serializableCheck` and `actionCreatorCheck`, and note which sit inside the `NODE_ENV` check. The array's class doesn't override `push` or `unshift`."
+  - "Pay attention to whether each one is added with `push` or `unshift`, and write down the whole array after each statement, in source order."
 solution: solutions/rtk-architecture-002.md
 tags: [state-management, middleware]
 authors: [agent-author-2]

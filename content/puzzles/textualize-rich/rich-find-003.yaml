@@ -16,7 +16,9 @@ answer:
   accept: []
   accept_reasons: []
 hints:
-  - The imports for this path are done lazily, inside the method, right before they are used.
+  - "Rich keeps platform-specific code in private modules under `rich/` and imports them only where they're needed, so the imports at the top of `console.py` won't point you there."
+  - "The imports for this path are done lazily, inside the method, right before they are used."
+  - "In `Console._write_buffer`, find the branch guarded by `use_legacy_windows_render`; of the two modules imported there, pick the one that supplies the function the buffer is passed to."
 solution: solutions/rich-find-003.md
 tags: [code-structure]
 authors: [agent-author-rich-rhf]

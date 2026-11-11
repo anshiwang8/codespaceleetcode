@@ -24,7 +24,9 @@ choices:
   - id: d
     label: "O(1) amortized: the key is appended again, and its stale earlier entry is skipped later, when the cache evicts."
 hints:
-  - "`_postinit` gives some of the deque's methods short names. Find out which deque method `_remove` is."
+  - "An LRU cache pairs a dict for lookup with something that records recency order; the cost of a read depends on how that order is updated when the key moves."
+  - "Read `LRUCache.__getitem__` and list what it does to `self._queue` when the key isn't already at the right end; the lock and the dict lookup cost constant time."
+  - "`_postinit` gives some of the deque's methods short private names. Match each name that `__getitem__` uses to the deque method it stands for, then ask what that method has to do to find a key."
 solution: solutions/jinja-design-001.md
 tags: [caching-and-storage]
 authors: [agent-author-design]

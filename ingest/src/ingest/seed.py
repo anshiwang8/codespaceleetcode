@@ -468,13 +468,18 @@ def _remove_absent_puzzles(connection: Connection, slugs: list[str], counts: Puz
     """Delete puzzles gone from content, except ones users have tried, which only get unpublished.
 
     A progress row with no submission (the removed give-up feature left these) still counts as
-    tried, since deleting the puzzle would cascade to that row.
+    tried, since deleting the puzzle would cascade to that row. So do a revealed hint, points, and
+    a challenge period that featured it: deleting the puzzle would cascade those away too, and a
+    challenge's period would then get a different puzzle than the one people already saw.
     """
     absent = connection.execute(
         """
         select p.id,
           exists (select 1 from submissions s where s.puzzle_id = p.id)
           or exists (select 1 from progress r where r.puzzle_id = p.id)
+          or exists (select 1 from hint_reveals h where h.puzzle_id = p.id)
+          or exists (select 1 from score_events e where e.puzzle_id = p.id)
+          or exists (select 1 from challenge_assignments a where a.puzzle_id = p.id)
         from puzzles p
         where not (p.slug = any(%s::text[]))
         """,

@@ -14,7 +14,9 @@ answer:
   accept: []
   accept_reasons: []
 hints:
-  - It's called from the method that wraps both dispatching and error handling.
+  - "This is the request-setup step that runs before the view is dispatched; both kinds of callbacks are stored per blueprint name, with `None` standing for the app itself."
+  - "It's called from the method that wraps both dispatching and error handling."
+  - "Search `src/flask/app.py` for where `self.url_value_preprocessors` is read rather than registered; the method you want loops over it and then over `self.before_request_funcs`."
 solution: solutions/flask-find-001.md
 tags: [request-lifecycle, middleware]
 authors: [agent-author-3]

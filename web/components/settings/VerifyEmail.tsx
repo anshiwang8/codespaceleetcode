@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { SignInPrompt } from "@/components/auth/SignInPrompt";
 import { ApiRequestError, api } from "@/lib/client/api";
+import { Icon } from "@/components/site/Icon";
 
 type State =
   | { kind: "waiting" }
@@ -57,7 +58,7 @@ export function VerifyEmail() {
         <>
           <p role="status" data-testid="verify-done">
             <span className="badge badge-ok">
-              <span aria-hidden="true">✓</span> Confirmed
+              <Icon name="check" /> Confirmed
             </span>{" "}
             {state.address ? <>Your contact email is now <strong>{state.address}</strong>.</> : "Your email is confirmed."}
           </p>

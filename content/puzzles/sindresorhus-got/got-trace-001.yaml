@@ -22,7 +22,9 @@ answer:
     - source/core/timed-out.ts#timedOut
   accept_sequences: []
 hints:
-  - flush first prepares the body and then calls a method that issues the actual HTTP request.
+  - "Think in phases: build the request, send it, then do per-request setup once a `ClientRequest` object exists. Timeout timers can only be attached in that last phase."
+  - "`flush` first prepares the body and then calls a method that issues the actual HTTP request."
+  - "In that method, skip the cache branch and find the `isClientRequest(...)` check on the request function's result; follow the handler that receives the `ClientRequest` toward `source/core/timed-out.ts`."
 solution: solutions/got-trace-001.md
 tags: [retries-and-timeouts, request-lifecycle]
 authors: [agent-author-2]

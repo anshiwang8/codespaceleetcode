@@ -15,7 +15,9 @@ answer:
   accept: []
   accept_reasons: []
 hints:
-  - Find where the application's constructor fills in its exception_handlers dict, and follow the names it uses.
+  - The application only plugs default handlers into a mapping; the handler functions themselves are defined in a separate module and imported.
+  - Find where the application's constructor fills in its handler dict, and follow the names it uses.
+  - In `FastAPI.__init__`, the `setdefault` calls keyed by `HTTPException` and `RequestValidationError` pass functions imported at the top of the file. Jump to one's definition.
 solution: solutions/fastapi-architecture-003.md
 tags: [errors, extension-points]
 authors: [agent-author-6]

@@ -20,7 +20,9 @@ answer:
   accept_sequences: []
   accept_reasons: []
 hints:
-  - The transform stage works on the AST that the parser produced. Find the entry point of that stage first.
+  - "The transform stage works on the AST that the parser produced. Find the entry point of that stage first."
+  - "In compile.ts, `baseCompile` also calls `baseParse`, `getBaseTransformPreset` and `generate`, and none of those leads to the AST walk. Look for the call that receives `ast` along with the merged transforms."
+  - "From that entry point, follow the call that starts visiting the root node, and keep following calls that pass a node down until one loops over `parent.children`. Loops over `nodeTransforms` or `node.branches` don't count."
 solution: solutions/vue-trace-001.md
 tags: [compilers]
 authors: [agent-author-1]

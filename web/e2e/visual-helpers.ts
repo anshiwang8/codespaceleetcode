@@ -15,10 +15,10 @@ export async function fixtureAccount(page: Page, populated = false, login = "vis
     if (populated) {
       // Synthetic activity contains no canonical or submitted answer data.
       await client.query(`insert into submissions (user_id, puzzle_id, answer_json, correct, created_at)
-        select $1, p.id, '{}'::jsonb, n % 3 = 0, (current_date - n + time '12:00') at time zone 'UTC'
+        select $1, p.id, '{}'::jsonb, n % 3 = 0, ((now() at time zone 'UTC')::date - n + time '12:00') at time zone 'UTC'
         from puzzles p cross join generate_series(14, 1, -1) n where p.slug = 'e2e-find-file'`, [id]);
       await client.query(`insert into progress (user_id, puzzle_id, status, attempts, solved_at)
-        select $1, id, 'solved', 14, current_date - interval '3 days' from puzzles where slug = 'e2e-find-file'`, [id]);
+        select $1, id, 'solved', 14, (now() at time zone 'UTC')::date - interval '3 days' from puzzles where slug = 'e2e-find-file'`, [id]);
       await client.query(`insert into progress (user_id, puzzle_id, status, attempts)
         select $1, id, 'attempted', 2 from puzzles where slug = 'e2e-trace-sequence'`, [id]);
     }
@@ -79,17 +79,17 @@ export async function denseActivity(login: string) {
     const id = rows[0].id;
     await client.query("delete from submissions where user_id = $1", [id]);
     await client.query("delete from progress where user_id = $1", [id]);
-    await client.query("update users set created_at = (current_date - 430) at time zone 'UTC' where id = $1", [id]);
+    await client.query("update users set created_at = ((now() at time zone 'UTC')::date - 430) at time zone 'UTC' where id = $1", [id]);
     await client.query(
       `insert into submissions (user_id, puzzle_id, answer_json, correct, created_at)
-       select $1, p.id, '{}'::jsonb, (n + k) % 4 = 0, (current_date - n + time '09:00' + k * interval '1 hour') at time zone 'UTC'
+       select $1, p.id, '{}'::jsonb, (n + k) % 4 = 0, ((now() at time zone 'UTC')::date - n + time '09:00' + k * interval '1 hour') at time zone 'UTC'
          from puzzles p cross join generate_series(1, 420) n cross join generate_series(0, 7) k
         where p.slug = 'e2e-trace-sequence' and n % 5 <> 0 and k < (n * 7) % 9`,
       [id],
     );
     await client.query(
       `insert into progress (user_id, puzzle_id, status, attempts, solved_at)
-       select $1, p.id, 'solved', 3, (current_date - d) at time zone 'UTC'
+       select $1, p.id, 'solved', 3, ((now() at time zone 'UTC')::date - d) at time zone 'UTC'
          from (values ('e2e-find-file', 300), ('e2e-find-symbol', 200), ('e2e-arch-choice', 40), ('e2e-find-location', 5)) v(slug, d)
          join puzzles p on p.slug = v.slug`,
       [id],

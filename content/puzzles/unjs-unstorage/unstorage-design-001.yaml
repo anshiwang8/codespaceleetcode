@@ -27,7 +27,9 @@ choices:
   - id: d
     label: One setItems call on the `a` driver with the `a:` keys, then, once it resolves, one setItem call per `b:` key on the `b` driver, one after another.
 hints:
-  - Read the helper inside createStorage that setItems hands its list to, and how it groups the items before calling back.
+  - "Treat a batch write as a routing problem first: each key has to be resolved to its mount, just as a single `setItem` call finds its driver."
+  - "Read the helper inside `createStorage` that `setItems` hands its list to, and how it groups the items before calling back."
+  - "Then read the callback `setItems` passes in: what it does for a group whose driver lacks `setItems`, and whether the groups' callbacks are awaited one by one or together."
 solution: solutions/unstorage-design-001.md
 tags: [caching-and-storage]
 authors: [agent-author-design]

@@ -16,7 +16,9 @@ answer:
   anchor: [292, 300]
   window: [288, 306]
 hints:
-  - A module-level constant above the helper defines the iteration limit.
+  - "A guard against endless re-triggering usually counts how many passes the drain loop makes and gives up past a fixed limit, so look for a counter that grows inside the loop."
+  - "The draining helper is not `runReactions` itself: `runReactions` hands it to the reaction scheduler, and it loops over `globalState.pendingReactions`."
+  - "A module-level constant above the helper defines the iteration limit. Find where the loop compares its counter with that constant."
 solution: solutions/mobx-find-002.md
 tags: [reactivity]
 authors: [agent-author-2]

@@ -1,4 +1,5 @@
 import styles from "@/components/landing/landing.module.css";
+import { Icon } from "@/components/site/Icon";
 
 // A static picture of one question, built from the real requests source at the commit the site
 // pins. It isn't one of the site's puzzles: neither CaseInsensitiveDict nor structures.py is any
@@ -112,23 +113,24 @@ export function CodeDemo() {
           Select and submit
         </p>
         <p className={styles.demoNote}>
-          Put the cursor on the class name and choose <strong>Select as answer</strong>. Nothing is typed.
+          Put the cursor on the class name and choose <strong>Select as answer</strong>. Nothing is typed. The server
+          checks it against the puzzle&apos;s one answer, and every submission counts as an attempt.
         </p>
         <p className={styles.demoLabel}>Your answer</p>
         <code className={styles.answerChip}>{FILE}#CaseInsensitiveDict</code>
         <p className={styles.demoResult}>
-          <span aria-hidden="true">✓</span> Correct, attempt 1
+          <Icon name="check" /> Correct, attempt 1
         </p>
         <p className={styles.demoNote}>The written solution unlocks after a correct answer.</p>
       </div>
 
       <figcaption id="demo-caption" className={styles.demoCaption}>
-        A static example, not one of the puzzles, using the real requests source at commit{" "}
+        An example written for this page, not one of the puzzles, using the real requests source at commit{" "}
         <a href={SOURCE_URL} rel="noopener noreferrer">
           <span className="mono">{SHA.slice(0, 7)}</span>
           <span className="visually-hidden"> (view this file on GitHub)</span>
         </a>
-        . On the site this happens in a browser IDE with a file tree, search, go-to-definition and find references.
+        .
       </figcaption>
     </figure>
   );

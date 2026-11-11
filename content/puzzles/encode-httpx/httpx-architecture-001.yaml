@@ -15,7 +15,9 @@ answer:
     - httpx/_transports/wsgi.py#WSGITransport
     - httpx/_transports/mock.py#MockTransport
 hints:
-  - One of them supports both the sync and the async interface.
+  - "Transports are an extension point defined by inheritance: what counts is whether `BaseTransport` appears among a class's own bases, whatever the class is called."
+  - Skip `base.py` itself and the classes that subclass `SyncByteStream` or `AsyncByteStream`; those are the stream helpers the prompt excludes.
+  - Find references to `BaseTransport` and keep only those in `class` headers. One of them supports both the sync and the async interface.
 solution: solutions/httpx-architecture-001.md
 tags: [http-clients, extension-points]
 authors: [agent-author-3]

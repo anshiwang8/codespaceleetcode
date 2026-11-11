@@ -14,7 +14,9 @@ answer:
   accept: []
   accept_reasons: []
 hints:
-  - Open the operator implementation for `filter` and look at what its callback calls first.
+  - "Each operator builds its output with `this[create]` and, inside that callback, subscribes to its source with some handlers replaced. Look for the code they share for that step."
+  - "Open the operator implementation for `filter` and look at what its callback calls first."
+  - "Confirm your candidate takes an optional `signal` parameter, wraps each override in a `try`/`catch`, and passes options with a `signal` to `source.subscribe`."
 solution: solutions/rxjs-find-001.md
 tags: [observables]
 authors: [agent-author-1]

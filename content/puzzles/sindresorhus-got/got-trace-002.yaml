@@ -27,7 +27,9 @@ answer:
   accept_sequences: []
   accept_reasons: []
 hints:
-  - In stream mode there is no promise wrapper to turn a bad status into an error. Find where the stream code does it.
+  - "Here the response path becomes the error path: the 503 is first handled as an ordinary response, then turned into an error, and the retry delay is decided while that error is handled."
+  - "In stream mode there is no promise wrapper to turn a bad status into an error. Find where the stream code does it."
+  - "In `_onRequest`, follow the `once` listener for the `response` event until `options.isStream && options.throwHttpErrors` is tested, then follow the call that receives the new error to its `retry`-listener branch."
 validator_overrides:
   - check: sequence-alternate-path
     reason: Every other path of equal or shorter length reaches calculateRetryDelay through a call to Request._beforeError that runs only on a failure other than the 503 status, from the error and close listeners in Request._onRequest, from the body-sending methods (_sendBody, _onBodyError, _writeBodyInChunks), or from the catch block of Request._onResponse. The prompt fixes the runtime path so that no error is thrown or emitted except the HTTPError that _onResponseBase creates for the 503, so none of those calls runs.

@@ -14,7 +14,9 @@ answer:
   accept: []
   accept_reasons: []
 hints:
-  - The retry logic in the Request class calls it and passes its result on to the user-supplied `calculateDelay` option.
+  - "got separates its built-in retry rules from the user's hook: a default delay is computed first and then handed to a user function that can override it."
+  - "The retry logic in the Request class calls it and passes its result on to the user-supplied `calculateDelay` option."
+  - "Search `source/core/` for where `retryOptions.backoffLimit` is read, not where its default is declared in `options.ts`, and confirm that function's early `return 0` cases."
 solution: solutions/got-find-001.md
 tags: [retries-and-timeouts]
 authors: [agent-author-2]

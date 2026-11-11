@@ -1,0 +1,82 @@
+/*
+ * Toasts sit in the bottom-left corner: in the puzzle workspace that's over the prompt panel's
+ * foot, clear of the answer tray's Submit button and result. They sit above the attribution bar.
+ */
+.region {
+  position: fixed;
+  bottom: 32px;
+  left: 8px;
+  z-index: 50;
+  width: min(280px, calc(100vw - 16px));
+  pointer-events: none;
+}
+
+.list {
+  display: grid;
+  gap: 8px;
+}
+
+.toast {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 8px;
+  padding: 10px 6px 10px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  background: var(--panel);
+  box-shadow: 0 6px 20px var(--shadow), var(--shadow-card);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.45;
+  pointer-events: auto;
+  animation: var(--motion-enter) var(--motion-panel) var(--motion-ease);
+}
+
+.icon {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-size: 14px;
+}
+
+.content {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.eyebrow {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.title {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.body {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.link {
+  justify-self: start;
+  margin-top: 3px;
+  font-size: 12px;
+}
+
+/* The control sits in the toast's padding, so its corners follow the toast's radius less the inset. */
+.dismiss {
+  min-width: 22px;
+  min-height: 22px;
+  padding: 0 4px;
+  border-radius: calc(var(--radius-lg) - 6px);
+  color: var(--text-muted);
+}

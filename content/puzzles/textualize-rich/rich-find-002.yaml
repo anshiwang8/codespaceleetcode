@@ -14,7 +14,9 @@ answer:
   anchor: [224, 228]
   window: [222, 231]
 hints:
-  - Opening tags are pushed onto a stack together with the text offset where they started.
+  - "Unclosed tags can only be handled once parsing is over, so look after the main loop over `_parse(markup)` rather than in the closing-tag branch."
+  - "Opening tags are pushed onto a stack together with the text offset where they started."
+  - "Find the stack's name in the opening-tag branch, then look after the parsing loop for code that keeps popping from it and adds a `_Span` ending at the text's final length."
 solution: solutions/rich-find-002.md
 tags: [compilers]
 authors: [agent-author-rich-rhf]

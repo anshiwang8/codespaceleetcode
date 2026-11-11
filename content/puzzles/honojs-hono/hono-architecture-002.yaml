@@ -15,7 +15,9 @@ answer:
     - src/router/pattern-router/router.ts
     - src/router/reg-exp-router/router.ts
 hints:
-  - Each router class is defined in a router.ts inside its own directory.
+  - "Start from the declaration of the `UnsupportedPathError` class, find its references under `src/router/`, and sort them into imports, `instanceof` checks and real throws."
+  - "Rule out the `catch` in `SmartRouter.match` and any test files. A throw can also build the error inside a conditional expression rather than as a plain `throw new`."
+  - "Each router class is defined in its own directory under `src/router/`. Read the whole class file in each, since a router can throw from `match` as well as from `add` or a private helper."
 solution: solutions/hono-architecture-002.md
 tags: [routing, errors]
 authors: [agent-author-1]

@@ -16,7 +16,9 @@ answer:
   accept: []
   accept_reasons: []
 hints:
-  - Check where createReducer.ts imports createNextState from.
+  - "Libraries often route a third-party dependency through one small internal module, so the rest of the code imports from that module instead of from the package itself."
+  - "Search packages/toolkit/src/ for `createNextState` and read the `import` lines rather than the call sites. Skip matches under query/, which has its own re-export modules."
+  - "Check where `createReducer.ts` imports `createNextState` from, then open that module and confirm the `produce as` rename in its export list."
 solution: solutions/rtk-architecture-001.md
 tags: [state-management, code-structure]
 authors: [agent-author-2]

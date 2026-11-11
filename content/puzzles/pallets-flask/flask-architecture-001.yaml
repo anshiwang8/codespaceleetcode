@@ -16,7 +16,9 @@ answer:
     - src/flask/sessions.py#SessionInterface.open_session
     - src/flask/sessions.py#SessionInterface.save_session
 hints:
-  - Look for the methods that Flask calls at the start and at the end of a request.
+  - "A pluggable interface usually splits into required hooks the framework calls on every request and optional helpers with working defaults; most helpers here just read `app.config`."
+  - "Look for the methods that Flask calls at the start and at the end of a request."
+  - "`SecureCookieSessionInterface`, the default subclass in the same file, overrides only a few base methods; check which of those have a base body that only raises."
 solution: solutions/flask-architecture-001.md
 tags: [auth-and-security, extension-points]
 authors: [agent-author-3]

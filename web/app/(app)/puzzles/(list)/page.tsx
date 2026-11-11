@@ -2,6 +2,7 @@ import { ProgressFill } from "@/components/motion/ProgressFill";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { z } from "zod";
+import { TodayStrip } from "@/components/challenges/TodayStrip";
 import { DifficultyStrip } from "@/components/list/DifficultyStrip";
 import { FilterBar } from "@/components/list/FilterBar";
 import { GroupBy } from "@/components/list/GroupBy";
@@ -22,7 +23,10 @@ import {
   type BrowseState,
   type Grouping,
 } from "@/lib/browse";
-import { getCurrentUser } from "@/lib/server/auth";
+import type { ChallengesResponse } from "@/lib/api-types";
+import { getCurrentUser, type CurrentUser } from "@/lib/server/auth";
+import { isPageRateLimited } from "@/lib/server/rate-limit";
+import { getChallenges } from "@/lib/server/challenges";
 import { textValue } from "@/lib/server/http";
 import { listPuzzles } from "@/lib/server/puzzles";
 
@@ -47,6 +51,18 @@ function parseGrouping(value: string | string[] | undefined): Grouping {
   return parsed.success ? parsed.data : DEFAULT_GROUPING;
 }
 
+/** Today's challenge for the strip above the filters. The list never fails because of it. */
+async function loadChallenges(user: CurrentUser | null): Promise<ChallengesResponse | null> {
+  try {
+    // Over the limit, the strip is left out and the list itself still loads.
+    if (await isPageRateLimited(user)) return null;
+    return await getChallenges(user?.id ?? null);
+  } catch (error) {
+    console.error("[puzzles] challenges failed to load:", error instanceof Error ? error.message : error);
+    return null;
+  }
+}
+
 export const metadata: Metadata = { title: "Puzzles" };
 
 export default async function PuzzleListPage({ searchParams }: PageProps<"/puzzles">) {
@@ -59,7 +75,10 @@ export default async function PuzzleListPage({ searchParams }: PageProps<"/puzzl
   };
   const user = await getCurrentUser();
   // Every published puzzle, filtered here, so each control can count what it would show.
-  const { puzzles: all, repos, tags } = await listPuzzles(user?.id ?? null, {});
+  const [{ puzzles: all, repos, tags }, challenges] = await Promise.all([
+    listPuzzles(user?.id ?? null, {}),
+    loadChallenges(user),
+  ]);
 
   // `repos` ignores the filters, so empty means nothing is published at all.
   if (repos.length === 0) {
@@ -77,6 +96,8 @@ export default async function PuzzleListPage({ searchParams }: PageProps<"/puzzl
       </main>
     );
   }
+
+  const daily = challenges?.current.find((card) => card.kind === "daily") ?? null;
 
   // Sorted before grouping, so every section keeps the chosen order.
   const shown = sortPuzzles(filterPuzzles(all, state.filters), state.sort);
@@ -120,6 +141,8 @@ export default async function PuzzleListPage({ searchParams }: PageProps<"/puzzl
         )}
       </div>
 
+      {challenges && daily ? <TodayStrip card={daily} now={challenges.now} signedIn={showProgress} /> : null}
+
       <section className={styles.controls} aria-label="Filter and group puzzles">
         <DifficultyStrip
           state={state}
@@ -150,7 +173,7 @@ export default async function PuzzleListPage({ searchParams }: PageProps<"/puzzl
           ) : null}
         </div>
       ) : state.group === "none" ? (
-        <PuzzleTable puzzles={shown} state={state} />
+        <PuzzleTable puzzles={shown} state={state} showStatus={showProgress} />
       ) : (
         groups.map((group) => (
           <PuzzleGroupSection

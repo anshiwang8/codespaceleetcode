@@ -26,7 +26,9 @@ answer:
     - lib/cancel/CanceledError.js#CanceledError.<constructor>
   accept_sequences: []
 hints:
-  - The check happens before any adapter is chosen.
+  - "`Axios.request` wraps the method that does the real work and only adds stack-trace handling, so the cancellation check sits further in, on the way to sending the request."
+  - "The check happens before any adapter is chosen."
+  - "With no interceptors the synchronous branch runs, so follow the `.call(this, newConfig)` at its end. In the function it reaches, find the cancellation check, skip the `cancelToken` branch and follow `config.signal.aborted`."
 solution: solutions/axios-trace-001.md
 tags: [request-lifecycle, http-clients, errors]
 authors: [agent-author-unstorage-axios]

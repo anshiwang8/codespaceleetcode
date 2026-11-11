@@ -30,7 +30,9 @@ answer:
     - src/drivers/utils/index.ts#createError
   accept_sequences: []
 hints:
-  - getItem asks for the binding before it touches the key-value store. Follow that call into src/drivers/utils/.
+  - "The missing `put` is caught by a shape check on the binding, not by a failed write, which is why a read can throw too."
+  - "`getItem` asks for the binding before it touches the key-value store. Follow that call into `src/drivers/utils/`."
+  - "There, note which branch runs for an object binding rather than a string name, and follow it to a loop over required method names. The thrown value comes from a shared helper, not an inline `new Error`."
 solution: solutions/unstorage-trace-001.md
 tags: [errors, validation, caching-and-storage]
 authors: [agent-author-unstorage-axios]

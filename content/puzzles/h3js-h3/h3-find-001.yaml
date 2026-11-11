@@ -15,7 +15,9 @@ answer:
   anchor: [255, 259]
   window: [253, 262]
 hints:
-  - The lookup is a method that H3 overrides from H3Core, and its name starts with a tilde.
+  - "Route lookup runs once per request, before middleware and handlers, and asks the router for a match by the request's method and pathname."
+  - "The lookup is a method that `H3` overrides from `H3Core`, and its name starts with a tilde."
+  - "In that override, the first `findRoute` call uses the request's own method. The fallback is the `if` that runs only when that first result is `undefined`."
 solution: solutions/h3-find-001.md
 tags: [routing]
 authors: [agent-author-2]

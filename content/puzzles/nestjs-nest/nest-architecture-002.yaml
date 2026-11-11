@@ -23,7 +23,9 @@ choices:
   - id: d
     label: It is ignored, because only static providers can be global enhancers
 hints:
-  - The scope is read from the class when the provider is inserted, and recorded for later.
+  - "Think of this in two phases: what `insertProvider` records about an `APP_INTERCEPTOR` provider during scanning, and how `applyApplicationProviders` later branches on that record."
+  - "The scope is read from the class when the provider is inserted, and recorded for later."
+  - "In `applyApplicationProviders`, find the `isRequestOrTransient` check on the recorded scope and follow the branch it selects: note which collection the wrapper comes from and which map function receives it."
 solution: solutions/nest-architecture-002.md
 tags: [middleware, dependency-injection]
 authors: [agent-author-1]

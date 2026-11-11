@@ -135,6 +135,7 @@
 .lockIconLarge {
   flex: none;
   color: var(--text-muted);
+  font-size: 22px;
 }
 
 .tabPanel {
@@ -167,24 +168,18 @@
   gap: 4px;
 }
 
+/* A status chip: the same size as its neighbors, with the list's status icon before the word. */
+.statusChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .block h2 {
   margin-bottom: 3px;
-  color: var(--text-faint);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-}
-
-.hints {
-  display: grid;
-  gap: 6px;
-  margin-bottom: 6px;
-}
-
-.hints li {
-  padding-left: 8px;
-  border-left: 2px solid var(--line-strong);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .unverified {
@@ -346,11 +341,12 @@
 }
 
 .treeCaret {
-  display: inline-block;
+  display: inline-grid;
   flex: none;
+  place-items: center;
   width: 12px;
-  color: var(--text-faint);
-  font-size: 10px;
+  color: var(--text-muted);
+  font-size: 11px;
 }
 
 .treePick,
@@ -364,9 +360,10 @@
   background: var(--panel-raised);
   color: var(--text);
   cursor: pointer;
-  font-family: var(--font-mono);
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
   font-size: 12px;
-  line-height: 15px;
 }
 
 .treePick:hover {
@@ -391,11 +388,9 @@
 .outlineHeading {
   flex: none;
   padding: 4px 10px 2px;
-  color: var(--text-faint);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .outlineScroll {
@@ -433,7 +428,7 @@
 .outlineKind {
   flex: none;
   width: 16px;
-  color: var(--text-faint);
+  color: var(--text-muted);
   font-size: 10px;
 }
 
@@ -541,13 +536,17 @@
 }
 
 .tabClose {
+  display: inline-grid;
+  place-items: center;
   width: 18px;
   height: 18px;
+  padding: 0;
+  font-size: 12px;
   margin-right: 4px;
   border: 0;
   border-radius: 3px;
   background: transparent;
-  color: var(--text-faint);
+  color: var(--text-muted);
   cursor: pointer;
 }
 
@@ -664,7 +663,7 @@
 .actionLabel {
   flex: none;
   width: 44px;
-  color: var(--text-faint);
+  color: var(--text-muted);
   font-size: 11px;
 }
 
@@ -746,6 +745,7 @@
 
 .setCount {
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 .sequence {
@@ -770,8 +770,8 @@
 }
 
 .sequenceIndex {
-  color: var(--text-faint);
-  font-family: var(--font-mono);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
   font-size: 11px;
   line-height: 18px;
 }
@@ -818,6 +818,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  font-variant-numeric: tabular-nums;
 }
 
 .resultCorrect,
@@ -882,8 +883,13 @@
 
 /* The one bounce in the app: a single overshoot when a correct result first appears. The result
    is keyed by attempt, so it plays once per new result and never loops. */
+.resultIcon > span {
+  display: inline-grid;
+  place-items: center;
+}
+
 .resultCheck {
-  display: inline-block;
+  display: inline-grid;
   animation: var(--motion-bounce) var(--motion-bounce-time) var(--motion-bounce-ease) both;
 }
 
@@ -971,7 +977,7 @@
 .promptTab, .choice, .treePick, .treePickActive, .sidebarTab, .sidebarTabActive {
   transition: background-color var(--motion-control) var(--motion-feedback), border-color var(--motion-control) var(--motion-feedback), color var(--motion-control) var(--motion-feedback);
 }
-.tabPanel:not([hidden]), .solution[data-state="ready"], .hints li {
+.tabPanel:not([hidden]), .solution[data-state="ready"] {
   animation: var(--motion-fade) var(--motion-panel) var(--motion-ease);
 }
 .tabBadge { animation: var(--motion-enter) var(--motion-panel) var(--motion-ease); }

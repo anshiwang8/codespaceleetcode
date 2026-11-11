@@ -21,7 +21,9 @@ choices:
   - id: d
     label: The chain stops and an empty 200 response is sent.
 hints:
-  - Look at what callLayer does with the value returned by the middleware function.
+  - "What a return value does is decided by the code that receives it, not by the middleware itself. Find who calls the middleware function and what they do with its result."
+  - "`use()` passes the function through `normalizeMiddleware`. Check whether this unfiltered two-parameter function takes the fast path there, which stores it unchanged."
+  - "Look at what `callLayer` does with the value returned by the middleware function, then read what the `next` closure defined just above it runs."
 solution: solutions/h3-architecture-002.md
 tags: [middleware]
 authors: [agent-author-2]

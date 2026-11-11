@@ -22,7 +22,9 @@ choices:
   - id: d
     label: The adapter registered under the URL's scheme; any host or path in a prefix is ignored.
 hints:
-  - Look at what mount does to the other entries after inserting one.
+  - "`get_adapter` returns the first prefix in `self.adapters` that the URL starts with, so the answer depends only on the order `mount` leaves that dict in."
+  - Python dicts keep insertion order, and popping a key and then setting it again moves it to the end.
+  - "Look at what `mount` does to the other entries after inserting one: which keys does it move to the end, and what comparison picks them?"
 solution: solutions/requests-architecture-002.md
 tags: [http-clients]
 authors: [agent-author-3]

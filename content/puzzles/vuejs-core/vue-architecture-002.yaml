@@ -22,7 +22,9 @@ choices:
   - id: d
     label: P, A, B
 hints:
-  - Check which branch of `queueJob` a PRE job takes, then trace the binary search in `findInsertionIndex`.
+  - "The queue is kept sorted by job id, and a new job can be spliced into the middle rather than appended. The interesting case is how a tie on id is ordered."
+  - "In scheduler.ts, each job's sort key comes from `getId`, and flags are tested with bitwise `&`. Write down the id and flags of A, B and P, then read the outer `if` in `queueJob`."
+  - "Check which branch of `queueJob` a PRE job takes, then trace the binary search in `findInsertionIndex` from `start` = `flushIndex + 1`, applying its comparison to each middle job's id and flags."
 solution: solutions/vue-architecture-002.md
 tags: [reactivity]
 authors: [agent-author-1]

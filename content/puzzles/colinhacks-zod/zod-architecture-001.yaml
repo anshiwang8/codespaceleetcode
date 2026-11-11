@@ -23,7 +23,9 @@ choices:
   - id: d
     label: "false, because member A is closed"
 hints:
-  - The check on whether every member has `additionalProperties === false` comes first. Work out whether it is true here.
+  - "Read the end of `foldObjects` as a decision: the merged `additionalProperties` comes from what each member says about keys it does not declare itself."
+  - "The check on whether every member has `additionalProperties === false` comes first. Work out whether it is true here."
+  - "When that check fails, the other branch runs `undeclaredConstraint` on each member: work out what it returns for `false` and for a non-empty object, then which assignment the number of constraints picks."
 solution: solutions/zod-architecture-001.md
 tags: [validation, compilers]
 authors: [agent-author-1]

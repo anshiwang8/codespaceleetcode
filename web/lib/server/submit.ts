@@ -1,7 +1,10 @@
 import "server-only";
 import { z } from "zod";
-import type { AnswerKind, Submission, SubmitResponse } from "@/lib/api-types";
+import type { AnswerKind, Difficulty, PeriodKind, Submission, SubmitResponse } from "@/lib/api-types";
+import { evaluateAchievements } from "@/lib/server/achievements";
+import { databaseNow, ensureAssignments, recordChallengeCompletions } from "@/lib/server/challenges";
 import { getPool, withTransaction } from "@/lib/server/db";
+import { recordChallengeBonus, recordSolve } from "@/lib/server/scores";
 import { answerKeySchema, grade, parseLocationId } from "@/lib/server/grader";
 import { LINE_BREAK_PATTERN } from "@/lib/server/code-index";
 import { choicesSchema } from "@/lib/server/puzzles";
@@ -26,6 +29,7 @@ export const submissionSchema = z.discriminatedUnion("kind", [
 interface PuzzleToGrade {
   id: string;
   snapshot_id: string;
+  difficulty: Difficulty;
   answer_kind: AnswerKind;
   answer_json: unknown;
   choices: unknown;
@@ -34,7 +38,7 @@ interface PuzzleToGrade {
 /** The only query in the app that reads the key. The result must not leave this module. */
 async function loadPuzzleToGrade(slug: string): Promise<PuzzleToGrade | null> {
   const { rows } = await getPool().query<PuzzleToGrade>(
-    `select id, snapshot_id, answer_kind, answer_json, choices
+    `select id, snapshot_id, difficulty, answer_kind, answer_json, choices
        from puzzles
       where slug = $1 and published`,
     [slug],
@@ -128,18 +132,23 @@ export async function submitAnswer(
   }
   const correct = grade(key.data, submission);
 
+  // One clock for the whole submission: the database's, read once at grading time. It decides
+  // which challenge periods are open, so the browser's clock never matters.
+  const now = await databaseNow();
+  if (correct) await ensureAssignments(now);
+
   const { timeOnPuzzleMs: elapsedMs, ...answer } = submission;
-  const attempts = await withTransaction(async (client) => {
+  const graded = await withTransaction(async (client) => {
     await client.query(
-      `insert into submissions (user_id, puzzle_id, answer_json, correct, time_on_puzzle_ms)
-       values ($1, $2, $3::jsonb, $4, $5)`,
-      [userId, puzzle.id, JSON.stringify(answer), correct, elapsedMs ?? null],
+      `insert into submissions (user_id, puzzle_id, answer_json, correct, time_on_puzzle_ms, created_at)
+       values ($1, $2, $3::jsonb, $4, $5, $6)`,
+      [userId, puzzle.id, JSON.stringify(answer), correct, elapsedMs ?? null, now],
     );
     // One statement, so concurrent submissions can't lose a count. `solved` is final.
-    const { rows } = await client.query<{ attempts: number }>(
+    const { rows } = await client.query<{ attempts: number; solved_now: boolean }>(
       `insert into progress (user_id, puzzle_id, status, attempts, solved_at)
        values ($1, $2, case when $3::boolean then 'solved' else 'attempted' end, 1,
-               case when $3::boolean then now() end)
+               case when $3::boolean then $4::timestamptz end)
        on conflict (user_id, puzzle_id) do update
          set attempts = progress.attempts + 1,
              status = case
@@ -148,15 +157,44 @@ export async function submitAnswer(
                else 'attempted'
              end,
              solved_at = case
-               when progress.status = 'attempted' and $3::boolean then now()
+               when progress.status = 'attempted' and $3::boolean then $4::timestamptz
                else progress.solved_at
              end
-       returning attempts`,
-      [userId, puzzle.id, correct],
+       returning attempts, coalesce(solved_at = $4::timestamptz, false) as solved_now`,
+      [userId, puzzle.id, correct, now],
     );
     const count = rows[0]?.attempts;
     if (count === undefined) throw new Error("progress upsert returned no row");
-    return count;
+    // Only the submission that solves a puzzle scores it. A puzzle solved earlier without a points
+    // row (a key changed during seeding) gets one from reconcileSolves, dated by its real solve.
+    if (!correct || rows[0]?.solved_now !== true) return { attempts: count, pointsAwarded: 0, challenges: [] };
+
+    // The progress row is locked by the upsert above, so `count` is this submission's place in
+    // line: 1 means no graded submission to this puzzle came before it.
+    let pointsAwarded = await recordSolve(client, {
+      userId,
+      puzzleId: puzzle.id,
+      difficulty: puzzle.difficulty,
+      firstTry: count === 1,
+      now,
+    });
+    const challenges: { kind: PeriodKind; bonus: number }[] = [];
+    for (const period of await recordChallengeCompletions(client, userId, puzzle.id, now)) {
+      const bonus = await recordChallengeBonus(client, { userId, puzzleId: puzzle.id, ...period, now });
+      pointsAwarded += bonus;
+      challenges.push({ kind: period.kind, bonus });
+    }
+    return { attempts: count, pointsAwarded, challenges };
   });
-  return { state: "graded", response: { correct, attempts } };
+
+  // After the commit: achievements read what the transaction recorded. A failure here mustn't
+  // turn a graded submission into an error, and the next evaluation catches up anyway.
+  const achievements = await evaluateAchievements(userId).then(
+    (evaluation) => evaluation.unlocked,
+    (error: unknown) => {
+      console.error("[submit] achievement evaluation failed:", error instanceof Error ? error.message : error);
+      return [];
+    },
+  );
+  return { state: "graded", response: { correct, ...graded, achievements } };
 }

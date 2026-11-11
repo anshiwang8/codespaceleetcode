@@ -1,8 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { type KeyboardEvent, type RefObject, useId, useRef, useState } from "react";
+import { HintPanel } from "@/components/puzzle/HintPanel";
 import { Markdown } from "@/components/puzzle/Markdown";
 import { SolutionView } from "@/components/puzzle/SolutionView";
+import hintStyles from "@/components/puzzle/hints.module.css";
 import styles from "@/components/puzzle/puzzle.module.css";
 import type { PuzzleDetail, PuzzleStatus } from "@/lib/api-types";
 import {
@@ -11,12 +14,21 @@ import {
   STATUS_LABELS,
   TYPE_LABELS,
 } from "@/lib/client/labels";
+import { PERIOD_KINDS, type PeriodKind } from "@/lib/periods";
 import { topicLabel } from "@/lib/topics";
+import { Icon } from "@/components/site/Icon";
 
 export type PromptTab = "description" | "solution";
 
 const TABS: readonly PromptTab[] = ["description", "solution"];
 const TAB_LABELS: Record<PromptTab, string> = { description: "Description", solution: "Solution" };
+
+/** How a puzzle featured in an open challenge period says so. */
+const FEATURED_LABELS: Record<PeriodKind, string> = {
+  daily: "Today's daily challenge",
+  weekly: "This week's challenge",
+  monthly: "This month's challenge",
+};
 
 interface PromptPanelProps {
   puzzle: PuzzleDetail;
@@ -92,7 +104,7 @@ export function PromptPanel({
             data-testid={`prompt-tab-${name}`}
             onClick={() => onTabChange(name)}
           >
-            {name === "solution" && !unlocked ? <LockIcon /> : null}
+            {name === "solution" && !unlocked ? <Icon name="lock" className={styles.lockIcon} /> : null}
             {TAB_LABELS[name]}
             {name === "solution" && !unlocked ? <span className="visually-hidden"> (locked)</span> : null}
             {name === "solution" && solutionIsNew ? (
@@ -136,7 +148,6 @@ export function PromptPanel({
 }
 
 function DescriptionTab({ puzzle, status }: { puzzle: PuzzleDetail; status: PuzzleStatus }) {
-  const [hintsShown, setHintsShown] = useState(0);
   const noPersonChecked = puzzle.verifiedBy.every((name) => name.startsWith("agent:"));
 
   return (
@@ -147,15 +158,32 @@ function DescriptionTab({ puzzle, status }: { puzzle: PuzzleDetail; status: Puzz
         <span className={`chip difficulty-${puzzle.difficulty}`}>
           {DIFFICULTY_LABELS[puzzle.difficulty]}
         </span>
-        <span className={`chip status-${status}`} data-testid="puzzle-status">
-          {STATUS_LABELS[status]}
-        </span>
+        {/* Only a status worth saying: an untouched puzzle doesn't need a "Not started" chip. */}
+        {status === "unsolved" ? null : (
+          <span className={`chip status-${status} ${styles.statusChip}`} data-testid="puzzle-status">
+            <Icon name={status === "solved" ? "status-solved" : "status-attempted"} />
+            {STATUS_LABELS[status]}
+          </span>
+        )}
         {puzzle.tags.map((tag) => (
           <span key={tag} className="chip">
             {topicLabel(tag)}
           </span>
         ))}
       </div>
+
+      {puzzle.featuredIn.length > 0 ? (
+        <ul className={hintStyles.featured} aria-label="Challenges" data-testid="featured-in">
+          {PERIOD_KINDS.filter((kind) => puzzle.featuredIn.includes(kind)).map((kind) => (
+            <li key={kind}>
+              <Link href="/challenges" className={`chip ${hintStyles.featuredChip}`} data-testid={`featured-${kind}`}>
+                <Icon name="calendar" />
+                {FEATURED_LABELS[kind]}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      ) : null}
 
       <Markdown source={puzzle.prompt} testId="prompt" />
 
@@ -164,27 +192,7 @@ function DescriptionTab({ puzzle, status }: { puzzle: PuzzleDetail; status: Puzz
         <p data-testid="answer-kind">{answerKindInWords(puzzle.answerKind, puzzle.setCount)}</p>
       </div>
 
-      {puzzle.hints.length > 0 ? (
-        <div className={styles.block}>
-          <h2>
-            Hints <span className="muted">({hintsShown} of {puzzle.hints.length})</span>
-          </h2>
-          {hintsShown > 0 ? (
-            <ol className={styles.hints}>
-              {puzzle.hints.slice(0, hintsShown).map((hint, index) => (
-                <li key={index} data-testid="hint">
-                  <Markdown source={hint} />
-                </li>
-              ))}
-            </ol>
-          ) : null}
-          {hintsShown < puzzle.hints.length ? (
-            <button type="button" className="btn btn-small" onClick={() => setHintsShown(hintsShown + 1)}>
-              {hintsShown === 0 ? "Show a hint" : "Show the next hint"}
-            </button>
-          ) : null}
-        </div>
-      ) : null}
+      <HintPanel puzzle={puzzle} status={status} />
 
       {noPersonChecked ? (
         <p className={styles.unverified} data-testid="agent-only-note">
@@ -198,26 +206,10 @@ function DescriptionTab({ puzzle, status }: { puzzle: PuzzleDetail; status: Puzz
 function SolutionLocked({ signedOut }: { signedOut: boolean }) {
   return (
     <div className={styles.solutionLocked} data-testid="solution-locked">
-      <LockIcon large />
+      <Icon name="lock" className={styles.lockIconLarge} />
       <p>Solve this puzzle to see the solution and a full explanation.</p>
       {signedOut ? <p className="muted">Sign in to submit an answer.</p> : null}
     </div>
   );
 }
 
-function LockIcon({ large = false }: { large?: boolean }) {
-  const size = large ? 22 : 12;
-  return (
-    <svg
-      className={large ? styles.lockIconLarge : styles.lockIcon}
-      width={size}
-      height={size}
-      viewBox="0 0 16 16"
-      aria-hidden="true"
-      focusable="false"
-    >
-      <rect x="3" y="7" width="10" height="7" rx="1.5" fill="none" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" fill="none" stroke="currentColor" strokeWidth="1.5" />
-    </svg>
-  );
-}

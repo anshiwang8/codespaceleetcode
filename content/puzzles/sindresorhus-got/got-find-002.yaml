@@ -14,7 +14,9 @@ answer:
   anchor: [1378, 1389]
   window: [1372, 1401]
 hints:
-  - The defaults object is a constant near the middle of options.ts; look for the key that holds numbers rather than strings.
+  - "got keeps its default options in one object literal that each new `Options` instance starts from, so look for that literal rather than the class's setters."
+  - "The defaults object is a module-level constant in `options.ts`, declared before the `Options` class; look for the key that holds numbers rather than strings."
+  - "Inside `defaultInternals`, go to the `retry` key and skip its `methods` and `errorCodes` arrays; select the remaining array from the line that opens it with `[` through the line that closes it."
 solution: solutions/got-find-002.md
 tags: [retries-and-timeouts, configuration]
 authors: [agent-author-2]

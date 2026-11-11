@@ -17,7 +17,9 @@ answer:
   accept: []
   accept_reasons: []
 hints:
-  - The snapshot builder and the comparer are two separate top-level functions in the same file.
+  - "Start from the factory that creates the immutability check middleware, and read what its middleware does before and after it calls `next(action)`."
+  - "In immutableStateInvariantMiddleware.ts, `trackForMutations` builds the snapshot with `trackProperties` and returns a small tracker object that the middleware keeps between actions."
+  - "The snapshot builder and the comparer are two separate top-level functions in the same file. The tracker's method only forwards to the comparer, so select the top-level function, which calls itself for each child key."
 solution: solutions/rtk-find-001.md
 tags: [state-management, middleware]
 authors: [agent-author-2]

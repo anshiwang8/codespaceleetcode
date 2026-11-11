@@ -15,7 +15,9 @@ answer:
   accept: []
   accept_reasons: []
 hints:
-  - Session.prepare_request calls this helper several times, once per setting it merges.
+  - Headers, params and other settings can be set on both the session and a single request, so one generic helper reconciles each pair, whatever the setting is.
+  - The session calls this helper several times while preparing a request, once per setting it merges.
+  - Only a few functions in `src/requests/sessions.py` sit outside a class. Skip the hooks-specific one, which delegates to the general helper, and look for the loop that deletes `None` values.
 solution: solutions/requests-find-001.md
 tags: [http-clients, configuration]
 authors: [agent-author-3]

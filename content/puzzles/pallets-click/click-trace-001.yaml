@@ -22,7 +22,9 @@ answer:
   accept_sequences: []
   accept_reasons: []
 hints:
-  - The "complete" instruction branch is the second one in shell_complete.
+  - "Completion parses the words typed so far into a context without running callbacks or prompts; follow the instruction that produces completion output, not the one that prints the shell script."
+  - "The \"complete\" instruction branch is the second one in `shell_complete`."
+  - "Methods the bash class doesn't override come from its base class, so check which class defines each method you step into, and skip `get_completion_args` and `format_completion`, which don't lead toward a context."
 solution: solutions/click-trace-001.md
 tags: [command-line]
 authors: [agent-author-3]

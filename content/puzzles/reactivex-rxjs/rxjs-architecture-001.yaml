@@ -15,7 +15,9 @@ answer:
     - packages/rxjs/src/not-found-error.ts
     - packages/rxjs/src/sequence-error.ts
 hints:
-  - Check the imports at the top of single.ts and where each imported class is constructed.
+  - "Only errors that `singleOperator` builds with `new` count. Think about which outcomes of the source mean `single` has failed on its own."
+  - "Look at the `next` and `complete` handlers inside `singleOperator`; the `error` handler only forwards what the source sent."
+  - "Check the imports at the top of single.ts and where each imported class is constructed."
 solution: solutions/rxjs-architecture-001.md
 tags: [observables, errors]
 authors: [agent-author-1]

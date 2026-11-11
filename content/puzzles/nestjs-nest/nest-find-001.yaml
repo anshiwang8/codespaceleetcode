@@ -13,7 +13,9 @@ answer:
   accept: []
   accept_reasons: []
 hints:
-  - The module scanner registers a module's `imports` entries one by one.
+  - "The module scanner registers a module's `imports` entries one by one."
+  - "Other scanner methods also reject `undefined` entries, such as `scanForModules` with `UndefinedModuleException`. The one you want throws a different exception, imported at the top of scanner.ts."
+  - "In `reflectImports`, follow the call inside the `for` loop over the collected `modules` to its definition, and check that its first statement throws when the entry is `undefined`."
 solution: solutions/nest-find-001.md
 tags: [dependency-injection, errors]
 authors: [agent-author-1]

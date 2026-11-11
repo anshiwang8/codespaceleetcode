@@ -21,7 +21,9 @@ choices:
   - id: d
     label: compileSchema does not run again; the second call returns the validation function stored on the cached schema entry from the first call.
 hints:
-  - Look at what _addSchema returns when its cache already holds the schema, and what compile does with sch.validate.
+  - "This is a caching question: work out what Ajv uses as the cache key for a schema with no `$id`, and what it keeps under that key."
+  - "In `lib/core.ts`, find the private `_cache` map on the class: note its key type and the kind of object it stores, then see where `_addSchema` reads and writes it."
+  - "Look at what `_addSchema` returns when its cache already holds the schema, and what `compile` does with `sch.validate`."
 solution: solutions/ajv-architecture-003.md
 tags: [compilers, caching-and-storage]
 authors: [agent-author-2]

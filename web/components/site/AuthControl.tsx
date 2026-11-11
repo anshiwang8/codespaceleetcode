@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Avatar } from "@/components/site/Avatar";
 import styles from "@/components/site/site.module.css";
+import { Icon } from "@/components/site/Icon";
 
 /** The header's account area: who's signed in and Sign out, or the ways to sign in. */
 export function AuthControl() {
@@ -105,7 +106,7 @@ export function AuthErrorBanner() {
   return (
     <div className={styles.authBanner} role="alert" data-testid="auth-error">
       <p>
-        <span aria-hidden="true">⚠ </span>
+        <Icon name="alert" className={styles.authBannerIcon} />
         {error}
       </p>
       <button type="button" className="btn btn-small btn-quiet" onClick={clearError}>

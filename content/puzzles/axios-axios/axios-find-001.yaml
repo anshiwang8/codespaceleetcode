@@ -17,7 +17,9 @@ answer:
   anchor: [173, 182]
   window: [170, 191]
 hints:
-  - It sits between the paramsSerializer checks and the spelling check for baseUrl.
+  - "After merging, `_request` normalizes the config in a series of steps before it builds the interceptor chain; this statement is one of those fill-in-a-default steps."
+  - "It sits between the `paramsSerializer` checks and the spelling check for `baseUrl`."
+  - "The statement's first branch only tests the request's own value with `!== undefined` and does nothing, and the middle branch reads `this.defaults` through `utils.hasOwnProp`."
 solution: solutions/axios-find-001.md
 tags: [configuration, http-clients]
 authors: [agent-author-unstorage-axios]

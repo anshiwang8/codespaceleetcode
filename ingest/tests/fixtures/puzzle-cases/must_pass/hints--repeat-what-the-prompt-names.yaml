@@ -1,0 +1,26 @@
+id: case-trace-001
+snapshot: acme-widgets@a1b2c3d
+type: trace
+difficulty: easy
+title: Fixture case-trace-001
+prompt: 'Start at `Queue.push` and list the calls until `Queue.flush` runs.
+
+  '
+answer:
+  kind: sequence
+  ids:
+  - src/queue.js#Queue.push
+  - src/queue.js#Queue.drain
+  - src/queue.js#Queue.flush
+  accept_sequences:
+  - - src/queue.js#Queue.push
+    - src/queue.js#Queue.spill
+    - src/queue.js#Queue.flush
+  accept_reasons:
+  - Either branch flushes, and the code doesn't favor one.
+hints:
+- "`push` doesn't call `flush` itself."
+solution: solutions/case-trace-001.md
+authors:
+- fixture-author
+verified_by: []

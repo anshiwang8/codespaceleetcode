@@ -24,7 +24,9 @@ choices:
   - id: d
     label: UP_TO_DATE_
 hints:
-  - propagateChanged only marks X's direct observers as STALE_. R is not a direct observer of X.
+  - "Draw the graph from X to C to R and follow the notification one edge at a time. Each node's `dependenciesState_` is set by whichever function notifies it."
+  - "`propagateChanged` only marks X's direct observers as `STALE_`. R is not a direct observer of X."
+  - "Find what `propagateChanged` calls on C, then read `ComputedValue.onBecomeStale_` and check what, if anything, the loop in `propagateMaybeChanged` does to each of C's observers, and what it tests first."
 solution: solutions/mobx-architecture-001.md
 tags: [reactivity]
 authors: [agent-author-2]

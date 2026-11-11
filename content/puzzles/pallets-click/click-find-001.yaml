@@ -15,7 +15,9 @@ answer:
   accept: []
   accept_reasons: []
 hints:
-  - Command.parse_args calls it right after the parser has run.
+  - "Processing order is decided once per invocation, after the command line has been parsed and before each parameter's value is handled; think of it as a sort with a two-part key."
+  - "The parser's `parse_args` returns a third value besides `opts` and `args`: the order in which it saw the parameters. Look for where that order is consumed."
+  - "`Command.parse_args` calls it right after the parser has run."
 solution: solutions/click-find-001.md
 tags: [command-line]
 authors: [agent-author-3]

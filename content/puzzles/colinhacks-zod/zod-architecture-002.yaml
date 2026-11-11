@@ -14,7 +14,9 @@ answer:
   accept: []
   accept_reasons: []
 hints:
+  - "`$ZodType` is both an interface and a constructor value, and the name appears in type positions all over the core layer, so follow the import chain instead of searching for the name."
   - "`core` is a namespace import of the core layer's index."
+  - "That index re-exports several sibling modules with `export *`; check which one declares `export const $ZodType` built with `core.$constructor`, and skip the module that defines `$constructor` itself."
 solution: solutions/zod-architecture-002.md
 tags: [code-structure, validation]
 authors: [agent-author-1]

@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import { SignInPrompt } from "@/components/auth/SignInPrompt";
+import { Achievements, AchievementsUnavailable } from "@/components/profile/Achievements";
 import { SettingsLink } from "@/components/profile/SettingsLink";
 import { IdentityCard } from "@/components/profile/IdentityCard";
 import { ProfileActivityArea } from "@/components/profile/ProfileActivityArea";
 import styles from "@/components/profile/profile.module.css";
 import { ThemeButton } from "@/components/themes/ThemeButton";
+import type { AchievementsResponse } from "@/lib/api-types";
+import { getAchievements } from "@/lib/server/achievements";
 import { getCurrentUser } from "@/lib/server/auth";
 import { getProfile } from "@/lib/server/profile";
 
@@ -12,9 +15,21 @@ import { getProfile } from "@/lib/server/profile";
 // so one user's profile is never cached for another.
 export const metadata: Metadata = { title: "Profile", robots: { index: false, follow: false } };
 
+/** The profile still renders when achievements can't be measured; that section says so instead. */
+async function loadAchievements(userId: string): Promise<AchievementsResponse | null> {
+  try {
+    return await getAchievements(userId);
+  } catch (error) {
+    console.error("[profile] achievements failed to load:", error instanceof Error ? error.message : error);
+    return null;
+  }
+}
+
 export default async function ProfilePage() {
   const user = await getCurrentUser();
-  const profile = user ? await getProfile(user.id) : null;
+  const [profile, achievements] = user
+    ? await Promise.all([getProfile(user.id), loadAchievements(user.id)])
+    : [null, null];
   if (!profile) {
     return (
       <main className="page-message" data-testid="profile-signed-out">
@@ -57,6 +72,7 @@ export default async function ProfilePage() {
         progress={progress}
         unfinished={unfinished}
       />
+      {achievements ? <Achievements achievements={achievements.achievements} /> : <AchievementsUnavailable />}
       <SettingsLink />
     </main>
   );

@@ -20,7 +20,9 @@ answer:
     - starlette/routing.py#Mount.__init__
     - starlette/routing.py#Router.__init__
 hints:
-  - Find references on RequestBodyLimitMiddleware, and ignore the tests.
+  - Each level that accepts `max_body_size` enforces it on the ASGI app it owns. Look for where the limit is actually applied, not just where the argument is accepted.
+  - Find references on `RequestBodyLimitMiddleware`, and ignore the tests.
+  - Group the references by the method that contains them. In `starlette/applications.py` the constructor only stores the limit; the wrapping happens in the method that assembles the `Middleware` list.
 solution: solutions/starlette-architecture-002.md
 tags: [middleware, routing, configuration]
 authors: [agent-author-jinja-starlette]

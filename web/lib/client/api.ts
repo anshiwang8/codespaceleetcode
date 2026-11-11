@@ -97,12 +97,6 @@ export const api = {
     request<ActivityResponse>(`/api/me/activity?${new URLSearchParams({ period })}`, { signal }),
   devLogin: (login: string) => post<MeResponse>("/api/dev/login", { login }),
   devLogout: () => post<MeResponse>("/api/dev/logout"),
-  deleteAccount: () =>
-    request<MeResponse>("/api/me", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ confirm: true }),
-    }),
   submit: (slug: string, submission: Submission, signal?: AbortSignal) =>
     request<SubmitResponse>(`${puzzlePath(slug)}/submit`, {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(submission), signal,

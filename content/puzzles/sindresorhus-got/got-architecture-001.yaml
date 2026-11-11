@@ -22,7 +22,9 @@ choices:
   - id: d
     label: 0, because the Retry-After value is larger than the allowed maximum.
 hints:
-  - Work out what computedValue is when neither maxRetryAfter nor a request timeout is set.
+  - "Read the function as a series of early returns, and find the first one that this 429 response with a `Retry-After` header actually reaches."
+  - "The header is parsed into milliseconds in `source/core/index.ts` before the call, so check the units of `retryAfter` and what is passed as `computedValue`."
+  - "Work out what `computedValue` is when neither `maxRetryAfter` nor a request timeout is set, then compare it with `retryAfter` in the branch for errors that carry a response."
 solution: solutions/got-architecture-001.md
 tags: [retries-and-timeouts]
 authors: [agent-author-2]

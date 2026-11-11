@@ -15,7 +15,9 @@ answer:
     - rich/console.py#Console.end_capture
     - rich/console.py#PagerContext.__exit__
 hints:
-  - One of them belongs to a class other than Console, in the same file.
+  - "Buffer depth goes up and down in matched pairs, so each caller of `Console._exit_buffer` has a partner that calls `_enter_buffer`."
+  - "One of them belongs to a class other than `Console`, and reaches the console through a stored `self._console` attribute rather than through `self`."
+  - "Search `rich/` for `_exit_buffer(` and skip its definition; a context manager whose exit only calls another `Console` method, which then leaves the buffer, is not a direct caller."
 solution: solutions/rich-architecture-002.md
 tags: [code-structure]
 authors: [agent-author-rich-rhf]

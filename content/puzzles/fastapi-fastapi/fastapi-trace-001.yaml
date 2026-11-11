@@ -25,7 +25,9 @@ answer:
   accept_sequences: []
   accept_reasons: []
 hints:
-  - The route's state, including its Dependant tree, is filled in by a helper that the constructor calls first.
+  - FastAPI inspects the endpoint's signature once, when the route is constructed, to build a `Dependant` tree, so no request is involved in this chain.
+  - The route's state, including its `Dependant` tree, is filled in by a helper that the constructor calls first.
+  - In that helper, follow the call whose result is unpacked into `route.dependant`, then continue into `fastapi/dependencies/utils.py` to the loop over the signature's parameters.
 solution: solutions/fastapi-trace-001.md
 tags: [dependency-injection, routing]
 authors: [agent-author-3]

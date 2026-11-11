@@ -26,7 +26,9 @@ answer:
   accept_sequences: []
   accept_reasons: []
 hints:
-  - The `add_*` methods of the class builder prepare source code, but none of them compiles it.
+  - "Bare `@define` means `maybe_cls` is the class itself, so the decorator applies at once; nested functions count as their own entries in the stack."
+  - "Every field is annotated, so the first `try` in `src/attr/_next_gen.py` succeeds and the `UnannotatedAttributeError` fallback never runs."
+  - "The `add_*` methods of the class builder prepare source code, but none of them compiles it. Once the builder is configured, follow the one call that finishes it, then go down until source is compiled."
 solution: solutions/attrs-trace-001.md
 tags: [compilers, code-structure]
 authors: [agent-author-rich-rhf]

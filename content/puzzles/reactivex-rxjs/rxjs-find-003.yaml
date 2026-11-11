@@ -16,7 +16,9 @@ answer:
   anchor: [41, 43]
   window: [38, 44]
 hints:
-  - Check whether the source's `complete` handler completes the subscriber itself in this scenario, and what runs when the timer fires.
+  - "With `trailing: true`, the second value is held until the window ends, so completing the output right away would drop it. Look for where completion is deferred instead."
+  - "Check whether the source's `complete` handler completes the subscriber itself in this scenario, and what runs when the timer fires."
+  - "For a numeric `delay`, `startThrottle` schedules a `setTimeout`. Follow its callback, and ignore the similar check in the helper that runs only when a duration observable completes."
 solution: solutions/rxjs-find-003.md
 tags: [observables]
 authors: [agent-author-4]

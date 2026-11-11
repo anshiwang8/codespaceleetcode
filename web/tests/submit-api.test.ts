@@ -142,13 +142,13 @@ describe.skipIf(!hasDatabase)("POST /api/puzzles/:slug/submit", () => {
     const cookie = await signIn(`right-${slug}`);
     const response = await submit(slug, cookie, body);
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ correct: true, attempts: 1 });
+    expect(await response.json()).toMatchObject({ correct: true, attempts: 1 });
     expect(await progressRow(`right-${slug}`, slug)).toMatchObject({ status: "solved", attempts: 1 });
   });
 
   it("accepts an ID listed in accept", async () => {
     const response = await submit("fx-symbol", await signIn("right-accept"), { kind: "symbol", id: ALIAS_SYMBOL });
-    expect(await response.json()).toEqual({ correct: true, attempts: 1 });
+    expect(await response.json()).toMatchObject({ correct: true, attempts: 1 });
   });
 
   it.each(wrongAnswers)("marks a wrong %s answer wrong: %s", async (slug, name, body) => {
@@ -157,7 +157,7 @@ describe.skipIf(!hasDatabase)("POST /api/puzzles/:slug/submit", () => {
     const response = await submit(slug, cookie, body);
     expect(response.status).toBe(200);
     const text = await response.text();
-    expect(JSON.parse(text)).toEqual({ correct: false, attempts: 1 });
+    expect(JSON.parse(text)).toMatchObject({ correct: false, attempts: 1 });
     expectNoAnswerData(text.replace('"correct"', ""));
     expect(await progressRow(login, slug)).toMatchObject({ status: "attempted", attempts: 1 });
   });
@@ -248,9 +248,9 @@ describe.skipIf(!hasDatabase)("POST /api/puzzles/:slug/submit", () => {
 
     it("counts attempts across wrong and right answers, and shows them on the puzzle", async () => {
       const cookie = await signIn("rec-count");
-      expect(await (await submit("fx-file", cookie, { kind: "file", path: ROUTER_FILE })).json()).toEqual({ correct: false, attempts: 1 });
-      expect(await (await submit("fx-file", cookie, { kind: "file", path: "src/decoy.ts" })).json()).toEqual({ correct: false, attempts: 2 });
-      expect(await (await submit("fx-file", cookie, { kind: "file", path: CONFIG_FILE })).json()).toEqual({ correct: true, attempts: 3 });
+      expect(await (await submit("fx-file", cookie, { kind: "file", path: ROUTER_FILE })).json()).toMatchObject({ correct: false, attempts: 1 });
+      expect(await (await submit("fx-file", cookie, { kind: "file", path: "src/decoy.ts" })).json()).toMatchObject({ correct: false, attempts: 2 });
+      expect(await (await submit("fx-file", cookie, { kind: "file", path: CONFIG_FILE })).json()).toMatchObject({ correct: true, attempts: 3 });
       expect(await detail("fx-file", cookie)).toMatchObject({ status: "solved", attempts: 3 });
       expect(await submissionRows("rec-count")).toHaveLength(3);
     });
@@ -260,8 +260,8 @@ describe.skipIf(!hasDatabase)("POST /api/puzzles/:slug/submit", () => {
       const bob = await signIn("rec-bob");
       await submit("fx-file", alice, { kind: "file", path: ROUTER_FILE });
       await submit("fx-file", alice, { kind: "file", path: ROUTER_FILE });
-      expect(await (await submit("fx-file", bob, { kind: "file", path: ROUTER_FILE })).json()).toEqual({ correct: false, attempts: 1 });
-      expect(await (await submit("fx-choice", alice, { kind: "choice", option: "opt-a" })).json()).toEqual({ correct: false, attempts: 1 });
+      expect(await (await submit("fx-file", bob, { kind: "file", path: ROUTER_FILE })).json()).toMatchObject({ correct: false, attempts: 1 });
+      expect(await (await submit("fx-choice", alice, { kind: "choice", option: "opt-a" })).json()).toMatchObject({ correct: false, attempts: 1 });
     });
 
     it("stays solved after a later wrong answer, keeping the first solve time", async () => {
@@ -270,7 +270,7 @@ describe.skipIf(!hasDatabase)("POST /api/puzzles/:slug/submit", () => {
       const solved = await progressRow("rec-stay", "fx-file");
       expect(solved?.solved_at).toBeInstanceOf(Date);
       const later = await submit("fx-file", cookie, { kind: "file", path: ROUTER_FILE });
-      expect(await later.json()).toEqual({ correct: false, attempts: 2 });
+      expect(await later.json()).toMatchObject({ correct: false, attempts: 2 });
       const after = await progressRow("rec-stay", "fx-file");
       expect(after).toMatchObject({ status: "solved", attempts: 2 });
       expect(after?.solved_at).toEqual(solved?.solved_at);

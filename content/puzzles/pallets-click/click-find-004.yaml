@@ -15,7 +15,9 @@ answer:
   anchor: [1384, 1385]
   window: [1383, 1386]
 hints:
-  - Look at how the function records whether the type it is working with was passed in or guessed.
+  - "The function narrows the type through a series of early returns; the fallback you want sits after the checks for the built-in types."
+  - "Look at how the function records whether the type it is working with was passed in or guessed."
+  - "`convert_type` calls `_guess_type` first and compares the result with the `ty` argument; follow that boolean down to the `if` that returns `STRING` on its own."
 solution: solutions/click-find-004.md
 tags: [command-line]
 authors: [agent-author-6]

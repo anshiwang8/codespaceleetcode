@@ -15,7 +15,9 @@ answer:
   accept: []
   accept_reasons: []
 hints:
-  - Start at Context.resolve and jump to the definition of the first method it calls.
+  - "When several public lookups share one behavior, they usually delegate to a single overridable method, so follow the calls instead of reading each lookup in full."
+  - "`get` goes through item access, so look at what `resolve` and `__getitem__` call; the shared method returns the sentinel imported from `jinja2.utils`."
+  - "Start at `Context.resolve` and jump to the definition of the first method it calls."
 solution: solutions/jinja-find-001.md
 tags: [code-structure]
 authors: [agent-author-jinja-starlette]

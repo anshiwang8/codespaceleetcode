@@ -24,7 +24,9 @@ choices:
   - id: e
     label: The second Live replaces the first, which stops redrawing until the second one stops.
 hints:
-  - Look at what `Live.start` does when `set_live` returns False, and at which Lives the `renderable` property collects.
+  - "Read the method bodies rather than the docstrings: at least one docstring in this area describes behavior the code doesn't have."
+  - "Start with `Console.set_live`: see what it does to `self._live_stack` and what its return value means for the second `Live`."
+  - "Look at what `Live.start` does when `set_live` returns False, and at which Lives the `renderable` property collects. Then read what `Live.refresh` does for a Live in that state."
 solution: solutions/rich-architecture-001.md
 tags: [code-structure]
 authors: [agent-author-rich-rhf]

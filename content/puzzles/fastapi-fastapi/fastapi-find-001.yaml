@@ -15,7 +15,9 @@ answer:
   accept: []
   accept_reasons: []
 hints:
-  - It is called from the inner request-handling function built by get_request_handler.
+  - "This is the response half of the request lifecycle: when the endpoint returns a plain value rather than a `Response`, FastAPI checks it against the response model before building a response."
+  - It is called from the inner request-handling function built by `get_request_handler`.
+  - In that inner `app`, follow the branch where the endpoint's return value is not a `Response`, and open the call that receives `field=response_field` and the raw return value.
 solution: solutions/fastapi-find-001.md
 tags: [validation, request-lifecycle]
 authors: [agent-author-3]

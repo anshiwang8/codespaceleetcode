@@ -13,7 +13,9 @@ answer:
   accept: []
   accept_reasons: []
 hints:
-  - Look at how the Hono class constructor in src/hono-base.ts chooses `this.getPath`.
+  - "Strict mode is decided once, when the app is built, by choosing which path-extraction function the app calls on every request."
+  - "Look at how the Hono class constructor in `src/hono-base.ts` chooses `this.getPath`."
+  - "Follow the non-strict side of that choice through the import at the top of `src/hono-base.ts`, and confirm the function trims one trailing `/`, and only from paths longer than `/`."
 solution: solutions/hono-find-001.md
 tags: [routing, configuration]
 authors: [agent-author-1]

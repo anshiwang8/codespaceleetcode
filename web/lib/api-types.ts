@@ -1,10 +1,12 @@
 // Shapes shared by the API routes and the UI. Nothing here may ever carry an answer key.
 // See spec.md section 9.
 
+import type { AchievementCategory } from "@/lib/achievements";
+import type { LeaderboardPeriod, PeriodKind } from "@/lib/periods";
 import type { ProfileLinks } from "@/lib/profile-fields";
 import type { ThemePreference } from "@/lib/themes/runtime";
 
-export type { ProfileLinks, ThemePreference };
+export type { LeaderboardPeriod, PeriodKind, ProfileLinks, ThemePreference };
 
 /** In the order the site lists them. */
 export const PUZZLE_TYPES = ["find", "trace", "architecture", "design"] as const;
@@ -55,7 +57,12 @@ export interface PuzzleDetail extends PuzzleSummary {
   setCount: number | null;
   /** The options for `choice` puzzles, otherwise null. */
   choices: ChoiceOption[] | null;
-  hints: string[];
+  /** How many hint levels this puzzle has (0 to 3). The text arrives only as each is revealed. */
+  hintCount: number;
+  /** The hints this user has revealed, in order. Empty when signed out. */
+  revealedHints: string[];
+  /** The open challenge periods that feature this puzzle, for linking to /challenges. */
+  featuredIn: PeriodKind[];
   /** Who did the blind second solve. An `agent:` prefix means it wasn't a person. */
   verifiedBy: string[];
   attempts: number;
@@ -75,6 +82,136 @@ export type Submission = (
 export interface SubmitResponse {
   correct: boolean;
   attempts: number;
+  /** Points this submission earned, bonuses included. 0 when it earned none. */
+  pointsAwarded: number;
+  /** Achievements this submission unlocked, for the toast. */
+  achievements: AchievementUnlock[];
+  /** Challenge periods this submission completed. */
+  challenges: { kind: PeriodKind; bonus: number }[];
+}
+
+/** POST /api/puzzles/:slug/hints */
+export interface HintRevealResponse {
+  hintCount: number;
+  revealedHints: string[];
+}
+
+export interface AchievementUnlock {
+  id: string;
+  title: string;
+  description: string;
+}
+
+export interface AchievementStatus extends AchievementUnlock {
+  category: AchievementCategory;
+  icon: string;
+  /** The number to reach. "All" thresholds are resolved to a count here. */
+  threshold: number;
+  /** How far the user is, capped at the threshold. */
+  progress: number;
+  /** When the activity that earned it happened, or null while locked. */
+  unlockedAt: string | null;
+}
+
+/** GET /api/me/achievements */
+export interface AchievementsResponse {
+  achievements: AchievementStatus[];
+}
+
+export interface ChallengePuzzle {
+  slug: string;
+  title: string;
+  type: PuzzleType;
+  difficulty: Difficulty;
+  repoSlug: string;
+}
+
+export interface ChallengeCard {
+  kind: PeriodKind;
+  /** YYYY-MM-DD, the UTC date the period starts. */
+  periodStart: string;
+  /** "Wednesday, November 11, 2026", "Week of November 9, 2026", "November 2026". */
+  label: string;
+  /** ISO timestamps: 00:00 UTC at the start, and 00:00 UTC when the next period begins. */
+  startsAt: string;
+  endsAt: string;
+  /** Null when the puzzle has since been withdrawn. */
+  puzzle: ChallengePuzzle | null;
+  /** Bonus points for completing it while the period is open. */
+  bonus: number;
+  /** Completed during the period. Always false when signed out. */
+  completed: boolean;
+  completedAt: string | null;
+  /** The user's status on the puzzle itself, at any time. */
+  status: PuzzleStatus;
+}
+
+export interface ChallengeStreak {
+  /** Consecutive UTC dates with the daily challenge completed, ending today or yesterday. */
+  current: number;
+  longest: number;
+  completedToday: boolean;
+}
+
+/** GET /api/challenges */
+export interface ChallengesResponse {
+  /** The server's clock when this was built, for counting down without trusting the browser. */
+  now: string;
+  current: ChallengeCard[];
+  /** Null when signed out. */
+  streak: ChallengeStreak | null;
+  /** Periods completed, by kind. Null when signed out. */
+  completedCounts: Record<PeriodKind, number> | null;
+}
+
+/** GET /api/challenges/archive?kind=&before= */
+export interface ChallengeArchiveResponse {
+  kind: PeriodKind;
+  items: ChallengeCard[];
+  /** Pass as `before` for the next page, or null at the end. */
+  nextBefore: string | null;
+}
+
+export interface LeaderboardRow {
+  rank: number;
+  publicName: string;
+  points: number;
+  /** Distinct puzzles first solved in the period. */
+  solved: number;
+  /** When the user reached this total: the earlier one ranks higher on a tie. */
+  reachedAt: string;
+  isYou: boolean;
+}
+
+export interface LeaderboardYou {
+  participating: boolean;
+  publicName: string | null;
+  /** Null when not participating or with no points in the period. */
+  rank: number | null;
+  points: number;
+  solved: number;
+}
+
+/** GET /api/leaderboard?period=&page= */
+export interface LeaderboardResponse {
+  period: LeaderboardPeriod;
+  /** Null for all time. */
+  range: { startsAt: string; endsAt: string } | null;
+  now: string;
+  page: number;
+  pageSize: number;
+  /** Ranked participants with points in the period. */
+  totalEntries: number;
+  rows: LeaderboardRow[];
+  /** Null when signed out. */
+  you: LeaderboardYou | null;
+}
+
+/** GET, PUT and DELETE /api/me/leaderboard */
+export interface LeaderboardParticipation {
+  participating: boolean;
+  publicName: string | null;
+  joinedAt: string | null;
 }
 
 export interface SolutionResponse {

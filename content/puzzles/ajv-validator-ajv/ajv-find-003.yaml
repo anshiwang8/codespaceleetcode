@@ -16,7 +16,9 @@ answer:
   accept: []
   accept_reasons: []
 hints:
-  - Look at how the keyword's `code` builds the length expression when `unicode` is not false, and follow the import.
+  - "JavaScript's `.length` counts UTF-16 code units, so a character outside the Basic Multilingual Plane counts as two. A correct counter has to treat a surrogate pair as one character."
+  - "Generated code reaches runtime helpers through `useFunc` in `lib/compile/util.ts`; the function you want is the one passed to it, not `useFunc` itself."
+  - "Look at how the keyword's `code` builds the length expression when `unicode` is not false, and follow the import."
 solution: solutions/ajv-find-003.md
 tags: [compilers, validation]
 authors: [agent-author-5]

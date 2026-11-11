@@ -15,7 +15,9 @@ answer:
   accept: []
   accept_reasons: []
 hints:
-  - Find where the app builds its json attribute, then follow the class it instantiates.
+  - "Flask splits its app class into a framework-independent base and a WSGI subclass, so the attribute may be set up in the base class rather than in `src/flask/app.py`."
+  - "Find where the app builds its `json` attribute, then follow the class it instantiates."
+  - "`self.json` is created from a class attribute on `App` in `src/flask/sansio/app.py`; that attribute's default is imported at the top of that file, and the relative import names the module."
 solution: solutions/flask-find-003.md
 tags: [configuration, extension-points]
 authors: [agent-author-3]

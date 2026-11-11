@@ -20,7 +20,9 @@ answer:
     - lib/compile/codegen/index.ts#Catch
     - lib/compile/codegen/index.ts#Finally
 hints:
-  - Look at how the node classes in this file relate to each other.
+  - "Look at how the node classes in this file relate to each other."
+  - "Each class names its parent in an `extends` clause, and the hierarchy has layers: `Node`, then `ParentNode`, then `BlockNode`, with some classes one level below a `BlockNode` subclass."
+  - "Search the file for `extends BlockNode` and read each hit's declaration; an `abstract` class counts when it extends `BlockNode` directly, but the classes that extend it do not."
 solution: solutions/ajv-architecture-002.md
 tags: [compilers, code-structure]
 authors: [agent-author-2]

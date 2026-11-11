@@ -19,6 +19,17 @@ export const STATUS_LABELS: Record<PuzzleStatus, string> = {
   solved: "Solved",
 };
 
+const LANGUAGE_NAMES: Record<string, string> = {
+  javascript: "JavaScript",
+  python: "Python",
+  typescript: "TypeScript",
+};
+
+/** A repository's language as it's written, such as TypeScript, from the lowercase name the index stores. */
+export function languageLabel(language: string): string {
+  return LANGUAGE_NAMES[language] ?? language.charAt(0).toUpperCase() + language.slice(1);
+}
+
 /** The required answer in plain words. `setCount` only applies to `set`. */
 export function answerKindInWords(kind: AnswerKind, setCount: number | null): string {
   switch (kind) {

@@ -2,9 +2,20 @@
 
 import { useEffect, useRef, useState } from "react";
 import { SignInPrompt } from "@/components/auth/SignInPrompt";
+import hintStyles from "@/components/puzzle/hints.module.css";
 import styles from "@/components/puzzle/puzzle.module.css";
 import type { PuzzleDetail, SubmitResponse } from "@/lib/api-types";
 import { type Draft, type DraftAction, isReadyToSubmit, type SequenceItem } from "@/lib/client/answer";
+import { Icon } from "@/components/site/Icon";
+import { formatNumber, plural } from "@/lib/format";
+import type { PeriodKind } from "@/lib/periods";
+
+/** What a correct submission says about each challenge it completed. */
+const CHALLENGE_DONE: Record<PeriodKind, string> = {
+  daily: "Daily challenge complete",
+  weekly: "Weekly challenge complete",
+  monthly: "Monthly challenge complete",
+};
 
 const INSTRUCTIONS: Record<Draft["kind"], string> = {
   symbol: "Put the cursor on a symbol and choose Select as answer below the editor, or use + on an outline row.",
@@ -96,19 +107,35 @@ export function AnswerTray({
             data-correct={result.correct}
           >
             <p className={styles.resultHead}>
-              {/* A fixed box, so the ✓'s bounce never moves the text or the button below it. */}
+              {/* A fixed box, so the check's bounce never moves the text or the button below it. */}
               <span className={styles.resultIcon} aria-hidden="true">
                 <span className={result.correct ? styles.resultCheck : undefined} data-testid="result-icon">
-                  {result.correct ? "✓" : "✗"}
+                  <Icon name={result.correct ? "check" : "x"} />
                 </span>
               </span>
               <strong>{result.correct ? "Correct" : "Incorrect"}</strong>
+              {result.correct && result.pointsAwarded > 0 ? (
+                <span className={hintStyles.points} data-testid="result-points">
+                  +{plural(result.pointsAwarded, "point", "points")}
+                </span>
+              ) : null}
             </p>
             <span>
               {result.attempts === 1 ? "Attempt 1" : `Attempt ${result.attempts}`}
               {result.correct ? ". The solution and its explanation are unlocked." : null}
               {result.correct ? null : ". Change your answer and try again."}
             </span>
+            {result.correct && result.challenges.length > 0 ? (
+              <ul className={hintStyles.resultChallenges} data-testid="result-challenges">
+                {result.challenges.map((challenge) => (
+                  <li key={challenge.kind}>
+                    <Icon name="calendar" />
+                    {CHALLENGE_DONE[challenge.kind]}
+                    {challenge.bonus > 0 ? `, +${formatNumber(challenge.bonus)}` : null}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
             {result.correct && onViewSolution ? (
               <button
                 type="button"
@@ -295,7 +322,7 @@ function SequenceList({ items, pick }: { items: SequenceItem[]; pick: (action: D
                 disabled={index === 0}
                 onClick={() => move(item, index - 1, "up")}
               >
-                ↑
+                <Icon name="arrow-up" />
               </button>
               <button
                 type="button"
@@ -305,7 +332,7 @@ function SequenceList({ items, pick }: { items: SequenceItem[]; pick: (action: D
                 disabled={index === items.length - 1}
                 onClick={() => move(item, index + 1, "down")}
               >
-                ↓
+                <Icon name="arrow-down" />
               </button>
               <button
                 type="button"
@@ -313,7 +340,7 @@ function SequenceList({ items, pick }: { items: SequenceItem[]; pick: (action: D
                 aria-label={`Remove ${item.id}`}
                 onClick={() => pick({ type: "remove-item", key: item.key })}
               >
-                ×
+                <Icon name="x" />
               </button>
             </span>
           </li>

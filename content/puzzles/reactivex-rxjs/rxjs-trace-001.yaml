@@ -19,6 +19,8 @@ answer:
   accept_reasons: []
 hints:
   - "`BehaviorSubject._subscribe` emits the current value and then defers to its base class."
+  - "Use the `import` at the top of behavior-subject.ts to open the class it extends; it keeps the live observers in a private `Set` field."
+  - "In the base class, the branches for an errored or completed subject return early, which the prompt rules out. Follow the call made when the subject is still active."
 solution: solutions/rxjs-trace-001.md
 tags: [observables]
 authors: [agent-author-1]

@@ -15,7 +15,9 @@ answer:
   accept: []
   accept_reasons: []
 hints:
-  - Start at src/attrs/__init__.py and follow the import of `asdict` until you reach a body that loops over fields.
+  - "attrs has two public packages, `attrs` and the older `attr`, and the newer one often wraps an older function with different defaults, so the first body you reach may only forward the call."
+  - "Start at `src/attrs/__init__.py` and follow the import of `asdict` until you reach a body that loops over fields."
+  - "The `asdict` in `src/attr/_next_gen.py` only calls a name it imported under an alias; follow that aliased import one more step to the function that loops over `fields(...)`."
 solution: solutions/attrs-find-003.md
 tags: [code-structure]
 authors: [agent-author-rich-rhf]

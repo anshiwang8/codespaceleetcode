@@ -14,7 +14,9 @@ answer:
   accept: []
   accept_reasons: []
 hints:
-  - Look at the argument `compile` passes to `baseCompile` under the `directiveTransforms` key.
+  - "Tell the record apart from the transforms it holds: each value is a function defined in its own module, but the question asks where the keyed object itself is declared."
+  - "Look at the argument `compile` passes to `baseCompile` under the `directiveTransforms` key."
+  - "That value is built with `extend`. Take the argument that doesn't come from `options`, jump to its definition, and select the file that declares it, not the files its values are imported from."
 solution: solutions/vue-architecture-003.md
 tags: [compilers, extension-points]
 authors: [agent-author-1]

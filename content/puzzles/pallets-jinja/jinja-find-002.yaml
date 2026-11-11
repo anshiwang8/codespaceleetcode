@@ -15,7 +15,9 @@ answer:
   anchor: [736, 740]
   window: [733, 741]
 hints:
-  - The lexer looks at which whitespace-control character was captured next to the opening delimiter.
+  - "Whitespace control happens while the lexer splits the source into tokens: the text before a tag and the tag come from one regex match, so the stripping edits that match's groups."
+  - "The lexer looks at which whitespace-control character was captured next to the opening delimiter."
+  - "Inside `tokeniter`, find the branch for rules of type `OptionalLStrip` and the variable holding the captured sign; the `if` you want tests it for the minus sign, before the `elif` for `lstrip_blocks`."
 solution: solutions/jinja-find-002.md
 tags: [compilers]
 authors: [agent-author-jinja-starlette]

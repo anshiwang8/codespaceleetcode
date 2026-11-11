@@ -3,14 +3,17 @@ import Link from "next/link";
 import { SignInPrompt } from "@/components/auth/SignInPrompt";
 import { AccountSection } from "@/components/profile/AccountSection";
 import { AvatarEditor } from "@/components/settings/AvatarEditor";
+import { DangerZone } from "@/components/settings/DangerZone";
 import { DetailsForm } from "@/components/settings/DetailsForm";
 import { EmailPanel } from "@/components/settings/EmailPanel";
+import { LeaderboardVisibility } from "@/components/settings/LeaderboardVisibility";
 import { LinksForm } from "@/components/settings/LinksForm";
 import styles from "@/components/settings/settings.module.css";
 import { ThemePicker } from "@/components/themes/ThemePicker";
 import { getCurrentUser } from "@/lib/server/auth";
 import { getAvatar } from "@/lib/server/avatar";
 import { getEmailStatus } from "@/lib/server/email";
+import { getParticipation } from "@/lib/server/leaderboard";
 import { getProfileRecord } from "@/lib/server/settings";
 
 // Private to whoever is signed in, and rendered per request from their session.
@@ -20,6 +23,7 @@ const SECTIONS = [
   { id: "appearance", label: "Appearance" },
   { id: "profile", label: "Profile" },
   { id: "links", label: "Links" },
+  { id: "leaderboard", label: "Leaderboard" },
   { id: "email", label: "Email and account" },
 ] as const;
 
@@ -29,17 +33,24 @@ export default async function SettingsPage() {
     return (
       <main className="page-message" data-testid="settings-signed-out">
         <h1>Settings</h1>
-        <p className="muted">Sign in to change your theme, picture, profile, links and email.</p>
+        <p className="muted">
+          Sign in to change your theme, picture, profile, links, email and whether you appear on the leaderboard.
+        </p>
         <div className={styles.signedOut}>
           <SignInPrompt reason="Sign in to see your settings." />
         </div>
         <p className={styles.hint}>
-          You can still pick a theme for this browser with the Theme button at the top of the page.
+          You can still pick a theme for this browser from the Theme button on the profile page.
         </p>
       </main>
     );
   }
-  const [record, avatar, email] = await Promise.all([getProfileRecord(user.id), getAvatar(user.id), getEmailStatus(user)]);
+  const [record, avatar, email, participation] = await Promise.all([
+    getProfileRecord(user.id),
+    getAvatar(user.id),
+    getEmailStatus(user),
+    getParticipation(user.id),
+  ]);
 
   return (
     <main className={`page ${styles.page}`} data-testid="settings">
@@ -47,7 +58,7 @@ export default async function SettingsPage() {
         <div>
           <h1 className="page-title">Settings</h1>
           <p className="page-lede">
-            Signed in as <span className="mono">{user.login}</span> with {user.via === "github" ? "GitHub" : "the local dev login"}.
+            Signed in as <strong>{user.login}</strong> with {user.via === "github" ? "GitHub" : "the local dev login"}.
             Your progress is on your <Link href="/profile">profile</Link>.
           </p>
         </div>
@@ -89,6 +100,16 @@ export default async function SettingsPage() {
         <LinksForm initial={record.links} />
       </section>
 
+      <section id="leaderboard" className={`card ${styles.section}`} aria-labelledby="leaderboard-heading">
+        <h2 id="leaderboard-heading" className="section-title">
+          Leaderboard visibility
+        </h2>
+        <p className={styles.lede}>
+          Off by default. Nobody appears on the <Link href="/leaderboard">leaderboard</Link> unless they join here.
+        </p>
+        <LeaderboardVisibility initial={participation} />
+      </section>
+
       <section id="email" className={`card ${styles.section}`} aria-labelledby="email-heading">
         <h2 id="email-heading" className="section-title">
           Email and account
@@ -97,6 +118,7 @@ export default async function SettingsPage() {
         <EmailPanel initial={email} provider={user.via} />
       </section>
       <AccountSection />
+      <DangerZone provider={user.via} />
     </main>
   );
 }

@@ -21,7 +21,9 @@ answer:
   accept_sequences: []
   accept_reasons: []
 hints:
-  - The top-level helpers don't talk to the network themselves; they delegate to a Session.
+  - The top-level helpers don't talk to the network themselves; they delegate to a `Session`.
+  - Every verb helper in `src/requests/api.py` forwards to one shared function in that file, which opens a `Session` in a `with` block and hands off to it.
+  - On the session, open the method that the shared function calls and find where it turns its `Request` into a `PreparedRequest`, before `send` runs.
 solution: solutions/requests-trace-001.md
 tags: [http-clients]
 authors: [agent-author-3]
