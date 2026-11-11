@@ -23,7 +23,8 @@ function puzzleFiles(): PuzzleFile[] {
 
 /** A YAML block scalar or plain value, as one line of words, with code backticks dropped. */
 function field(text: string, name: string): string {
-  const lines = text.split("\n");
+  // Windows checkouts have CRLF endings; a blank line must still read as blank.
+  const lines = text.split(/\r?\n/);
   const start = lines.findIndex((line) => line.startsWith(`${name}:`));
   if (start === -1) return "";
   const inline = lines[start]?.slice(name.length + 1).trim() ?? "";

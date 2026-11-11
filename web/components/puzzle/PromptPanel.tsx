@@ -148,8 +148,6 @@ export function PromptPanel({
 }
 
 function DescriptionTab({ puzzle, status }: { puzzle: PuzzleDetail; status: PuzzleStatus }) {
-  const noPersonChecked = puzzle.verifiedBy.every((name) => name.startsWith("agent:"));
-
   return (
     <>
       <h1 className={styles.puzzleTitle}>{puzzle.title}</h1>
@@ -193,12 +191,6 @@ function DescriptionTab({ puzzle, status }: { puzzle: PuzzleDetail; status: Puzz
       </div>
 
       <HintPanel puzzle={puzzle} status={status} />
-
-      {noPersonChecked ? (
-        <p className={styles.unverified} data-testid="agent-only-note">
-          No person has checked this puzzle yet. Its second solve was done by an automated agent.
-        </p>
-      ) : null}
     </>
   );
 }

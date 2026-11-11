@@ -1,5 +1,27 @@
 # DEVLOG
 
+## Remove the agent-only note from puzzle pages
+
+Type: Removal
+
+Goal: Stop showing "No person has checked this puzzle yet. Its second solve was done by an automated agent." at the bottom of every puzzle's description.
+
+What should be done: Drop the note and what only it used, and keep the disclosure true elsewhere.
+
+What was done (technical): `DescriptionTab` in `web/components/puzzle/PromptPanel.tsx` no longer renders the `agent-only-note` paragraph or computes whether every `verifiedBy` name starts with `agent:`. The `.unverified` style is gone from `puzzle.module.css`, and the e2e test "the unverified note follows verifiedBy" is removed from `web/e2e/viewer.spec.ts`. `verifiedBy` stays in the puzzle API. The landing page's limits list still says the blind second solves were done by an automated agent, but no longer claims every puzzle page says so. Spec section 6 now says the landing page carries that disclosure, not the puzzle page.
+
+## Email delivery is live in production (launch checklist M10 done)
+
+Type: Change
+
+Goal: Record that production now confirms contact emails, so the launch checklist matches the live site.
+
+What should be done: Mark M10 done in spec section 14 and close it here.
+
+What was done (technical): The five SMTP values (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `EMAIL_FROM`) are set for Production in Vercel, for a Gmail account made for the site with an app password. After the deploy of the SMTP change, Settings on `codespaceleetcode.vercel.app` no longer says email is unavailable, and the owner confirmed the email flow works there. Spec section 14 marks M10 done, dated 2026-11-10.
+
+Still open: Move to Resend once M1 gives the site a domain (remove the SMTP values, set `RESEND_API_KEY` and `EMAIL_FROM`, and update the providers table on `/privacy`). Gmail caps a free account at about 500 recipients a day. M11 still needs to review `/privacy`.
+
 ## Progressive hints, points, challenges, achievements, an opt-in leaderboard, safer deletion and a new logo
 
 Type: Addition

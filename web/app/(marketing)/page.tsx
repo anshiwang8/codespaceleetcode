@@ -26,7 +26,7 @@ const LIMITS = [
   "No partial credit. An answer is the exact symbol, file, lines or option, or it's wrong.",
   "No peeking. A solution shows only after you've solved the puzzle.",
   "The workspace needs a laptop-size screen. The puzzle list works on a phone.",
-  "Each puzzle's second, blind solve has been done by an automated agent so far, not yet by a person. Every puzzle page says so.",
+  "Each puzzle's second, blind solve has been done by an automated agent so far, not yet by a person.",
 ] as const;
 
 export default function LandingPage() {

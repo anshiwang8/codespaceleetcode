@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { clickToken, cursorOnSymbol, expectOpenFile, FILES, openFile, openPuzzle, signIn, visible } from "./helpers";
+import { clickToken, cursorOnSymbol, expectOpenFile, FILES, openFile, openPuzzle, signIn } from "./helpers";
 
 test.describe("code viewer", () => {
   test("F12 jumps across files, and the tree, tabs and trail follow", async ({ page }) => {
@@ -290,14 +290,6 @@ test.describe("puzzle page furniture", () => {
       "href",
       "https://github.com/example/acme-tiny/tree/0123456789abcdef0123456789abcdef01234567",
     );
-  });
-
-  test("the unverified note follows verifiedBy", async ({ page }) => {
-    await openPuzzle(page, "e2e-find-symbol");
-    // Read straight after navigating, while hydration can briefly leave a hidden second copy.
-    await expect(visible(page, "agent-only-note")).toContainText("No person has checked");
-    await openPuzzle(page, "e2e-find-file");
-    await expect(page.getByTestId("agent-only-note")).toHaveCount(0);
   });
 
   test("hints come one at a time", async ({ page }) => {
