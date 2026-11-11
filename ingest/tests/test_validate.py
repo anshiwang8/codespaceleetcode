@@ -34,6 +34,7 @@ FAILING_CHECKS = {
     "location-window",
     "choice-options",
     "verifier-not-author",
+    "hint-leak",
 }
 
 

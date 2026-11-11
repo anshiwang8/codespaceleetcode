@@ -39,6 +39,7 @@ OVERRIDABLE_CHECKS = (
     "symbol-unique",
     "sequence-edges",
     "sequence-alternate-path",
+    "hint-leak",
 )
 _WARNING_CHECKS = frozenset({"sequence-alternate-path"})
 
@@ -222,7 +223,8 @@ def _check_puzzle(
     unresolved = _existence_problems(puzzle.answer, index)
     for problem in unresolved:
         result.fail("answer-exists", problem)
-    _apply_overrides(result, puzzle, _heuristic_findings(puzzle, index, bool(unresolved)))
+    findings = _heuristic_findings(puzzle, index, bool(unresolved)) + _hint_findings(puzzle)
+    _apply_overrides(result, puzzle, findings)
 
 
 def _check_file_layout(result: PuzzleResult, puzzle: Puzzle) -> None:
@@ -496,6 +498,96 @@ def _choice_findings(answer: ChoiceAnswer, puzzle: Puzzle) -> list[Finding]:
         findings.append(Finding("choice-options", "option ids and labels must be unique"))
     if answer.option not in ids:
         findings.append(Finding("choice-options", "answer.option isn't one of the choices"))
+    return findings
+
+
+_CODE_SPAN = re.compile(r"`([^`]+)`")
+_COLLISION_SUFFIX = re.compile(r"~\d+$")
+
+
+def _answer_tokens(puzzle: Puzzle) -> tuple[list[str], list[str]]:
+    """What a hint must not say: (exact strings, short identifier names).
+
+    Exact strings are full IDs, qualified symbol names, paths, file names and the correct choice's
+    label. Names are each answer symbol's last segment, matched as a whole word.
+    """
+    exact: list[str] = []
+    names: list[str] = []
+
+    def add_symbol(symbol_id: str) -> None:
+        exact.append(symbol_id)
+        qualified = _COLLISION_SUFFIX.sub("", symbol_id.partition("#")[2])
+        if qualified:
+            exact.append(qualified)
+            last = qualified.rsplit(".", 1)[-1].lstrip("#")
+            if last and "<" not in last:
+                names.append(last)
+
+    def add_file(path: str) -> None:
+        exact.append(path)
+        exact.append(path.rsplit("/", 1)[-1])
+
+    def add_id(value: str) -> None:
+        if "#" in value:
+            add_symbol(value)
+        else:
+            add_file(value)
+
+    match puzzle.answer:
+        case SymbolAnswer(id=symbol_id, accept=accept):
+            for value in (symbol_id, *accept):
+                add_symbol(value)
+        case FileAnswer(path=path, accept=accept):
+            for value in (path, *accept):
+                add_file(value)
+        case LocationAnswer(path=path):
+            add_file(path)
+            exact.append(f"{path}:L")
+        case SequenceAnswer(ids=ids, accept_sequences=alternates):
+            for value in {*ids, *(i for sequence in alternates for i in sequence)}:
+                add_symbol(value)
+        case SetAnswer(ids=ids):
+            for value in ids:
+                add_id(value)
+        case ChoiceAnswer(option=option):
+            exact += [c.label for c in puzzle.choices or () if c.id == option]
+    return exact, names
+
+
+def _names_word(name: str, text: str) -> bool:
+    return re.search(rf"(?<![\w$]){re.escape(name)}(?![\w$])", text) is not None
+
+
+def _hint_findings(puzzle: Puzzle) -> list[Finding]:
+    """A hint guides toward the answer without saying it (spec section 4, Hints).
+
+    Anything the prompt already names is fair to repeat. A plain lowercase name such as `run` only
+    counts when it's written as code, since the same word in a sentence is usually just English.
+    """
+    exact, names = _answer_tokens(puzzle)
+    prompt = puzzle.prompt
+    findings: list[Finding] = []
+    for number, hint in enumerate(puzzle.hints, start=1):
+        code = " ".join(_CODE_SPAN.findall(hint))
+        leaked = any(
+            token not in prompt and token.lower() in hint.lower()
+            if isinstance(puzzle.answer, ChoiceAnswer)
+            else token not in prompt and token in hint
+            for token in exact
+            if token
+        ) or any(
+            not _names_word(name, prompt)
+            and (
+                _names_word(name, code)
+                or (name != name.lower() or "_" in name or any(c.isdigit() for c in name))
+                and _names_word(name, hint)
+            )
+            for name in names
+        )
+        if leaked:
+            findings.append(
+                Finding("hint-leak", f"hints[{number - 1}] names part of the answer the prompt doesn't")
+            )
     return findings
 
 
