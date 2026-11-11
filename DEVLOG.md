@@ -1,5 +1,24 @@
 # DEVLOG
 
+## Send email through Gmail over SMTP (launch checklist M10)
+
+Type: Addition
+
+Goal: Let people confirm a contact email on the live site now. Production had no email provider, so Settings greyed out the email box, and Resend can't be used until the site has its own domain (M1).
+
+What should be done: Add SMTP as a second way to send email, so production can send through a Gmail account with an app password, and keep Resend for when there's a domain.
+
+What was done (technical):
+
+- `web/lib/server/email-delivery.ts` adds an SMTP sender using nodemailer 10.2.1, chosen when `SMTP_HOST`, `SMTP_USER` and `SMTP_PASSWORD` are set and Resend isn't. `SMTP_PORT` defaults to 465 (TLS from the start); any other port requires STARTTLS. `EMAIL_FROM` defaults to `SMTP_USER`. Spaces are stripped from the password, since Google shows app passwords in groups of four. A port that isn't a number from 1 to 65535 leaves SMTP off. Connection, greeting and socket timeouts are 10 seconds, and the connection is closed after each message.
+- Failed sends throw `EmailDeliveryError`, whose message names only the provider and Resend's status or nodemailer's error code (for example `EAUTH` for a wrong app password). nodemailer's own message is dropped because it can quote the server's reply, which may name the recipient. `web/lib/server/email.ts` now logs that message, so a failure shows in the Vercel logs with a reason; anything else is logged as "unexpected error".
+- `scripts/e2e.mjs` clears the SMTP values too, so e2e never sends mail.
+- `web/tests/landing.test.ts` splits puzzle YAML on `\r?\n`, so it also passes on a Windows checkout with CRLF endings, where a blank line used to end a prompt early.
+- Tests: `web/tests/email-delivery.test.ts` checks the provider choice (Resend first, incomplete SMTP settings ignored), the port and password handling, the TLS options on 465 and 587, the message sent, and that a failure carries only its code.
+- Docs: `web/.env.example`, CLAUDE.md, README, and spec sections 7, 8 and 14 (M10 now gives the Gmail steps and the Resend steps). `/privacy` names Google (Gmail) as the email provider, dated 2026-11-10; it's still a draft for M11.
+
+Still open: M10 itself: the SMTP values in Vercel and a redeploy. Move to Resend after M1, and update `/privacy` when the provider changes.
+
 ## Design puzzles, and a v2 plan for Build puzzles
 
 Type: Addition
