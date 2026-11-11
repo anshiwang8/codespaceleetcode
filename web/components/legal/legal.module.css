@@ -16,6 +16,7 @@
 .page h1 {
   font-size: 24px;
   font-weight: 700;
+  text-wrap: balance;
 }
 
 .updated {
@@ -32,16 +33,47 @@
   margin: 28px 0 6px;
   font-size: 16px;
   font-weight: 600;
+  text-wrap: balance;
+  /* Room above a heading reached from the contents, so it isn't flush with the top edge. */
+  scroll-margin-top: var(--space-4);
+}
+
+.page h3 {
+  margin: 18px 0 4px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.page p {
+  text-wrap: pretty;
+}
+
+/* Long words in mid-sentence, such as cookie names and addresses, wrap rather than overflow. */
+.page {
+  overflow-wrap: break-word;
 }
 
 .page p + p,
 .page p + ul,
-.page ul + p {
+.page ul + p,
+.page ul + ul,
+.page p + ol,
+.page ol + p {
   margin-top: 10px;
+}
+
+.page ol {
+  padding-left: 20px;
+  list-style: decimal;
 }
 
 .page ul {
   padding-left: 20px;
+  list-style: disc;
+}
+
+.page li::marker {
+  color: var(--text-faint);
 }
 
 .page li + li {
@@ -49,8 +81,69 @@
 }
 
 .page p + .tableWrap,
-.page .tableWrap + p {
+.page .tableWrap + p,
+.page .tableWrap + .review,
+.page .review + p,
+.page .review + ul,
+.page .review + .tableWrap,
+.page .review + .review {
   margin-top: 10px;
+}
+
+/* An open question in a draft. Text plus an icon, never color alone. */
+.review {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: 10px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid color-mix(in srgb, var(--warn) 45%, transparent);
+  border-radius: var(--radius);
+  background: var(--warn-soft);
+  color: var(--text);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
+.reviewIcon {
+  margin-top: 0.2em;
+  color: var(--warn);
+}
+
+/* The table of contents: one column on a phone, two once there's room. */
+.contents {
+  margin: 20px 0 8px;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-sunken);
+}
+
+.page .contentsHeading {
+  margin: 0 0 6px;
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.contents ol {
+  padding-left: 24px;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+}
+
+.contents li + li {
+  margin-top: 2px;
+}
+
+@media (min-width: 640px) {
+  .contents ol {
+    columns: 2;
+    column-gap: var(--space-6);
+  }
+
+  .contents li {
+    break-inside: avoid;
+  }
 }
 
 /* Wide tables scroll inside their box, so the page itself never scrolls sideways on a phone. */
@@ -88,10 +181,51 @@
   min-width: 96px;
 }
 
-.footer {
-  margin-top: 40px;
-  padding-top: 12px;
-  border-top: 1px solid var(--line);
-  color: var(--text-muted);
-  font-size: 12px;
+/* On a phone, each row of a stacking table is a block of labeled lines. */
+@media (max-width: 559px) {
+  .stacking thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .stacking,
+  .stacking tbody,
+  .stacking tr,
+  .stacking td {
+    display: block;
+  }
+
+  .stacking tr {
+    padding: 6px 0;
+  }
+
+  .stacking tr + tr {
+    border-top: 1px solid var(--line);
+  }
+
+  .table.stacking tr + tr td,
+  .table.stacking thead + tbody tr:first-child td {
+    border-top: none;
+  }
+
+  .stacking td {
+    padding: 2px 12px;
+  }
+
+  .stacking td:first-child {
+    font-weight: 600;
+  }
+
+  .stacking td:not(:first-child)::before {
+    content: attr(data-label);
+    display: block;
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+    font-weight: 400;
+  }
 }
+
