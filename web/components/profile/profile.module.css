@@ -510,33 +510,6 @@
   font-size: var(--text-sm);
 }
 
-/* Deleting is kept apart from everything else, behind a line and a tinted panel. */
-.danger {
-  display: grid;
-  gap: var(--space-3);
-  margin-top: var(--space-2);
-  padding: var(--space-4);
-  border: 1px solid color-mix(in srgb, var(--bad) 30%, transparent);
-  border-radius: var(--radius);
-  background: color-mix(in srgb, var(--bad) 3%, transparent);
-}
-
-.danger .cardTitle {
-  color: var(--bad);
-}
-
-.dangerConfirm {
-  display: grid;
-  gap: var(--space-3);
-  font-size: var(--text-sm);
-}
-
-.dangerActions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-
 /* Loading */
 
 .skeletons {
@@ -662,6 +635,4 @@
 .identity { animation: var(--motion-enter) var(--motion-panel) var(--motion-ease); }
 .meterAttempted { transform-origin: left; transition: transform var(--motion-progress) var(--motion-ease); }
 .unfinishedCard { transition: border-color var(--motion-control) var(--motion-feedback); }
-.dangerConfirm { animation: var(--motion-enter) var(--motion-panel) var(--motion-ease); }
 .loadMore :global(.btn) { min-width: 172px; }
-.dangerActions :global(.btn-danger) { min-width: 235px; }

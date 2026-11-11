@@ -2,10 +2,9 @@
 
 import Link from "next/link";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { DeleteAccount } from "@/components/profile/DeleteAccount";
 import styles from "@/components/profile/profile.module.css";
 
-/** Sign out, the legal pages, and, set apart, deleting the account. */
+/** Sign out and the legal pages. Deleting the account is in Settings, under Danger zone. */
 export function AccountSection() {
   const { signOut, pending } = useAuth();
   return (
@@ -39,7 +38,6 @@ export function AccountSection() {
           <Link href="/terms">Terms</Link>
         </p>
       </div>
-      <DeleteAccount />
     </section>
   );
 }
