@@ -1,5 +1,17 @@
 # DEVLOG
 
+## Email delivery is live in production (launch checklist M10 done)
+
+Type: Change
+
+Goal: Record that production now confirms contact emails, so the launch checklist matches the live site.
+
+What should be done: Mark M10 done in spec section 14 and close it here.
+
+What was done (technical): The five SMTP values (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `EMAIL_FROM`) are set for Production in Vercel, for a Gmail account made for the site with an app password. After the deploy of the SMTP change, Settings on `codespaceleetcode.vercel.app` no longer says email is unavailable, and the owner confirmed the email flow works there. Spec section 14 marks M10 done, dated 2026-11-10.
+
+Still open: Move to Resend once M1 gives the site a domain (remove the SMTP values, set `RESEND_API_KEY` and `EMAIL_FROM`, and update the providers table on `/privacy`). Gmail caps a free account at about 500 recipients a day. M11 still needs to review `/privacy`.
+
 ## Send email through Gmail over SMTP (launch checklist M10)
 
 Type: Addition
