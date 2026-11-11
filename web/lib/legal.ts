@@ -6,7 +6,7 @@ export const LEGAL = {
     // Back to draft on 2026-11-06: the policy now describes newly collected data (a verified email,
     // optional profile details, a picture, theme choices), which needs a fresh review (M11).
     // Rewritten in full on 2026-11-08 (legal bases, retention, cookies, rights); still a draft.
-    privacy: { reviewed: false, lastUpdated: "2026-11-08" },
+    privacy: { reviewed: false, lastUpdated: "2026-11-10" },
     terms: { reviewed: true, lastUpdated: "2026-11-05" },
   },
   /** Where people write about their data, for example privacy@<domain>. Null until M7 sets it. */

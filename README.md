@@ -42,7 +42,7 @@ Real sign-in uses [Better Auth](https://www.better-auth.com) with GitHub. To tur
 
 ### Email
 
-Settings asks each account for a contact email and confirms it with a link. Locally nothing is sent: each message is saved as a JSON file in `web/.dev-outbox/`, and Settings says so. Open the newest file and visit the link in it while signed in as the same user. Real delivery uses Resend with `RESEND_API_KEY` and `EMAIL_FROM` ([spec.md section 14](spec.md#14-launch-checklist), M10).
+Settings asks each account for a contact email and confirms it with a link. Locally nothing is sent: each message is saved as a JSON file in `web/.dev-outbox/`, and Settings says so. Open the newest file and visit the link in it while signed in as the same user. Real delivery uses Resend (`RESEND_API_KEY` and `EMAIL_FROM`) or an SMTP server such as Gmail (`SMTP_HOST`, `SMTP_USER`, `SMTP_PASSWORD`), as `web/.env.example` explains ([spec.md section 14](spec.md#14-launch-checklist), M10).
 
 ### On a fresh clone
 

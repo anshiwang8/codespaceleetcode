@@ -280,7 +280,7 @@ export default function PrivacyPage() {
               <td>That you signed in to codebases, under GitHub&apos;s own privacy statement</td>
             </tr>
             <tr>
-              <td>Resend</td>
+              <td>Google (Gmail)</td>
               <td>Sends our emails</td>
               <td>The recipient address and the message, including any confirmation link</td>
             </tr>
