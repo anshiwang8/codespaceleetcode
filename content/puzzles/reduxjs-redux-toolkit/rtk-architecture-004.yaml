@@ -36,7 +36,9 @@ choices:
   - id: d
     label: "2"
 hints:
+  - "The slice's reducer is assembled from two sources of case reducers before it ever runs, so the result depends on how they're merged and on which reducers run for a single action."
   - "Look at how `buildReducer` in createSlice.ts combines the slice's own case reducers with the ones from `extraReducers` before calling `createReducer`."
+  - "Check the order of the two spreads in `finalCaseReducers`, then read `reducer` inside createReducer.ts: which reducers it collects for `action.type`, when it falls back to the default case, and in what order it applies them."
 solution: solutions/rtk-architecture-004.md
 tags: [state-management]
 authors: [agent-author-4]

@@ -15,7 +15,9 @@ answer:
   anchor: [680, 695]
   window: [676, 697]
 hints:
-  - The condition tests an attribute of the object passed as dependency_overrides_provider.
+  - Dependency overrides are a lookup table on the app that maps an original dependency callable to its replacement, consulted each time a sub-dependency is solved.
+  - Inside the loop over `dependant.dependencies`, look before the recursive `solve_dependencies` call for a block that reassigns both `call` and `use_sub_dependant`.
+  - The condition tests an attribute of the object passed as `dependency_overrides_provider`. The block ends with the call that builds the new `Dependant`; include its closing parenthesis.
 solution: solutions/fastapi-find-003.md
 tags: [dependency-injection]
 authors: [agent-author-3]

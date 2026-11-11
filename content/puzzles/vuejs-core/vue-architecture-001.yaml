@@ -15,7 +15,9 @@ answer:
     - packages/compiler-core/src/transforms/vModel.ts
     - packages/compiler-core/src/transforms/vOn.ts
 hints:
-  - The record is the second element of the returned array. Follow each value's import.
+  - "Node transforms run on every AST node, but directive transforms are looked up by directive name when an element's directives are processed. Only the keyed record matters here."
+  - "Open `getBaseTransformPreset` and compare the `TransformPreset` type with the value it returns. Some node transforms have names that mention a directive, and those don't count."
+  - "The record is the second element of the returned array. Follow each value's import, or jump to its definition, rather than guessing the file from the value's name."
 solution: solutions/vue-architecture-001.md
 tags: [compilers]
 authors: [agent-author-1]

@@ -16,7 +16,9 @@ answer:
   accept: []
   accept_reasons: []
 hints:
-  - The conversion rules for each target type are written as a switch over the type name.
+  - "Coercion is decided at compile time: Ajv emits conversion code next to the generated type check, so look where the `coerceTypes` option is read while that check is built."
+  - "The conversion rules for each target type are written as a switch over the type name."
+  - "Start from `coerceAndCheckDataType`, which only decides whether to coerce, and follow its call. The function it reaches loops over target types and calls a nested helper holding the `switch`; `checkDataType` only tests types."
 solution: solutions/ajv-find-001.md
 tags: [validation, compilers]
 authors: [agent-author-2]

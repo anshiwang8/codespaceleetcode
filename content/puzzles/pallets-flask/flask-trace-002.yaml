@@ -27,7 +27,9 @@ answer:
   accept_sequences: []
   accept_reasons: []
 hints:
-  - Three different Flask methods call the handler lookup. Work out which of them actually sees this exception, and through which branch.
+  - "The exception is raised inside the view, so ask which `try`/`except` catches it first and what that handler does with an HTTP exception under the default configuration."
+  - "`wsgi_app` has its own `except` that calls `handle_exception`, but only for exceptions that escape the inner dispatch call; check whether that call catches the view's error itself."
+  - "Three different Flask methods call the handler lookup. Work out which of them actually sees this exception, and through which branch; check what `trap_http_exception` returns for a 404 by default."
 validator_overrides:
   - check: sequence-alternate-path
     reason: The shorter paths go through Flask.handle_exception (called by wsgi_app only when an exception escapes full_dispatch_request, which does not happen here because full_dispatch_request catches it) or call _find_error_handler directly from handle_user_exception (the branch for exceptions that are not HTTPExceptions, or that trap_http_exception traps, which the default configuration does not). The prompt fixes the exception type and configuration, so neither runs.

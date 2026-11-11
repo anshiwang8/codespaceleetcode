@@ -19,7 +19,9 @@ answer:
     - src/drivers/localstorage.ts
     - src/drivers/session-storage.ts
 hints:
-  - A text search finds two of them. For the third, look for a driver that builds its object out of another driver's object.
+  - "Judge each driver by the object its factory returns, not by its options or its imports: a `watch` method counts however it got onto that object."
+  - "A method can be written in the factory's object literal, or copied in by spreading another factory's result, as `...baseDriver` does in `src/drivers/deno-kv-node.ts`."
+  - "A text search finds two of them. For the third, look for a driver that builds its object out of another driver's object."
 solution: solutions/unstorage-architecture-002.md
 tags: [extension-points, code-structure, caching-and-storage]
 authors: [agent-author-unstorage-axios]

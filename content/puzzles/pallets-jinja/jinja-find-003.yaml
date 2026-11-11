@@ -15,7 +15,9 @@ answer:
   accept: []
   accept_reasons: []
 hints:
-  - Follow the import of the name that Environment.__init__ copies, and keep following it if it is itself imported.
+  - "Packages often re-export a value under a new name from a small module of defaults, so the module that imports a name is not necessarily the one that defines it."
+  - "Follow the import of the name that `Environment.__init__` copies, and keep following it if it is itself imported."
+  - "The first import leads to `src/jinja2/defaults.py`, which only re-imports the name under an alias with `as`; follow that import one more step and confirm the dict literal is there."
 solution: solutions/jinja-find-003.md
 tags: [configuration]
 authors: [agent-author-jinja-starlette]

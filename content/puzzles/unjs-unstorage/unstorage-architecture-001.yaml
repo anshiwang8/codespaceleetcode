@@ -32,7 +32,9 @@ choices:
   - id: d
     label: '["data:a"]'
 hints:
-  - Work out the order in which getKeys visits the two mounts, and what maskedMounts holds when it reaches the second one.
+  - "Track where each write lands: the first `setItem` runs before the `data` mount exists and the second after it. Then the question is how `getKeys` merges keys from overlapping mounts."
+  - "`getKeys` asks `getMounts` for every mount relevant to the base, then loops over them, prefixing each driver's raw keys with that mount's `mountpoint`."
+  - "Work out the order in which `getKeys` visits the two mounts, and what `maskedMounts` holds when it reaches the second one."
 solution: solutions/unstorage-architecture-001.md
 tags: [routing, code-structure, caching-and-storage]
 authors: [agent-author-unstorage-axios]

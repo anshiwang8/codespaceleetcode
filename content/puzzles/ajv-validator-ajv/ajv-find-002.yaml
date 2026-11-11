@@ -16,7 +16,9 @@ answer:
   anchor: [171, 172]
   window: [163, 185]
 hints:
-  - The text is built from the code generator's output just before this point, and handed to a function constructor.
+  - "Think about how JavaScript turns a string of source code into a callable at run time, and which parameters that callable would need to reach the Ajv instance and its scope values."
+  - "The text is built from the code generator's output just before this point, and handed to a function constructor."
+  - "After `sourceCode` is assembled from `gen.toString()` and optionally passed through `opts.code.process`, find the statement that builds a function with `N.self` and `N.scope` as parameter names, then the call of its result."
 solution: solutions/ajv-find-002.md
 tags: [compilers]
 authors: [agent-author-2]

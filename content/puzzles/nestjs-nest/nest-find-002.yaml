@@ -14,7 +14,9 @@ answer:
   anchor: [336, 338]
   window: [335, 340]
 hints:
-  - The early return is the first statement in the method body.
+  - "Global modules are linked into every other module after scanning, by a loop in `bindGlobalsToImports` that calls this method once per pair of target and global module."
+  - "The method compares `target` by identity with two other modules: one passed in as a parameter, and one the container keeps in a private field."
+  - "The early return is the first statement in the method body. Select from its `if` line through the closing brace, and stop before the `addImport` call it guards."
 solution: solutions/nest-find-002.md
 tags: [dependency-injection]
 authors: [agent-author-1]

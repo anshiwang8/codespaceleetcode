@@ -15,7 +15,9 @@ answer:
     - packages/core/interceptors/interceptors-consumer.ts
     - packages/core/pipes/pipes-consumer.ts
 hints:
-  - The classes that look up which enhancers apply are separate from the ones that run them.
+  - "The classes that look up which enhancers apply are separate from the ones that run them."
+  - "Look in the folder for each enhancer type under packages/core/. Orchestrators such as `router/router-execution-context.ts` call `intercept` on a Nest-owned object, not on the user's interceptor."
+  - "Search packages/core/ for `.canActivate(`, `.intercept(` and `.transform(`, and keep only hits whose receiver is a user's guard, interceptor or pipe instance, not a Nest class held on `this` or an options object."
 solution: solutions/nest-architecture-001.md
 tags: [middleware, request-lifecycle]
 authors: [agent-author-1]

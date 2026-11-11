@@ -21,7 +21,9 @@ answer:
     - source/core/errors.ts#AbortError
     - source/core/response.ts#ParseError
 hints:
-  - Not all of them live in errors.ts.
+  - "This is a class-hierarchy question: read each class's own `extends` clause rather than its name, since several error classes in `source/` extend `Error` directly."
+  - "Not all of them live in `errors.ts`."
+  - "Search all of `source/` for `extends RequestError`, and make sure the search also matches a type argument written right after the name, such as `RequestError<T>`."
 solution: solutions/got-architecture-002.md
 tags: [errors, code-structure]
 authors: [agent-author-2]

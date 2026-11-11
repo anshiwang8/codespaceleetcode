@@ -22,7 +22,9 @@ answer:
   accept_sequences: []
   accept_reasons: []
 hints:
-  - FileSystemLoader only overrides how the source is found, not how a template is loaded.
+  - "Loading by name goes from the environment to its loader and back to the environment for compilation, so the path leaves `environment.py` once and then returns."
+  - "Skip `join_path` (there is no parent), `make_globals`, the template-cache check and the bytecode-cache branch, and don't stop at the loader's `get_source`, which only returns source text."
+  - "`FileSystemLoader` only overrides how the source is found, not how a template is loaded. So the loader call resolves to an inherited method; from there, follow the call that turns source into code."
 solution: solutions/jinja-trace-001.md
 tags: [compilers]
 authors: [agent-author-jinja-starlette]

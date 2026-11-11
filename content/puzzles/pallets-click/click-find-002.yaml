@@ -14,7 +14,9 @@ answer:
   anchor: [1419, 1426]
   window: [1415, 1430]
 hints:
-  - The condition also looks at two flags on the context.
+  - "Leftover arguments are what the parser returned but no parameter consumed, so the check can only come after every parameter has been handled; read the method in order."
+  - "The condition also looks at two flags on the context."
+  - "Skip the loop that calls `handle_parse_result` and the `UNSET` clean-up loop after it; the `if` you want comes next and calls `ctx.fail` with an `ngettext` message."
 solution: solutions/click-find-002.md
 tags: [command-line, errors]
 authors: [agent-author-3]

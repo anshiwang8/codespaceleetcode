@@ -14,7 +14,9 @@ answer:
   accept: []
   accept_reasons: []
 hints:
-  - Read the last statement of `ReactiveEffect.notify`.
+  - "Vue doesn't run an effect the moment its dependency changes. It collects notified effects first and runs them later, so look for the code that collects them, not the code that runs them."
+  - "The pending list is a singly linked chain threaded through each subscriber's `next` field, with its heads held in module-level variables in effect.ts."
+  - "Read the last statement of `ReactiveEffect.notify`, then jump to the definition of the function it calls and check that it sets the flag and moves the list head."
 solution: solutions/vue-find-001.md
 tags: [reactivity]
 authors: [agent-author-1]

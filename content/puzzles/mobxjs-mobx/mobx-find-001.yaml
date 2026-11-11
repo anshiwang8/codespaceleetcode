@@ -17,7 +17,9 @@ answer:
   accept: []
   accept_reasons: []
 hints:
-  - The function that runs the derivation's function and collects what it reads calls this one right after the run.
+  - "Dependency tracking has two phases: record what the function reads during the run, then reconcile that record with the previous one. You want the code for the second phase."
+  - "Search `packages/mobx/src/core/` for `newObserving_`, the array a derivation fills with each observable it reads during the run. The comparison reads it after the run ends."
+  - "The function that runs the derivation's function and collects what it reads calls this one right after the run."
 solution: solutions/mobx-find-001.md
 tags: [reactivity]
 authors: [agent-author-2]

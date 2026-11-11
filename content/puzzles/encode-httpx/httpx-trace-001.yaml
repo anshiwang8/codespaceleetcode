@@ -22,7 +22,9 @@ answer:
   accept_sequences: []
   accept_reasons: []
 hints:
-  - The redirect loop lives one level below the auth loop.
+  - "`send` hands off to layers that each own one concern in a loop. The redirect loop lives one level below the auth loop."
+  - In `send`, skip `_set_timeout` and `_build_request_auth`, which return before any response exists. Below the redirect loop, skip `_send_single_request`, the network round trip.
+  - In the redirect loop, find the line that reassigns `request` once `response.has_redirect_location` is true, open that method, and see which of its helpers returns `Headers`.
 solution: solutions/httpx-trace-001.md
 tags: [http-clients]
 authors: [agent-author-3]

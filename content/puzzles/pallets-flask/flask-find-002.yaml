@@ -14,7 +14,9 @@ answer:
   anchor: [911, 912]
   window: [906, 914]
 hints:
-  - The re-raise is a bare statement with no exception argument.
+  - "A handler that can't deal with an exception should let it propagate with its original traceback, so look for where the method gives up after the handler lookup."
+  - "Skip the `BadRequestKeyError` tweak and the `HTTPException` branch near the top; the lines you want come after the lookup in the registered handlers."
+  - "The re-raise is a bare statement with no exception argument. Make sure it's the one in `handle_user_exception`, not the similar bare `raise` in `handle_exception` just below."
 solution: solutions/flask-find-002.md
 tags: [errors, request-lifecycle]
 authors: [agent-author-3]

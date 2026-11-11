@@ -15,7 +15,9 @@ answer:
   accept: []
   accept_reasons: []
 hints:
+  - With no handlers registered, the response must come from a built-in default. The file that defines `HTTPException` is not necessarily the one that turns it into a response.
   - A default handler is registered somewhere before any user handlers are added. Look for where that registration happens, not where the exception is caught.
+  - Find references on `HTTPException` and skip the `raise` statements and `isinstance` checks; you want the one where the class is a dictionary key mapped to a method.
 solution: solutions/starlette-find-003.md
 tags: [errors, middleware]
 authors: [agent-author-jinja-starlette]

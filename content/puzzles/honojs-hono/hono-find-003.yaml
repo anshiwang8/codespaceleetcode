@@ -14,7 +14,9 @@ answer:
   accept: []
   accept_reasons: []
 hints:
-  - Check the order of the array passed as `routers`, then check how `SmartRouter.match` iterates it.
+  - "`SmartRouter` tries its candidates one after another until one accepts the registered routes, so first means first in the order it iterates them."
+  - "The candidates are created in the constructor of the `Hono` class in `src/hono.ts`, when no `router` option is passed."
+  - "Check the order of the array passed as `routers`, then check how `SmartRouter.match` iterates it. The import resolves to an `index.ts` that only re-exports, so jump on to the class definition."
 solution: solutions/hono-find-003.md
 tags: [routing]
 authors: [agent-author-1]

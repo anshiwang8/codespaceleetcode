@@ -19,7 +19,9 @@ answer:
     - packages/toolkit/src/entities/state_adapter.ts#createSingleArgumentStateOperator
   accept_sequences: []
 hints:
-  - The sorted adapter reuses a few operations from the other kind of adapter instead of redefining them.
+  - "Entity adapters are factories that return a set of operation functions. The sorted adapter only needs its own versions of the operations whose result depends on sort order."
+  - "`createSortedStateAdapter` wraps its own mutators with `createStateOperator`, but that function never calls the target. Check what else the start function calls, and its imports."
+  - "The sorted adapter reuses a few operations from the other kind of adapter instead of redefining them. Follow where `removeAll` comes from, and keep following direct calls until you reach the target."
 solution: solutions/rtk-trace-001.md
 tags: [state-management]
 authors: [agent-author-2]

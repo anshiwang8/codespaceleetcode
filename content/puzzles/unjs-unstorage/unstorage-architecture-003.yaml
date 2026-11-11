@@ -15,7 +15,9 @@ answer:
   accept: []
   accept_reasons: []
 hints:
-  - Look outside src/.
+  - "A map that has to list every file in `src/drivers/` is a natural target for code generation: some code scans that directory and writes TypeScript."
+  - "Look outside `src/`. `build.config.ts` imports `builtinDrivers`, but it only reads the map."
+  - "Check the `scripts` in `package.json`: the `build` script runs one step before `obuild`, and that step runs a file with `node`."
 solution: solutions/unstorage-architecture-003.md
 tags: [extension-points, code-structure, caching-and-storage]
 authors: [agent-author-unstorage-axios]

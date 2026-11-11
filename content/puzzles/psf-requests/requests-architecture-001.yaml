@@ -16,7 +16,9 @@ answer:
     - src/requests/auth.py#HTTPProxyAuth
     - src/requests/auth.py#HTTPDigestAuth
 hints:
-  - One of them derives from another one rather than from the base class.
+  - "Auth in requests is a callable-object pattern: each scheme is a class whose `__call__` takes a `PreparedRequest` and returns it, all rooted in one base class."
+  - The base class only defines a `__call__` that raises `NotImplementedError`. Find it first, then read every `class` line in `src/requests/auth.py`.
+  - One of them derives from another one rather than from the base class, so a reference search on the base class alone will miss it.
 solution: solutions/requests-architecture-001.md
 tags: [auth-and-security, extension-points]
 authors: [agent-author-3]

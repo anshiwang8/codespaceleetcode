@@ -21,7 +21,9 @@ answer:
   accept_sequences: []
   accept_reasons: []
 hints:
-  - The decision is made by checking an attribute of the matched rule, just before the view function would be called.
+  - "Automatic OPTIONS handling is a routing feature: Flask skips the view and answers with the methods the URL allows, so follow the normal dispatch path until it branches off."
+  - "In `wsgi_app`, ignore `request_context`, `ctx.push` and the `except` branches; nothing is raised, so follow only the dispatch call in the inner `try` body."
+  - "The decision is made by checking an attribute of the matched rule, just before the view function would be called. Find that check, then connect it back to `wsgi_app` through its callers."
 solution: solutions/flask-trace-001.md
 tags: [request-lifecycle, routing]
 authors: [agent-author-3]

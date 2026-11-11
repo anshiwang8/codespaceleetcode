@@ -14,7 +14,9 @@ answer:
   accept: []
   accept_reasons: []
 hints:
-  - Look in `_ClassBuilder.__init__` for the branch that runs when the class properties say it is frozen.
+  - "Immutability is enforced by swapping the class's attribute-assignment hook, so look for where the builder writes into the namespace dict it prepares, not for a method on the class."
+  - "Search `src/attr/_make.py` for `\"__setattr__\"` used as a key of `self._cls_dict`; skip the write that wraps on_setattr hooks for mutable classes."
+  - "Look in `_ClassBuilder.__init__` for the branch that runs when the class properties say it is frozen."
 solution: solutions/attrs-find-001.md
 tags: [code-structure]
 authors: [agent-author-rich-rhf]

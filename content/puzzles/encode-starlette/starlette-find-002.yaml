@@ -15,7 +15,9 @@ answer:
   anchor: [722, 725]
   window: [720, 726]
 hints:
-  - The alternate path either loses or gains one character at the end.
+  - "Slash redirects retry the match with the trailing slash flipped: the alternate path either loses or gains one character at the end."
+  - In `Router.app`, look past the loop over `self.routes` and the partial-match branch, where `redirect_scope` is made as a copy of `scope`.
+  - Select the `if` that tests whether the route path ends with a slash, together with its `else`. Stop before the second loop that re-runs `route.matches` on the copy.
 solution: solutions/starlette-find-002.md
 tags: [routing]
 authors: [agent-author-jinja-starlette]

@@ -16,7 +16,9 @@ answer:
   accept: []
   accept_reasons: []
 hints:
-  - The object that computes the token is chosen once, when the container itself is constructed.
+  - "Follow the token back from `addModule`: it is produced when the module is compiled, and the compiler only asks another object to build it."
+  - "The object that computes the token is chosen once, when the container itself is constructed."
+  - "In the `NestContainer` constructor, work out which side of the `moduleIdGeneratorAlgorithm` ternary runs when `NestFactory.create` passes no options, then open that class's definition."
 solution: solutions/nest-find-003.md
 tags: [dependency-injection, configuration]
 authors: [agent-author-5]

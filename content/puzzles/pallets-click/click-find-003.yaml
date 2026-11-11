@@ -14,7 +14,9 @@ answer:
   accept: []
   accept_reasons: []
 hints:
-  - Look at the return statement of the public function and follow the name it calls.
+  - "Click keeps its public terminal helpers thin and puts the heavier implementations in private modules, often imported only when the helper is called."
+  - "Look at the return statement of the public function and follow the name it calls."
+  - "Find where that class name is imported into `src/click/termui.py`, either under `t.TYPE_CHECKING` at the top or inside the function body; the relative import names the module."
 solution: solutions/click-find-003.md
 tags: [command-line, code-structure]
 authors: [agent-author-3]

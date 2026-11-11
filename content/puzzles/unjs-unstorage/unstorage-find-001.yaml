@@ -14,7 +14,9 @@ answer:
   accept: []
   accept_reasons: []
 hints:
-  - Open getKeys in src/storage.ts and look at what happens to allKeys just before it is returned.
+  - "Metadata keys are hidden when keys are listed, not when they are written, so follow the read path for key listings rather than `setMeta`."
+  - "The `$` test is plain string work, so expect a small key helper that `src/storage.ts` imports from another file, next to other key utilities."
+  - "Open `getKeys` in `src/storage.ts` and look at what happens to `allKeys` just before it is returned. Two helpers are used there; check which one tests the key's last character."
 solution: solutions/unstorage-find-001.md
 tags: [code-structure, caching-and-storage]
 authors: [agent-author-unstorage-axios]

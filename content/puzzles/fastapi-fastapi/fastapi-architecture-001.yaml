@@ -25,7 +25,9 @@ choices:
   - id: d
     label: Both run before the endpoint function is called.
 hints:
-  - Find the two AsyncExitStack objects created in request_response and see where each is exited relative to the call that sends the response.
+  - "`_solve_generator` enters the dependency's context manager on an exit stack, so its post-`yield` code runs when that stack closes. The question is which stack each scope gets."
+  - In `solve_dependencies`, see how `use_astack` is chosen, then search `fastapi/routing.py` for the scope keys `fastapi_inner_astack` and `fastapi_function_astack`.
+  - Find the two `AsyncExitStack` objects created in `request_response` and see where each is exited relative to the call that sends the response.
 solution: solutions/fastapi-architecture-001.md
 tags: [dependency-injection, request-lifecycle]
 authors: [agent-author-3]

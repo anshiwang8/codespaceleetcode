@@ -15,7 +15,9 @@ answer:
   anchor: [639, 645]
   window: [633, 650]
 hints:
-  - The callback's result is awaited first if it is a promise.
+  - "The thunk's body runs in an async function wrapped in `try`/`catch`, so stopping early is a `throw` that the `catch` turns into a `rejected` action."
+  - "Search `actionCreator` for the call to `options?.condition`. The callback's result is awaited first if it is a promise."
+  - "Just after that, two neighboring `if` blocks each throw a plain object. Only one of them tests the callback's result; the other checks the abort signal."
 solution: solutions/rtk-find-002.md
 tags: [state-management]
 authors: [agent-author-2]

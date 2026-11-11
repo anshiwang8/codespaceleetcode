@@ -13,7 +13,9 @@ answer:
   accept: []
   accept_reasons: []
 hints:
-  - It is one of several small helpers that _build_redirect_request combines.
+  - It is one of several small `BaseClient` helpers that are combined to build the follow-up request after a redirect, one helper for each part of the new request.
+  - Those helpers sit together in `BaseClient`, just before `_set_timeout`. Skip the one that reads the `Location` header; it only works out the URL.
+  - Open the method that assembles the redirect request and see which helper fills its `method` variable; that helper compares `response.status_code` with `codes` constants.
 solution: solutions/httpx-find-001.md
 tags: [http-clients]
 authors: [agent-author-3]

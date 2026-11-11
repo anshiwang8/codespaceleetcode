@@ -23,7 +23,9 @@ choices:
   - id: d
     label: The one for "https://example.com", because patterns with a longer host sort ahead of those with a shorter one.
 hints:
-  - Look at the priority property of URLPattern.
+  - "`_transport_for_url` returns the transport of the first pattern that matches, so the answer comes down to the order the `_mounts` dict is left in after construction."
+  - The re-sort is `sorted` over the dict's items, so the order comes from how two `URLPattern` objects compare. Find the comparison method on that class.
+  - Look at the `priority` property of `URLPattern`. Work out its tuple for each of the two patterns, remembering that `sorted` puts smaller tuples first.
 solution: solutions/httpx-architecture-002.md
 tags: [http-clients]
 authors: [agent-author-3]

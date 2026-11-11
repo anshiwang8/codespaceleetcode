@@ -16,7 +16,9 @@ answer:
     - lib/core/dispatchRequest.js
     - lib/helpers/composeSignals.js
 hints:
-  - Find All References on the CanceledError class, then discard the import lines.
+  - "Cancellation errors are created wherever axios notices an abort or a canceled token, and that happens in several layers of the library, not in one subsystem."
+  - "Find All References on the `CanceledError` class, then discard the import lines."
+  - "Also drop the file that defines the class and the entry file that only attaches it to the exported `axios` object. A remaining file counts once even when it constructs the error in more than one place."
 solution: solutions/axios-architecture-002.md
 tags: [errors, http-clients]
 authors: [agent-author-unstorage-axios]

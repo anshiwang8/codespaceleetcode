@@ -16,7 +16,9 @@ answer:
   accept: []
   accept_reasons: []
 hints:
-  - Ajv._addVocabularies in lib/ajv.ts imports a draft-07 list of vocabularies, which in turn imports each vocabulary's index.
+  - "Ajv groups keywords into vocabularies, each an array of keyword definitions. Work down from how the class adds its vocabularies instead of starting from one keyword's implementation."
+  - "`Ajv._addVocabularies` in `lib/ajv.ts` adds a draft-07 list of vocabularies, whose file in turn imports each vocabulary from its own module."
+  - "In `lib/vocabularies/draft7.ts`, follow each array entry to its import, and pick the vocabulary whose list pulls in the keyword modules for `required`, `pattern` and the length and item limits."
 solution: solutions/ajv-architecture-001.md
 tags: [extension-points, validation]
 authors: [agent-author-2]

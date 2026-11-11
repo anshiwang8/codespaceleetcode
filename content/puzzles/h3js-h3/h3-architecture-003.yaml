@@ -14,7 +14,9 @@ answer:
     - src/h3.ts#createDispatcher
     - src/rules/middleware.ts#routeRules
 hints:
-  - Some of the calls sit inside closures that these functions return.
+  - "This is a find-references question: start at the definition of `callMiddleware` in `src/middleware.ts` and list each usage outside that file, not just the import lines."
+  - "The usage in `src/index.ts` is a re-export and doesn't count. The real calls may be written inside an arrow or an inner function rather than directly in a top-level body."
+  - "Some of the calls sit inside closures that these functions return. For each call, climb outward past the returned closure, even a named one, to the top-level function that contains it."
 solution: solutions/h3-architecture-003.md
 tags: [middleware]
 authors: [agent-author-2]

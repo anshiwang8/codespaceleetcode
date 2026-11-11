@@ -16,7 +16,9 @@ answer:
   accept: []
   accept_reasons: []
 hints:
-  - Every column is called through the same method on the base class. Read what it checks before it calls `render`.
+  - "The caching is switched on by a class-level setting that the base class reads, so the subclass that opts in only overrides an attribute, not a method."
+  - "Every column is called through the same method on the base class. Read what it checks before it calls `render`."
+  - "Note the attribute the base class's `__call__` tests, then look for the concrete column class in `rich/progress.py` that sets it to a number in its class body."
 solution: solutions/rich-find-001.md
 tags: [extension-points]
 authors: [agent-author-rich-rhf]

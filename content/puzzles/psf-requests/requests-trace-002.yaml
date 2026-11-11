@@ -23,7 +23,9 @@ answer:
   accept_sequences: []
   accept_reasons: []
 hints:
-  - The connection lookup is where the proxy decision is made.
+  - In the adapter, proxy credentials become a header given to the proxy manager when that manager is first created. Since none is cached yet, follow the creation path.
+  - The connection lookup is where the proxy decision is made. In `send`, skip `cert_verify`, `request_url` and `add_headers`, and ignore the deprecated `get_connection`.
+  - In the method that creates proxy managers, the cached and SOCKS branches don't apply. In the remaining branch, follow the helper that builds the headers, then the call it makes once a username is found.
 solution: solutions/requests-trace-002.md
 tags: [http-clients, auth-and-security]
 authors: [agent-author-3]

@@ -21,7 +21,9 @@ choices:
   - id: d
     label: B receives the last value the source emitted, then completes
 hints:
-  - Look at what the `complete` handler passed to `source.subscribe` does with `resetOnComplete`.
+  - "`share` keeps its connection state in closure variables: the current Subject, a connection controller and completion flags. The question is what that state looks like when B arrives."
+  - "Read the defaults destructured at the top of the operator, then the `reset` and `handleReset` helpers defined before the returned observable."
+  - "Look at what the `complete` handler passed to `source.subscribe` does with `resetOnComplete`, then walk B's subscription through the returned observable's callback with that state."
 solution: solutions/rxjs-architecture-002.md
 tags: [observables]
 authors: [agent-author-1]

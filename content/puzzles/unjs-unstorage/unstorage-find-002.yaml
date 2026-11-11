@@ -18,7 +18,9 @@ answer:
   anchor: [545, 545]
   window: [538, 556]
 hints:
-  - The order is not fixed at lookup time. Look at what happens when a driver is added.
+  - "Because the lookup stops at the first prefix match, specificity has to come from the order of `context.mountpoints` itself. Find every place that writes to that list."
+  - "The order is not fixed at lookup time. Look at what happens when a driver is added."
+  - "In the storage's `mount` method, follow what happens to `context.mountpoints` right after the new base is added, and pick the line that decides the order, not the `push`."
 solution: solutions/unstorage-find-002.md
 tags: [routing, caching-and-storage]
 authors: [agent-author-unstorage-axios]

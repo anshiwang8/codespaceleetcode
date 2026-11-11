@@ -24,7 +24,9 @@ choices:
   - id: e
     label: PatternRouter
 hints:
-  - Look for where a path pattern can make a router throw during `add`, and what `SmartRouter.match` does about it.
+  - "`SmartRouter` is a lazy selector: it commits to a router only when a request arrives. Work out which candidates the default app hands it, and in what order."
+  - "Look for where a path pattern can make a router throw during `add`, and what `SmartRouter.match` does about it."
+  - "For each candidate in turn, check whether its `add` accepts the `{.*}` part of `:path{.*}`, then read what `SmartRouter.match` assigns to `this.match` after the first success."
 solution: solutions/hono-architecture-001.md
 tags: [routing]
 authors: [agent-author-1]

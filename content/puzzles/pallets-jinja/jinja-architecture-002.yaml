@@ -23,7 +23,9 @@ choices:
   - id: d
     label: The code generator writes every attribute access as a call to environment.getattr(...), and SandboxedEnvironment overrides getattr with a version that runs the check.
 hints:
-  - Look at what the code generator writes for a Getattr node, and whether that depends on the environment class.
+  - "Jinja compiles templates to Python source, so any check made during rendering runs either inside the generated code or inside something that code calls."
+  - "Look at what the code generator writes for a `Getattr` node, and whether that depends on the environment class."
+  - "Search `src/jinja2/sandbox.py` for the callers of `is_safe_attribute`, then work out how compiled template code reaches that caller."
 solution: solutions/jinja-architecture-002.md
 tags: [auth-and-security, compilers, extension-points]
 authors: [agent-author-jinja-starlette]

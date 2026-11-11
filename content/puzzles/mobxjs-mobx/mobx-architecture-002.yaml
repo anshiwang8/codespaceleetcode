@@ -16,7 +16,9 @@ answer:
     - packages/mobx-react/src/observerClass.ts#createReaction
     - packages/mobx-react-lite/src/useObserver.ts#createReaction
 hints:
-  - Two of the four functions have the same name but live in different packages.
+  - "Search for the constructor expression itself, `new Reaction(`, rather than for imports of `Reaction`, and leave out tests."
+  - "Map each hit to the named function that encloses it. In the core package the hits are under `packages/mobx/src/api/`, and one function there contains more than one hit."
+  - "Two of the four functions have the same name but live in different packages. In the React bindings each hit is in a small helper, not in exported functions like `useObserver` or `makeClassComponentObserver`."
 solution: solutions/mobx-architecture-002.md
 tags: [reactivity]
 authors: [agent-author-2]
