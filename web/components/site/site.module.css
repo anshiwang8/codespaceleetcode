@@ -46,9 +46,30 @@
   text-decoration: none;
 }
 
+/*
+ * The links never push the page wider: when the row runs short (a long login on a tablet, or a
+ * very narrow phone), the list scrolls sideways inside the header. Its block padding keeps the
+ * current link's bar, which hangs below the link, inside the scroll area.
+ */
+.nav {
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+
+.nav::-webkit-scrollbar {
+  display: none;
+}
+
 .nav ul {
   display: flex;
   gap: var(--space-1);
+  padding: 10px 0;
+}
+
+.nav li {
+  flex: none;
 }
 
 .nav a {
@@ -166,7 +187,7 @@ a.account:hover .login {
 
 /*
  * Everything under the header. A flex column held to the height left, so the puzzle workspace can
- * fill it exactly. Longer pages overflow it and the document scrolls, as before.
+ * fill it exactly (components/site/ShellBody.tsx).
  */
 .content {
   display: flex;
@@ -177,6 +198,38 @@ a.account:hover .login {
 
 .content:focus {
   outline: none;
+}
+
+/*
+ * Any page but the workspace: at least the height left, so a short page keeps the footer at the
+ * bottom of the window, and never shrunk, so a long page pushes the footer below its end.
+ */
+.page {
+  flex-shrink: 0;
+}
+
+/* Tablet widths: the mark stands for the logo, and the links sit closer. */
+@media (max-width: 1023px) {
+  .inner {
+    gap: var(--space-4);
+  }
+
+  .brandWord {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .nav a {
+    padding: 0 var(--space-2);
+  }
+
+  .nav a[aria-current]::after {
+    right: var(--space-2);
+    left: var(--space-2);
+  }
 }
 
 @media (max-width: 899px) {
@@ -224,10 +277,19 @@ a.account:hover .login {
 .authBanner { animation: var(--motion-fade) var(--motion-panel) var(--motion-ease); }
 
 @media (max-width: 640px) {
-  /* Keep navigation and account targets separate even with both local and GitHub sign-in. */
+  /*
+   * Two rows on a phone: the full logo and the account area, then the links, each with room to
+   * tap. The links' row ends at the header's border, so the current link's bar sits on it.
+   */
   .header { height: auto; min-height: var(--header-height); }
-  .inner { height: auto; min-height: var(--header-height); flex-wrap: wrap; }
-  .auth { flex: 1 0 auto; }
+  .inner { height: auto; flex-wrap: wrap; row-gap: 0; }
+  .brand { order: 1; min-height: 52px; }
+  .brandWord { position: static; width: auto; height: auto; overflow: visible; clip-path: none; }
+  .auth { order: 2; flex: 1 0 auto; min-height: 52px; }
+  .nav { order: 3; flex: 1 1 100%; margin: 0 calc(-1 * var(--space-2)); }
+  .nav ul { padding: 0; }
+  .nav a { height: 40px; }
+  .nav a[aria-current]::after { bottom: 0; }
   .authDetail {
     position: absolute;
     width: 1px;

@@ -7,6 +7,7 @@ import styles from "@/components/landing/landing.module.css";
 import { LoginButton } from "@/components/landing/LoginButton";
 import { ViewportReveals } from "@/components/landing/ViewportReveals";
 import { Logo } from "@/components/site/Logo";
+import { SiteFooter } from "@/components/site/SiteFooter";
 import { browseHref, DEFAULT_GROUPING, PUZZLES_PATH } from "@/lib/browse";
 import workspaceDark from "@/public/landing/workspace-dark.png";
 import workspaceLight from "@/public/landing/workspace-light.png";
@@ -174,18 +175,7 @@ export default function LandingPage() {
         </section>
       </main>
 
-      <footer className={styles.footer}>
-        <div className={styles.footerInner}>
-          <Logo size="small" />
-          <p>Puzzles are set in open-source repositories, each under its own license.</p>
-          <nav aria-label="Footer" className={styles.footerNav}>
-            <Link href={PUZZLES_PATH}>Puzzles</Link>
-            <a href="#how">How it works</a>
-            <Link href="/privacy">Privacy</Link>
-            <Link href="/terms">Terms</Link>
-          </nav>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

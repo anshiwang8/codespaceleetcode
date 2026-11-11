@@ -13,7 +13,7 @@ export function SiteHeader() {
       <header className={styles.header}>
         <div className={styles.inner}>
           <Link href="/" className={styles.brand} aria-label="codebases home">
-            <Logo size="small" />
+            <Logo size="small" wordClassName={styles.brandWord} />
           </Link>
           <NavLinks />
           <AuthControl />
