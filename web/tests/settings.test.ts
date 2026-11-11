@@ -1,6 +1,6 @@
 import { makeSignature } from "better-auth/crypto";
 import sharp from "sharp";
-import { afterEach, beforeAll, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { DELETE as deleteAvatarRoute, GET as getAvatarRoute, POST as postAvatarRoute } from "@/app/api/me/avatar/route";
 import { PUT as detailsRoute } from "@/app/api/me/details/route";
 import { POST as emailRoute, DELETE as cancelEmailRoute } from "@/app/api/me/email/route";
@@ -226,6 +226,28 @@ describe.skipIf(!hasDatabase)("settings", () => {
   describe("email", () => {
     const request = (cookie: string, email: string) => emailRoute(call("/api/me/email", "POST", cookie, { email }), undefined);
     const verify = (cookie: string, token: string) => verifyRoute(call("/api/me/email/verify", "POST", cookie, { token }), undefined);
+
+    it("gives one of two accounts confirming the same address at once a plain refusal, logging no address", async () => {
+      setEmailSenderForTests(fakeSender);
+      const errors = vi.spyOn(console, "error").mockImplementation(() => undefined);
+      try {
+        for (let round = 0; round < 4; round++) {
+          const address = `race-${round}@example.com`;
+          const first = await signIn(`email-race-a${round}`);
+          const second = await signIn(`email-race-b${round}`);
+          outbox = [];
+          await request(first, address);
+          const firstToken = linkToken(outbox.at(-1));
+          await request(second, address);
+          const secondToken = linkToken(outbox.at(-1));
+          const statuses = (await Promise.all([verify(first, firstToken), verify(second, secondToken)])).map((r) => r.status);
+          expect(statuses.sort()).toEqual([200, 400]);
+        }
+        expect(JSON.stringify(errors.mock.calls)).not.toContain("example.com");
+      } finally {
+        errors.mockRestore();
+      }
+    });
 
     it("sets an address only after its link is opened, once, by the same user", async () => {
       setEmailSenderForTests(fakeSender);

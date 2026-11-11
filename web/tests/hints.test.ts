@@ -37,7 +37,7 @@ describe.skipIf(!hasDatabase)("progressive hints", () => {
 
     const first = await reveal("fx-symbol", cookie, 1);
     expect(first.status).toBe(200);
-    expect(await first.json()).toEqual({ hintCount: 3, revealedHints: [THREE_HINTS[0]] } satisfies HintRevealResponse);
+    expect(await first.json()).toEqual({ hintCount: 3, revealedHints: THREE_HINTS.slice(0, 1) } satisfies HintRevealResponse);
     // The page now shows the first level only.
     const after = await detail("fx-symbol", cookie);
     expect(after.body.revealedHints).toEqual([THREE_HINTS[0]]);
