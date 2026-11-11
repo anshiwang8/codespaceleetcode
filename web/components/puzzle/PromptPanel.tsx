@@ -1,8 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { type KeyboardEvent, type RefObject, useId, useRef, useState } from "react";
+import { HintPanel } from "@/components/puzzle/HintPanel";
 import { Markdown } from "@/components/puzzle/Markdown";
 import { SolutionView } from "@/components/puzzle/SolutionView";
+import hintStyles from "@/components/puzzle/hints.module.css";
 import styles from "@/components/puzzle/puzzle.module.css";
 import type { PuzzleDetail, PuzzleStatus } from "@/lib/api-types";
 import {
@@ -11,6 +14,7 @@ import {
   STATUS_LABELS,
   TYPE_LABELS,
 } from "@/lib/client/labels";
+import { PERIOD_KINDS, type PeriodKind } from "@/lib/periods";
 import { topicLabel } from "@/lib/topics";
 import { Icon } from "@/components/site/Icon";
 
@@ -18,6 +22,13 @@ export type PromptTab = "description" | "solution";
 
 const TABS: readonly PromptTab[] = ["description", "solution"];
 const TAB_LABELS: Record<PromptTab, string> = { description: "Description", solution: "Solution" };
+
+/** How a puzzle featured in an open challenge period says so. */
+const FEATURED_LABELS: Record<PeriodKind, string> = {
+  daily: "Today's daily challenge",
+  weekly: "This week's challenge",
+  monthly: "This month's challenge",
+};
 
 interface PromptPanelProps {
   puzzle: PuzzleDetail;
@@ -161,6 +172,19 @@ function DescriptionTab({ puzzle, status }: { puzzle: PuzzleDetail; status: Puzz
         ))}
       </div>
 
+      {puzzle.featuredIn.length > 0 ? (
+        <ul className={hintStyles.featured} aria-label="Challenges" data-testid="featured-in">
+          {PERIOD_KINDS.filter((kind) => puzzle.featuredIn.includes(kind)).map((kind) => (
+            <li key={kind}>
+              <Link href="/challenges" className={`chip ${hintStyles.featuredChip}`} data-testid={`featured-${kind}`}>
+                <Icon name="calendar" />
+                {FEATURED_LABELS[kind]}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
       <Markdown source={puzzle.prompt} testId="prompt" />
 
       <div className={styles.block}>
@@ -168,18 +192,7 @@ function DescriptionTab({ puzzle, status }: { puzzle: PuzzleDetail; status: Puzz
         <p data-testid="answer-kind">{answerKindInWords(puzzle.answerKind, puzzle.setCount)}</p>
       </div>
 
-      {puzzle.hintCount > 0 ? (
-        <div className={styles.block}>
-          <h2>Hints</h2>
-          <ol className={styles.hints}>
-            {puzzle.revealedHints.map((hint, index) => (
-              <li key={index} data-testid="hint">
-                <Markdown source={hint} />
-              </li>
-            ))}
-          </ol>
-        </div>
-      ) : null}
+      <HintPanel puzzle={puzzle} status={status} />
 
       {noPersonChecked ? (
         <p className={styles.unverified} data-testid="agent-only-note">

@@ -182,17 +182,6 @@
   font-weight: 600;
 }
 
-.hints {
-  display: grid;
-  gap: 6px;
-  margin-bottom: 6px;
-}
-
-.hints li {
-  padding-left: 8px;
-  border-left: 2px solid var(--line-strong);
-}
-
 .unverified {
   padding-left: 8px;
   border-left: 2px solid var(--line-strong);
@@ -988,7 +977,7 @@
 .promptTab, .choice, .treePick, .treePickActive, .sidebarTab, .sidebarTabActive {
   transition: background-color var(--motion-control) var(--motion-feedback), border-color var(--motion-control) var(--motion-feedback), color var(--motion-control) var(--motion-feedback);
 }
-.tabPanel:not([hidden]), .solution[data-state="ready"], .hints li {
+.tabPanel:not([hidden]), .solution[data-state="ready"] {
   animation: var(--motion-fade) var(--motion-panel) var(--motion-ease);
 }
 .tabBadge { animation: var(--motion-enter) var(--motion-panel) var(--motion-ease); }

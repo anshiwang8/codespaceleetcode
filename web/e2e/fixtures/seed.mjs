@@ -206,6 +206,8 @@ export const PUZZLES = [
       { id: "config", label: "The config module" },
       { id: "views", label: "The views module" },
     ],
+    // One hint, as every puzzle had before hints came in levels.
+    hints: ["Start from the entry point."],
     tags: ["code-structure"],
   }),
   puzzle({
@@ -222,6 +224,11 @@ export const PUZZLES = [
       { id: "request", label: "They are read again on every request" },
       { id: "module", label: "A module-level constant in the config module" },
       { id: "env", label: "Environment variables read by the router" },
+    ],
+    hints: [
+      "Start from the entry point.",
+      "Follow the call into the router.",
+      "Compare where each option says the limits live with where `start` reads them.",
     ],
     tags: ["caching-and-storage"],
   }),
