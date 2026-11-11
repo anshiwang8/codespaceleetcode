@@ -61,6 +61,8 @@ export interface PuzzleDetail extends PuzzleSummary {
   hintCount: number;
   /** The hints this user has revealed, in order. Empty when signed out. */
   revealedHints: string[];
+  /** The open challenge periods that feature this puzzle, for linking to /challenges. */
+  featuredIn: PeriodKind[];
   /** Who did the blind second solve. An `agent:` prefix means it wasn't a person. */
   verifiedBy: string[];
   attempts: number;

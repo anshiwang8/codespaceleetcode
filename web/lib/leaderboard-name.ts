@@ -7,8 +7,9 @@ export const PUBLIC_NAME_MAX = 30;
 
 export type PublicNameResult = { ok: true; value: string } | { ok: false; error: string };
 
-// Letters and numbers from any script, spaces, and . _ - ' between them.
-const ALLOWED = /^[\p{L}\p{N}](?:[\p{L}\p{N} ._'-]*[\p{L}\p{N}])?$/u;
+// Letters and numbers from any script, with spaces and . _ - ' between them (and a final period,
+// as in an initial).
+const ALLOWED = /^[\p{L}\p{N}](?:[\p{L}\p{N} ._'-]*[\p{L}\p{N}.])?$/u;
 
 export function publicNameField(value: unknown): PublicNameResult {
   if (typeof value !== "string") return { ok: false, error: "Enter a public name." };
@@ -17,7 +18,7 @@ export function publicNameField(value: unknown): PublicNameResult {
   if (length < PUBLIC_NAME_MIN) return { ok: false, error: `Use at least ${PUBLIC_NAME_MIN} characters.` };
   if (length > PUBLIC_NAME_MAX) return { ok: false, error: `Use at most ${PUBLIC_NAME_MAX} characters.` };
   if (!ALLOWED.test(name)) {
-    return { ok: false, error: "Use letters, numbers, spaces and . _ - ' only, starting and ending with a letter or number." };
+    return { ok: false, error: "Use letters, numbers, spaces and . _ - ' only, starting with a letter or number." };
   }
   return { ok: true, value: name };
 }

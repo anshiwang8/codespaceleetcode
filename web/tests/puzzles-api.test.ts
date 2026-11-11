@@ -109,6 +109,8 @@ describe.skipIf(!hasDatabase)("puzzle reads", () => {
 
   describe("GET /api/puzzles/:slug", () => {
     it("returns exactly the fields of PuzzleDetail", async () => {
+      // A correct submission earlier in this file picks challenges, which could feature fx-set.
+      await getPool().query("delete from challenge_assignments");
       const response = await getDetail("fx-set");
       expect(response.status).toBe(200);
       expect(await response.json()).toEqual({
@@ -126,6 +128,7 @@ describe.skipIf(!hasDatabase)("puzzle reads", () => {
         choices: null,
         hintCount: 1,
         revealedHints: [],
+        featuredIn: [],
         verifiedBy: ["agent:tester"],
         attempts: 0,
         snapshot: {

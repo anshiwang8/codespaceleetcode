@@ -14,6 +14,7 @@ import {
 } from "@/lib/api-types";
 import { getPool } from "@/lib/server/db";
 import { parseHints } from "@/lib/server/hints";
+import { PERIOD_KINDS, periodStart, type PeriodKind } from "@/lib/periods";
 
 // Nothing in this file may read the answer key. Only submit.ts does.
 
@@ -101,6 +102,7 @@ interface DetailRow extends SummaryRow {
   choices: unknown;
   hints: unknown;
   hints_revealed: number;
+  featured_in: PeriodKind[];
   verified_by: string[];
   attempts: number;
   snapshot_id: string;
@@ -132,6 +134,11 @@ export async function getPuzzleDetail(
             p.hints, p.tags, p.verified_by,
             (select count(*)::int from hint_reveals h where h.puzzle_id = p.id and h.user_id = $1)
               as hints_revealed,
+            array(select a.period_kind from challenge_assignments a
+                   where a.puzzle_id = p.id
+                     and (a.period_kind, a.period_start) in (
+                       select u.kind, u.start from unnest($3::text[], $4::date[]) as u(kind, start))
+                   order by array_position($3::text[], a.period_kind)) as featured_in,
             coalesce(pr.status, 'unsolved') as status, coalesce(pr.attempts, 0) as attempts,
             s.id as snapshot_id, s.name as snapshot_name, s.sha, s.manifest_url,
             r.slug as repo_slug, r.url as repo_url, r.license, r.language
@@ -140,7 +147,9 @@ export async function getPuzzleDetail(
        join repos r on r.id = s.repo_id
        left join progress pr on pr.puzzle_id = p.id and pr.user_id = $1
       where p.slug = $2 and p.published`,
-    [userId, slug],
+    // The server's clock, for a link only: whether a submission completes a challenge is decided
+    // on the database's clock when it's graded.
+    [userId, slug, [...PERIOD_KINDS], PERIOD_KINDS.map((kind) => periodStart(kind, new Date()))],
   );
   const row = rows[0];
   if (!row) return null;
@@ -154,6 +163,7 @@ export async function getPuzzleDetail(
     choices: choicesSchema.parse(row.choices),
     hintCount: hints.length,
     revealedHints: hints.slice(0, userId ? row.hints_revealed : 0),
+    featuredIn: row.featured_in,
     verifiedBy: row.verified_by,
     attempts: row.attempts,
     snapshot: {
