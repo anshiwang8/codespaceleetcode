@@ -22,7 +22,17 @@ export type IconName =
   | "status-unsolved"
   | "status-attempted"
   | "status-solved"
-  | "theme";
+  | "theme"
+  | "trophy"
+  | "flame"
+  | "calendar"
+  | "clock"
+  | "award"
+  | "lightbulb"
+  | "ranking"
+  | "trash"
+  | "shield"
+  | "compass";
 
 const PATHS: Record<IconName, React.ReactNode> = {
   check: <path d="M3.5 8.5l3 3 6-7" />,
@@ -68,6 +78,52 @@ const PATHS: Record<IconName, React.ReactNode> = {
     <>
       <circle cx="8" cy="8" r="5.75" />
       <path d="M8 2.25a5.75 5.75 0 0 1 0 11.5z" fill="currentColor" />
+    </>
+  ),
+  trophy: (
+    <>
+      <path d="M4.5 2.75h7v3.5a3.5 3.5 0 0 1-7 0z" />
+      <path d="M4.5 4H2.75v1a2 2 0 0 0 2 2M11.5 4h1.75v1a2 2 0 0 1-2 2" />
+      <path d="M8 9.75v2.5M5.5 13.25h5" />
+    </>
+  ),
+  flame: <path d="M8 13.75c-2.5 0-4.25-1.7-4.25-4 0-2.1 1.5-3.4 2.4-4.9.4 1.3 1.1 2 1.85 2.4C8.3 5.2 8.9 3.6 9.5 2.25c1.6 1.6 2.75 3.9 2.75 6.5 0 3-1.75 5-4.25 5z" />,
+  calendar: (
+    <>
+      <rect x="2.75" y="3.5" width="10.5" height="9.75" rx="1.5" />
+      <path d="M2.75 6.75h10.5M5.5 2.25v2.5M10.5 2.25v2.5" />
+    </>
+  ),
+  clock: (
+    <>
+      <circle cx="8" cy="8" r="5.75" />
+      <path d="M8 4.75V8l2.25 1.5" />
+    </>
+  ),
+  award: (
+    <>
+      <circle cx="8" cy="6.25" r="3.75" />
+      <path d="M5.75 9.25l-1 4.5L8 12.25l3.25 1.5-1-4.5" />
+    </>
+  ),
+  lightbulb: (
+    <>
+      <path d="M5.75 10.25C4.6 9.4 3.75 8.1 3.75 6.5a4.25 4.25 0 0 1 8.5 0c0 1.6-.85 2.9-2 3.75v1h-4.5z" />
+      <path d="M6.25 13.5h3.5" />
+    </>
+  ),
+  ranking: <path d="M2.75 13.25V9h3.5v4.25M6.25 13.25V5.5h3.5v7.75M9.75 13.25V7.5h3.5v5.75M2 13.25h12" />,
+  trash: (
+    <>
+      <path d="M2.75 4.25h10.5M6.25 4.25V2.75h3.5v1.5" />
+      <path d="M4 4.25l.6 8.6a1.25 1.25 0 0 0 1.25 1.15h4.3a1.25 1.25 0 0 0 1.25-1.15l.6-8.6M6.75 7v4.25M9.25 7v4.25" />
+    </>
+  ),
+  shield: <path d="M8 2.25l5 1.75v3.75c0 3-2.1 5.1-5 6-2.9-.9-5-3-5-6V4z" />,
+  compass: (
+    <>
+      <circle cx="8" cy="8" r="5.75" />
+      <path d="M10.25 5.75L9 9 5.75 10.25 7 7z" />
     </>
   ),
 };

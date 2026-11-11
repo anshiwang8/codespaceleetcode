@@ -78,7 +78,12 @@ interface PuzzleFixture {
   choices?: unknown;
   tags?: string[];
   published?: boolean;
+  /** Defaults to one hint, as every puzzle had before hints came in levels. */
+  hints?: string[];
 }
+
+/** fx-symbol's three levels. None names KEYTOKEN, so a response scan stays meaningful. */
+export const THREE_HINTS = ["HINTLEVEL1 think about routing.", "HINTLEVEL2 look in src/.", "HINTLEVEL3 follow the first call."];
 
 async function insertPuzzle(puzzle: PuzzleFixture): Promise<void> {
   const pool = getPool();
@@ -98,7 +103,7 @@ async function insertPuzzle(puzzle: PuzzleFixture): Promise<void> {
       JSON.stringify(puzzle.key),
       puzzle.setCount ?? null,
       puzzle.choices === undefined ? null : JSON.stringify(puzzle.choices),
-      JSON.stringify(["A hint."]),
+      JSON.stringify(puzzle.hints ?? ["A hint."]),
       puzzle.tags ?? [],
       ["agent:tester"],
       puzzle.published ?? true,
@@ -185,6 +190,7 @@ export async function seedFixtures(): Promise<Fixtures> {
   };
   await insertPuzzle({
     slug: "fx-symbol",
+    hints: THREE_HINTS,
     snapshotId,
     type: "find",
     difficulty: "easy",

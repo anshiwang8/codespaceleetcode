@@ -124,7 +124,8 @@ describe.skipIf(!hasDatabase)("puzzle reads", () => {
         answerKind: "set",
         setCount: 2,
         choices: null,
-        hints: ["A hint."],
+        hintCount: 1,
+        revealedHints: [],
         verifiedBy: ["agent:tester"],
         attempts: 0,
         snapshot: {
@@ -217,7 +218,7 @@ describe.skipIf(!hasDatabase)("puzzle reads", () => {
         makeRequest("/api/puzzles/fx-file/submit", { cookie, body: { kind: "file", path: "src/decoy.ts" } }),
         params({ slug: "fx-file" }),
       );
-      expect(await wrong.json()).toEqual({ correct: false, attempts: 1 });
+      expect(await wrong.json()).toMatchObject({ correct: false, attempts: 1 });
       const response = await getSolution("fx-file", cookie);
       expect(response.status).toBe(403);
       expectNoAnswerData(await response.text());

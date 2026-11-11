@@ -13,6 +13,7 @@ import {
   type StatsResponse,
 } from "@/lib/api-types";
 import { getPool } from "@/lib/server/db";
+import { parseHints } from "@/lib/server/hints";
 
 // Nothing in this file may read the answer key. Only submit.ts does.
 
@@ -21,8 +22,6 @@ import { getPool } from "@/lib/server/db";
 export const choicesSchema = z
   .array(z.object({ id: z.string(), label: z.string() }))
   .nullable() satisfies z.ZodType<ChoiceOption[] | null>;
-
-const hintsSchema = z.array(z.string());
 
 export interface PuzzleFilters {
   type?: PuzzleType;
@@ -101,6 +100,7 @@ interface DetailRow extends SummaryRow {
   set_count: number | null;
   choices: unknown;
   hints: unknown;
+  hints_revealed: number;
   verified_by: string[];
   attempts: number;
   snapshot_id: string;
@@ -130,6 +130,8 @@ export async function getPuzzleDetail(
   const { rows } = await getPool().query<DetailRow>(
     `select p.slug, p.type, p.difficulty, p.title, p.prompt, p.answer_kind, p.set_count, p.choices,
             p.hints, p.tags, p.verified_by,
+            (select count(*)::int from hint_reveals h where h.puzzle_id = p.id and h.user_id = $1)
+              as hints_revealed,
             coalesce(pr.status, 'unsolved') as status, coalesce(pr.attempts, 0) as attempts,
             s.id as snapshot_id, s.name as snapshot_name, s.sha, s.manifest_url,
             r.slug as repo_slug, r.url as repo_url, r.license, r.language
@@ -142,13 +144,16 @@ export async function getPuzzleDetail(
   );
   const row = rows[0];
   if (!row) return null;
+  // Only revealed hints leave the server; the rest stay behind POST /api/puzzles/:slug/hints.
+  const hints = parseHints(row.hints);
   return {
     ...toSummary(row),
     prompt: row.prompt,
     answerKind: row.answer_kind,
     setCount: row.set_count,
     choices: choicesSchema.parse(row.choices),
-    hints: hintsSchema.parse(row.hints),
+    hintCount: hints.length,
+    revealedHints: hints.slice(0, userId ? row.hints_revealed : 0),
     verifiedBy: row.verified_by,
     attempts: row.attempts,
     snapshot: {

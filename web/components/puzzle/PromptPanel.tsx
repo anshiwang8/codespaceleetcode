@@ -137,7 +137,6 @@ export function PromptPanel({
 }
 
 function DescriptionTab({ puzzle, status }: { puzzle: PuzzleDetail; status: PuzzleStatus }) {
-  const [hintsShown, setHintsShown] = useState(0);
   const noPersonChecked = puzzle.verifiedBy.every((name) => name.startsWith("agent:"));
 
   return (
@@ -169,25 +168,16 @@ function DescriptionTab({ puzzle, status }: { puzzle: PuzzleDetail; status: Puzz
         <p data-testid="answer-kind">{answerKindInWords(puzzle.answerKind, puzzle.setCount)}</p>
       </div>
 
-      {puzzle.hints.length > 0 ? (
+      {puzzle.hintCount > 0 ? (
         <div className={styles.block}>
-          <h2>
-            Hints <span className="muted">({hintsShown} of {puzzle.hints.length})</span>
-          </h2>
-          {hintsShown > 0 ? (
-            <ol className={styles.hints}>
-              {puzzle.hints.slice(0, hintsShown).map((hint, index) => (
-                <li key={index} data-testid="hint">
-                  <Markdown source={hint} />
-                </li>
-              ))}
-            </ol>
-          ) : null}
-          {hintsShown < puzzle.hints.length ? (
-            <button type="button" className="btn btn-small" onClick={() => setHintsShown(hintsShown + 1)}>
-              {hintsShown === 0 ? "Show a hint" : "Show the next hint"}
-            </button>
-          ) : null}
+          <h2>Hints</h2>
+          <ol className={styles.hints}>
+            {puzzle.revealedHints.map((hint, index) => (
+              <li key={index} data-testid="hint">
+                <Markdown source={hint} />
+              </li>
+            ))}
+          </ol>
         </div>
       ) : null}
 

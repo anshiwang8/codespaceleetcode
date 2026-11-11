@@ -371,7 +371,7 @@ describe.skipIf(!hasDatabase)("settings", () => {
     for (const table of ["user_profiles", "user_preferences", "user_avatars", "user_emails", "email_verifications"]) {
       expect(await count(table), table).toBeGreaterThan(0);
     }
-    const response = await deleteMe(call("/api/me", "DELETE", cookie, { confirm: true }), undefined);
+    const response = await deleteMe(call("/api/me", "DELETE", cookie, { confirm: "DELETE" }), undefined);
     expect(response.status).toBe(200);
     for (const table of ["user_profiles", "user_preferences", "user_avatars", "user_emails", "email_verifications"]) {
       expect(await count(table), table).toBe(0);

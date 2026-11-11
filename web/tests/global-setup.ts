@@ -11,7 +11,15 @@ declare module "vitest" {
 
 // Tests get their own database on the same server, so they never touch local dev data. It's
 // dropped and rebuilt from the migrations on every run, which also tests the migrations.
-const TEST_DATABASE = "codebase_puzzles_test";
+// TEST_DATABASE_NAME gives a parallel run (another worktree or agent) its own database, since each
+// run drops and rebuilds this one.
+const TEST_DATABASE = (() => {
+  const name = process.env.TEST_DATABASE_NAME?.trim() || "codebase_puzzles_test";
+  if (!/^codebase_puzzles_test[a-z0-9_]{0,30}$/.test(name)) {
+    throw new Error("TEST_DATABASE_NAME must start with codebase_puzzles_test and use only a-z, 0-9 and _");
+  }
+  return name;
+})();
 const DEFAULT_SERVER = `postgres://postgres:postgres@localhost:${process.env.LOCALDB_PORT || 54329}/postgres`;
 const LOCAL_HOSTNAMES = new Set(["localhost", "127.0.0.1", "[::1]"]);
 const REPO_ROOT = path.resolve(import.meta.dirname, "../..");

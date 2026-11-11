@@ -21,6 +21,14 @@ export const SEARCH_LIMIT: RateLimit = { limit: 240, windowMs: 60_000 };
  */
 export const SHORT_SEARCH_LIMIT: RateLimit = { limit: 30, windowMs: 60_000 };
 export const SHORT_SEARCH_CHARS = 3;
+/** Revealing hints: a person reads each one, so this is generous and only stops scripts. */
+export const HINT_LIMIT: RateLimit = { limit: 30, windowMs: 60_000 };
+/** Leaderboard and challenge reads, which aggregate over many rows. */
+export const BOARD_LIMIT: RateLimit = { limit: 120, windowMs: 60_000 };
+/** Joining, renaming or leaving the leaderboard. */
+export const LEADERBOARD_CHANGE_LIMIT: RateLimit = { limit: 20, windowMs: 60 * 60_000 };
+/** Account deletion attempts, which each check a recent sign-in. */
+export const DELETE_ACCOUNT_LIMIT: RateLimit = { limit: 10, windowMs: 60 * 60_000 };
 
 /** Rows whose window started longer ago than this are deleted. Every window must be shorter. */
 const MAX_WINDOW_MS = 60 * 60_000;
