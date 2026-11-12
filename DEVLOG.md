@@ -12,6 +12,16 @@ What was done (technical): It wasn't the rate limiter (those pages show "Too man
 
 Still open: Set Vercel's `DATABASE_URL` to the transaction pooler (port 6543, same host, user and password), as spec M2 already says, and redeploy. With the session pooler, five busy instances can still fill its 15 slots.
 
+## Privacy policy and terms reviewed (launch checklist M11 done); new contact address
+
+Type: Change
+
+Goal: The owner reviewed both legal pages, so they should stop saying they're drafts and stop showing open questions, and list the site's own contact mailbox.
+
+What should be done: Remove every "Needs review" note, mark both pages reviewed, change the contact address to mailcodebases@gmail.com, and close M11.
+
+What was done (technical): The eight `ReviewNote` blocks on `/privacy` and the one on `/terms` are deleted. `web/lib/legal.ts` sets `reviewed: true` and `lastUpdated: "2026-11-12"` for both pages, which hides the draft notice, and `CONTACT` is now `mailcodebases@gmail.com`. `ReviewNote` stays in `components/legal/LegalPage.tsx` for the next draft. The e2e checks in `legal.spec.ts` and `account.spec.ts` already follow `LEGAL`, so they now expect no notes, no draft notice and the new `mailto:` link. Spec section 14 marks M11 done and section 10's legal-pages paragraph names the new address.
+
 ## Fix Challenges, Leaderboard, Profile and Settings in production; account menu; "To puzzles" for returning visitors
 
 Type: Fix
@@ -22,7 +32,7 @@ What should be done: Find and fix why the pages failed, move Profile and Setting
 
 What was done (technical): The production database had 8 of 9 migrations applied. `0009_hints_scores_challenges.sql`, which creates `challenge_assignments`, `challenge_completions`, `score_events`, `user_achievements`, `leaderboard_entries` and `hint_reveals`, merged and deployed on 2026-11-11 without `python -m ingest migrate` being run, so every query on those tables failed: `/leaderboard` returned 500, `/challenges` streamed its error page, and signed in, Profile (achievements) and Settings (leaderboard visibility) failed too. It's now applied (dry run first, then `migrate`: 9 applied, 0 pending), and both public pages render in production. CLAUDE.md and spec M2 now say to apply a new migration before the code that reads it deploys. In the header, `NavLinks.tsx` lists only Puzzles, Challenges and Leaderboard, and the signed-in control is `AccountMenu.tsx`: the avatar and login are a disclosure button (`aria-expanded`, `aria-controls`) for a panel with Profile, Settings and Sign out, which closes on Escape (focus returns to the button), a pointer down outside, focus leaving, or navigation (the open state is tied to the path it was opened on). The `.wideOnly` style is gone. `web/lib/returning.ts` holds the `cb-signed-in` localStorage flag (always "1"): `AuthProvider` sets it whenever `/api/me` returns a user and clears it on sign-out, and `DangerZone` clears it on deletion. The landing page stays `force-static`: both hero button sets render, and CSS in `landing.module.css` shows either "Browse puzzles", "Sign in with GitHub" and the gate line, or a single "To puzzles" link, by `html[data-returning]`. A fixed inline script in `app/layout.tsx` sets that attribute before first paint, and `ReturningMark` re-syncs it in a layout effect when the page is reached by a link such as the logo. `/privacy` lists the new key (date moved to 2026-11-12) and `e2e/legal.spec.ts` checks it. New e2e tests cover the returning-visitor hero (logo click, reload, sign-out) and the account menu (links, Escape, outside click, `aria-current`); tests that used `nav-settings`, `nav-profile`, `account-link` or the header's Sign out now go through `openAccountMenu` and `signOutFromHeader` in `e2e/helpers.ts`.
 
-Still open: Migrations still reach production by hand. A CI or deploy step that fails when `migrate --dry-run` shows pending migrations would stop this recurring. Signed out, the header no longer links to the profile page, where a guest could pick a theme; `/profile` still offers it. M11 should review the new `/privacy` row.
+Still open: Migrations still reach production by hand. A CI or deploy step that fails when `migrate --dry-run` shows pending migrations would stop this recurring. Signed out, the header no longer links to the profile page, where a guest could pick a theme; `/profile` still offers it. ~~M11 should review the new `/privacy` row.~~ Done 2026-11-12.
 
 ## Remove the agent-only note from puzzle pages
 
@@ -44,7 +54,7 @@ What should be done: Mark M10 done in spec section 14 and close it here.
 
 What was done (technical): The five SMTP values (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `EMAIL_FROM`) are set for Production in Vercel, for a Gmail account made for the site with an app password. After the deploy of the SMTP change, Settings on `codespaceleetcode.vercel.app` no longer says email is unavailable, and the owner confirmed the email flow works there. Spec section 14 marks M10 done, dated 2026-11-10.
 
-Still open: Move to Resend once M1 gives the site a domain (remove the SMTP values, set `RESEND_API_KEY` and `EMAIL_FROM`, and update the providers table on `/privacy`). Gmail caps a free account at about 500 recipients a day. M11 still needs to review `/privacy`.
+Still open: Move to Resend once M1 gives the site a domain (remove the SMTP values, set `RESEND_API_KEY` and `EMAIL_FROM`, and update the providers table on `/privacy`). Gmail caps a free account at about 500 recipients a day. ~~M11 still needs to review `/privacy`.~~ Done 2026-11-12.
 
 ## Progressive hints, points, challenges, achievements, an opt-in leaderboard, safer deletion and a new logo
 
@@ -74,7 +84,7 @@ What was done (technical):
 Still open:
 
 - **Deploy steps (manual):** apply migration 0009 to the hosted database (`cd ingest && uv run --env-file .env python -m ingest migrate`, `--dry-run` first), then reseed (`uv run --env-file .env python -m ingest seed`) so the three-level hints load. Hints don't change blind-solve versions.
-- **M11:** both legal pages need a person to resolve each "Needs review" note and mark them reviewed.
+- ~~**M11:** both legal pages need a person to resolve each "Needs review" note and mark them reviewed.~~ Done 2026-11-12.
 - The hints were written by agents; like the blind solves, a person should read them (part of M6) for paraphrased giveaways the `hint-leak` check can't see.
 - Someone who solved a challenge's puzzle before its period can't complete that challenge (see the review fixes below). As puzzles get featured again, long-time users will see more "Solved before" cards; a larger pool or a per-user fallback puzzle would be a product decision.
 - Look-alike names written entirely in another alphabet ("Аlісе" in Cyrillic only) can still resemble Latin ones; only mixing alphabets is refused.

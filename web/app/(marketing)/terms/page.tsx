@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ContactLine, LegalPage, ReviewNote } from "@/components/legal/LegalPage";
+import { ContactLine, LegalPage } from "@/components/legal/LegalPage";
 
 export const metadata: Metadata = { title: "Terms" };
 export const dynamic = "force-static";
 
 // Keep these consistent with the privacy policy and with what the code does (spec.md section 14,
-// M7 and M11). Each <ReviewNote> is a point a person must decide; the reviewer resolves and
-// deletes them before setting the page back to reviewed in lib/legal.ts.
+// M7 and M11). Mark open questions in a new draft with <ReviewNote>; the reviewer resolves and
+// deletes each one before setting the page back to reviewed in lib/legal.ts.
 export default function TermsPage() {
   return (
     <LegalPage page="terms" title="Terms">
@@ -58,10 +58,6 @@ export default function TermsPage() {
         value, can&apos;t be exchanged, sold or transferred, and aren&apos;t a qualification. We may change how they
         work, or correct them when a puzzle or a score was wrong.
       </p>
-      <ReviewNote>
-        Confirm the conduct rules for public names and what happens to points when a puzzle is withdrawn or a rule
-        changes. Decide whether these terms need a governing law and a minimum age.
-      </ReviewNote>
 
       <h2 id="code">The code in the puzzles</h2>
       <p>
