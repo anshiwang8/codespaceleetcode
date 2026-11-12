@@ -6,7 +6,6 @@ import {
   LegalContents,
   LegalPage,
   LegalTable,
-  ReviewNote,
   SectionHeading,
   SectionRef,
 } from "@/components/legal/LegalPage";
@@ -19,8 +18,8 @@ export const dynamic = "force-static";
 
 // Every statement here must match what the code does. When storage, cookies, providers or
 // retention change, update this page in the same change and set the privacy page back to draft in
-// lib/legal.ts so it's reviewed again (spec.md section 14, M11). Each <ReviewNote> is a point a
-// person must decide or confirm; the reviewer resolves and deletes them before approving.
+// lib/legal.ts so it's reviewed again (spec.md section 14, M11). Mark open questions in a new
+// draft with <ReviewNote>; the reviewer resolves and deletes each one before approving.
 const SECTIONS = [
   { id: "without-account", title: "Using the site without an account" },
   { id: "github", title: "Signing in with GitHub" },
@@ -57,10 +56,6 @@ export default function PrivacyPage() {
         website and its sign-in. &quot;We&quot; and &quot;us&quot; mean whoever runs codebases, reachable at the
         address under <a href="#contact">Contact</a>.
       </p>
-      <ReviewNote>
-        Name the operator: who runs codebases (a person or an organization), and, if the site serves people in the
-        EEA or the UK, who is the data controller and whether a representative is needed there.
-      </ReviewNote>
 
       <h2 id="summary">The short version</h2>
       <ul>
@@ -204,10 +199,6 @@ export default function PrivacyPage() {
         the leaderboard while you were on it may still remember or have copied what it showed. We may remove a public
         name that breaks the <Link href="/terms">terms</Link>.
       </p>
-      <ReviewNote>
-        Decide the legal basis for the public leaderboard ({ref("purposes")} says consent, which you withdraw by leaving), and
-        whether including points earned before joining needs to be said on the join form as well as here.
-      </ReviewNote>
 
       {heading("email")}
       <p>
@@ -319,10 +310,6 @@ export default function PrivacyPage() {
           <strong>To meet legal obligations</strong>, such as answering a valid legal request, if one ever applies.
         </li>
       </ul>
-      <ReviewNote>
-        Confirm these legal bases, in particular for scoring solves made before points existed from the submission
-        history already held, and for the leaderboard.
-      </ReviewNote>
 
       {heading("retention")}
       <div className={styles.tableWrap}>
@@ -397,11 +384,6 @@ export default function PrivacyPage() {
           </tbody>
         </table>
       </div>
-      <ReviewNote>
-        Confirm with each provider, for the plans in use, how long Vercel keeps request and error logs, how long
-        Supabase keeps database backups, and how long Gmail keeps sent messages, and state those periods here. Also
-        decide how long messages to the contact address are kept.
-      </ReviewNote>
 
       {heading("providers")}
       <p>
@@ -432,12 +414,6 @@ export default function PrivacyPage() {
         protection law requires it, we rely on the providers&apos; standard contractual clauses or equivalent
         safeguards for these transfers.
       </p>
-      <ReviewNote>
-        Email is sent through Gmail over SMTP with an app password (M10); confirm Google&apos;s terms allow that use,
-        or move to a dedicated sender. Confirm the region of the Supabase project and of Vercel&apos;s functions, and that a
-        data processing agreement with standard contractual clauses is in place with each provider before relying on
-        the paragraph above.
-      </ReviewNote>
 
       {heading("cookies")}
       <p>
@@ -564,9 +540,6 @@ export default function PrivacyPage() {
         request from your confirmed contact email or while signed in, so we know it&apos;s you. We&apos;ll answer
         within 30 days. If you&apos;re not satisfied, you can also complain to your local data protection authority.
       </p>
-      <ReviewNote>
-        Confirm the 30-day response time and the list of rights for the places the site will serve.
-      </ReviewNote>
 
       {heading("delete")}
       <p>
@@ -598,10 +571,6 @@ export default function PrivacyPage() {
         codebases isn&apos;t meant for children under 13, and GitHub&apos;s terms don&apos;t allow them to have an
         account. If you believe a child under 13 has signed in, write to us and we&apos;ll delete the account.
       </p>
-      <ReviewNote>
-        Some countries set a higher age, up to 16, for consent to processing such as the public leaderboard. Decide
-        whether the leaderboard needs its own minimum age.
-      </ReviewNote>
 
       {heading("changes")}
       <p>
@@ -609,22 +578,11 @@ export default function PrivacyPage() {
         takes effect. If a change means we&apos;d use data you&apos;ve already given us in a materially different
         way, we&apos;ll also tell you by email or on the site, and ask for your consent where the law requires it.
       </p>
-      <ReviewNote>
-        Hints, points, challenges, achievements and the leaderboard are new since the last approved version, and
-        points were worked out from existing submission history. Decide whether existing users must be told under
-        the promise above, and how.
-      </ReviewNote>
 
       {heading("contact")}
       <p>
         For questions about your data or this policy, or to make a request, write to <ContactLine />.
       </p>
-      <ReviewNote>
-        The contact address is a personal mailbox at an email provider, which isn&apos;t one of the services that run
-        the site and isn&apos;t listed in {ref("providers")}. Decide whether to replace it with an address on the
-        site&apos;s own domain once it has one (M1), or to list that mailbox&apos;s provider as handling the messages
-        people send.
-      </ReviewNote>
     </LegalPage>
   );
 }
