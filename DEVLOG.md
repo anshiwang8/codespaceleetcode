@@ -1,5 +1,17 @@
 # DEVLOG
 
+## Fix pages failing after switching quickly between Puzzles, Challenges and Leaderboard
+
+Type: Fix
+
+Goal: Clicking quickly between Puzzles, Challenges and the leaderboard made the live site show "Something went wrong", and it kept failing for a while afterwards.
+
+What should be done: Find why, and stop serverless instances from using up the database's connections.
+
+What was done (technical): It wasn't the rate limiter (those pages show "Too many requests" instead). Production's `DATABASE_URL` points at Supabase's session pooler (port 5432), which gives each client its own server connection and allows 15 on the free plan. Each Vercel instance opened up to 10 connections, and an instance that Vercel freezes between requests never runs the pool's idle timer, so the connections stayed open. A burst of page loads spread across a few instances filled all 15, and from then on every new connection failed with `EMAXCONNSESSION max clients reached in session mode`: `/api/puzzles` (three queries at once, so it needs new connections) failed every time while `/api/leaderboard` still worked on a connection it already had. `getPool` in `web/lib/server/db.ts` now, on Vercel (`VERCEL` set), keeps at most 3 connections per instance with a 5-second idle timeout, and calls `attachDatabasePool` from `@vercel/functions` so the instance stays awake until its idle connections close instead of freezing with them open. It also logs a warning at startup when `DATABASE_URL` is a Supabase session pooler. Locally nothing changes. The transaction pooler ignores the `statement_timeout` startup setting, which the code now notes. Tests in `server-utils.test.ts` cover the pool settings and the session-pooler check.
+
+Still open: Set Vercel's `DATABASE_URL` to the transaction pooler (port 6543, same host, user and password), as spec M2 already says, and redeploy. With the session pooler, five busy instances can still fill its 15 slots.
+
 ## Fix Challenges, Leaderboard, Profile and Settings in production; account menu; "To puzzles" for returning visitors
 
 Type: Fix
