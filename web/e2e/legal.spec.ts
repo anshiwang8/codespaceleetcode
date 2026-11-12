@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { DELETE_CONFIRMATION, DELETED_DATA } from "../lib/account-deletion";
 import { LEGAL } from "../lib/legal";
+import { SIGNED_IN_KEY } from "../lib/returning";
 import { APPLIED_KEY, GUEST_FAVORITES_KEY, GUEST_PREFERENCE_KEY } from "../lib/themes/runtime";
 
 // The legal pages' structure and the facts they share with the code. account.spec.ts checks the
@@ -49,7 +50,7 @@ test.describe("legal pages", () => {
     const deletion = page.locator("main");
     for (const item of DELETED_DATA) await expect(deletion.getByText(item, { exact: true })).toBeVisible();
     await expect(deletion).toContainText(`type ${DELETE_CONFIRMATION}`);
-    for (const name of [APPLIED_KEY, GUEST_PREFERENCE_KEY, GUEST_FAVORITES_KEY, "cp-dev-login", "cp_dev_login"]) {
+    for (const name of [APPLIED_KEY, GUEST_PREFERENCE_KEY, GUEST_FAVORITES_KEY, SIGNED_IN_KEY, "cp-dev-login", "cp_dev_login"]) {
       await expect(page.locator("main code", { hasText: new RegExp(`^${name}$`) })).toHaveCount(1);
     }
   });

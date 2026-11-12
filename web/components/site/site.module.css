@@ -117,17 +117,101 @@
   white-space: nowrap;
 }
 
-a.account {
-  border-radius: var(--radius);
-  color: var(--text);
+/* The account menu: a button with the avatar and login, and a panel under it, right-aligned. */
+.accountMenu {
+  position: relative;
+  display: inline-flex;
+  min-width: 0;
 }
 
-a.account:hover {
+button.account {
+  min-height: 36px;
+  padding: 2px var(--space-2) 2px 2px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: none;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+button.account:hover,
+button.account[aria-expanded="true"] {
+  background: var(--hover);
+}
+
+button.account:hover .login {
+  color: var(--accent-text);
+}
+
+.accountChevron {
+  flex: none;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+button.account[aria-expanded="true"] .accountChevron {
+  transform: rotate(180deg);
+}
+
+.accountPanel {
+  position: absolute;
+  top: calc(100% + var(--space-1));
+  right: 0;
+  z-index: 50;
+  min-width: 180px;
+  padding: var(--space-1);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--panel);
+  box-shadow: 0 8px 24px var(--shadow);
+}
+
+.accountPanel[hidden] {
+  display: none;
+}
+
+.accountPanel ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.accountItem {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 36px;
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: var(--text-sm);
+  text-align: left;
+  cursor: pointer;
+}
+
+.accountItem:hover {
+  background: var(--hover);
   text-decoration: none;
 }
 
-a.account:hover .login {
+.accountItem[aria-current] {
   color: var(--accent-text);
+  font-weight: 600;
+}
+
+.accountItem:disabled {
+  color: var(--text-faint);
+  cursor: progress;
+}
+
+.accountDivider {
+  margin-top: var(--space-1);
+  padding-top: var(--space-1);
+  border-top: 1px solid var(--line);
 }
 
 .setupBanner {
@@ -239,10 +323,6 @@ a.account:hover .login {
 }
 
 @media (max-width: 640px) {
-  .wideOnly {
-    display: none !important;
-  }
-
   .inner {
     gap: var(--space-2);
     padding: 0 var(--space-3);
@@ -275,6 +355,8 @@ a.account:hover .login {
 .nav a { transition: background-color var(--motion-control) var(--motion-feedback), color var(--motion-control) var(--motion-feedback); }
 .nav a[aria-current]::after { animation: var(--motion-fade) var(--motion-control) var(--motion-ease); }
 .authBanner { animation: var(--motion-fade) var(--motion-panel) var(--motion-ease); }
+.accountPanel { animation: var(--motion-fade) var(--motion-control) var(--motion-ease); }
+.accountChevron { transition: transform var(--motion-control) var(--motion-feedback); }
 
 @media (max-width: 640px) {
   /*

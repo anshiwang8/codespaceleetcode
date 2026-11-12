@@ -30,7 +30,8 @@ test.describe("profile", () => {
     await expect(signedOut.getByRole("heading", { level: 1 })).toHaveText("Your profile");
     await expect(signedOut.getByRole("button", { name: /Local dev sign-in/ })).toBeVisible();
     await expect(page.getByTestId("profile")).toHaveCount(0);
-    await expect(page.getByTestId("nav-profile")).toHaveAttribute("aria-current", "page");
+    // Profile is in the account menu, which only a signed-in user has.
+    await expect(page.getByTestId("account-menu-button")).toHaveCount(0);
   });
 
   test("a new account shows helpful empty states", async ({ page }) => {

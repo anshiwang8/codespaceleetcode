@@ -3,7 +3,7 @@ import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import pg from "pg";
 import sharp from "sharp";
-import { FILES, openFile, openPuzzle, visible } from "./helpers";
+import { FILES, openFile, openPuzzle, signOutFromHeader, visible } from "./helpers";
 
 const base = () => test.info().project.use.baseURL ?? "";
 
@@ -122,7 +122,7 @@ test.describe("themes", () => {
     await devLogin(page, alice);
     await page.goto("/puzzles");
     await chooseTheme(page, "dracula");
-    await page.getByRole("button", { name: "Sign out" }).click();
+    await signOutFromHeader(page);
     await expect.poll(() => bg(page)).toBe("#ffffff");
 
     await devLogin(page, unique("theme-bob"));
@@ -232,7 +232,7 @@ test.describe("settings", () => {
   test("a picture uploads with a chosen crop, shows everywhere, falls back, and can be removed", async ({ page }) => {
     await devLogin(page, unique("avatar"));
     await page.goto("/settings");
-    await expect(page.getByTestId("account-link").getByTestId("avatar")).toHaveAttribute("data-kind", "silhouette");
+    await expect(page.getByTestId("account-menu-button").getByTestId("avatar")).toHaveAttribute("data-kind", "silhouette");
     const picture = await sharp({ create: { width: 400, height: 300, channels: 3, background: "#cc3366" } }).png().toBuffer();
     await page.getByTestId("avatar-file").setInputFiles({ name: "me.png", mimeType: "image/png", buffer: picture });
     const frame = page.getByTestId("avatar-crop");
@@ -247,7 +247,7 @@ test.describe("settings", () => {
     await page.getByTestId("avatar-file").setInputFiles({ name: "me.png", mimeType: "image/png", buffer: picture });
     await page.getByTestId("avatar-save").click();
     await expect(page.getByTestId("avatar-status")).toHaveText("Picture saved.");
-    const header = page.getByTestId("account-link").getByTestId("avatar");
+    const header = page.getByTestId("account-menu-button").getByTestId("avatar");
     await expect(header).toHaveAttribute("data-kind", "picture");
     await expect.poll(() => header.locator("img").evaluate((image) => (image as HTMLImageElement).naturalWidth)).toBe(256);
 
@@ -267,7 +267,7 @@ test.describe("settings", () => {
     await page.goto("/settings");
     await page.getByTestId("avatar-remove").click();
     await expect(page.getByTestId("avatar-status")).toContainText("Picture removed");
-    await expect(page.getByTestId("account-link").getByTestId("avatar")).toHaveAttribute("data-kind", "silhouette");
+    await expect(page.getByTestId("account-menu-button").getByTestId("avatar")).toHaveAttribute("data-kind", "silhouette");
   });
 
   test("email setup: required to finish setup, confirmed by link once, changeable with the old address kept until then", async ({ page }) => {

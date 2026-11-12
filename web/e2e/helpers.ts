@@ -28,6 +28,21 @@ export async function signIn(page: Page): Promise<void> {
   await expect(page.getByTestId("signed-in-as")).toHaveText(/^dev-/);
 }
 
+/** Opens the header's account menu, under the signed-in user's name. */
+export async function openAccountMenu(page: Page): Promise<Locator> {
+  const button = visible(page, "account-menu-button");
+  if ((await button.getAttribute("aria-expanded")) !== "true") await button.click();
+  const menu = visible(page, "account-menu");
+  await expect(menu).toBeVisible();
+  return menu;
+}
+
+/** Signs out from the header's account menu. */
+export async function signOutFromHeader(page: Page): Promise<void> {
+  const menu = await openAccountMenu(page);
+  await menu.getByRole("button", { name: "Sign out" }).click();
+}
+
 /** Clicks a file in the tree, expanding the folders above it. */
 export async function openFile(page: Page, path: string): Promise<void> {
   const parts = path.split("/");

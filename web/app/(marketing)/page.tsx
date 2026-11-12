@@ -5,6 +5,7 @@ import { CodeDemo } from "@/components/landing/CodeDemo";
 import { LANDING_EXAMPLES } from "@/components/landing/examples";
 import styles from "@/components/landing/landing.module.css";
 import { LoginButton } from "@/components/landing/LoginButton";
+import { ReturningMark } from "@/components/landing/ReturningMark";
 import { ViewportReveals } from "@/components/landing/ViewportReveals";
 import { Logo } from "@/components/site/Logo";
 import { SiteFooter } from "@/components/site/SiteFooter";
@@ -57,15 +58,22 @@ export default function LandingPage() {
               how the modules divide the work, or how the code meets a system-design requirement. You find the answer
               in a browser IDE and click it to submit.
             </p>
-            <div className={styles.actions}>
+            {/* Both sets render; CSS shows the second only on a browser someone has signed in on. */}
+            <ReturningMark />
+            <div className={`${styles.actions} ${styles.newVisitor}`}>
               <Link href={PUZZLES_PATH} className={`${styles.button} ${styles.primary}`} data-testid="browse-puzzles">
                 Browse puzzles
               </Link>
               <LoginButton />
             </div>
-            <p id="hero-gate" className={styles.gate}>
+            <p id="hero-gate" className={`${styles.gate} ${styles.newVisitor}`}>
               Reading puzzles needs no account. Sign in, free, to submit answers and save your progress.
             </p>
+            <div className={`${styles.actions} ${styles.returning}`}>
+              <Link href={PUZZLES_PATH} className={`${styles.button} ${styles.primary}`} data-testid="to-puzzles">
+                To puzzles
+              </Link>
+            </div>
           </div>
           <figure className={styles.shot} data-testid="workspace-shot">
             <div className={styles.shotFrame}>

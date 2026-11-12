@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import { LEGAL } from "../lib/legal";
-import { FILES, openFile, openPuzzle, submitAndExpect, visible } from "./helpers";
+import { FILES, openAccountMenu, openFile, openPuzzle, submitAndExpect, visible } from "./helpers";
 
 test.describe("account deletion", () => {
   test("deleting from settings removes progress and signs out", async ({ page }) => {
@@ -16,7 +16,7 @@ test.describe("account deletion", () => {
 
     await page.goto("/profile");
     await expect(visible(page, "stats-total")).toContainText("1 of 8");
-    await visible(page, "nav-settings").click();
+    await (await openAccountMenu(page)).getByRole("link", { name: "Settings" }).click();
     await expect(page).toHaveURL(/\/settings$/);
 
     // The first click only opens the warning, with Cancel focused; Cancel closes it without deleting.
