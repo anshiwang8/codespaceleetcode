@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { RETURNING_SCRIPT } from "@/lib/returning";
 import { PREPAINT_SCRIPT } from "@/lib/themes/prepaint";
 import { siteOrigin } from "@/lib/server/site";
 
@@ -27,8 +28,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     // copy of <html> differs from the server's in its style attribute; that's expected.
     <html lang="en-US" suppressHydrationWarning>
       <head>
-        {/* A fixed string, no user data: applies the theme cached in this browser before first paint. */}
-        <script dangerouslySetInnerHTML={{ __html: PREPAINT_SCRIPT }} />
+        {/*
+          Fixed strings, no user data, in one tag: applies the theme cached in this browser before
+          first paint, then marks a browser someone has signed in on, so the landing page offers
+          "To puzzles". Each part is its own try/catch IIFE, so one failing never stops the other.
+        */}
+        <script dangerouslySetInnerHTML={{ __html: PREPAINT_SCRIPT + RETURNING_SCRIPT }} />
       </head>
       <body>{children}</body>
     </html>

@@ -98,6 +98,15 @@
   margin-top: var(--space-5);
 }
 
+/* A browser someone has signed in on (lib/returning.ts) gets "To puzzles" instead of sign-in. */
+:global(html:not([data-returning])) .returning {
+  display: none;
+}
+
+:global(html[data-returning]) .newVisitor {
+  display: none;
+}
+
 .gate {
   margin-top: var(--space-3);
   color: var(--text-muted);

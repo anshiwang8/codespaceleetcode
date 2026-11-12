@@ -5,14 +5,11 @@ import { usePathname } from "next/navigation";
 import styles from "@/components/site/site.module.css";
 import { PUZZLES_PATH } from "@/lib/browse";
 
-/** `wideOnly` links are left out on a phone, where something else on the page reaches them. */
+// Profile and Settings live in the account menu, under the signed-in user's name (AccountMenu.tsx).
 const LINKS = [
-  { href: PUZZLES_PATH, label: "Puzzles", wideOnly: false },
-  { href: "/challenges", label: "Challenges", wideOnly: false },
-  { href: "/leaderboard", label: "Leaderboard", wideOnly: false },
-  { href: "/profile", label: "Profile", wideOnly: false },
-  // The account link in the header goes to Settings too, and Profile links to it on a phone.
-  { href: "/settings", label: "Settings", wideOnly: true },
+  { href: PUZZLES_PATH, label: "Puzzles" },
+  { href: "/challenges", label: "Challenges" },
+  { href: "/leaderboard", label: "Leaderboard" },
 ] as const;
 
 /**
@@ -24,10 +21,10 @@ export function NavLinks() {
   return (
     <nav className={styles.nav} aria-label="Main">
       <ul>
-        {LINKS.map(({ href, label, wideOnly }) => {
+        {LINKS.map(({ href, label }) => {
           const current = pathname === href ? "page" : pathname.startsWith(`${href}/`) ? "true" : undefined;
           return (
-            <li key={href} className={wideOnly ? styles.wideOnly : undefined}>
+            <li key={href}>
               <Link href={href} aria-current={current} data-testid={`nav-${label.toLowerCase()}`}>
                 {label}
               </Link>

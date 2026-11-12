@@ -6,6 +6,7 @@ import styles from "@/components/settings/settings.module.css";
 import { Icon } from "@/components/site/Icon";
 import { DELETED_DATA, DELETE_CONFIRMATION } from "@/lib/account-deletion";
 import { signInWithGitHub } from "@/lib/client/auth-client";
+import { forgetSignedIn } from "@/lib/returning";
 
 /** Where GitHub sign-in comes back to, so the user lands on this section again. */
 const RETURN_TO = "/settings#delete-account";
@@ -79,6 +80,7 @@ export function DangerZone({ provider }: DangerZoneProps) {
     const result = await deleteAccount();
     setOutcome(result);
     if (result.kind === "deleted") {
+      forgetSignedIn();
       // The landing page sits outside the signed-in shell, so nothing there remembers the user.
       // refresh() drops cached pages that were rendered for them.
       router.replace("/");

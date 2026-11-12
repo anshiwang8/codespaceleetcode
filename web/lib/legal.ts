@@ -10,7 +10,7 @@ export const LEGAL = {
     // Updated on 2026-11-10: emails are now sent through Gmail over SMTP (M10).
     // Audited against the code on 2026-11-11 for hints, points, challenges, achievements, the
     // opt-in leaderboard and deletion from Settings → Danger zone; still a draft (M11).
-    privacy: { reviewed: false, lastUpdated: "2026-11-11" },
+    privacy: { reviewed: false, lastUpdated: "2026-11-12" },
     // Approved 2026-11-05 (M7). Back to draft on 2026-11-11: deletion moved to Settings, and the
     // terms now cover leaderboard names and points, which need the same review (M11).
     terms: { reviewed: false, lastUpdated: "2026-11-11" },

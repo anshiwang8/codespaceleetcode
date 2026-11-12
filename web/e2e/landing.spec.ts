@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { visible } from "./helpers";
+import { signIn, signOutFromHeader, visible } from "./helpers";
 
 test.describe("landing page", () => {
   test("says what it is, and Browse puzzles goes to the puzzle list", async ({ page }) => {
@@ -18,6 +18,35 @@ test.describe("landing page", () => {
     await expect(page).toHaveURL(/\/puzzles$/);
     await expect(page.getByRole("heading", { name: "Puzzles", level: 1 })).toBeVisible();
     await expect(visible(page, "puzzle-row-e2e-find-file")).toBeVisible();
+  });
+
+  test("a browser someone signed in on is greeted with To puzzles, until they sign out", async ({ page }) => {
+    await page.goto("/puzzles");
+    await signIn(page);
+
+    // Back by the logo, a client-side navigation: the hero offers the way back, not sign-in.
+    await page.getByRole("link", { name: "codebases home" }).click();
+    await expect(page).toHaveURL(/\/$/);
+    const hero = page.getByTestId("hero");
+    await expect(hero.getByRole("link", { name: "To puzzles" })).toBeVisible();
+    await expect(hero.getByRole("button", { name: "Sign in with GitHub" })).toBeHidden();
+    await expect(hero.getByRole("link", { name: "Browse puzzles" })).toBeHidden();
+    await expect(page.getByText("Reading puzzles needs no account.")).toBeHidden();
+
+    // A fresh load reads the same mark before first paint.
+    await page.reload();
+    await expect(hero.getByRole("link", { name: "To puzzles" })).toBeVisible();
+    await expect(hero.getByRole("button", { name: "Sign in with GitHub" })).toBeHidden();
+    await hero.getByRole("link", { name: "To puzzles" }).click();
+    await expect(page).toHaveURL(/\/puzzles$/);
+
+    // Signing out forgets it.
+    await signOutFromHeader(page);
+    await expect(visible(page, "signed-in-as")).toHaveCount(0);
+    await page.getByRole("link", { name: "codebases home" }).click();
+    await expect(page.getByTestId("hero").getByRole("button", { name: "Sign in with GitHub" })).toBeVisible();
+    await expect(page.getByTestId("hero").getByRole("link", { name: "To puzzles" })).toBeHidden();
+    expect(await page.evaluate(() => window.localStorage.getItem("cb-signed-in"))).toBeNull();
   });
 
   test("Sign in starts GitHub sign-in, and says so when this server has no GitHub app", async ({ page }) => {

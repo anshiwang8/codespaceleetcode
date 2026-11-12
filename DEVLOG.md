@@ -1,5 +1,17 @@
 # DEVLOG
 
+## Fix Challenges, Leaderboard, Profile and Settings in production; account menu; "To puzzles" for returning visitors
+
+Type: Fix
+
+Goal: Challenges, the leaderboard, and the signed-in profile and settings couldn't load on the live site. Profile and Settings should sit in a drop-down under the signed-in user's name, and someone who has signed in on a browser should be greeted on the home page with a button back to the puzzles.
+
+What should be done: Find and fix why the pages failed, move Profile and Settings out of the main navigation into an account menu, and remember a sign-in per browser so the landing hero shows "To puzzles".
+
+What was done (technical): The production database had 8 of 9 migrations applied. `0009_hints_scores_challenges.sql`, which creates `challenge_assignments`, `challenge_completions`, `score_events`, `user_achievements`, `leaderboard_entries` and `hint_reveals`, merged and deployed on 2026-11-11 without `python -m ingest migrate` being run, so every query on those tables failed: `/leaderboard` returned 500, `/challenges` streamed its error page, and signed in, Profile (achievements) and Settings (leaderboard visibility) failed too. It's now applied (dry run first, then `migrate`: 9 applied, 0 pending), and both public pages render in production. CLAUDE.md and spec M2 now say to apply a new migration before the code that reads it deploys. In the header, `NavLinks.tsx` lists only Puzzles, Challenges and Leaderboard, and the signed-in control is `AccountMenu.tsx`: the avatar and login are a disclosure button (`aria-expanded`, `aria-controls`) for a panel with Profile, Settings and Sign out, which closes on Escape (focus returns to the button), a pointer down outside, focus leaving, or navigation (the open state is tied to the path it was opened on). The `.wideOnly` style is gone. `web/lib/returning.ts` holds the `cb-signed-in` localStorage flag (always "1"): `AuthProvider` sets it whenever `/api/me` returns a user and clears it on sign-out, and `DangerZone` clears it on deletion. The landing page stays `force-static`: both hero button sets render, and CSS in `landing.module.css` shows either "Browse puzzles", "Sign in with GitHub" and the gate line, or a single "To puzzles" link, by `html[data-returning]`. A fixed inline script in `app/layout.tsx` sets that attribute before first paint, and `ReturningMark` re-syncs it in a layout effect when the page is reached by a link such as the logo. `/privacy` lists the new key (date moved to 2026-11-12) and `e2e/legal.spec.ts` checks it. New e2e tests cover the returning-visitor hero (logo click, reload, sign-out) and the account menu (links, Escape, outside click, `aria-current`); tests that used `nav-settings`, `nav-profile`, `account-link` or the header's Sign out now go through `openAccountMenu` and `signOutFromHeader` in `e2e/helpers.ts`.
+
+Still open: Migrations still reach production by hand. A CI or deploy step that fails when `migrate --dry-run` shows pending migrations would stop this recurring. Signed out, the header no longer links to the profile page, where a guest could pick a theme; `/profile` still offers it. M11 should review the new `/privacy` row.
+
 ## Remove the agent-only note from puzzle pages
 
 Type: Removal

@@ -2,41 +2,20 @@
 
 import Link from "next/link";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { Avatar } from "@/components/site/Avatar";
+import { AccountMenu } from "@/components/site/AccountMenu";
 import styles from "@/components/site/site.module.css";
 import { Icon } from "@/components/site/Icon";
 
-/** The header's account area: who's signed in and Sign out, or the ways to sign in. */
+/** The header's account area: the account menu (Profile, Settings, Sign out), or the ways to sign in. */
 export function AuthControl() {
-  const { me, devName, gitHubSignIn, devSignIn, signOut, pending } = useAuth();
+  const { me, devName, gitHubSignIn, devSignIn, pending } = useAuth();
   // Keeps its place while /api/me answers, so the header doesn't shift.
   if (!me) return <div className={styles.auth} aria-hidden="true" />;
 
   if (me.user) {
     return (
       <div className={styles.auth}>
-        <Link
-          href="/settings"
-          className={styles.account}
-          title={`Signed in as ${me.user.login}. Account settings`}
-          data-testid="account-link"
-        >
-          <Avatar version={me.user.avatarVersion} />
-          <span className="visually-hidden">Signed in as </span>
-          <span className={styles.login} data-testid="signed-in-as">
-            {me.user.login}
-          </span>
-          <span className="visually-hidden">, account settings</span>
-        </Link>
-        <button
-          type="button"
-          className="btn btn-small"
-          onClick={() => void signOut()}
-          disabled={pending}
-          aria-busy={pending}
-        >
-          Sign out
-        </button>
+        <AccountMenu login={me.user.login} avatarVersion={me.user.avatarVersion} />
       </div>
     );
   }

@@ -477,6 +477,13 @@ export default function PrivacyPage() {
           ],
           [
             <>
+              <code>cb-signed-in</code> (local storage)
+            </>,
+            "Remembers that someone has signed in on this browser, so the home page offers To puzzles instead of sign-in. It holds only the value 1, isn't sent to us, and is cleared when you sign out or delete your account",
+            UNTIL_CLEARED,
+          ],
+          [
+            <>
               <code>cp-dev-login</code> (local storage)
             </>,
             "A random name, such as dev-3f2a, for the sign-in developers use when they run the site on their own computer. This site may store it, but never uses it or sends it to us",

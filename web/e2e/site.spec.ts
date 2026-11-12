@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import pg from "pg";
-import { FILES, openFile, openPuzzle, signIn, submitAndExpect, visible } from "./helpers";
+import { FILES, openFile, openPuzzle, signIn, signOutFromHeader, submitAndExpect, visible } from "./helpers";
 
 test.describe("puzzle list", () => {
   test("shows every puzzle with its repo and language", async ({ page }) => {
@@ -224,9 +224,47 @@ test.describe("dev sign-in and profile", () => {
     await signIn(page);
     await page.reload();
     await expect(visible(page, "signed-in-as")).toHaveText(/^dev-/);
-    await page.getByRole("button", { name: "Sign out" }).click();
+    await signOutFromHeader(page);
     await expect(visible(page, "signed-in-as")).toHaveCount(0);
     await expect(page.getByRole("button", { name: /^Sign in as dev-/ })).toBeVisible();
+  });
+
+  test("the account menu holds Profile, Settings and Sign out, and closes on Escape or a click outside", async ({ page }) => {
+    await page.goto("/puzzles");
+    // The main navigation no longer has Profile or Settings; they're under the user's name.
+    const nav = page.getByRole("navigation", { name: "Main" });
+    await expect(nav.getByRole("link", { name: "Profile" })).toHaveCount(0);
+    await expect(nav.getByRole("link", { name: "Settings" })).toHaveCount(0);
+    await signIn(page);
+
+    const button = visible(page, "account-menu-button");
+    const menu = page.getByTestId("account-menu");
+    await expect(button).toHaveAttribute("aria-expanded", "false");
+    await expect(menu).toBeHidden();
+    await button.click();
+    await expect(button).toHaveAttribute("aria-expanded", "true");
+    await expect(menu.getByRole("link", { name: "Profile" })).toHaveAttribute("href", "/profile");
+    await expect(menu.getByRole("link", { name: "Settings" })).toHaveAttribute("href", "/settings");
+    await expect(menu.getByRole("button", { name: "Sign out" })).toBeVisible();
+
+    await page.keyboard.press("Escape");
+    await expect(menu).toBeHidden();
+    await expect(button).toBeFocused();
+
+    await button.click();
+    await page.getByRole("heading", { name: "Puzzles", level: 1 }).click();
+    await expect(menu).toBeHidden();
+
+    await button.click();
+    await menu.getByRole("link", { name: "Profile" }).click();
+    await expect(page).toHaveURL(/\/profile$/);
+    await expect(visible(page, "profile")).toBeVisible();
+    await expect(menu).toBeHidden();
+    await button.click();
+    await expect(menu.getByRole("link", { name: "Profile" })).toHaveAttribute("aria-current", "page");
+    await menu.getByRole("link", { name: "Settings" }).click();
+    await expect(page).toHaveURL(/\/settings$/);
+    await expect(visible(page, "settings")).toBeVisible();
   });
 
   test("profile shows solved counts by type and difficulty", async ({ page }) => {

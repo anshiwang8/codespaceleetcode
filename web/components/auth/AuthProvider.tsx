@@ -5,6 +5,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import type { MeResponse } from "@/lib/api-types";
 import { ApiRequestError, api } from "@/lib/client/api";
 import { signInWithGitHub, signOutOfGitHub } from "@/lib/client/auth-client";
+import { forgetSignedIn, rememberSignedIn } from "@/lib/returning";
 import { adoptAccount, adoptGuest } from "@/lib/themes/controller";
 
 const DEV_NAME_KEY = "cp-dev-login";
@@ -62,6 +63,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [themeOwner]);
 
+  // Remembered per browser, so the landing page greets a returning visitor with "To puzzles".
+  const signedIn = me?.user != null;
+  useEffect(() => {
+    if (signedIn) rememberSignedIn();
+  }, [signedIn]);
+
   useEffect(() => {
     let canceled = false;
     api
@@ -109,10 +116,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const clearError = useCallback(() => setError(null), []);
 
   const signOut = useCallback(async () => {
-    if (me?.user?.via !== "github") return change(api.devLogout);
+    if (me?.user?.via !== "github") {
+      return change(async () => {
+        const response = await api.devLogout();
+        forgetSignedIn();
+        return response;
+      });
+    }
     return change(async () => {
       const failed = await signOutOfGitHub();
       if (failed) throw new Error(failed);
+      forgetSignedIn();
       // On localhost a dev login cookie may be left behind, which would sign the user back in.
       return me.devAuth ? api.devLogout() : api.me();
     });
