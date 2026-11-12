@@ -1,6 +1,12 @@
 import type { Pool } from "pg";
 import { afterEach, describe, expect, it } from "vitest";
-import { withTransaction } from "@/lib/server/db";
+import {
+  VERCEL_IDLE_TIMEOUT_MS,
+  VERCEL_POOL_MAX,
+  getPool,
+  isSupabaseSessionPooler,
+  withTransaction,
+} from "@/lib/server/db";
 import { readJson } from "@/lib/server/http";
 
 const MAX_BODY_BYTES = 256 * 1024;
@@ -102,5 +108,40 @@ describe("readJson", () => {
     const declared = new Request(request, { headers: { "content-length": String(MAX_BODY_BYTES + 1) } });
     expect(await readJson(declared)).toBeUndefined();
     expect(declared.bodyUsed).toBe(false);
+  });
+});
+
+describe("getPool", () => {
+  const holder = globalThis as typeof globalThis & { codebasePuzzlesPool?: Pool };
+
+  it("keeps few, short-lived connections per instance on Vercel", async () => {
+    const saved = holder.codebasePuzzlesPool;
+    const savedVercel = process.env.VERCEL;
+    holder.codebasePuzzlesPool = undefined;
+    process.env.VERCEL = "1";
+    try {
+      const pool = getPool();
+      expect(pool.options.max).toBe(VERCEL_POOL_MAX);
+      expect(pool.options.idleTimeoutMillis).toBe(VERCEL_IDLE_TIMEOUT_MS);
+      await pool.end();
+    } finally {
+      holder.codebasePuzzlesPool = saved;
+      if (savedVercel === undefined) delete process.env.VERCEL;
+      else process.env.VERCEL = savedVercel;
+    }
+  });
+});
+
+describe("isSupabaseSessionPooler", () => {
+  it("flags the session pooler, which serverless instances run out of", () => {
+    expect(isSupabaseSessionPooler("postgresql://u:p@aws-0-us-east-1.pooler.supabase.com:5432/postgres")).toBe(true);
+    expect(isSupabaseSessionPooler("postgresql://u:p@aws-0-us-east-1.pooler.supabase.com/postgres")).toBe(true);
+  });
+
+  it("accepts the transaction pooler, the direct connection and local databases", () => {
+    expect(isSupabaseSessionPooler("postgresql://u:p@aws-0-us-east-1.pooler.supabase.com:6543/postgres")).toBe(false);
+    expect(isSupabaseSessionPooler("postgresql://u:p@db.abc.supabase.co:5432/postgres")).toBe(false);
+    expect(isSupabaseSessionPooler("postgres://postgres:postgres@localhost:54329/codebase_puzzles")).toBe(false);
+    expect(isSupabaseSessionPooler("not a url")).toBe(false);
   });
 });
