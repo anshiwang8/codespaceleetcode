@@ -7,7 +7,6 @@ minutes: 10
 summary: Tell a rejected request, a denied request and a timed-out attempt apart, each by its own evidence.
 objective: Use separate evidence for input rejection, permission, and an upstream timeout.
 prerequisites: [authentication-and-authorization]
-prerequisite_note: L18, then this checkpoint
 scenario: |
   A toy endpoint parses a decimal item id and rejects non-numeric input with 400. It then checks
   ownership using an already authenticated session: a valid user who isn't the owner gets 403,

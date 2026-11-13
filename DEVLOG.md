@@ -1,5 +1,57 @@
 # DEVLOG
 
+## Learn: a course in reading real software
+
+Type: Addition
+
+Goal: Give people who have never read code a path into the puzzles, with 24 lessons, four checkpoints and a capstone that teach reading, tracing and reasoning about real repositories, without running code, typed answers or AI grading.
+
+What should be done: Build the Learn catalog and lesson pages from the curriculum, with server-graded checks, feedback, hints, reveals and private progress. Keep every answer key off the client, keep the lessons apart from puzzle answers and scores, and document how to author more.
+
+What was done (technical):
+- **Content and generation.** Lessons are YAML in `content/lessons/`, against `content/schema/lesson.schema.json`, with `course.yaml` as the one source of order. `ingest/src/ingest/lessons.py` validates them and splits each lesson into its public content and its private `key`. The public part goes to `web/lib/learn/course.generated.ts`. The keys and the capstone rubric go to `web/lib/server/learn/keys.generated.ts`, which imports `server-only`. Both are written by `uv run python -m ingest learn`, and `ingest validate` (so `pnpm validate`) checks lessons too and fails while the generated files are stale. The checks are listed in spec section 6. One of them refuses lesson text that names part of a practice puzzle's answer; a plain-word symbol name such as `request` only counts when it's written as code.
+- **Grading.** `POST /api/learn/:slug/check`, `hint`, `reveal` and `rubric` (`web/lib/server/learn/grade.ts`) grade three kinds of answer exactly: a choice, a selected line, and an ordered sequence. They validate with zod, need a same-origin request, return 409 for a stale revision, and never return a key.
+  - Signed out, checks touch no database.
+  - Signed in, a correct required answer is recorded in `learn_progress` (migration 0010: row-level security on, no client grants, cascades from `users`). A single upsert also completes the lesson when that was the last missing answer.
+  - `GET /api/me/learn` returns the user's own rows, `no-store`.
+- **Pages.** `/learn` lists groups, modules, durations, prerequisites, progress and "Continue learning". `/learn/:slug` renders prose and code on the server with react-markdown (raw HTML skipped) and loads no Monaco. Each check is a client component (`components/learn/Exercise.tsx`):
+  - choices are radio groups;
+  - lines are a radio group of numbered lines;
+  - sequences have keyboard add, move and remove buttons.
+
+  Practice links show only for published puzzles.
+- **Progress in the browser.** `lib/client/learn-progress.ts` loads signed-in progress per account and resets when the person changes. Signed-out progress stays in `cb-learn-progress` and is never imported into an account.
+- **Integration.** "Learn" is in the main navigation, the landing page and the puzzle list, and every lesson is in the sitemap. Deletion lists Learn progress. `/privacy` describes it and goes back to draft with "Needs review" notes, as `lib/legal.ts` requires: spec M12.
+- **Tests.**
+  - `ingest/tests/test_lessons.py` has a fixture for every check, the split, and stale-file detection.
+  - `web/tests/learn.test.ts` covers the generated course, that no client file imports it, grading of every answer and every choice, the API's refusals, guest and signed-in recording, checkpoint and capstone completion, reveals, hints and per-user privacy. `account.test.ts` checks deletion empties `learn_progress`.
+  - `e2e/learn.spec.ts` covers the catalog, a guest lesson, a signed-in checkpoint across sign-out and a second account, the capstone's controls, a scan of every lesson page for private strings, and a 375px phone.
+- **Review.** A separate agent solved all 62 checks from the public course alone and matched every key. It flagged two exit checks whose worked examples stated their answers, a checkpoint that relied on syntax not yet taught, and a few vague prompts; all are fixed. The 11 rewritten checks were blind-solved again.
+
+**Changes from the curriculum, made on purpose:**
+- **Titles** are in sentence case, per the site's style rules.
+- **L08's exit check** is a line selection, and **L24's Trace** an ordered sequence, as the implementation appendix asks.
+- **Two exit checks** were answered by their own worked examples:
+  - L19's now uses `{ type: "Add" }`, an action whose case doesn't match, and L19 now says that string comparison is exact;
+  - L20's guided and exit questions now run from `show` false.
+- **L02** now teaches the conditional operator, which C1's return item needs, using different numbers from C1.
+- **Wording fixes:**
+  - L18's exit check asks which change would wrongly let a non-owner read, not which "bypasses" the check.
+  - L03's module review says exactly what to change.
+  - L23 states its folding rule.
+  - L15 says "the parse step", not "the schema", and states that leading zeros are allowed.
+  - C2 names the `fee` case.
+  - L19 names L05 by its title.
+- **Four guided questions** each change one condition instead of repeating their example: L07, L08, L09 and L16.
+- **New wording I added:** short per-choice feedback on some practice questions, a hint for the capstone's Architecture task, and the learner-facing intro text on the checkpoints.
+- **Left out:** the optional "back to the lesson" link from a puzzle, because the puzzle workspace has no place for it and the browser's back button already returns to the lesson.
+
+Still open:
+- M12: review the privacy policy's Learn notes, and apply migration 0010 to production before deploying.
+- A human blind review of the lessons, and a pilot with a first-time reader, which the curriculum asks for.
+- The time estimates are the curriculum's and haven't been checked with real learners.
+- `next dev` reloads pages in a loop on this machine, because each request writes `.next*/dev/logs/next-development.log` and the dev server reacts to that change. Playwright's e2e server isn't affected.
+
 ## Faster Settings, fewer queries per request, and caching for public data
 
 Type: Change

@@ -67,6 +67,7 @@ mistake: |
   Resetting the accumulator each iteration. Point to the line where it's initialized and ask how
   often that line runs: once, before the loop.
 next: |
-  **Module review.** Before the next lesson, go back to the branches lesson and try its exit check
-  with a cutoff of exactly 3.
+  **Module review.** Before the next lesson, go back to the branches lesson's exit check and change
+  it: set `n` to 3 and the condition to `n >= 3`. Which branch runs now, and why is equality the
+  case that matters?
 references: [R5, R6]

@@ -36,28 +36,28 @@ exercises:
     role: practice
     label: Guided practice
     kind: choice
-    prompt: "`show` is initially true. Which dependency set does the first run record?"
+    prompt: "This time `show` starts **false**. Which dependency set does the first run record?"
     choices:
       - { id: show, label: "`show` only" }
       - { id: count, label: "`count` only" }
       - { id: both, label: "`show` and `count`" }
     key:
-      answer: both
-      explanation: "The condition reads `show`, and the true branch reads `count`, so both are tracked."
+      answer: show
+      explanation: "The condition reads `show`; it's false, so the `else` branch runs and `count` is never read. Only `show` is tracked."
       hints:
-        - Trace every property access, including the one in the condition.
+        - Trace every property access, including the one in the condition, on the branch that runs.
   - id: exit
     role: required
     label: Exit check
     kind: choice
-    prompt: After `show` turns false and the rerun finishes, which write can rerun the effect?
+    prompt: Still starting from `show` false, set `show` to true and let the rerun finish. Which writes can rerun the effect now?
     choices:
       - { id: count, label: "A write to `count` only" }
       - { id: show, label: "A write to `show` only" }
-      - { id: neither, label: Neither }
+      - { id: both, label: "A write to `show` or to `count`" }
     key:
-      answer: show
-      explanation: "The latest run read only `show`, so only a write to `show` is tracked now."
+      answer: both
+      explanation: "The rerun took the true branch, so it read `show` and then `count`. Its dependency set is replaced by both, so a write to either reruns it."
 mistake: |
   Treating every property mentioned in the source as an active dependency. Check what the effect
   actually read on the branch it took.

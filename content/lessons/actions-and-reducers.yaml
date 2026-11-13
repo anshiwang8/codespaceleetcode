@@ -13,7 +13,7 @@ teach: |
   **State** is the current data the system holds. An **action** describes an event. A **reducer**
   computes the next state from the previous state and an action. In this example, the reducer
   returns a new object when it handles an action, and the original object for actions it doesn't
-  know.
+  know. `action.type === "add"` compares strings exactly, capital letters included.
 
   A **store** coordinates dispatching actions; middleware around it may handle asynchronous work.
 code_blocks:
@@ -51,19 +51,19 @@ exercises:
     role: required
     label: Exit check
     kind: choice
-    prompt: 'What does this reducer do when it receives `{ type: "ping" }`?'
+    prompt: 'Starting at `{ count: 4 }`, the reducer receives `{ type: "Add", amount: 1 }`. What does it return?'
     choices:
-      - { id: changes, label: It changes `count` }
-      - { id: network, label: It performs network I/O }
-      - { id: same, label: It returns the same state object }
+      - { id: changes, label: "A new object with `count` 5" }
+      - { id: network, label: It performs network I/O first }
+      - { id: same, label: "The same state object, unchanged" }
     key:
       answer: same
-      explanation: "No branch handles `\"ping\"`, so line 5 returns the original state object, unchanged."
+      explanation: "`\"Add\" === \"add\"` is false: string comparison is exact, case included. No branch handles it, so line 5 returns the original state object."
 mistake: |
   Assuming syntax that looks like mutation always mutates stored state. Some libraries hand the
   reducer a draft wrapper; check whether one is in use before concluding anything.
 transfer: |
-  After reviewing L05, try the puzzle below. Read what it asks rather than assuming this toy
+  After reviewing L05 Collections and mutation, try the puzzle below. Read what it asks rather than assuming this toy
   reducer's rule applies.
 practice: [rtk-find-001]
 references: [R19]

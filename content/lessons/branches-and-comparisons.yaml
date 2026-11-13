@@ -12,6 +12,9 @@ teach: |
   false. Equality doesn't satisfy "greater than" (`>`), but it does satisfy "greater than or equal
   to" (`>=`).
 
+  The **conditional operator** is a compact `if`/`else` that gives a value: `cond ? a : b` is `a`
+  when `cond` is true and `b` otherwise. So `n >= 5 ? n - 1 : n` subtracts 1 only from 5 upward.
+
   A useful reading technique: test a value just below, exactly at, and just above the cutoff.
 code_blocks:
   - id: example

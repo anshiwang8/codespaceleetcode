@@ -14,6 +14,9 @@ teach: |
   turns the result into output text or another representation.
 
   A compiler can have other stages too, and needn't produce machine code.
+
+  The toy folder below has one rule: it replaces `Add(Number(a), Number(b))` with `Number(a + b)`,
+  and leaves every other node as it is.
 code_blocks:
   - id: pipeline
     file: A toy constant folder

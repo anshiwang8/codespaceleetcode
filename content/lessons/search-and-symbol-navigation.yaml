@@ -39,16 +39,16 @@ exercises:
     role: practice
     label: Guided practice
     kind: choice
-    prompt: Which file holds the definition's body?
+    prompt: 'Suppose line 2 instead read `export { basePrice as price } from "./prices";`, and `prices.ts` held only `export { basePrice } from "./cost";`. Which file holds the body now?'
     choices:
       - { id: public, label: "`public.ts`" }
+      - { id: prices, label: "`prices.ts`" }
       - { id: cost, label: "`cost.ts`" }
-      - { id: demo, label: "`demo.ts`" }
     key:
       answer: cost
-      explanation: "`cost.ts` has the block with the `return` expression. `public.ts` only renames it, and `demo.ts` only uses it."
+      explanation: "Each re-export only passes the name along. Follow `public.ts` to `prices.ts` to `cost.ts`, the file with the block holding a `return` expression."
       hints:
-        - Look for the block with a return expression.
+        - Keep following re-exports until you reach a block with a return expression.
   - id: exit
     role: required
     label: Exit check

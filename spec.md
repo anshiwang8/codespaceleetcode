@@ -2,7 +2,7 @@
 
 A LeetCode-style site where every puzzle is set in a real open-source repository, pinned to a commit. Users read the code in a browser IDE and submit a precise answer, which is graded automatically. Each puzzle comes with a written solution.
 
-Scope for v1: **Find**, **Trace**, **Architecture** and **Design** puzzles. No code execution, no bug fixing, no AI mode. **Build** puzzles, where users write and run code, are a v2 plan (section 15), not part of v1.
+Scope for v1: **Find**, **Trace**, **Architecture** and **Design** puzzles, and a read-only **Learn** path of lessons that teaches reading code from the first line up (section 10, "Learn"). No code execution, no bug fixing, no AI mode. **Build** puzzles, where users write and run code, are a v2 plan (section 15), not part of v1.
 
 ---
 
@@ -226,6 +226,14 @@ Only `symbol-unique`, `sequence-edges`, `sequence-alternate-path` and `hint-leak
 - For the localhost MVP, a separate agent that never sees the key may do this solve, recorded as `agent:<name>`. The landing page's limits list says these solves were done by an agent; the puzzle page doesn't. Replace these with human solves before a public launch.
 - `blind-check` gives each solver one graded attempt at each version of a puzzle. The first result is kept in `content/blind-attempts.json`, and a rerun repeats it instead of grading again, so a solver can't guess until it passes. A version is a hash of what `blind-export` shows, never of the key, so rewording a prompt allows a fresh solve. Unknown and malformed answers don't use the attempt. The ledger is committed with the content; if a key was wrong, delete that solver's entry for the puzzle by hand.
 
+
+**Lessons** (`ingest/src/ingest/lessons.py`, run by the same `pnpm validate`)
+- Every file matches `content/schema/lesson.schema.json`, its slug matches its file name, and `course.yaml` lists every lesson exactly once. Codes (L01–L24, C1–C4) are unique, there is exactly one capstone, and each group's checkpoint isn't in a module.
+- A lesson has exactly one required exercise, a checkpoint three and the capstone four. Exercise ids are unique. A choice answer is one of its choices, and feedback is only for wrong ones. A line answer is a non-blank line of a block in the lesson. A sequence answer uses each candidate at most once and leaves at least one out.
+- Prerequisites exist and point only backwards in the course, so they can't loop. Review links and references exist.
+- Inline text (choice labels, explanations, hints, feedback) is one line, with no fences or links. Markdown has no raw HTML or Mermaid, and links are `https://` or site paths.
+- Practice puzzles exist in `content/puzzles/`, and no lesson's public text names part of their answers: an id, path or symbol name, or a plain-word symbol name written as code.
+- `web/lib/learn/course.generated.ts` and `web/lib/server/learn/keys.generated.ts` match what `uv run python -m ingest learn` would write. A content folder with no `lessons/` has nothing to check.
 ---
 
 ## 7. System architecture
@@ -270,8 +278,9 @@ The site runs on localhost with no accounts or keys. Each hosted service has a l
 /ingest              Python: clone, filter, index, upload, seed, validate
 /content
   repos.yaml
-  schema/puzzle.schema.json
+  schema/puzzle.schema.json, schema/lesson.schema.json
   puzzles/<repo-slug>/<id>.yaml
+  lessons/course.yaml, lessons/<slug>.yaml   the Learn path (section 10, "Learn")
   solutions/<id>.md
   blind-attempts.json   each blind solver's first graded result per puzzle version
 /supabase/migrations SQL migrations
@@ -344,7 +353,10 @@ score_events       (id, user_id, puzzle_id, kind, period_kind, period_start,
                     first_try, backfilled, earned_at)                             -- kind: solve | challenge
 user_achievements  (user_id, achievement_id, unlocked_at, recorded_at)
 leaderboard_entries (user_id, public_name, joined_at)                             -- unique lower(public_name)
+learn_progress     (user_id, lesson_slug, revision, correct[], completed_at, updated_at)  -- pk (user_id, lesson_slug, revision)
 ```
+
+`learn_progress` (migration 0010) records, per user and lesson revision, which required Learn exercises the server graded correct and when the last of them was. Only `POST /api/learn/:slug/check` writes it, after a correct answer to a required exercise, in one upsert that also sets `completed_at` when the set is complete. Older revisions' rows stay. Lessons themselves aren't in the database: they're content in the repository (section 10, "Learn"). Row-level security is on with no client grants, and rows go with the `users` row.
 
 Migration 0007 adds the five settings tables. Migration 0008 adds `design` to the check on `puzzles.type`. Migration 0009 adds the six tables for hints, challenges, points, achievements and the leaderboard (section 10), backfills points for earlier solves, and revokes the client grant on `puzzles.hints`, so hint text is only reachable through the server. Each row belongs to one user and is deleted with them; every table has row-level security on and no client grants, since only the server reads them.
 
@@ -423,6 +435,11 @@ Hosted Supabase grants `anon` and `authenticated` everything on each new table, 
 | `/api/leaderboard?period=&page=` | GET | One page (25) of `all`, `daily`, `weekly` or `monthly` rankings of users who joined, and signed in, the user's own standing |
 | `/api/me/leaderboard` | GET, PUT, DELETE | Whether the user is on the leaderboard; join or rename with `{ publicName }`; leave. Changes are same-origin, 20 an hour |
 | `/api/me/achievements` | GET | Every achievement with the user's progress and unlock dates |
+| `/api/me/learn` | GET | The signed-in user's Learn progress: every lesson revision they've worked on, its correct required exercises and when it was completed |
+| `/api/learn/:slug/check` | POST | Grades one Learn exercise: `{ revision, exerciseId, answer }`, where `answer` is `{ kind: "choice", choiceId }`, `{ kind: "line", line }` or `{ kind: "sequence", steps }`. Returns `{ correct, feedback, explanation, progress }`: feedback after a miss, the explanation after a hit, never the key. Signed in, a correct required answer is recorded and `progress` is the lesson's progress; signed out, `progress` is null and nothing touches the database. Same-origin; a revision that isn't the current one is a 409 with the current revision; signed-in checks are limited to 120 a minute |
+| `/api/learn/:slug/hint` | POST | One hint, `{ revision, exerciseId, level }`, on request. Hints cost nothing and aren't recorded |
+| `/api/learn/:slug/reveal` | POST | The answer and explanation for one exercise, when the learner asks. Records and completes nothing |
+| `/api/learn/:slug/rubric` | POST | The capstone's self-assessment rubric, when the learner asks |
 | `/api/puzzles/:slug/solution` | GET | Solution markdown, only if solved |
 | `/api/snapshots/:id/symbols?file=&line=&col=` | GET | Definition + references at a position, capped at 500, with `referencesTruncated` when there are more |
 | `/api/snapshots/:id/symbols/outline?file=` | GET | Symbols in a file |
@@ -463,6 +480,7 @@ Everything private or personal is `Cache-Control: no-store` (`jsonResponse`), an
 
 - **Published puzzle catalog** (puzzles, repos and tags for `/puzzles` and `/api/puzzles`): kept in each server instance's memory for five minutes in production and five seconds elsewhere (`PUZZLE_CATALOG_TTL_MS`, `web/lib/server/memo-cache.ts`). The user's status is joined in per request from their own `progress` rows. After a seed, a newly published puzzle appears within that time, or at once after a deployment; the detail page, submit and hints check `published` live, so an unpublished puzzle can't be used meanwhile.
 - **Code intelligence** (`/api/snapshots/:id/symbols`, `/symbols/outline`, `/search`): public, the same for everyone. `public, max-age=60, s-maxage=600, stale-while-revalidate=600` with an ETag, so a rebuilt snapshot's index shows within about ten minutes and revalidation is a 304. A CDN hit isn't counted against the search rate limit.
+- **Learn:** `/learn` is static. A lesson page renders per request only so its practice links follow what's published (from the cached catalog above); its content is the same for everyone, and progress fills in on the client. Every `/api/learn` response and `/api/me/learn` is `no-store`.
 - **Not cached:** the leaderboard (leaving it must remove a public name at once), challenges (each period's puzzle is stored once and completions are decided on the database's clock), and anything under `/api/me`.
 
 ---
@@ -525,6 +543,18 @@ The site is named **codebases**. The logo is the mark, a curly brace drawn as a 
 ---
 
 
+### Learn
+
+A self-paced course in reading code, at `/learn`: four groups, eight modules, 24 lessons, a checkpoint per group and a capstone (L24). It teaches with small, original, read-only examples and sends learners to existing puzzles for practice. Nothing runs code, nothing is typed as an answer, and nothing is graded by AI: every check is a choice, a selected line, or an ordered list of steps, graded on the server against a key, like puzzles (rules 2 and 3).
+
+- **Content** is YAML in `content/lessons/`: `course.yaml` holds the groups, modules, order and references, and each lesson is `<slug>.yaml` (schema `content/schema/lesson.schema.json`). Everything is public except each exercise's `key` (answer, explanation, hints, per-choice feedback) and the capstone reflection's rubric. `uv run python -m ingest learn` validates the lessons and writes two committed files: `web/lib/learn/course.generated.ts`, the public course, which pages read on the server and pass to the browser one lesson at a time, and `web/lib/server/learn/keys.generated.ts`, which imports `server-only`. `docs/learn-authoring.md` is the authoring guide.
+- **Catalog** (`/learn`): the groups and modules in order, each lesson's duration and suggested prerequisites, a progress count and a "Start" or "Continue learning" link to the first item not completed. Prerequisites are suggestions; nothing is locked.
+- **Lesson** (`/learn/<slug>`): context, outcome, teaching, a worked example whose walkthrough opens on request, a practice question and an exit check (a checkpoint has three required items, the capstone four plus an optional reflection that's never sent or stored), the common mistake, optional practice puzzles, references and previous/next. Prose and code are rendered on the server; only the checks are client components, and Monaco never loads. Line exercises are radio groups of numbered lines; sequence exercises have keyboard add, move and remove buttons.
+- **Checks:** a hint on request, one at a time; feedback after a miss, with a review link on checkpoint and capstone items; the explanation after a hit; "Show the answer" reveals answer and explanation without completing anything. A lesson is complete when all its required exercises are correct at its current revision.
+- **Progress:** signed in, only server-graded correct answers are recorded (`learn_progress`); signed out, progress stays in this browser (`cb-learn-progress`), says so, and is never copied into an account. When a lesson's revision changes, an earlier completion is kept and the lesson shows "Updated since you finished". A practice puzzle, a reveal or reading never completes a lesson, and Learn never affects points, challenges or the leaderboard.
+- **Practice links** name existing puzzles. The validator checks they exist and that no lesson's public text names part of a practice puzzle's answer; the page shows only those that are published.
+- **Entry points:** "Learn" in the main navigation, the landing page's top bar and closing section, and a line under the puzzle list's lede.
+
 ### Motion
 
 Motion uses shared CSS tokens in `web/app/globals.css`: 150ms control feedback, 220ms panel/state feedback, 400ms progress changes, 8px entrance distance and 45ms stagger. Transform and opacity carry movement; color and border transitions communicate control state. No animation library or JavaScript render loop is needed.
@@ -544,7 +574,8 @@ Motion uses shared CSS tokens in `web/app/globals.css`: 150ms control feedback, 
 ## 11. Non-goals for v1
 
 - Bug-fix puzzles and any code execution, including Build puzzles (section 15 is their v2 plan)
-- AI-assisted mode
+- AI-assisted mode, including AI tutoring or grading in Learn
+- Learn lessons that run code or take typed or free-text answers
 - User-submitted puzzles or private repos
 - Partial credit, contests with prizes or entry (the opt-in leaderboard and recurring challenges in section 10 are in scope)
 - Mobile-optimized IDE (read-only puzzle list must work on mobile)
@@ -596,6 +627,7 @@ What's left before a public launch, as of 2026-11-06. When an item lands, mark i
 | M8 | ~~**Protect `main`**~~ **Done 2026-11-08.** Pull request required (no approval count, since the team is small), the five checks required and up to date, no force pushes or deletion. Admins can still bypass in an emergency. | In GitHub → Settings → Branches, add a rule for `main` that requires a pull request and these CI checks from `.github/workflows/ci.yml`: "Web lint, typecheck and unit tests", "Ingest ruff, pyright and tests", "Content validation", "End-to-end (Playwright, next dev)" and "Production smoke test (next build, next start)". | Safe collaboration |
 | M10 | ~~**Set up email delivery**~~ **Done 2026-11-10** through a Gmail account over SMTP, until M1 makes Resend possible. | Contact email confirmation needs it in production. Pick one; until then, production Settings says email can't be sent. Never paste a key or password into git, a chat or a terminal. **Gmail, no domain needed (for now):** 1. Create a Gmail account for the site and turn on 2-Step Verification. 2. Create an app password at `https://myaccount.google.com/apppasswords`. 3. In Vercel → Environment Variables, for Production, set `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=465`, `SMTP_USER` (the Gmail address), `SMTP_PASSWORD` (the app password, marked Sensitive) and `EMAIL_FROM` (`codebases <that address>`), then redeploy. Gmail caps a free account at about 500 recipients a day. **Resend, once M1 gives a domain:** 1. Create a Resend account. 2. Verify a sending domain, such as `mail.<domain>`, by adding the DNS records Resend gives you (SPF, DKIM). 3. Create an API key with sending access only. 4. In Vercel, set `RESEND_API_KEY` and `EMAIL_FROM` (for example `codebases <noreply@mail.<domain>>`) for Production, remove the SMTP values, and redeploy. If the provider changes, update the providers table on `/privacy`. | Contact email in production |
 | M11 | ~~**Re-review the privacy policy and terms**~~ **Done 2026-11-12.** | Approved by the owner on 2026-11-12: every "Needs review" note was resolved and removed, both pages are marked reviewed with that date, and the contact address changed to `mailcodebases@gmail.com`, a mailbox made for the site. Earlier: On 2026-11-11 hints, points, challenges, achievements and the opt-in leaderboard changed both pages, and the terms went back to draft. Each open question is a "Needs review" note on the page: the operator and controller, the leaderboard's legal basis and whether joining should say past points count, the other legal bases (including scoring past solves from history), provider backup and log retention on the plans in use, regions and data processing agreements, the 30-day response and rights list, a minimum age for the public leaderboard, whether existing users must be told of the new uses, the personal Gmail contact address, and in the terms the name rules, withdrawn puzzles' points, governing law and minimum age. Resolve and delete each note, then set `reviewed` and `lastUpdated` for each page in `web/lib/legal.ts`. On 2026-11-12 the storage table gained `cb-signed-in`, the flag that makes the home page offer "To puzzles". Earlier: the settings work changed `/privacy`: contact email (and the provider that sends it: Google's Gmail since 2026-11-10, Resend once there's a domain), profile details, links, birthday, picture, theme preference and browser storage, and deletion now lives in Settings. On 2026-11-08 the page was rewritten in full to match the code: what GitHub shares at sign-in (the email addresses are read and not stored), legal bases, a retention table, every cookie and storage key, providers, security, rights, children and changes. Used email links and expired sessions are deliberately kept until account deletion, as the page says (decided 2026-11-08). The reviewer should also decide whether the page names the operator. Someone accountable reads the new text and, if it's right, sets `PAGES.privacy.reviewed` to true and its `lastUpdated` in `web/lib/legal.ts`. The draft notice shows until then. | Public launch |
+| M12 | **Review the Learn changes to the privacy policy** | Learn (2026-11-13) added lesson progress for signed-in accounts and the `cb-learn-progress` browser key, so `/privacy` is back to draft with "Needs review" notes on what changed. Read them; if the text is right, delete each note and set `PAGES.privacy.reviewed` to true and its `lastUpdated` in `web/lib/legal.ts`. Before deploying Learn, apply migration 0010 to production (`python -m ingest migrate`, as in M2). | Deploying Learn |
 | M9 | **Pick an error-monitoring service** | For C8. Create the account, for example Sentry, and get its DSN. | C8 |
 
 **Per-developer setup (manual, each teammate once).** Follow `README.md`: Node 22 or 24, pnpm, uv, the SCIP indexers, then `snapshot-all`. To use GitHub sign-in locally, each developer creates their **own** OAuth app with the callback `http://127.0.0.1:3000/api/auth/callback/github`, and puts the four values in their own `web/.env.local` (README, "GitHub sign-in"). Don't share one secret between developers. Without that file, GitHub sign-in is off and the localhost dev login still works.

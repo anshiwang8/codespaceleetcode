@@ -262,7 +262,7 @@ export const COURSE: LearnCourse = {
       "prerequisites": [
         "values-and-assignments"
       ],
-      "teach": "A **condition** is evaluated before the body of an `if`. An `else` runs when that condition is\nfalse. Equality doesn't satisfy \"greater than\" (`>`), but it does satisfy \"greater than or equal\nto\" (`>=`).\n\nA useful reading technique: test a value just below, exactly at, and just above the cutoff.\n",
+      "teach": "A **condition** is evaluated before the body of an `if`. An `else` runs when that condition is\nfalse. Equality doesn't satisfy \"greater than\" (`>`), but it does satisfy \"greater than or equal\nto\" (`>=`).\n\nThe **conditional operator** is a compact `if`/`else` that gives a value: `cond ? a : b` is `a`\nwhen `cond` is true and `b` otherwise. So `n >= 5 ? n - 1 : n` subtracts 1 only from 5 upward.\n\nA useful reading technique: test a value just below, exactly at, and just above the cutoff.\n",
       "codeBlocks": [
         {
           "id": "example",
@@ -366,7 +366,7 @@ export const COURSE: LearnCourse = {
         "walkthrough": "| `value` | Added? | `total` after |\n|---|---|---|\n| 3 | yes | 3 |\n| 1 | no | 3 |\n| 4 | yes | 7 |\n\nThe number printed is 7. The middle row matters: skipping an update is still an iteration.\n"
       },
       "mistake": "Resetting the accumulator each iteration. Point to the line where it's initialized and ask how\noften that line runs: once, before the loop.\n",
-      "next": "**Module review.** Before the next lesson, go back to the branches lesson and try its exit check\nwith a cutoff of exactly 3.\n",
+      "next": "**Module review.** Before the next lesson, go back to the branches lesson's exit check and change\nit: set `n` to 3 and the condition to `n >= 3`. Which branch runs now, and why is equality the\ncase that matters?\n",
       "references": [
         "R5",
         "R6"
@@ -707,7 +707,6 @@ export const COURSE: LearnCourse = {
       "prerequisites": [
         "types-and-failure-paths"
       ],
-      "prerequisiteNote": "L06, then this checkpoint",
       "scenario": "Three short items about one function. Each has one accepted answer and can be retried. After a\nmiss, the review link names the lesson to revisit. Three out of three is a sign you're ready for\nthe next group, not a gate: nothing is locked.\n",
       "codeBlocks": [
         {
@@ -847,7 +846,7 @@ export const COURSE: LearnCourse = {
           "role": "practice",
           "label": "Guided practice",
           "kind": "choice",
-          "prompt": "Where do you first verify that the public entry really is `src/public.ts`?",
+          "prompt": "The README says the package's entry is `src/index.ts`, but the manifest names `src/public.ts`. Which file decides what a user's `import` loads?",
           "choices": [
             {
               "id": "package-json",
@@ -939,19 +938,19 @@ export const COURSE: LearnCourse = {
           "role": "practice",
           "label": "Guided practice",
           "kind": "choice",
-          "prompt": "Which file holds the definition's body?",
+          "prompt": "Suppose line 2 instead read `export { basePrice as price } from \"./prices\";`, and `prices.ts` held only `export { basePrice } from \"./cost\";`. Which file holds the body now?",
           "choices": [
             {
               "id": "public",
               "label": "`public.ts`"
             },
             {
-              "id": "cost",
-              "label": "`cost.ts`"
+              "id": "prices",
+              "label": "`prices.ts`"
             },
             {
-              "id": "demo",
-              "label": "`demo.ts`"
+              "id": "cost",
+              "label": "`cost.ts`"
             }
           ],
           "hintCount": 1
@@ -1019,19 +1018,19 @@ export const COURSE: LearnCourse = {
           "role": "practice",
           "label": "Guided practice",
           "kind": "choice",
-          "prompt": "Which case tests the default?",
+          "prompt": "A third assertion is added: `assertEqual(labelPrice(3, undefined), \"3.00\");`. Which assertions exercise the default for `digits`?",
           "choices": [
-            {
-              "id": "both",
-              "label": "Both"
-            },
-            {
-              "id": "first",
-              "label": "The first only"
-            },
             {
               "id": "second",
               "label": "The second only"
+            },
+            {
+              "id": "second-third",
+              "label": "The second and the third"
+            },
+            {
+              "id": "all",
+              "label": "All three"
             }
           ],
           "hintCount": 1
@@ -1349,7 +1348,6 @@ export const COURSE: LearnCourse = {
       "prerequisites": [
         "interfaces-and-dispatch"
       ],
-      "prerequisiteNote": "L12, then this checkpoint",
       "scenario": "Three files, three items. Each item has one accepted answer and can be retried; after a miss,\nthe review link names the lesson to revisit. Nothing is locked by your score.\n",
       "codeBlocks": [
         {
@@ -1401,7 +1399,7 @@ export const COURSE: LearnCourse = {
           "role": "required",
           "label": "2. Evidence",
           "kind": "choice",
-          "prompt": "Which case does the assertion cover?",
+          "prompt": "Which `fee` case does the assertion in `pricing.test.ts` cover?",
           "choices": [
             {
               "id": "omitted",
@@ -1666,7 +1664,7 @@ export const COURSE: LearnCourse = {
           "id": "pipeline",
           "file": "A toy endpoint",
           "lang": "text",
-          "source": "raw query value → parse decimal digits → check 1 through 100\naccepted number → resolve store provider → store.read(number)\nparse or range failure → return 400 before resolving the store\n"
+          "source": "raw query value → parse decimal digits (leading zeros allowed) → check 1 through 100\naccepted number → resolve store provider → store.read(number)\nparse or range failure → return 400 before resolving the store\n"
         }
       ],
       "example": {
@@ -1674,7 +1672,7 @@ export const COURSE: LearnCourse = {
         "blocks": [
           "pipeline"
         ],
-        "walkthrough": "The schema accepts decimal digit strings for integers from 1 to 100, and parses `\"08\"` as 8.\n8 is in range, so the injected store receives `read(8)`. The toy order is parse, validate,\nresolve the store, handle; real frameworks may interleave these steps.\n"
+        "walkthrough": "The parse step accepts decimal digit strings, leading zeros included, and turns `\"08\"` into 8.\nThe range check then accepts 8, so the injected store receives `read(8)`. The toy order is parse, validate,\nresolve the store, handle; real frameworks may interleave these steps.\n"
       },
       "mistake": "Assuming that successful parsing guarantees acceptable data, or that TypeScript checks an\nincoming HTTP payload.\n",
       "transfer": "Try one of the puzzles below.",
@@ -1787,19 +1785,19 @@ export const COURSE: LearnCourse = {
           "role": "practice",
           "label": "Guided practice",
           "kind": "choice",
-          "prompt": "Under the toy policy, which rule strips `Authorization`?",
+          "prompt": "A 303 sends the client from `https://a.example/submit` to `http://a.example/receipt`: the same host, over plain HTTP. Under the toy policy, what happens to `Authorization`?",
           "choices": [
             {
-              "id": "every-303",
-              "label": "Every 303"
-            },
-            {
-              "id": "every-get",
-              "label": "Every GET"
+              "id": "kept",
+              "label": "It's kept, because the host is the same"
             },
             {
               "id": "changed-origin",
-              "label": "A changed origin"
+              "label": "It's removed, because the origin changed"
+            },
+            {
+              "id": "refused",
+              "label": "The client refuses to follow the redirect"
             }
           ],
           "hintCount": 1
@@ -1996,11 +1994,11 @@ export const COURSE: LearnCourse = {
           "role": "required",
           "label": "Exit check",
           "kind": "choice",
-          "prompt": "Which change would bypass the required resource check?",
+          "prompt": "Which change would wrongly let a signed-in user who isn't the owner read the document?",
           "choices": [
             {
               "id": "hide",
-              "label": "Hiding the Read button"
+              "label": "Hiding the Read button in the page"
             },
             {
               "id": "verify",
@@ -2033,7 +2031,6 @@ export const COURSE: LearnCourse = {
       "prerequisites": [
         "authentication-and-authorization"
       ],
-      "prerequisiteNote": "L18, then this checkpoint",
       "scenario": "A toy endpoint parses a decimal item id and rejects non-numeric input with 400. It then checks\nownership using an already authenticated session: a valid user who isn't the owner gets 403,\nbefore any upstream call. Finally it reads an upstream service. An upstream timeout says only\nthat the local caller didn't get a result before its deadline.\n\nEach item has one accepted answer and can be retried; after a miss, the review link names the\nlesson to revisit.\n",
       "after": "For each item, say which rule decided it. If your explanation assumes a behavior the case doesn't\nstate, rewrite it from the stated evidence.\n",
       "exercises": [
@@ -2136,7 +2133,7 @@ export const COURSE: LearnCourse = {
       "topics": [
         "state-management"
       ],
-      "teach": "**State** is the current data the system holds. An **action** describes an event. A **reducer**\ncomputes the next state from the previous state and an action. In this example, the reducer\nreturns a new object when it handles an action, and the original object for actions it doesn't\nknow.\n\nA **store** coordinates dispatching actions; middleware around it may handle asynchronous work.\n",
+      "teach": "**State** is the current data the system holds. An **action** describes an event. A **reducer**\ncomputes the next state from the previous state and an action. In this example, the reducer\nreturns a new object when it handles an action, and the original object for actions it doesn't\nknow. `action.type === \"add\"` compares strings exactly, capital letters included.\n\nA **store** coordinates dispatching actions; middleware around it may handle asynchronous work.\n",
       "codeBlocks": [
         {
           "id": "example",
@@ -2152,7 +2149,7 @@ export const COURSE: LearnCourse = {
         "walkthrough": "The first action returns a new object with `count` 6. The second isn't handled, so the reducer\nreturns the existing object unchanged. Neither action implies a network request.\n"
       },
       "mistake": "Assuming syntax that looks like mutation always mutates stored state. Some libraries hand the\nreducer a draft wrapper; check whether one is in use before concluding anything.\n",
-      "transfer": "After reviewing L05, try the puzzle below. Read what it asks rather than assuming this toy\nreducer's rule applies.\n",
+      "transfer": "After reviewing L05 Collections and mutation, try the puzzle below. Read what it asks rather than assuming this toy\nreducer's rule applies.\n",
       "practice": [
         "rtk-find-001"
       ],
@@ -2187,19 +2184,19 @@ export const COURSE: LearnCourse = {
           "role": "required",
           "label": "Exit check",
           "kind": "choice",
-          "prompt": "What does this reducer do when it receives `{ type: \"ping\" }`?",
+          "prompt": "Starting at `{ count: 4 }`, the reducer receives `{ type: \"Add\", amount: 1 }`. What does it return?",
           "choices": [
             {
               "id": "changes",
-              "label": "It changes `count`"
+              "label": "A new object with `count` 5"
             },
             {
               "id": "network",
-              "label": "It performs network I/O"
+              "label": "It performs network I/O first"
             },
             {
               "id": "same",
-              "label": "It returns the same state object"
+              "label": "The same state object, unchanged"
             }
           ],
           "hintCount": 0
@@ -2256,7 +2253,7 @@ export const COURSE: LearnCourse = {
           "role": "practice",
           "label": "Guided practice",
           "kind": "choice",
-          "prompt": "`show` is initially true. Which dependency set does the first run record?",
+          "prompt": "This time `show` starts **false**. Which dependency set does the first run record?",
           "choices": [
             {
               "id": "show",
@@ -2278,7 +2275,7 @@ export const COURSE: LearnCourse = {
           "role": "required",
           "label": "Exit check",
           "kind": "choice",
-          "prompt": "After `show` turns false and the rerun finishes, which write can rerun the effect?",
+          "prompt": "Still starting from `show` false, set `show` to true and let the rerun finish. Which writes can rerun the effect now?",
           "choices": [
             {
               "id": "count",
@@ -2289,8 +2286,8 @@ export const COURSE: LearnCourse = {
               "label": "A write to `show` only"
             },
             {
-              "id": "neither",
-              "label": "Neither"
+              "id": "both",
+              "label": "A write to `show` or to `count`"
             }
           ],
           "hintCount": 0
@@ -2507,7 +2504,7 @@ export const COURSE: LearnCourse = {
       "topics": [
         "compilers"
       ],
-      "teach": "A **parser** reads input text and builds structure. An **abstract syntax tree** (AST)\nrepresents the meaningful parts of the input. A **transform** changes the tree. A **generator**\nturns the result into output text or another representation.\n\nA compiler can have other stages too, and needn't produce machine code.\n",
+      "teach": "A **parser** reads input text and builds structure. An **abstract syntax tree** (AST)\nrepresents the meaningful parts of the input. A **transform** changes the tree. A **generator**\nturns the result into output text or another representation.\n\nA compiler can have other stages too, and needn't produce machine code.\n\nThe toy folder below has one rule: it replaces `Add(Number(a), Number(b))` with `Number(a + b)`,\nand leaves every other node as it is.\n",
       "codeBlocks": [
         {
           "id": "pipeline",
@@ -2598,7 +2595,6 @@ export const COURSE: LearnCourse = {
       "prerequisites": [
         "parsing-and-code-generation"
       ],
-      "prerequisiteNote": "L23, before the capstone",
       "scenario": "A toy app stores a count, displays it only while a switch is on, and caches a separate report\nwith a TTL of 30 seconds. A reducer increments the count on `add`. The view tracks only the\nproperties it read in its latest completed run. The report cache is well below its capacity.\n\nEach item has one accepted answer and can be retried; after a miss, the review link names the\nlesson to revisit.\n",
       "after": "**Review beyond the score.** Explain which rule answers each question. If your explanation\nassumes a behavior the case doesn't state, rewrite it using the stated evidence. Then move on to\nthe capstone, after reviewing any misses.\n",
       "exercises": [

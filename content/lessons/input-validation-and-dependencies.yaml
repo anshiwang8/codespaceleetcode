@@ -20,15 +20,15 @@ code_blocks:
     file: A toy endpoint
     lang: text
     source: |
-      raw query value → parse decimal digits → check 1 through 100
+      raw query value → parse decimal digits (leading zeros allowed) → check 1 through 100
       accepted number → resolve store provider → store.read(number)
       parse or range failure → return 400 before resolving the store
 example:
   prompt: Follow the raw value `"08"` through the stages. What does the store receive?
   blocks: [pipeline]
   walkthrough: |
-    The schema accepts decimal digit strings for integers from 1 to 100, and parses `"08"` as 8.
-    8 is in range, so the injected store receives `read(8)`. The toy order is parse, validate,
+    The parse step accepts decimal digit strings, leading zeros included, and turns `"08"` into 8.
+    The range check then accepts 8, so the injected store receives `read(8)`. The toy order is parse, validate,
     resolve the store, handle; real frameworks may interleave these steps.
 exercises:
   - id: guided

@@ -37,7 +37,7 @@ exercises:
     role: practice
     label: Guided practice
     kind: choice
-    prompt: Where do you first verify that the public entry really is `src/public.ts`?
+    prompt: The README says the package's entry is `src/index.ts`, but the manifest names `src/public.ts`. Which file decides what a user's `import` loads?
     choices:
       - { id: package-json, label: "`package.json`" }
       - { id: readme, label: "`README.md`" }

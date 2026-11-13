@@ -33,16 +33,16 @@ exercises:
     role: practice
     label: Guided practice
     kind: choice
-    prompt: Which case tests the default?
+    prompt: 'A third assertion is added: `assertEqual(labelPrice(3, undefined), "3.00");`. Which assertions exercise the default for `digits`?'
     choices:
-      - { id: both, label: Both }
-      - { id: first, label: The first only }
       - { id: second, label: The second only }
+      - { id: second-third, label: The second and the third }
+      - { id: all, label: All three }
     key:
-      answer: second
-      explanation: "Only `labelPrice(3)` omits the second argument, so only it uses `digits = 2`."
+      answer: second-third
+      explanation: "A default applies when the argument is absent or `undefined`, so `labelPrice(3)` and `labelPrice(3, undefined)` both use `digits = 2`. The first passes 1."
       hints:
-        - Look for the call that leaves out the second argument.
+        - Reread when a default parameter applies, then check each call's second argument.
   - id: exit
     role: required
     label: Exit check

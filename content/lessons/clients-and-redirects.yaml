@@ -36,16 +36,16 @@ exercises:
     role: practice
     label: Guided practice
     kind: choice
-    prompt: Under the toy policy, which rule strips `Authorization`?
+    prompt: 'A 303 sends the client from `https://a.example/submit` to `http://a.example/receipt`: the same host, over plain HTTP. Under the toy policy, what happens to `Authorization`?'
     choices:
-      - { id: every-303, label: Every 303 }
-      - { id: every-get, label: Every GET }
-      - { id: changed-origin, label: A changed origin }
+      - { id: kept, label: "It's kept, because the host is the same" }
+      - { id: changed-origin, label: "It's removed, because the origin changed" }
+      - { id: refused, label: The client refuses to follow the redirect }
     key:
       answer: changed-origin
-      explanation: "The method change and the credential removal are separate decisions; credentials are dropped because the origin changed."
+      explanation: "An origin is the scheme, host and port together. `https` to `http` changes the scheme (and the default port), so the origin changed and the toy policy removes `Authorization`."
       hints:
-        - Treat the method and the credentials as separate decisions.
+        - Recall which three parts make up an origin.
   - id: exit
     role: required
     label: Exit check

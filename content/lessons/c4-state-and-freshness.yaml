@@ -7,7 +7,6 @@ minutes: 12
 summary: Compare a state transition, a reactive dependency and a cache expiry, and why each can matter.
 objective: Use the stated rules to explain a reducer step, an effect rerun, and a cache miss.
 prerequisites: [parsing-and-code-generation]
-prerequisite_note: L23, before the capstone
 scenario: |
   A toy app stores a count, displays it only while a switch is on, and caches a separate report
   with a TTL of 30 seconds. A reducer increments the count on `add`. The view tracks only the

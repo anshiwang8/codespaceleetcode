@@ -7,7 +7,6 @@ minutes: 8
 summary: Predict a receipt function by hand, and explain the one input that changes its branch.
 objective: Trace a loop, a branch and a return by hand, without running the code.
 prerequisites: [types-and-failure-paths]
-prerequisite_note: L06, then this checkpoint
 scenario: |
   Three short items about one function. Each has one accepted answer and can be retried. After a
   miss, the review link names the lesson to revisit. Three out of three is a sign you're ready for

@@ -223,9 +223,9 @@ export const KEYS: Record<string, LessonKeys> = {
         "kind": "choice",
         "role": "practice",
         "answer": "cost",
-        "explanation": "`cost.ts` has the block with the `return` expression. `public.ts` only renames it, and `demo.ts` only uses it.",
+        "explanation": "Each re-export only passes the name along. Follow `public.ts` to `prices.ts` to `cost.ts`, the file with the block holding a `return` expression.",
         "hints": [
-          "Look for the block with a return expression."
+          "Keep following re-exports until you reach a block with a return expression."
         ],
         "feedback": {}
       },
@@ -245,10 +245,10 @@ export const KEYS: Record<string, LessonKeys> = {
       "guided": {
         "kind": "choice",
         "role": "practice",
-        "answer": "second",
-        "explanation": "Only `labelPrice(3)` omits the second argument, so only it uses `digits = 2`.",
+        "answer": "second-third",
+        "explanation": "A default applies when the argument is absent or `undefined`, so `labelPrice(3)` and `labelPrice(3, undefined)` both use `digits = 2`. The first passes 1.",
         "hints": [
-          "Look for the call that leaves out the second argument."
+          "Reread when a default parameter applies, then check each call's second argument."
         ],
         "feedback": {}
       },
@@ -436,9 +436,9 @@ export const KEYS: Record<string, LessonKeys> = {
         "kind": "choice",
         "role": "practice",
         "answer": "changed-origin",
-        "explanation": "The method change and the credential removal are separate decisions; credentials are dropped because the origin changed.",
+        "explanation": "An origin is the scheme, host and port together. `https` to `http` changes the scheme (and the default port), so the origin changed and the toy policy removes `Authorization`.",
         "hints": [
-          "Treat the method and the credentials as separate decisions."
+          "Recall which three parts make up an origin."
         ],
         "feedback": {}
       },
@@ -492,7 +492,7 @@ export const KEYS: Record<string, LessonKeys> = {
         "kind": "choice",
         "role": "required",
         "answer": "any-session",
-        "explanation": "That authenticates but never checks ownership. Hiding a button changes nothing on the server, and verifying ownership is the check itself.",
+        "explanation": "Reading whenever a session exists authenticates but never checks ownership, so any signed-in user gets in. Hiding a button changes nothing on the server, and verifying ownership is the check itself.",
         "hints": [],
         "feedback": {}
       }
@@ -544,7 +544,7 @@ export const KEYS: Record<string, LessonKeys> = {
         "kind": "choice",
         "role": "required",
         "answer": "same",
-        "explanation": "No branch handles `\"ping\"`, so line 5 returns the original state object, unchanged.",
+        "explanation": "`\"Add\" === \"add\"` is false: string comparison is exact, case included. No branch handles it, so line 5 returns the original state object.",
         "hints": [],
         "feedback": {}
       }
@@ -556,18 +556,18 @@ export const KEYS: Record<string, LessonKeys> = {
       "guided": {
         "kind": "choice",
         "role": "practice",
-        "answer": "both",
-        "explanation": "The condition reads `show`, and the true branch reads `count`, so both are tracked.",
+        "answer": "show",
+        "explanation": "The condition reads `show`; it's false, so the `else` branch runs and `count` is never read. Only `show` is tracked.",
         "hints": [
-          "Trace every property access, including the one in the condition."
+          "Trace every property access, including the one in the condition, on the branch that runs."
         ],
         "feedback": {}
       },
       "exit": {
         "kind": "choice",
         "role": "required",
-        "answer": "show",
-        "explanation": "The latest run read only `show`, so only a write to `show` is tracked now.",
+        "answer": "both",
+        "explanation": "The rerun took the true branch, so it read `show` and then `count`. Its dependency set is replaced by both, so a write to either reruns it.",
         "hints": [],
         "feedback": {}
       }
