@@ -1,0 +1,201 @@
+{
+  "label": "after, no added latency",
+  "date": "2026-11-13T08:39:41.748Z",
+  "environment": {
+    "server": "next start (production build) on 127.0.0.1",
+    "database": "local embedded Postgres",
+    "addedQueryLatencyMs": 0,
+    "poolMax": 3,
+    "runsPerRoute": 20,
+    "node": "v26.13.0",
+    "platform": "darwin arm64"
+  },
+  "routes": [
+    {
+      "name": "Settings page",
+      "path": "/settings",
+      "signedIn": true,
+      "ttfbMedian": 3.8,
+      "ttfbP90": 5.4,
+      "totalMedian": 5.7,
+      "queriesMedian": 2,
+      "queryMsMedian": 0.7,
+      "authMsMedian": 1.7,
+      "bytesMedian": 55193,
+      "sqlSample": [
+        "select \"primary\".*, \"join_auth_users\".\"name\" as \"_joined_auth_users_name\", \"join_auth_user",
+        "select p.display_name, p.pronouns, p.bio, to_char(p.birthday, 'YYYY-MM-DD') as birthday, p"
+      ]
+    },
+    {
+      "name": "Profile page",
+      "path": "/profile",
+      "signedIn": true,
+      "ttfbMedian": 3.2,
+      "ttfbP90": 3.7,
+      "totalMedian": 11.2,
+      "queriesMedian": 16,
+      "queryMsMedian": 6.1,
+      "authMsMedian": 1.6,
+      "bytesMedian": 218134,
+      "sqlSample": [
+        "select \"primary\".*, \"join_auth_users\".\"name\" as \"_joined_auth_users_name\", \"join_auth_user",
+        "select u.github_login, u.created_at, p.display_name, p.pronouns, p.bio, p.links, av.versio",
+        "select count(*)::int as count from submissions s join puzzles p on p.id = s.puzzle_id wher",
+        "select p.type, p.difficulty, p.tags, r.slug as repo_slug, r.language, pr.status from puzzl",
+        "select to_char( least( u.created_at, coalesce( (select min(s.created_at) from submissions ",
+        "select p.slug, p.title, p.type, p.difficulty, r.slug as repo_slug, pr.attempts, last.last_",
+        "with active as ( select distinct (s.created_at at time zone 'UTC')::date as day from submi",
+        "select s.id::text as id, p.slug, p.title, r.slug as repo_slug, p.type, p.difficulty, s.cor",
+        "insert into score_events (user_id, puzzle_id, kind, base_points, first_try_bonus, hint_pen",
+        "select to_char(s.created_at at time zone 'UTC', 'YYYY-MM-DD') as date, count(*)::int as su",
+        "select to_char(coalesce(first.at, pr.solved_at) at time zone 'UTC', 'YYYY-MM-DD') as date,",
+        "select period_kind, to_char(period_start, 'YYYY-MM-DD') as day, completed_at from challeng",
+        "select e.earned_at, p.difficulty, p.type, s.repo_id::text as repo, e.first_try, (not e.bac",
+        "select to_char((s.created_at at time zone 'UTC')::date, 'YYYY-MM-DD') as day, min(s.create",
+        "select count(distinct type)::int as count from puzzles where published",
+        "select achievement_id, unlocked_at from user_achievements where user_id = $1"
+      ]
+    },
+    {
+      "name": "Puzzle list page",
+      "path": "/puzzles",
+      "signedIn": true,
+      "ttfbMedian": 3.4,
+      "ttfbP90": 3.9,
+      "totalMedian": 19.6,
+      "queriesMedian": 8,
+      "queryMsMedian": 2.3,
+      "authMsMedian": 1.7,
+      "bytesMedian": 403365,
+      "sqlSample": [
+        "select \"primary\".*, \"join_auth_users\".\"name\" as \"_joined_auth_users_name\", \"join_auth_user",
+        "select puzzle_id::text as puzzle_id, status from progress where user_id = $1",
+        "insert into rate_limits as r (key, count, window_start) values ($1, 1, coalesce($3::timest",
+        "select now() as now",
+        "select count(*)::int as count from challenge_assignments where (period_kind, period_start)",
+        "select a.period_kind, to_char(a.period_start, 'YYYY-MM-DD') as period_start, p.slug, p.tit",
+        "select to_char(period_start, 'YYYY-MM-DD') as day from challenge_completions where user_id",
+        "select period_kind, count(*)::int as count from challenge_completions where user_id = $1 g"
+      ]
+    },
+    {
+      "name": "Puzzle page",
+      "path": "/puzzles/hono-trace-002",
+      "signedIn": true,
+      "ttfbMedian": 5.3,
+      "ttfbP90": 11.5,
+      "totalMedian": 6.2,
+      "queriesMedian": 2,
+      "queryMsMedian": 0.8,
+      "authMsMedian": 1.5,
+      "bytesMedian": 34655,
+      "sqlSample": [
+        "select \"primary\".*, \"join_auth_users\".\"name\" as \"_joined_auth_users_name\", \"join_auth_user",
+        "select p.slug, p.type, p.difficulty, p.title, p.prompt, p.answer_kind, p.set_count, p.choi"
+      ]
+    },
+    {
+      "name": "Leaderboard page",
+      "path": "/leaderboard",
+      "signedIn": true,
+      "ttfbMedian": 2.9,
+      "ttfbP90": 4.1,
+      "totalMedian": 4.9,
+      "queriesMedian": 5,
+      "queryMsMedian": 1.5,
+      "authMsMedian": 1.4,
+      "bytesMedian": 40545,
+      "sqlSample": [
+        "select \"primary\".*, \"join_auth_users\".\"name\" as \"_joined_auth_users_name\", \"join_auth_user",
+        "insert into rate_limits as r (key, count, window_start) values ($1, 1, coalesce($3::timest",
+        "select now() as now",
+        "insert into score_events (user_id, puzzle_id, kind, base_points, first_try_bonus, hint_pen",
+        "with totals as ( select e.user_id, sum(e.points)::int as points, (count(*) filter (where e"
+      ]
+    },
+    {
+      "name": "GET /api/me",
+      "path": "/api/me",
+      "signedIn": true,
+      "ttfbMedian": 2.1,
+      "ttfbP90": 2.8,
+      "totalMedian": 2.1,
+      "queriesMedian": 2,
+      "queryMsMedian": 0.5,
+      "authMsMedian": 0.7,
+      "bytesMedian": 225,
+      "sqlSample": [
+        "select \"primary\".*, \"join_auth_users\".\"name\" as \"_joined_auth_users_name\", \"join_auth_user",
+        "select p.display_name, a.version, pref.theme_mode, pref.theme_id, pref.favorite_themes, ex"
+      ]
+    },
+    {
+      "name": "GET /api/puzzles",
+      "path": "/api/puzzles",
+      "signedIn": true,
+      "ttfbMedian": 4.7,
+      "ttfbP90": 6.9,
+      "totalMedian": 4.9,
+      "queriesMedian": 2,
+      "queryMsMedian": 0.9,
+      "authMsMedian": 1.9,
+      "bytesMedian": 31077,
+      "sqlSample": [
+        "select \"primary\".*, \"join_auth_users\".\"name\" as \"_joined_auth_users_name\", \"join_auth_user",
+        "select puzzle_id::text as puzzle_id, status from progress where user_id = $1"
+      ]
+    },
+    {
+      "name": "GET /api/leaderboard",
+      "path": "/api/leaderboard",
+      "signedIn": true,
+      "ttfbMedian": 5,
+      "ttfbP90": 6.4,
+      "totalMedian": 5.1,
+      "queriesMedian": 5,
+      "queryMsMedian": 2.5,
+      "authMsMedian": 1.2,
+      "bytesMedian": 202,
+      "sqlSample": [
+        "select \"primary\".*, \"join_auth_users\".\"name\" as \"_joined_auth_users_name\", \"join_auth_user",
+        "insert into rate_limits as r (key, count, window_start) values ($1, 1, coalesce($3::timest",
+        "select now() as now",
+        "insert into score_events (user_id, puzzle_id, kind, base_points, first_try_bonus, hint_pen",
+        "with totals as ( select e.user_id, sum(e.points)::int as points, (count(*) filter (where e"
+      ]
+    },
+    {
+      "name": "GET /api/me (signed out)",
+      "path": "/api/me",
+      "signedIn": false,
+      "ttfbMedian": 3.6,
+      "ttfbP90": 4.6,
+      "totalMedian": 3.9,
+      "queriesMedian": 0,
+      "queryMsMedian": 0,
+      "authMsMedian": 0,
+      "bytesMedian": 48,
+      "sqlSample": []
+    },
+    {
+      "name": "Puzzle list page (signed out)",
+      "path": "/puzzles",
+      "signedIn": false,
+      "ttfbMedian": 2.6,
+      "ttfbP90": 4.4,
+      "totalMedian": 11.1,
+      "queriesMedian": 4,
+      "queryMsMedian": 1.5,
+      "authMsMedian": 0,
+      "bytesMedian": 248933,
+      "sqlSample": [
+        "insert into rate_limits as r (key, count, window_start) values ($1, 1, coalesce($3::timest",
+        "select now() as now",
+        "select count(*)::int as count from challenge_assignments where (period_kind, period_start)",
+        "select a.period_kind, to_char(a.period_start, 'YYYY-MM-DD') as period_start, p.slug, p.tit"
+      ]
+    }
+  ],
+  "browser": null
+}
