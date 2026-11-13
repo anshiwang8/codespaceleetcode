@@ -527,3 +527,13 @@
     justify-content: space-between;
   }
 }
+
+/* The loading screen's placeholders (app/(app)/leaderboard/loading.tsx). */
+.skeletonTabs {
+  width: min(360px, 100%);
+  height: 36px;
+}
+
+.skeletonRows {
+  height: 420px;
+}

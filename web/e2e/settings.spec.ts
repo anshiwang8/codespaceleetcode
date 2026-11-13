@@ -255,19 +255,19 @@ test.describe("settings", () => {
     await page.goto("/settings");
     await expect(page.getByTestId("account-menu-button").getByTestId("avatar")).toHaveAttribute("data-kind", "silhouette");
     const picture = await sharp({ create: { width: 400, height: 300, channels: 3, background: "#cc3366" } }).png().toBuffer();
-    await page.getByTestId("avatar-file").setInputFiles({ name: "me.png", mimeType: "image/png", buffer: picture });
-    const frame = page.getByTestId("avatar-crop");
+    await visible(page, "avatar-file").setInputFiles({ name: "me.png", mimeType: "image/png", buffer: picture });
+    const frame = visible(page, "avatar-crop");
     await expect(frame).toBeVisible();
-    await page.getByTestId("avatar-zoom").fill("2");
+    await visible(page, "avatar-zoom").fill("2");
     await frame.focus();
     await page.keyboard.press("ArrowRight");
     // Cancel leaves the saved picture (none) alone.
-    await page.getByTestId("avatar-cancel").click();
-    await expect(page.getByTestId("avatar-editor").getByTestId("avatar")).toHaveAttribute("data-kind", "silhouette");
+    await visible(page, "avatar-cancel").click();
+    await expect(visible(page, "avatar-editor").getByTestId("avatar")).toHaveAttribute("data-kind", "silhouette");
 
-    await page.getByTestId("avatar-file").setInputFiles({ name: "me.png", mimeType: "image/png", buffer: picture });
-    await page.getByTestId("avatar-save").click();
-    await expect(page.getByTestId("avatar-status")).toHaveText("Picture saved.");
+    await visible(page, "avatar-file").setInputFiles({ name: "me.png", mimeType: "image/png", buffer: picture });
+    await visible(page, "avatar-save").click();
+    await expect(visible(page, "avatar-status")).toHaveText("Picture saved.");
     const header = page.getByTestId("account-menu-button").getByTestId("avatar");
     await expect(header).toHaveAttribute("data-kind", "picture");
     await expect.poll(() => header.locator("img").evaluate((image) => (image as HTMLImageElement).naturalWidth)).toBe(256);
@@ -286,8 +286,8 @@ test.describe("settings", () => {
     await page.unrouteAll();
 
     await page.goto("/settings");
-    await page.getByTestId("avatar-remove").click();
-    await expect(page.getByTestId("avatar-status")).toContainText("Picture removed");
+    await visible(page, "avatar-remove").click();
+    await expect(visible(page, "avatar-status")).toContainText("Picture removed");
     await expect(page.getByTestId("account-menu-button").getByTestId("avatar")).toHaveAttribute("data-kind", "silhouette");
   });
 
@@ -300,9 +300,9 @@ test.describe("settings", () => {
     await expect(visible(page, "email-setup-banner")).toBeVisible();
     await visible(page, "email-setup-banner").getByRole("link", { name: "Add email" }).click();
     await expect(page).toHaveURL(/\/settings\/email$/);
-    await page.getByTestId("email-input").fill(first);
-    await page.getByTestId("email-submit").click();
-    await expect(page.getByTestId("email-pending")).toContainText(first);
+    await visible(page, "email-input").fill(first);
+    await visible(page, "email-submit").click();
+    await expect(visible(page, "email-pending")).toContainText(first);
 
     const link = /https?:\/\/\S+token=\S+/.exec(outboxFor(first).at(-1)?.text ?? "")?.[0] ?? "";
     expect(link).toContain("/settings/email/verify?token=");
@@ -310,18 +310,18 @@ test.describe("settings", () => {
     await expect(page.getByTestId("verify-done")).toContainText(first);
     // The token is gone from the address bar.
     expect(new URL(page.url()).search).toBe("");
-    await expect(page.getByTestId("email-setup-banner")).toHaveCount(0);
+    await expect(visible(page, "email-setup-banner")).toHaveCount(0);
     // A link works once.
     await page.goto(link);
     await expect(page.getByTestId("verify-failed")).toContainText("isn't valid");
 
     // Change: the verified address stays until the new one is confirmed.
     await page.goto("/settings#email");
-    await page.getByTestId("email-change").click();
-    await page.getByTestId("email-input").fill(second);
-    await page.getByTestId("email-submit").click();
-    await expect(page.getByTestId("email-current")).toContainText(first);
-    await expect(page.getByTestId("email-pending")).toContainText(second);
+    await visible(page, "email-change").click();
+    await visible(page, "email-input").fill(second);
+    await visible(page, "email-submit").click();
+    await expect(visible(page, "email-current")).toContainText(first);
+    await expect(visible(page, "email-pending")).toContainText(second);
 
     // An expired link says so, and offers a new one.
     const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
@@ -335,8 +335,8 @@ test.describe("settings", () => {
     await page.goto(expired);
     await expect(page.getByTestId("verify-failed")).toContainText("expired");
     await page.goto("/settings#email");
-    await page.getByTestId("email-resend").click();
-    await expect(page.getByTestId("email-message")).toContainText("new link");
+    await visible(page, "email-resend").click();
+    await expect(visible(page, "email-message")).toContainText("new link");
     const fresh = /https?:\/\/\S+token=\S+/.exec(outboxFor(second).at(-1)?.text ?? "")?.[0] ?? "";
     await page.goto(fresh);
     await expect(page.getByTestId("verify-done")).toContainText(second);
