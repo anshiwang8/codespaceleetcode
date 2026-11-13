@@ -24,7 +24,7 @@ code_blocks:
 example:
   prompt: Here `age` is 18 and `hasPass` is `false`. What is `label` after the `if`? Then try it with `hasPass` set to `true`.
   blocks: [example]
-  explanation: |
+  walkthrough: |
     With `age = 18`, the first comparison, `age >= 18`, is true. The second term is false, so the
     whole `&&` condition is false and `label` stays `"wait"`. With `hasPass = true`, both parts are
     true and `label` changes to `"enter"`.

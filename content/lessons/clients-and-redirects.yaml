@@ -26,7 +26,7 @@ code_blocks:
 example:
   prompt: 'The client sends `POST https://a.example/submit` and gets a 303 with `Location: https://b.example/receipt`. What is the next request?'
   blocks: [policy]
-  explanation: |
+  walkthrough: |
     Under this toy policy, a 303 after a POST makes the next request a GET to the new URL with no
     body, and a changed origin removes the `Authorization` header. So the next hop is
     `GET https://b.example/receipt`, without the original body or `Authorization`. Compare the

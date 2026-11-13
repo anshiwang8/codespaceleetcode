@@ -53,7 +53,7 @@ export interface PublicLesson {
   teach?: string;
   scenario?: string;
   codeBlocks: CodeBlock[];
-  example?: { prompt: string; blocks?: string[]; explanation: string };
+  example?: { prompt: string; blocks?: string[]; walkthrough: string };
   mistake?: string;
   next?: string;
   transfer?: string;

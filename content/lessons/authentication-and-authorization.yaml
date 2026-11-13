@@ -26,7 +26,7 @@ code_blocks:
 example:
   prompt: Three people ask for one document. Who gets which answer?
   blocks: [policy]
-  explanation: |
+  walkthrough: |
     A missing or invalid session gets 401; a valid user who doesn't own the document gets 403; a
     valid owner reaches the read. This assumes the document exists and the authentication protocol
     supplies whatever challenge a 401 needs. Some production systems deliberately answer 404 to hide

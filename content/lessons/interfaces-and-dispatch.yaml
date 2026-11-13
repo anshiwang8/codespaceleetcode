@@ -30,7 +30,7 @@ code_blocks:
 example:
   prompt: What does `load("memory")` return, and which line decided that?
   blocks: [example]
-  explanation: |
+  walkthrough: |
     With `mode = "memory"`, the lookup `registry[mode]` on line 7 returns the memory object, and
     its `read` runs, returning `"temporary"`. The `Driver` type tells you the result is a string;
     the argument tells you which body produced it.

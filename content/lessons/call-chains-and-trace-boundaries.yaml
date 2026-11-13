@@ -25,7 +25,7 @@ code_blocks:
 example:
   prompt: Starting at `serve(5)`, include the start and stop at the first entry to `write`. Which functions are entered, in order?
   blocks: [example]
-  explanation: |
+  walkthrough: |
     `5 > 0` is true, so `serve` calls `pack`, which calls `write`: the trace is
     `serve → pack → write`. The other branch, `empty`, isn't taken. Returning to `serve` afterwards
     isn't another entry to `serve`.

@@ -48,11 +48,11 @@
     "example": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["prompt", "explanation"],
+      "required": ["prompt", "walkthrough"],
       "properties": {
         "prompt": { "$ref": "#/$defs/markdown" },
         "blocks": { "description": "Ids from code_blocks shown with the example.", "type": "array", "items": { "$ref": "#/$defs/id" } },
-        "explanation": { "description": "The worked explanation. Public: it's a teaching example, not a check.", "$ref": "#/$defs/markdown" }
+        "walkthrough": { "description": "The worked explanation. Public: it's a teaching example, not a check, so it isn't called `explanation` like a key's.", "$ref": "#/$defs/markdown" }
       }
     },
     "mistake": { "description": "The common mistake.", "$ref": "#/$defs/markdown" },

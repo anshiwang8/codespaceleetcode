@@ -26,7 +26,7 @@ code_blocks:
 example:
   prompt: Predict the result of `doubleNumber("3")`, and of `doubleNumber(3)`.
   blocks: [example]
-  explanation: |
+  walkthrough: |
     The string `"3"` fails the guard on line 3 and returns `{ ok: false }`. The number `3` passes
     and returns `{ ok: true, value: 6 }`. The different literal `ok` values let TypeScript narrow
     the result after a caller tests `result.ok`.

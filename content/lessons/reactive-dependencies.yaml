@@ -27,7 +27,7 @@ code_blocks:
 example:
   prompt: '`show` starts true. Then `show` becomes false, and after that `count` changes. Which of those writes reruns the effect?'
   blocks: [example]
-  explanation: |
+  walkthrough: |
     With `show = true`, the effect reads `show` and `count`. Changing `show` to false reruns it,
     and this time it reads only `show`. So the later `count` change doesn't rerun it. (Each run is
     assumed to finish before the next event.)

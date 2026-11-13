@@ -26,7 +26,7 @@ code_blocks:
 example:
   prompt: Which handler receives `GET /books/42?format=short`, and what is `id`?
   blocks: [routes]
-  explanation: |
+  walkthrough: |
     `GET /books/42?format=short` matches the first rule, so `readBook` runs with `id` bound to the
     string `"42"`. The format stays available as a query parameter. `POST /books` would match
     `createBook` instead.

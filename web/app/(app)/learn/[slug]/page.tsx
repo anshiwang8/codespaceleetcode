@@ -124,7 +124,7 @@ export default async function LessonPage({ params }: PageProps) {
           })}
           <details className={styles.worked} data-testid="worked-example">
             <summary>Predict first, then show the worked explanation</summary>
-            <LessonMarkdown source={lesson.example.explanation} />
+            <LessonMarkdown source={lesson.example.walkthrough} />
           </details>
         </section>
       ) : null}

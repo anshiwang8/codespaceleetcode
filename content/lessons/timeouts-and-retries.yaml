@@ -27,7 +27,7 @@ code_blocks:
 example:
   prompt: The policy allows three attempts in all, a 100 ms timeout per attempt, waits of 50 ms then 100 ms, and no jitter. Every attempt times out. When does the caller give up?
   blocks: [schedule]
-  explanation: |
+  walkthrough: |
     Attempts start at 0, 150 and 350 ms. The last timeout arrives at 450 ms, assuming no other
     overhead, and no fourth attempt happens because three is the total.
 exercises:

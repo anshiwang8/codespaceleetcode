@@ -26,7 +26,7 @@ code_blocks:
 example:
   prompt: Follow the raw value `"08"` through the stages. What does the store receive?
   blocks: [pipeline]
-  explanation: |
+  walkthrough: |
     The schema accepts decimal digit strings for integers from 1 to 100, and parses `"08"` as 8.
     8 is in range, so the injected store receives `read(8)`. The toy order is parse, validate,
     resolve the store, handle; real frameworks may interleave these steps.

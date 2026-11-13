@@ -24,7 +24,7 @@ code_blocks:
 example:
   prompt: Which of the two assertions tells you about the default for `digits`?
   blocks: [example]
-  explanation: |
+  walkthrough: |
     The default applies only when `digits` is absent or `undefined`. The first test chooses 1
     explicitly, so it demonstrates an override. The second omits the argument, so it's the one that
     exercises the default; reading the default parameter on line 1 confirms it.

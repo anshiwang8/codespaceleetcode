@@ -26,7 +26,7 @@ code_blocks:
 example:
   prompt: Follow `2 + 3` through the three stages. What question does each stage answer?
   blocks: [pipeline]
-  explanation: |
+  walkthrough: |
     Parsing builds an `Add` node with two `Number` children. The constant-folding transform replaces
     it with a `Number` node for 5. The generator prints `5`. In order: what is the structure, what
     simplification is valid, and what text should be emitted?

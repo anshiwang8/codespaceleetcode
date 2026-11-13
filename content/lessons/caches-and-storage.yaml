@@ -27,7 +27,7 @@ code_blocks:
 example:
   prompt: Capacity is 2 and every entry is fresh. Insert A, insert B, read A, then insert C. Which entry is evicted?
   blocks: [lru]
-  explanation: |
+  walkthrough: |
     Reading A makes it the most recent, so inserting C evicts B. In a simple list, finding or
     removing a key may need a scan. A hash map plus a linked list supports expected constant-time
     lookup and recency updates, under the usual hashing assumptions, at the cost of extra memory.

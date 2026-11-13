@@ -117,6 +117,10 @@ export default async function PuzzleListPage({ searchParams }: PageProps<"/puzzl
             Each puzzle is set in a real open-source repository. Read the code, find the answer, and
             select it in the editor.
           </p>
+          <p className={styles.learnLink} data-testid="list-learn-link">
+            New to reading code? <Link href="/learn">Start with Learn</Link>: short lessons on values, branches, calls and
+            tracing, then puzzles to try next.
+          </p>
         </div>
         {showProgress ? (
           <div className={styles.progress} data-testid="list-progress">

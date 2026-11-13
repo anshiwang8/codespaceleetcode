@@ -23,7 +23,7 @@ code_blocks:
 example:
   prompt: What value does `charge` receive on line 5? Follow the calls in the order they happen, not the order they're written.
   blocks: [example]
-  explanation: |
+  walkthrough: |
     `invoice(4)` enters `invoice` with `price = 4`. To evaluate its return expression, it calls
     `fee(4)`. That inner call returns 6. Back in `invoice`, adding 1 gives 7, which `invoice`
     returns. The caller, line 5, receives 7.

@@ -29,7 +29,7 @@ code_blocks:
 example:
   prompt: 'Start at `{ count: 4 }`. Dispatch `{ type: "add", amount: 2 }`, then `{ type: "ping" }`. What is the state after each?'
   blocks: [example]
-  explanation: |
+  walkthrough: |
     The first action returns a new object with `count` 6. The second isn't handled, so the reducer
     returns the existing object unchanged. Neither action implies a network request.
 exercises:

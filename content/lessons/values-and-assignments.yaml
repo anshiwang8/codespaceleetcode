@@ -26,7 +26,7 @@ code_blocks:
 example:
   prompt: Predict `copy` and `total` after line 4. Start with an empty table, then write each name and its new value.
   blocks: [example]
-  explanation: |
+  walkthrough: |
     After line 2, `total` is 7. Line 3 binds `copy` to the number 7; line 4 changes `total` to 6.
     The earlier `copy` stays 7.
 

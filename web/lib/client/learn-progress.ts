@@ -2,6 +2,7 @@
 
 import { useEffect, useSyncExternalStore } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { LEARN_GUEST_KEY as GUEST_KEY } from "@/lib/learn/storage";
 import type { LearnProgressResponse, LessonProgress } from "@/lib/learn/types";
 
 // Learn progress as the browser shows it. Signed in, it comes from GET /api/me/learn (only
@@ -11,7 +12,6 @@ import type { LearnProgressResponse, LessonProgress } from "@/lib/learn/types";
 // state; when that changes, it's dropped and loaded again for the new owner, so one person's
 // progress never shows for another.
 
-export const GUEST_KEY = "cb-learn-progress";
 
 type Entries = Record<string, LessonProgress[]>;
 
@@ -134,15 +134,7 @@ export function recordCheck(
   replace(slug, { revision, correct, completedAt: current?.completedAt ?? (done ? new Date().toISOString() : null) });
 }
 
-export type LessonStatus = "complete" | "updated" | "started" | "none";
-
-export function statusOf(entries: LessonProgress[] | undefined, revision: number): LessonStatus {
-  const current = entries?.find((entry) => entry.revision === revision);
-  if (current?.completedAt) return "complete";
-  if (current && current.correct.length > 0) return "started";
-  if (entries?.some((entry) => entry.completedAt && entry.revision < revision)) return "updated";
-  return "none";
-}
+export { statusOf, type LessonStatus } from "@/lib/learn/status";
 
 /** The progress store, for whoever is signed in now (or this browser's guest). */
 export function useLearnProgress() {

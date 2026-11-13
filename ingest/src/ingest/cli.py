@@ -87,7 +87,7 @@ def migrate(
 def validate(
     content_dir: ContentDirOption = CONTENT_DIR, out_dir: OutDirOption = paths.OUT_DIR
 ) -> None:
-    """Run the checks in spec section 6 on every puzzle, and the Learn path's checks on every lesson."""
+    """Run spec section 6's checks on every puzzle, and the Learn checks on every lesson."""
     try:
         report = validate_content(content_dir, out_dir)
     except IngestError as error:
@@ -110,7 +110,9 @@ def learn(content_dir: ContentDirOption = CONTENT_DIR) -> None:
         typer.echo(line)
     if not report.ok:
         raise typer.Exit(code=1)
-    typer.echo("Wrote web/lib/learn/course.generated.ts and web/lib/server/learn/keys.generated.ts.")
+    typer.echo(
+        "Wrote web/lib/learn/course.generated.ts and web/lib/server/learn/keys.generated.ts."
+    )
 
 
 @app.command("blind-export")

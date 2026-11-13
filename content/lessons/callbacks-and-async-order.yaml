@@ -29,7 +29,7 @@ code_blocks:
 example:
   prompt: The promise on line 4 fulfills. In what order are A, B and C pushed?
   blocks: [example]
-  explanation: |
+  walkthrough: |
     Calling `work` on line 7 pushes A, then pauses at `await`. Control returns to the caller, which
     pushes C on line 8. Only then does the continuation resume and push B. The order is A, C, B.
 exercises:

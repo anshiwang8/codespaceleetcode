@@ -25,7 +25,7 @@ code_blocks:
 example:
   prompt: Predict the number printed after the loop. Start with `total = 0` and add one row per value.
   blocks: [example]
-  explanation: |
+  walkthrough: |
     | `value` | Added? | `total` after |
     |---|---|---|
     | 3 | yes | 3 |

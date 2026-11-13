@@ -27,7 +27,7 @@ code_blocks:
 example:
   prompt: Write down the log for an allowed request, then for a denied one.
   blocks: [chain]
-  explanation: |
+  walkthrough: |
     Allowed: `outer-in, auth-in, handler, auth-out, outer-out`. Denied: auth returns early, so only
     `outer-in, auth-in, outer-out` is logged. This assumes the outer middleware receives the
     returned response normally.

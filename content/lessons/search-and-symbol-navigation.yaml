@@ -30,7 +30,7 @@ code_blocks:
 example:
   prompt: The caller in `demo.ts` uses `price`. Where is the body that runs?
   blocks: [files]
-  explanation: |
+  walkthrough: |
     `demo.ts` imports `price` from the public module. That module re-exports `basePrice` under the
     name `price`. The function body is in `cost.ts`. So: search for the public name, follow the
     re-export, then read the body.

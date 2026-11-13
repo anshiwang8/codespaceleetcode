@@ -28,7 +28,7 @@ code_blocks:
 example:
   prompt: You want to trace this package's public API. Which file do you open first, and which gives you a concrete input to follow?
   blocks: [tree]
-  explanation: |
+  walkthrough: |
     The manifest maps the public export to `src/public.ts`, so begin there to trace the public API.
     Use the test to find a concrete input and its assertion. Record file paths relative to this
     revision, not to your own machine.

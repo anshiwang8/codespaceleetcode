@@ -26,7 +26,7 @@ code_blocks:
 example:
   prompt: Draw an arrow from each name to the object it refers to, then predict what each update changes.
   blocks: [example]
-  explanation: |
+  walkthrough: |
     Line 2 points `alias` at the original cart, so line 3 sets the original's first count to 2.
     Line 4 makes `copy` a separate top-level object **and** a separate `counts` array, because both
     were copied. Line 5 changes only the copy's array.
