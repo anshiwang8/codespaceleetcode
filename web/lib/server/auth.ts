@@ -3,6 +3,7 @@ import { headers as nextHeaders } from "next/headers";
 import { z } from "zod";
 import { withAuth } from "@/lib/server/better-auth";
 import { getPool, withTransaction } from "@/lib/server/db";
+import { traced } from "@/lib/server/perf-trace";
 
 export interface CurrentUser {
   id: string;
@@ -134,7 +135,7 @@ export const githubAuthProvider: AuthProvider = {
 export async function getCurrentUser(headers?: HeaderReader): Promise<CurrentUser | null> {
   const source = headers ?? (await nextHeaders());
   // A real session wins. The dev login is only a stand-in, and only where it's allowed.
-  return (await githubAuthProvider.getUser(source)) ?? (await devAuthProvider.getUser(source));
+  return traced("auth", async () => (await githubAuthProvider.getUser(source)) ?? (await devAuthProvider.getUser(source)));
 }
 
 /** Finds or creates the auth_users and users rows for a dev login. */
