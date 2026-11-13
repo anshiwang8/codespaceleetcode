@@ -1,5 +1,6 @@
 import "server-only";
 import { headers as nextHeaders } from "next/headers";
+import { cache } from "react";
 import { z } from "zod";
 import { withAuth } from "@/lib/server/better-auth";
 import { getPool, withTransaction } from "@/lib/server/db";
@@ -99,8 +100,42 @@ function isUniqueViolation(error: unknown): boolean {
 }
 
 /**
+ * Which users rows this server instance has already seen in step with their session's GitHub
+ * login, so the upsert below runs once per user per instance instead of on every request. It
+ * holds only an id and a login, decides nothing about who is signed in (Better Auth's session
+ * lookup does that, on every request), and is consulted only after that lookup has returned this
+ * same user. An entry is trusted for SYNC_TTL_MS; a different login always runs the upsert again.
+ */
+const SYNC_TTL_MS = 5 * 60_000;
+const SYNC_MAX_ENTRIES = 5_000;
+const syncHolder = globalThis as typeof globalThis & { codebasesUserSync?: Map<string, { login: string; at: number }> };
+const synced = (syncHolder.codebasesUserSync ??= new Map());
+
+function isSynced(id: string, login: string, now: number): boolean {
+  const entry = synced.get(id);
+  return entry !== undefined && entry.login === login && now - entry.at < SYNC_TTL_MS;
+}
+
+function markSynced(id: string, login: string, now: number): void {
+  synced.delete(id);
+  // Oldest first, since a Map keeps insertion order.
+  while (synced.size >= SYNC_MAX_ENTRIES) {
+    const oldest = synced.keys().next().value;
+    if (oldest === undefined) break;
+    synced.delete(oldest);
+  }
+  synced.set(id, { login, at: now });
+}
+
+/** Tests only: forget every synced user, as a fresh server instance would. */
+export function forgetSyncedUsersForTests(): void {
+  synced.clear();
+}
+
+/**
  * A Better Auth session from a GitHub sign-in. The `users` row that submissions and progress
  * point at is made here, on the first request after sign-up, and its login follows GitHub renames.
+ * Once an instance has done that for a user and login, it skips the upsert for SYNC_TTL_MS.
  */
 export const githubAuthProvider: AuthProvider = {
   async getUser(headers) {
@@ -111,31 +146,45 @@ export const githubAuthProvider: AuthProvider = {
     if (!session) return null;
     const login = session.user.githubLogin;
     if (typeof login !== "string" || !GITHUB_LOGIN.test(login)) return null;
-    try {
-      await getPool().query(
-        `insert into users (id, github_login) values ($1, $2)
-         on conflict (id) do update set github_login = excluded.github_login
-           where users.github_login <> excluded.github_login`,
-        [session.user.id, login],
-      );
-    } catch (error) {
-      // GitHub frees a login when its owner renames, so another account can hold it here. That
-      // user stays signed out until the old row is renamed, rather than taking over its progress.
-      if (isUniqueViolation(error)) {
-        console.error(`[auth] GitHub login ${login} already belongs to another user`);
-        return null;
+    const now = Date.now();
+    if (!isSynced(session.user.id, login, now)) {
+      try {
+        await getPool().query(
+          `insert into users (id, github_login) values ($1, $2)
+           on conflict (id) do update set github_login = excluded.github_login
+             where users.github_login <> excluded.github_login`,
+          [session.user.id, login],
+        );
+      } catch (error) {
+        // GitHub frees a login when its owner renames, so another account can hold it here. That
+        // user stays signed out until the old row is renamed, rather than taking over its progress.
+        if (isUniqueViolation(error)) {
+          console.error(`[auth] GitHub login ${login} already belongs to another user`);
+          return null;
+        }
+        throw error;
       }
-      throw error;
+      markSynced(session.user.id, login, now);
     }
     return { id: session.user.id, login, via: "github", sessionCreatedAt: new Date(session.session.createdAt) };
   },
 };
 
-/** Route handlers pass `request.headers`. Server components can leave it out. */
-export async function getCurrentUser(headers?: HeaderReader): Promise<CurrentUser | null> {
-  const source = headers ?? (await nextHeaders());
+async function resolveUser(source: HeaderReader): Promise<CurrentUser | null> {
   // A real session wins. The dev login is only a stand-in, and only where it's allowed.
   return traced("auth", async () => (await githubAuthProvider.getUser(source)) ?? (await devAuthProvider.getUser(source)));
+}
+
+/**
+ * Once per server render: a page, its layout and its metadata asking for the user share one
+ * session lookup. React's cache lasts only for this one request, so nothing carries between
+ * requests or people. Route handlers pass their headers and look the session up themselves.
+ */
+const userForRender = cache(async () => resolveUser(await nextHeaders()));
+
+/** Route handlers pass `request.headers`. Server components can leave it out. */
+export async function getCurrentUser(headers?: HeaderReader): Promise<CurrentUser | null> {
+  return headers ? resolveUser(headers) : userForRender();
 }
 
 /** Finds or creates the auth_users and users rows for a dev login. */

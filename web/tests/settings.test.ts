@@ -18,7 +18,7 @@ import { getAuth } from "@/lib/server/better-auth";
 import { getPool } from "@/lib/server/db";
 import { getEmailStatus } from "@/lib/server/email";
 import { getParticipation, joinLeaderboard } from "@/lib/server/leaderboard";
-import { getAppearance, getProfileRecord, getSettingsData } from "@/lib/server/settings";
+import { getAccountSummary, getAppearance, getProfileRecord, getSettingsData } from "@/lib/server/settings";
 import { setEmailSenderForTests, type EmailMessage } from "@/lib/server/email-delivery";
 import { seedFixtures } from "./fixtures";
 import { hasDatabase, makeRequest, signIn } from "./helpers";
@@ -310,6 +310,19 @@ describe.skipIf(!hasDatabase)("settings", () => {
       expect(together.avatarVersion).toMatch(/^[0-9a-f]{16}$/);
       expect(together.email).toMatchObject({ address: "loader-old@example.com", pending: { address: "loader-new@example.com", purpose: "change" } });
       expect(together.participation).toMatchObject({ participating: true, publicName: "Loader Full" });
+
+      // What every page's /api/me needs comes from one query too, and agrees with the above.
+      const summarySpy = vi.spyOn(getPool(), "query");
+      const summary = await getAccountSummary(user.id);
+      expect(summarySpy).toHaveBeenCalledTimes(1);
+      summarySpy.mockRestore();
+      expect(summary).toEqual({
+        displayName: "Full",
+        avatarVersion: together.avatarVersion,
+        needsEmail: false,
+        appearance: together.appearance,
+      });
+      expect(JSON.stringify(summary)).not.toContain("example.com");
 
       // /api/me/settings is built from the same loader.
       const response = await json<SettingsResponse>(await settingsRoute(makeRequest("/api/me/settings", { cookie }), undefined));

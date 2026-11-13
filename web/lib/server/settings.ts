@@ -226,29 +226,30 @@ export async function saveAppearance(
   return { ok: true };
 }
 
-/** What every signed-in page needs about the account: no email address, no birthday. */
+/** What every signed-in page needs about the account, in one query: no email address, no birthday. */
 export async function getAccountSummary(userId: string): Promise<{
   displayName: string | null;
   avatarVersion: string | null;
   needsEmail: boolean;
   appearance: AppearanceSettings;
 }> {
-  const [summary, appearance] = await Promise.all([
-    getPool().query<{ display_name: string | null; version: string | null; has_email: boolean }>(
-      `select p.display_name, a.version, exists (select 1 from user_emails e where e.user_id = $1) as has_email
-         from (select $1::uuid as id) u
-         left join user_profiles p on p.user_id = u.id
-         left join user_avatars a on a.user_id = u.id`,
-      [userId],
-    ),
-    getAppearance(userId),
-  ]);
-  const row = summary.rows[0];
+  const { rows } = await getPool().query<
+    AppearanceRow & { display_name: string | null; version: string | null; has_email: boolean }
+  >(
+    `select p.display_name, a.version, pref.theme_mode, pref.theme_id, pref.favorite_themes,
+            exists (select 1 from user_emails e where e.user_id = u.id) as has_email
+       from (select $1::uuid as id) u
+       left join user_profiles p on p.user_id = u.id
+       left join user_avatars a on a.user_id = u.id
+       left join user_preferences pref on pref.user_id = u.id`,
+    [userId],
+  );
+  const row = rows[0];
   return {
     displayName: row?.display_name ?? null,
     avatarVersion: row?.version ?? null,
     needsEmail: !row?.has_email,
-    appearance,
+    appearance: appearanceFrom(row),
   };
 }
 

@@ -163,7 +163,7 @@ test.describe("settings", () => {
   test("signed out, settings explain themselves and offer sign-in", async ({ page }) => {
     await page.goto("/settings");
     await expect(visible(page, "settings-signed-out")).toBeVisible();
-    await expect(page.getByTestId("details-form")).toHaveCount(0);
+    await expect(visible(page, "details-form")).toHaveCount(0);
   });
 
   test("every streamed section fills in, with no placeholder or error left, on a desktop and a phone", async ({ page }) => {
@@ -190,7 +190,7 @@ test.describe("settings", () => {
   test("optional details save, survive a reload, report errors inline, and clear", async ({ page }) => {
     await devLogin(page, unique("details"));
     await page.goto("/settings");
-    const form = page.getByTestId("details-form");
+    const form = visible(page, "details-form");
     await form.getByLabel(/Display name/).fill("Ada Reader");
     await form.getByLabel(/Pronouns/).fill("she/her");
     await form.getByLabel(/Short bio/).fill("I read code for fun.");
@@ -198,8 +198,8 @@ test.describe("settings", () => {
     await form.getByTestId("details-save").click();
     await expect(form.getByTestId("details-status")).toHaveText("Saved.");
     await page.reload();
-    await expect(page.getByTestId("details-form").getByLabel(/Display name/)).toHaveValue("Ada Reader");
-    await expect(page.getByTestId("details-form").getByLabel(/Birthday/)).toHaveValue("2000-02-29");
+    await expect(visible(page, "details-form").getByLabel(/Display name/)).toHaveValue("Ada Reader");
+    await expect(visible(page, "details-form").getByLabel(/Birthday/)).toHaveValue("2000-02-29");
 
     // A future birthday can't be picked past the field's max, so it's sent through the API, as
     // a crafted request would be.
@@ -210,19 +210,19 @@ test.describe("settings", () => {
     expect(crafted.status()).toBe(400);
 
     // An invalid value keeps what was typed and marks the field.
-    await page.getByTestId("details-form").getByLabel(/Display name/).fill("Line‮break");
-    await page.getByTestId("details-form").getByTestId("details-save").click();
-    await expect(page.getByTestId("details-form").getByLabel(/Display name/)).toHaveAttribute("aria-invalid", "true");
-    await expect(page.getByTestId("details-form").getByLabel(/Display name/)).toHaveValue("Line‮break");
-    await expect(page.getByTestId("details-status")).toHaveAttribute("role", "alert");
+    await visible(page, "details-form").getByLabel(/Display name/).fill("Line‮break");
+    await visible(page, "details-form").getByTestId("details-save").click();
+    await expect(visible(page, "details-form").getByLabel(/Display name/)).toHaveAttribute("aria-invalid", "true");
+    await expect(visible(page, "details-form").getByLabel(/Display name/)).toHaveValue("Line‮break");
+    await expect(visible(page, "details-status")).toHaveAttribute("role", "alert");
 
     // Everything clears.
-    await page.getByTestId("details-form").getByLabel(/Display name/).fill("");
-    await page.getByTestId("details-form").getByLabel(/Pronouns/).fill("");
-    await page.getByTestId("details-form").getByLabel(/Short bio/).fill("");
-    await page.getByTestId("details-form").getByRole("button", { name: "Clear" }).click();
-    await page.getByTestId("details-save").click();
-    await expect(page.getByTestId("details-status")).toHaveText("Saved.");
+    await visible(page, "details-form").getByLabel(/Display name/).fill("");
+    await visible(page, "details-form").getByLabel(/Pronouns/).fill("");
+    await visible(page, "details-form").getByLabel(/Short bio/).fill("");
+    await visible(page, "details-form").getByRole("button", { name: "Clear" }).click();
+    await visible(page, "details-save").click();
+    await expect(visible(page, "details-status")).toHaveText("Saved.");
     await page.goto("/profile");
     await expect(visible(page, "profile-identity")).not.toContainText("Ada Reader");
   });
@@ -230,7 +230,7 @@ test.describe("settings", () => {
   test("links are validated, saved, and shown on the profile as plain, safe links", async ({ page }) => {
     await devLogin(page, unique("links"));
     await page.goto("/settings");
-    const form = page.getByTestId("links-form");
+    const form = visible(page, "links-form");
     await form.getByTestId("link-github").fill("javascript:alert(1)");
     await form.getByTestId("links-save").click();
     await expect(form.getByTestId("link-github")).toHaveAttribute("aria-invalid", "true");
