@@ -205,13 +205,23 @@ test.describe("puzzle list", () => {
     await client.connect();
     try {
       await client.query("update puzzles set published = false");
-      await page.goto("/puzzles");
-      await expect(visible(page, "no-puzzles-seeded")).toContainText("No puzzles yet");
+      // The server keeps the published catalog for a few seconds outside production
+      // (PUZZLE_CATALOG_TTL_MS), so the empty list shows once that copy runs out.
+      await expect(async () => {
+        await page.goto("/puzzles");
+        await expect(visible(page, "no-puzzles-seeded")).toContainText("No puzzles yet", { timeout: 1_000 });
+      }).toPass({ timeout: 20_000 });
       await expect(visible(page, "no-puzzles-seeded")).not.toContainText("ingest");
     } finally {
       await client.query("update puzzles set published = true");
       await client.end();
     }
+    // Wait for the list to fill again, so the next test doesn't meet the empty copy.
+    await expect(async () => {
+      await page.goto("/puzzles");
+      await expect(visible(page, "no-puzzles-seeded")).toHaveCount(0, { timeout: 1_000 });
+      await expect(page.locator('a[href^="/puzzles/"]').first()).toBeVisible({ timeout: 1_000 });
+    }).toPass({ timeout: 20_000 });
   });
 });
 

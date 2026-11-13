@@ -154,6 +154,38 @@ describe.skipIf(!hasDatabase)("snapshot code index", () => {
     );
   });
 
+  describe("caching", () => {
+    it("lets browsers and the CDN keep answers briefly, revalidates with an ETag, and never caches errors", async () => {
+      const query = `file=${encodeURIComponent(ROUTER_FILE)}&line=1&col=20`;
+      const responses = [
+        await symbols(query),
+        await outline(`file=${ROUTER_FILE}`),
+        await search("handle"),
+      ];
+      for (const response of responses) {
+        expect(response.status).toBe(200);
+        expect(response.headers.get("cache-control")).toBe("public, max-age=60, s-maxage=600, stale-while-revalidate=600");
+        expect(response.headers.get("etag")).toMatch(/^"[A-Za-z0-9_-]{32}"$/);
+        expect(response.headers.get("content-type")).toBe("application/json");
+      }
+      const etag = responses[0]?.headers.get("etag") ?? "";
+      const again = await symbolsRoute(
+        makeRequest(`/api/snapshots/${fixtures.snapshotId}/symbols?${query}`, { headers: { "if-none-match": etag } }),
+        params({ id: String(fixtures.snapshotId) }),
+      );
+      expect(again.status).toBe(304);
+      expect(await again.text()).toBe("");
+      // The same answer has the same ETag whoever asks; a different one has its own.
+      expect((await symbols(query)).headers.get("etag")).toBe(etag);
+      expect((await outline(`file=${ROUTER_FILE}`)).headers.get("etag")).not.toBe(etag);
+
+      for (const failed of [await symbols("file=a&line=1&col=1", "999999"), await symbols("file=a"), await search("x")]) {
+        expect(failed.status).toBeGreaterThanOrEqual(400);
+        expect(failed.headers.get("cache-control")).toBe("no-store");
+      }
+    });
+  });
+
   describe("outline", () => {
     it("lists a file's symbols in source order", async () => {
       const response = await outline(`file=${ROUTER_FILE}`);
