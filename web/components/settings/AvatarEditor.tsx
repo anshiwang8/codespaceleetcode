@@ -24,7 +24,7 @@ interface Pending {
  * and stores it. Canceling never touches the saved picture.
  */
 export function AvatarEditor({ initialVersion }: { initialVersion: string | null }) {
-  const { refresh } = useAuth();
+  const { me, updateAccount } = useAuth();
   const [version, setVersion] = useState(initialVersion);
   const [pending, setPending] = useState<Pending | null>(null);
   const [zoom, setZoom] = useState(1);
@@ -90,12 +90,14 @@ export function AvatarEditor({ initialVersion }: { initialVersion: string | null
       y: Math.max(0, Math.min(Math.round(y - size / 2), pending.height - size)),
       size,
     };
+    // The account this upload is for, so its result never lands on someone who signed in since.
+    const login = me?.user?.login ?? "";
     try {
       const result = await api.uploadAvatar(pending.file, crop);
       setVersion(result.version);
       cancel();
       setMessage({ kind: "saved", text: "Picture saved." });
-      void refresh();
+      updateAccount(login, { avatarVersion: result.version });
     } catch (caught) {
       setMessage({ kind: "error", text: caught instanceof ApiRequestError ? caught.message : "Couldn't upload. Try again." });
     } finally {
@@ -106,11 +108,12 @@ export function AvatarEditor({ initialVersion }: { initialVersion: string | null
   async function remove() {
     setBusy(true);
     setMessage(null);
+    const login = me?.user?.login ?? "";
     try {
       await api.deleteAvatar();
       setVersion(null);
       setMessage({ kind: "saved", text: "Picture removed. The default picture shows instead." });
-      void refresh();
+      updateAccount(login, { avatarVersion: null });
     } catch (caught) {
       setMessage({ kind: "error", text: caught instanceof ApiRequestError ? caught.message : "Couldn't remove it. Try again." });
     } finally {

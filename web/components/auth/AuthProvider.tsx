@@ -5,7 +5,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import type { MeResponse } from "@/lib/api-types";
 import { ApiRequestError, api } from "@/lib/client/api";
 import { signInWithGitHub, signOutOfGitHub } from "@/lib/client/auth-client";
-import { createMeLoader } from "@/lib/client/me-loader";
+import { createMeLoader, type AccountChanges } from "@/lib/client/me-loader";
 import { forgetSignedIn, rememberSignedIn } from "@/lib/returning";
 import { adoptAccount, adoptGuest } from "@/lib/themes/controller";
 
@@ -42,6 +42,11 @@ interface AuthValue {
   signOut: () => Promise<void>;
   /** Asks /api/me again, after something in the header (picture, name, email) changed. */
   refresh: () => Promise<void>;
+  /**
+   * After a save the server confirmed for `login`, shows its result in the header without asking
+   * /api/me again. If that account isn't the one on screen any more, it asks instead.
+   */
+  updateAccount: (login: string, changes: AccountChanges) => void;
 }
 
 const AuthContext = createContext<AuthValue | null>(null);
@@ -145,9 +150,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [loader]);
 
+  const updateAccount = useCallback(
+    (login: string, changes: AccountChanges) => {
+      if (!loader.update(login, changes)) void refresh();
+    },
+    [loader, refresh],
+  );
+
   const value = useMemo<AuthValue>(
     () => ({
       refresh,
+      updateAccount,
       me,
       devName,
       error,
@@ -157,7 +170,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       devSignIn: () => change(() => api.devLogin(devName ?? devLoginName())),
       signOut,
     }),
-    [me, devName, error, clearError, pending, change, gitHubSignIn, signOut, refresh],
+    [me, devName, error, clearError, pending, change, gitHubSignIn, signOut, refresh, updateAccount],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

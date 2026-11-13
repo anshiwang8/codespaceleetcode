@@ -110,4 +110,43 @@ describe("ordering /api/me answers", () => {
     expect(shown).toEqual([]);
     expect(loader.settled).toBe(false);
   });
+
+  it("applies a confirmed save to the same account only, and drops requests from before it", async () => {
+    const { loader, requests, shown } = setup();
+    expect(loader.update("someone", { displayName: "Early" })).toBe(false);
+    const initial = loader.load("shared");
+    requests[0]?.resolve(signedIn("saver"));
+    await initial;
+    const before = loader.load("fresh");
+    expect(loader.update("saver", { displayName: "New name", avatarVersion: "0123456789abcdef" })).toBe(true);
+    requests[1]?.resolve(signedIn("saver"));
+    expect(await before).toBeNull();
+    expect(shown).toEqual(["saver", "saver"]);
+    // Someone else's save never changes this account.
+    expect(loader.update("another-person", { displayName: "Theirs" })).toBe(false);
+    expect(shown).toHaveLength(2);
+  });
+
+  it("never applies a save while a sign-out is under way, so the sign-out still wins", async () => {
+    const shownUsers: (NonNullable<MeResponse["user"]> | null)[] = [];
+    const requests: ReturnType<typeof deferred>[] = [];
+    const loader = createMeLoader(
+      () => {
+        const request = deferred();
+        requests.push(request);
+        return request.promise;
+      },
+      (me) => shownUsers.push(me.user),
+    );
+    const initial = loader.load("shared");
+    requests[0]?.resolve(signedIn("leaving"));
+    await initial;
+    const signOut = deferred();
+    const change = loader.change(() => signOut.promise);
+    expect(loader.update("leaving", { displayName: "Late save" })).toBe(false);
+    signOut.resolve(signedOut);
+    await change;
+    expect(shownUsers.at(-1)).toBeNull();
+    expect(shownUsers.some((user) => user?.displayName === "Late save")).toBe(false);
+  });
 });
