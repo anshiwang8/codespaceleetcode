@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import styles from "@/components/themes/themes.module.css";
 import {
   cancelPreview,
@@ -71,24 +71,38 @@ export function ThemePicker({ variant, onClose }: ThemePickerProps) {
 
   const byId = useMemo(() => new Map((themes ?? []).map((theme) => [theme.id, theme])), [themes]);
   const favorites = useMemo(() => new Set(appearance.favorites), [appearance.favorites]);
-  const shown = useMemo(() => {
+  // Sorted once per catalog, with each name lowercased once, rather than on every keystroke.
+  const ordered = useMemo(() => {
     if (!themes) return [];
-    const needle = query.trim().toLowerCase();
     const defaults = themes.filter((theme) => theme.source === null);
     const rest = themes.filter((theme) => theme.source !== null).sort((a, b) => a.name.localeCompare(b.name, "en-US"));
-    return [...defaults, ...rest].filter(
-      (theme) =>
-        (filter === "all" || (filter === "favorites" ? favorites.has(theme.id) : theme.scheme === filter)) &&
-        (needle === "" || theme.name.toLowerCase().includes(needle)),
-    );
-  }, [themes, query, filter, favorites]);
-  const showSystem = filter === "all" && (query.trim() === "" || "system".includes(query.trim().toLowerCase()));
+    return [...defaults, ...rest].map((theme) => ({ theme, key: theme.name.toLowerCase() }));
+  }, [themes]);
+  const needle = query.trim().toLowerCase();
+  const shown = useMemo(
+    () =>
+      ordered
+        .filter(
+          ({ theme, key }) =>
+            (filter === "all" || (filter === "favorites" ? favorites.has(theme.id) : theme.scheme === filter)) &&
+            (needle === "" || key.includes(needle)),
+        )
+        .map(({ theme }) => theme),
+    [ordered, needle, filter, favorites],
+  );
+  const showSystem = filter === "all" && (needle === "" || "system".includes(needle));
+  const systemSwatches = useMemo(() => [byId.get(SYSTEM_THEMES.light), byId.get(SYSTEM_THEMES.dark)], [byId]);
 
-  const choose = (next: ThemePreference) => {
+  // Stable, so choosing a theme re-renders only the two options whose checked state changed.
+  const choose = useCallback((next: ThemePreference) => {
     setCandidate(next);
     setStatus(null);
     void preview(next);
-  };
+  }, []);
+  const chooseValue = useCallback(
+    (value: string) => choose(value === "system" ? { mode: "system" } : { mode: "theme", id: value }),
+    [choose],
+  );
 
   const apply = async (next: ThemePreference = candidate) => {
     setStatus({ kind: "pending", text: "Saving…" });
@@ -169,8 +183,8 @@ export function ThemePicker({ variant, onClose }: ThemePickerProps) {
                   checked={candidateKey === "system"}
                   saved={committedKey === "system"}
                   favorite={false}
-                  swatches={[byId.get(SYSTEM_THEMES.light), byId.get(SYSTEM_THEMES.dark)]}
-                  onChoose={() => choose({ mode: "system" })}
+                  swatches={systemSwatches}
+                  onChoose={chooseValue}
                 />
               ) : null}
               {shown.map((theme) => (
@@ -183,8 +197,8 @@ export function ThemePicker({ variant, onClose }: ThemePickerProps) {
                   checked={candidateKey === theme.id}
                   saved={committedKey === theme.id}
                   favorite={favorites.has(theme.id)}
-                  swatches={[theme]}
-                  onChoose={() => choose({ mode: "theme", id: theme.id })}
+                  theme={theme}
+                  onChoose={chooseValue}
                 />
               ))}
               {shown.length === 0 && !showSystem ? (
@@ -269,20 +283,42 @@ interface ThemeOptionProps {
   checked: boolean;
   saved: boolean;
   favorite: boolean;
-  swatches: (ThemeDefinition | undefined)[];
-  onChoose: () => void;
+  /** One theme's swatch, or `swatches` for System's light and dark pair. */
+  theme?: ThemeDefinition;
+  swatches?: (ThemeDefinition | undefined)[];
+  onChoose: (value: string) => void;
 }
 
-function ThemeOption({ name, value, label, detail, checked, saved, favorite, swatches, onChoose }: ThemeOptionProps) {
+/** Memoized: with stable props, only options whose checked, saved or favorite state changed re-render. */
+const ThemeOption = memo(function ThemeOption({
+  name,
+  value,
+  label,
+  detail,
+  checked,
+  saved,
+  favorite,
+  theme,
+  swatches,
+  onChoose,
+}: ThemeOptionProps) {
+  const shownSwatches = swatches ?? [theme];
   return (
     <label className={styles.option} data-checked={checked || undefined} data-testid={`theme-option-${value}`}>
-      <input type="radio" name={name} value={value} checked={checked} onChange={onChoose} className="visually-hidden" />
+      <input
+        type="radio"
+        name={name}
+        value={value}
+        checked={checked}
+        onChange={() => onChoose(value)}
+        className="visually-hidden"
+      />
       <span className={styles.swatches} aria-hidden="true">
-        {swatches.map((theme, index) =>
-          theme ? (
-            <span key={index} className={styles.swatch} style={{ background: theme.tokens.bg }}>
-              <span style={{ background: theme.tokens.accent }} />
-              <span style={{ background: theme.tokens.text }} />
+        {shownSwatches.map((swatch, index) =>
+          swatch ? (
+            <span key={index} className={styles.swatch} style={{ background: swatch.tokens.bg }}>
+              <span style={{ background: swatch.tokens.accent }} />
+              <span style={{ background: swatch.tokens.text }} />
             </span>
           ) : null,
         )}
@@ -303,7 +339,7 @@ function ThemeOption({ name, value, label, detail, checked, saved, favorite, swa
       </span>
     </label>
   );
-}
+});
 
 /** A small, realistic look at a theme, drawn with its own tokens whatever the page shows. */
 function ThemePreview({ theme, label }: { theme: ThemeDefinition; label: string }) {

@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import styles from "@/components/themes/themes.module.css";
 import { ThemePicker } from "@/components/themes/ThemePicker";
+import { loadCatalog } from "@/lib/themes/controller";
 import { Icon } from "@/components/site/Icon";
 
 /**
@@ -27,6 +28,10 @@ export function ThemeButton({ className = "" }: { className?: string }) {
         type="button"
         className={`btn ${styles.themeButton} ${className}`}
         onClick={show}
+        // Someone about to open the picker: start fetching the theme list now, so it's there when
+        // the dialog opens. loadCatalog fetches once and shares the result, so repeats cost nothing.
+        onPointerEnter={() => void loadCatalog().catch(() => undefined)}
+        onFocus={() => void loadCatalog().catch(() => undefined)}
         aria-haspopup="dialog"
         data-testid="theme-button"
       >

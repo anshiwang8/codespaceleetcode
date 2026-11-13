@@ -64,7 +64,14 @@ export function getState(): AppearanceState {
 
 /** The full catalog, loaded on first use: it's only needed to change or resolve a theme. */
 export function loadCatalog(): Promise<readonly ThemeDefinition[]> {
-  catalog ??= import("./catalog.generated").then((module) => module.THEMES);
+  if (!catalog) {
+    const loading = import("./catalog.generated").then((module) => module.THEMES);
+    catalog = loading;
+    // A failed fetch (offline for a moment, say) isn't kept, so the next ask tries again.
+    loading.catch(() => {
+      if (catalog === loading) catalog = null;
+    });
+  }
   return catalog;
 }
 
