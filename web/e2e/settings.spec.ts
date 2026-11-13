@@ -166,6 +166,27 @@ test.describe("settings", () => {
     await expect(page.getByTestId("details-form")).toHaveCount(0);
   });
 
+  test("every streamed section fills in, with no placeholder or error left, on a desktop and a phone", async ({ page }) => {
+    await devLogin(page, unique("streamed"));
+    for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 }]) {
+      await page.setViewportSize(viewport);
+      await page.goto("/settings");
+      const main = visible(page, "settings");
+      await expect(main.getByTestId("details-form")).toBeVisible();
+      await expect(main.getByTestId("links-form")).toBeAttached();
+      await expect(main.locator('[data-testid^="theme-option-"]').first()).toBeAttached();
+      for (const id of ["appearance", "profile", "links", "leaderboard", "email"]) {
+        await expect(main.locator(`section#${id}`)).toHaveCount(1);
+      }
+      await expect(main.locator('[data-testid^="settings-loading-"]')).toHaveCount(0);
+      await expect(main.getByTestId("settings-section-error")).toHaveCount(0);
+      await expect(page.getByTestId("settings-loading")).toHaveCount(0);
+    }
+    // The email pages under /settings never borrow the overview's loading screen.
+    await page.goto("/settings/email");
+    await expect(page.getByTestId("settings-loading")).toHaveCount(0);
+  });
+
   test("optional details save, survive a reload, report errors inline, and clear", async ({ page }) => {
     await devLogin(page, unique("details"));
     await page.goto("/settings");
