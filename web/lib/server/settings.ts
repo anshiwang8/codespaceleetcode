@@ -1,6 +1,12 @@
 import "server-only";
 import { z } from "zod";
-import type { AppearanceSettings, ProfileDetails, ProfileLinks } from "@/lib/api-types";
+import type {
+  AppearanceSettings,
+  EmailStatus,
+  LeaderboardParticipation,
+  ProfileDetails,
+  ProfileLinks,
+} from "@/lib/api-types";
 import {
   bioField,
   birthdayField,
@@ -11,7 +17,10 @@ import {
   oneLine,
   type FieldResult,
 } from "@/lib/profile-fields";
+import type { CurrentUser } from "@/lib/server/auth";
 import { getPool } from "@/lib/server/db";
+import { emailStatusFrom, type PendingEmailRow, type VerifiedEmailRow } from "@/lib/server/email";
+import { participationFrom } from "@/lib/server/leaderboard";
 import { THEMES } from "@/lib/themes/catalog.generated";
 import type { ThemePreference } from "@/lib/themes/runtime";
 
@@ -122,19 +131,15 @@ export interface ProfileRecord {
   links: ProfileLinks;
 }
 
-export async function getProfileRecord(userId: string): Promise<ProfileRecord> {
-  const { rows } = await getPool().query<{
-    display_name: string | null;
-    pronouns: string | null;
-    bio: string | null;
-    birthday: string | null;
-    links: unknown;
-  }>(
-    `select display_name, pronouns, bio, to_char(birthday, 'YYYY-MM-DD') as birthday, links
-       from user_profiles where user_id = $1`,
-    [userId],
-  );
-  const row = rows[0];
+interface ProfileRow {
+  display_name: string | null;
+  pronouns: string | null;
+  bio: string | null;
+  birthday: string | null;
+  links: unknown;
+}
+
+function profileRecordFrom(row: ProfileRow | undefined): ProfileRecord {
   return {
     details: {
       displayName: row?.display_name ?? null,
@@ -144,6 +149,15 @@ export async function getProfileRecord(userId: string): Promise<ProfileRecord> {
     },
     links: storedLinks(row?.links ?? {}),
   };
+}
+
+export async function getProfileRecord(userId: string): Promise<ProfileRecord> {
+  const { rows } = await getPool().query<ProfileRow>(
+    `select display_name, pronouns, bio, to_char(birthday, 'YYYY-MM-DD') as birthday, links
+       from user_profiles where user_id = $1`,
+    [userId],
+  );
+  return profileRecordFrom(rows[0]);
 }
 
 /** Saves details only; links and everything else are untouched. */
@@ -167,18 +181,27 @@ export async function saveLinks(userId: string, links: ProfileLinks): Promise<vo
   );
 }
 
-export async function getAppearance(userId: string): Promise<AppearanceSettings> {
-  const { rows } = await getPool().query<{ theme_mode: string | null; theme_id: string | null; favorite_themes: string[] }>(
-    "select theme_mode, theme_id, favorite_themes from user_preferences where user_id = $1",
-    [userId],
-  );
-  const row = rows[0];
+interface AppearanceRow {
+  theme_mode: string | null;
+  theme_id: string | null;
+  favorite_themes: string[] | null;
+}
+
+function appearanceFrom(row: AppearanceRow | undefined): AppearanceSettings {
   let preference: ThemePreference | null = null;
   if (row?.theme_mode === "system") preference = { mode: "system" };
   else if (row?.theme_mode === "theme" && row.theme_id && THEME_IDS.has(row.theme_id)) {
     preference = { mode: "theme", id: row.theme_id };
   }
   return { preference, favorites: (row?.favorite_themes ?? []).filter((id) => THEME_IDS.has(id)) };
+}
+
+export async function getAppearance(userId: string): Promise<AppearanceSettings> {
+  const { rows } = await getPool().query<AppearanceRow>(
+    "select theme_mode, theme_id, favorite_themes from user_preferences where user_id = $1",
+    [userId],
+  );
+  return appearanceFrom(rows[0]);
 }
 
 /** Saves the theme and/or favorites. Unknown theme IDs are refused; unknown favorites dropped. */
@@ -226,5 +249,70 @@ export async function getAccountSummary(userId: string): Promise<{
     avatarVersion: row?.version ?? null,
     needsEmail: !row?.has_email,
     appearance,
+  };
+}
+
+/** Everything the Settings page shows, for its owner. */
+export interface SettingsData extends ProfileRecord {
+  appearance: AppearanceSettings;
+  /** Only the version: the picture's bytes are served by /api/me/avatar. */
+  avatarVersion: string | null;
+  email: EmailStatus;
+  participation: LeaderboardParticipation;
+}
+
+type SettingsRow = ProfileRow &
+  AppearanceRow & {
+    avatar_version: string | null;
+    verified_email: string | null;
+    verified_at: Date | null;
+    pending_email: string | null;
+    pending_purpose: PendingEmailRow["purpose"] | null;
+    pending_expires_at: Date | null;
+    public_name: string | null;
+    joined_at: Date | null;
+  };
+
+/**
+ * The Settings page's data in one round trip, where getProfileRecord, getAppearance,
+ * getEmailStatus and getParticipation would take five. Every join is on a primary key or the
+ * email_verifications user index, and the avatar's bytes are never read, only its version.
+ */
+export async function getSettingsData(user: CurrentUser, now: Date = new Date()): Promise<SettingsData> {
+  const { rows } = await getPool().query<SettingsRow>(
+    `select p.display_name, p.pronouns, p.bio, to_char(p.birthday, 'YYYY-MM-DD') as birthday, p.links,
+            pref.theme_mode, pref.theme_id, pref.favorite_themes,
+            a.version as avatar_version,
+            e.email as verified_email, e.verified_at,
+            v.email as pending_email, v.purpose as pending_purpose, v.expires_at as pending_expires_at,
+            l.public_name, l.joined_at
+       from (select $1::uuid as id) u
+       left join user_profiles p on p.user_id = u.id
+       left join user_preferences pref on pref.user_id = u.id
+       left join user_avatars a on a.user_id = u.id
+       left join user_emails e on e.user_id = u.id
+       left join leaderboard_entries l on l.user_id = u.id
+       left join lateral (
+         -- The same row getEmailStatus reads: the newest unconsumed verification.
+         select email, purpose, expires_at from email_verifications
+          where user_id = u.id and consumed_at is null order by created_at desc limit 1
+       ) v on true`,
+    [user.id],
+  );
+  const row = rows[0];
+  const verified: VerifiedEmailRow | undefined =
+    row?.verified_email && row.verified_at ? { email: row.verified_email, verified_at: row.verified_at } : undefined;
+  const pending: PendingEmailRow | undefined =
+    row?.pending_email && row.pending_purpose && row.pending_expires_at
+      ? { email: row.pending_email, purpose: row.pending_purpose, expires_at: row.pending_expires_at }
+      : undefined;
+  return {
+    ...profileRecordFrom(row),
+    appearance: appearanceFrom(row),
+    avatarVersion: row?.avatar_version ?? null,
+    email: emailStatusFrom(user, verified, pending, now),
+    participation: participationFrom(
+      row?.public_name && row.joined_at ? { public_name: row.public_name, joined_at: row.joined_at } : undefined,
+    ),
   };
 }

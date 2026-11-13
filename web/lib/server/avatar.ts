@@ -102,3 +102,9 @@ export async function getAvatar(userId: string): Promise<{ image: Buffer; versio
   );
   return rows[0] ?? null;
 }
+
+/** Only the version, for callers that don't need the picture's bytes. */
+export async function getAvatarVersion(userId: string): Promise<string | null> {
+  const { rows } = await getPool().query<{ version: string }>("select version from user_avatars where user_id = $1", [userId]);
+  return rows[0]?.version ?? null;
+}

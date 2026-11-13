@@ -12,8 +12,13 @@ import { DELETE as deleteMe, GET as getMe } from "@/app/api/me/route";
 import { GET as settingsRoute } from "@/app/api/me/settings/route";
 import { GET as profileRoute } from "@/app/api/me/profile/route";
 import type { EmailStatus, MeResponse, ProfileResponse, SettingsResponse } from "@/lib/api-types";
+import type { CurrentUser } from "@/lib/server/auth";
+import { getAvatarVersion } from "@/lib/server/avatar";
 import { getAuth } from "@/lib/server/better-auth";
 import { getPool } from "@/lib/server/db";
+import { getEmailStatus } from "@/lib/server/email";
+import { getParticipation, joinLeaderboard } from "@/lib/server/leaderboard";
+import { getAppearance, getProfileRecord, getSettingsData } from "@/lib/server/settings";
 import { setEmailSenderForTests, type EmailMessage } from "@/lib/server/email-delivery";
 import { seedFixtures } from "./fixtures";
 import { hasDatabase, makeRequest, signIn } from "./helpers";
@@ -220,6 +225,97 @@ describe.skipIf(!hasDatabase)("settings", () => {
 
       expect((await deleteAvatarRoute(call("/api/me/avatar", "DELETE", cookie), undefined)).status).toBe(200);
       expect((await getAvatarRoute(makeRequest("/api/me/avatar", { cookie }), undefined)).status).toBe(404);
+    });
+
+    it("answers a revalidation of the current picture with 304 and no bytes, and anything else in full", async () => {
+      const cookie = await signIn("settings-avatar-etag");
+      const uploaded = await postAvatarRoute(call("/api/me/avatar?x=0&y=0&size=80", "POST", cookie, undefined, new Uint8Array(await png())), undefined);
+      const { version } = await json<{ version: string }>(uploaded);
+      const id = await idOf("settings-avatar-etag");
+      expect(await getAvatarVersion(id)).toBe(version);
+
+      const revalidate = (etag: string, who = cookie) =>
+        getAvatarRoute(makeRequest(`/api/me/avatar?v=${version}`, { cookie: who, headers: { "if-none-match": etag } }), undefined);
+      const fresh = await revalidate(`"${version}"`);
+      expect(fresh.status).toBe(304);
+      expect((await fresh.arrayBuffer()).byteLength).toBe(0);
+      expect(fresh.headers.get("etag")).toBe(`"${version}"`);
+      expect(fresh.headers.get("cache-control")).toBe("private, max-age=31536000, immutable");
+      expect((await revalidate(`W/"${version}", "other"`)).status).toBe(304);
+
+      const changed = await revalidate('"0000000000000000"');
+      expect(changed.status).toBe(200);
+      expect((await changed.arrayBuffer()).byteLength).toBeGreaterThan(0);
+      // Someone else naming this picture's version still gets nothing of it.
+      const other = await signIn("settings-avatar-etag-other");
+      expect((await revalidate(`"${version}"`, other)).status).toBe(404);
+      expect(await getAvatarVersion(await idOf("settings-avatar-etag-other"))).toBeNull();
+    });
+  });
+
+  describe("one-query settings loader", () => {
+    const now = new Date("2026-06-01T12:00:00Z");
+    const userFor = async (login: string): Promise<CurrentUser> => ({ id: await idOf(login), login, via: "dev", sessionCreatedAt: null });
+    const separately = async (user: CurrentUser) => {
+      const [record, appearance, avatarVersion, email, participation] = await Promise.all([
+        getProfileRecord(user.id),
+        getAppearance(user.id),
+        getAvatarVersion(user.id),
+        getEmailStatus(user, now),
+        getParticipation(user.id),
+      ]);
+      return { ...record, appearance, avatarVersion, email, participation };
+    };
+
+    it("matches the separate loaders for an account with nothing saved, in one query", async () => {
+      await signIn("settings-loader-empty");
+      const user = await userFor("settings-loader-empty");
+      const spy = vi.spyOn(getPool(), "query");
+      const together = await getSettingsData(user, now);
+      expect(spy).toHaveBeenCalledTimes(1);
+      spy.mockRestore();
+      expect(together).toEqual(await separately(user));
+      expect(together.avatarVersion).toBeNull();
+      expect(together.participation.participating).toBe(false);
+      expect(together.email).toMatchObject({ address: null, pending: null });
+    });
+
+    it("matches the separate loaders for an account with everything saved, and never reads the picture's bytes", async () => {
+      setEmailSenderForTests(fakeSender);
+      const cookie = await signIn("settings-loader-full");
+      const user = await userFor("settings-loader-full");
+      await detailsRoute(call("/api/me/details", "PUT", cookie, { displayName: "Full", pronouns: "they/them", bio: "Bio", birthday: "2000-02-29" }), undefined);
+      await linksRoute(
+        call("/api/me/links", "PUT", cookie, {
+          linkedin: null, github: "https://github.com/full", website: null, x: null, bluesky: null, mastodon: null,
+          custom: [{ label: "Blog", url: "https://example.com/blog" }],
+        }),
+        undefined,
+      );
+      await preferencesRoute(call("/api/me/preferences", "PUT", cookie, { preference: { mode: "system" }, favorites: ["default-dark"] }), undefined);
+      await postAvatarRoute(call("/api/me/avatar?x=0&y=0&size=80", "POST", cookie, undefined, new Uint8Array(await png())), undefined);
+      await getPool().query("insert into user_emails (user_id, email, verified_at) values ($1, 'loader-old@example.com', now())", [user.id]);
+      await emailRoute(call("/api/me/email", "POST", cookie, { email: "loader-new@example.com" }), undefined);
+      expect(await joinLeaderboard(user.id, "Loader Full")).toMatchObject({ state: "ok" });
+
+      const spy = vi.spyOn(getPool(), "query");
+      const together = await getSettingsData(user, now);
+      const sql = spy.mock.calls.map((call) => String(call[0]));
+      spy.mockRestore();
+      expect(sql).toHaveLength(1);
+      expect(sql[0]).not.toMatch(/\bimage\b/);
+      expect(together).toEqual(await separately(user));
+      expect(together.details.displayName).toBe("Full");
+      expect(together.links.custom).toHaveLength(1);
+      expect(together.avatarVersion).toMatch(/^[0-9a-f]{16}$/);
+      expect(together.email).toMatchObject({ address: "loader-old@example.com", pending: { address: "loader-new@example.com", purpose: "change" } });
+      expect(together.participation).toMatchObject({ participating: true, publicName: "Loader Full" });
+
+      // /api/me/settings is built from the same loader.
+      const response = await json<SettingsResponse>(await settingsRoute(makeRequest("/api/me/settings", { cookie }), undefined));
+      expect(response.details).toEqual(together.details);
+      expect(response.avatarVersion).toBe(together.avatarVersion);
+      expect(response.email.pending?.address).toBe("loader-new@example.com");
     });
   });
 

@@ -118,17 +118,21 @@ async function getYou(userId: string, bounds: (string | null)[]): Promise<Leader
   };
 }
 
-export async function getParticipation(userId: string): Promise<LeaderboardParticipation> {
-  const { rows } = await getPool().query<{ public_name: string; joined_at: Date }>(
-    "select public_name, joined_at from leaderboard_entries where user_id = $1",
-    [userId],
-  );
-  const row = rows[0];
+/** A leaderboard_entries row, or nothing when the user hasn't joined. */
+export function participationFrom(row: { public_name: string; joined_at: Date } | undefined): LeaderboardParticipation {
   return {
     participating: row !== undefined,
     publicName: row?.public_name ?? null,
     joinedAt: row?.joined_at.toISOString() ?? null,
   };
+}
+
+export async function getParticipation(userId: string): Promise<LeaderboardParticipation> {
+  const { rows } = await getPool().query<{ public_name: string; joined_at: Date }>(
+    "select public_name, joined_at from leaderboard_entries where user_id = $1",
+    [userId],
+  );
+  return participationFrom(rows[0]);
 }
 
 export type JoinResult = { state: "ok"; participation: LeaderboardParticipation } | { state: "name_taken" };

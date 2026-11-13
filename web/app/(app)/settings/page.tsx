@@ -11,10 +11,7 @@ import { LinksForm } from "@/components/settings/LinksForm";
 import styles from "@/components/settings/settings.module.css";
 import { ThemePicker } from "@/components/themes/ThemePicker";
 import { getCurrentUser } from "@/lib/server/auth";
-import { getAvatar } from "@/lib/server/avatar";
-import { getEmailStatus } from "@/lib/server/email";
-import { getParticipation } from "@/lib/server/leaderboard";
-import { getProfileRecord } from "@/lib/server/settings";
+import { getSettingsData } from "@/lib/server/settings";
 
 // Private to whoever is signed in, and rendered per request from their session.
 export const metadata: Metadata = { title: "Settings", robots: { index: false, follow: false } };
@@ -45,12 +42,7 @@ export default async function SettingsPage() {
       </main>
     );
   }
-  const [record, avatar, email, participation] = await Promise.all([
-    getProfileRecord(user.id),
-    getAvatar(user.id),
-    getEmailStatus(user),
-    getParticipation(user.id),
-  ]);
+  const { details, links, avatarVersion, email, participation } = await getSettingsData(user);
 
   return (
     <main className={`page ${styles.page}`} data-testid="settings">
@@ -89,15 +81,15 @@ export default async function SettingsPage() {
           Profile
         </h2>
         <p className={styles.lede}>Everything here is optional, and only you can see it.</p>
-        <AvatarEditor initialVersion={avatar?.version ?? null} />
-        <DetailsForm initial={record.details} />
+        <AvatarEditor initialVersion={avatarVersion} />
+        <DetailsForm initial={details} />
       </section>
 
       <section id="links" className={`card ${styles.section}`} aria-labelledby="links-heading">
         <h2 id="links-heading" className="section-title">
           Links
         </h2>
-        <LinksForm initial={record.links} />
+        <LinksForm initial={links} />
       </section>
 
       <section id="leaderboard" className={`card ${styles.section}`} aria-labelledby="leaderboard-heading">
