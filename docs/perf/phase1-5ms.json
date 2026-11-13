@@ -1,0 +1,233 @@
+{
+  "label": "phase 1, 5 ms per query",
+  "date": "2026-11-13T07:46:44.156Z",
+  "environment": {
+    "server": "next start (production build) on 127.0.0.1",
+    "database": "local embedded Postgres",
+    "addedQueryLatencyMs": 5,
+    "poolMax": 3,
+    "runsPerRoute": 15,
+    "node": "v26.13.0",
+    "platform": "darwin arm64"
+  },
+  "routes": [
+    {
+      "name": "Settings page",
+      "path": "/settings",
+      "signedIn": true,
+      "ttfbMedian": 38.2,
+      "ttfbP90": 42.4,
+      "totalMedian": 40.6,
+      "queriesMedian": 4,
+      "queryMsMedian": 25.2,
+      "authMsMedian": 22.7,
+      "bytesMedian": 43077,
+      "sqlSample": [
+        "select \"primary\".* from (select * from \"auth_sessions\" where \"auth_sessions\".\"token\" = $1)",
+        "select \"primary\".* from (select * from \"auth_users\" where \"auth_users\".\"id\" = $1) as \"prim",
+        "insert into users (id, github_login) values ($1, $2) on conflict (id) do update set github",
+        "select p.display_name, p.pronouns, p.bio, to_char(p.birthday, 'YYYY-MM-DD') as birthday, p"
+      ]
+    },
+    {
+      "name": "Profile page",
+      "path": "/profile",
+      "signedIn": true,
+      "ttfbMedian": 5.1,
+      "ttfbP90": 5.9,
+      "totalMedian": 73.1,
+      "queriesMedian": 18,
+      "queryMsMedian": 109.3,
+      "authMsMedian": 19.8,
+      "bytesMedian": 218134,
+      "sqlSample": [
+        "select \"primary\".* from (select * from \"auth_sessions\" where \"auth_sessions\".\"token\" = $1)",
+        "select \"primary\".* from (select * from \"auth_users\" where \"auth_users\".\"id\" = $1) as \"prim",
+        "insert into users (id, github_login) values ($1, $2) on conflict (id) do update set github",
+        "select u.github_login, u.created_at, p.display_name, p.pronouns, p.bio, p.links, av.versio",
+        "select count(*)::int as count from submissions s join puzzles p on p.id = s.puzzle_id wher",
+        "select p.type, p.difficulty, p.tags, r.slug as repo_slug, r.language, pr.status from puzzl",
+        "select to_char( least( u.created_at, coalesce( (select min(s.created_at) from submissions ",
+        "with active as ( select distinct (s.created_at at time zone 'UTC')::date as day from submi",
+        "select p.slug, p.title, p.type, p.difficulty, r.slug as repo_slug, pr.attempts, last.last_",
+        "select to_char(s.created_at at time zone 'UTC', 'YYYY-MM-DD') as date, count(*)::int as su",
+        "select s.id::text as id, p.slug, p.title, r.slug as repo_slug, p.type, p.difficulty, s.cor",
+        "insert into score_events (user_id, puzzle_id, kind, base_points, first_try_bonus, hint_pen",
+        "select to_char((s.created_at at time zone 'UTC')::date, 'YYYY-MM-DD') as day, min(s.create",
+        "select e.earned_at, p.difficulty, p.type, s.repo_id::text as repo, e.first_try, (not e.bac",
+        "select to_char(coalesce(first.at, pr.solved_at) at time zone 'UTC', 'YYYY-MM-DD') as date,",
+        "select period_kind, to_char(period_start, 'YYYY-MM-DD') as day, completed_at from challeng",
+        "select count(distinct type)::int as count from puzzles where published",
+        "select achievement_id, unlocked_at from user_achievements where user_id = $1"
+      ]
+    },
+    {
+      "name": "Puzzle list page",
+      "path": "/puzzles",
+      "signedIn": true,
+      "ttfbMedian": 3.9,
+      "ttfbP90": 7,
+      "totalMedian": 79.2,
+      "queriesMedian": 12,
+      "queryMsMedian": 72.4,
+      "authMsMedian": 19.5,
+      "bytesMedian": 402772,
+      "sqlSample": [
+        "select \"primary\".* from (select * from \"auth_sessions\" where \"auth_sessions\".\"token\" = $1)",
+        "select \"primary\".* from (select * from \"auth_users\" where \"auth_users\".\"id\" = $1) as \"prim",
+        "insert into users (id, github_login) values ($1, $2) on conflict (id) do update set github",
+        "select distinct unnest(tags) as tag from puzzles where published order by tag",
+        "select distinct r.slug from puzzles p join snapshots s on s.id = p.snapshot_id join repos ",
+        "select p.slug, p.type, p.difficulty, p.title, r.slug as repo_slug, r.language, p.tags, coa",
+        "insert into rate_limits as r (key, count, window_start) values ($1, 1, coalesce($3::timest",
+        "select now() as now",
+        "select count(*)::int as count from challenge_assignments where (period_kind, period_start)",
+        "select a.period_kind, to_char(a.period_start, 'YYYY-MM-DD') as period_start, p.slug, p.tit",
+        "select to_char(period_start, 'YYYY-MM-DD') as day from challenge_completions where user_id",
+        "select period_kind, count(*)::int as count from challenge_completions where user_id = $1 g"
+      ]
+    },
+    {
+      "name": "Puzzle page",
+      "path": "/puzzles/hono-trace-002",
+      "signedIn": true,
+      "ttfbMedian": 37.6,
+      "ttfbP90": 45,
+      "totalMedian": 39.1,
+      "queriesMedian": 4,
+      "queryMsMedian": 25.1,
+      "authMsMedian": 21.3,
+      "bytesMedian": 34655,
+      "sqlSample": [
+        "select \"primary\".* from (select * from \"auth_sessions\" where \"auth_sessions\".\"token\" = $1)",
+        "select \"primary\".* from (select * from \"auth_users\" where \"auth_users\".\"id\" = $1) as \"prim",
+        "insert into users (id, github_login) values ($1, $2) on conflict (id) do update set github",
+        "select p.slug, p.type, p.difficulty, p.title, p.prompt, p.answer_kind, p.set_count, p.choi"
+      ]
+    },
+    {
+      "name": "Leaderboard page",
+      "path": "/leaderboard",
+      "signedIn": true,
+      "ttfbMedian": 67.9,
+      "ttfbP90": 76,
+      "totalMedian": 69.5,
+      "queriesMedian": 11,
+      "queryMsMedian": 70.7,
+      "authMsMedian": 24.2,
+      "bytesMedian": 37519,
+      "sqlSample": [
+        "select \"primary\".* from (select * from \"auth_sessions\" where \"auth_sessions\".\"token\" = $1)",
+        "select \"primary\".* from (select * from \"auth_users\" where \"auth_users\".\"id\" = $1) as \"prim",
+        "insert into users (id, github_login) values ($1, $2) on conflict (id) do update set github",
+        "insert into rate_limits as r (key, count, window_start) values ($1, 1, coalesce($3::timest",
+        "select now() as now",
+        "insert into score_events (user_id, puzzle_id, kind, base_points, first_try_bonus, hint_pen",
+        "select public_name from leaderboard_entries where user_id = $1",
+        "with totals as ( select e.user_id, sum(e.points)::int as points, (count(*) filter (where e",
+        "with totals as ( select e.user_id, sum(e.points)::int as points, (count(*) filter (where e",
+        "select coalesce(sum(points), 0)::int as points, (count(*) filter (where kind = 'solve'))::",
+        "with totals as ( select e.user_id, sum(e.points)::int as points, (count(*) filter (where e"
+      ]
+    },
+    {
+      "name": "GET /api/me",
+      "path": "/api/me",
+      "signedIn": true,
+      "ttfbMedian": 37.6,
+      "ttfbP90": 38.5,
+      "totalMedian": 38.1,
+      "queriesMedian": 5,
+      "queryMsMedian": 32.9,
+      "authMsMedian": 23.3,
+      "bytesMedian": 225,
+      "sqlSample": [
+        "select \"primary\".* from (select * from \"auth_sessions\" where \"auth_sessions\".\"token\" = $1)",
+        "select \"primary\".* from (select * from \"auth_users\" where \"auth_users\".\"id\" = $1) as \"prim",
+        "insert into users (id, github_login) values ($1, $2) on conflict (id) do update set github",
+        "select theme_mode, theme_id, favorite_themes from user_preferences where user_id = $1",
+        "select p.display_name, a.version, exists (select 1 from user_emails e where e.user_id = $1"
+      ]
+    },
+    {
+      "name": "GET /api/puzzles",
+      "path": "/api/puzzles",
+      "signedIn": true,
+      "ttfbMedian": 39.1,
+      "ttfbP90": 40.3,
+      "totalMedian": 39.5,
+      "queriesMedian": 6,
+      "queryMsMedian": 44.1,
+      "authMsMedian": 23.1,
+      "bytesMedian": 31077,
+      "sqlSample": [
+        "select \"primary\".* from (select * from \"auth_sessions\" where \"auth_sessions\".\"token\" = $1)",
+        "select \"primary\".* from (select * from \"auth_users\" where \"auth_users\".\"id\" = $1) as \"prim",
+        "insert into users (id, github_login) values ($1, $2) on conflict (id) do update set github",
+        "select distinct r.slug from puzzles p join snapshots s on s.id = p.snapshot_id join repos ",
+        "select distinct unnest(tags) as tag from puzzles where published order by tag",
+        "select p.slug, p.type, p.difficulty, p.title, r.slug as repo_slug, r.language, p.tags, coa"
+      ]
+    },
+    {
+      "name": "GET /api/leaderboard",
+      "path": "/api/leaderboard",
+      "signedIn": true,
+      "ttfbMedian": 65.3,
+      "ttfbP90": 73.4,
+      "totalMedian": 65.8,
+      "queriesMedian": 11,
+      "queryMsMedian": 73.6,
+      "authMsMedian": 23.1,
+      "bytesMedian": 202,
+      "sqlSample": [
+        "select \"primary\".* from (select * from \"auth_sessions\" where \"auth_sessions\".\"token\" = $1)",
+        "select \"primary\".* from (select * from \"auth_users\" where \"auth_users\".\"id\" = $1) as \"prim",
+        "insert into users (id, github_login) values ($1, $2) on conflict (id) do update set github",
+        "insert into rate_limits as r (key, count, window_start) values ($1, 1, coalesce($3::timest",
+        "select now() as now",
+        "insert into score_events (user_id, puzzle_id, kind, base_points, first_try_bonus, hint_pen",
+        "select public_name from leaderboard_entries where user_id = $1",
+        "with totals as ( select e.user_id, sum(e.points)::int as points, (count(*) filter (where e",
+        "with totals as ( select e.user_id, sum(e.points)::int as points, (count(*) filter (where e",
+        "select coalesce(sum(points), 0)::int as points, (count(*) filter (where kind = 'solve'))::",
+        "with totals as ( select e.user_id, sum(e.points)::int as points, (count(*) filter (where e"
+      ]
+    },
+    {
+      "name": "GET /api/me (signed out)",
+      "path": "/api/me",
+      "signedIn": false,
+      "ttfbMedian": 2.9,
+      "ttfbP90": 3.7,
+      "totalMedian": 3.1,
+      "queriesMedian": 0,
+      "queryMsMedian": 0,
+      "authMsMedian": 0,
+      "bytesMedian": 48,
+      "sqlSample": []
+    },
+    {
+      "name": "Puzzle list page (signed out)",
+      "path": "/puzzles",
+      "signedIn": false,
+      "ttfbMedian": 3.4,
+      "ttfbP90": 5.7,
+      "totalMedian": 42.9,
+      "queriesMedian": 7,
+      "queryMsMedian": 41.3,
+      "authMsMedian": 0.1,
+      "bytesMedian": 248512,
+      "sqlSample": [
+        "select distinct unnest(tags) as tag from puzzles where published order by tag",
+        "select distinct r.slug from puzzles p join snapshots s on s.id = p.snapshot_id join repos ",
+        "select p.slug, p.type, p.difficulty, p.title, r.slug as repo_slug, r.language, p.tags, coa",
+        "insert into rate_limits as r (key, count, window_start) values ($1, 1, coalesce($3::timest",
+        "select now() as now",
+        "select count(*)::int as count from challenge_assignments where (period_kind, period_start)",
+        "select a.period_kind, to_char(a.period_start, 'YYYY-MM-DD') as period_start, p.slug, p.tit"
+      ]
+    }
+  ],
+  "browser": null
+}

@@ -35,13 +35,22 @@ const RANKED = `
      where t.points > 0
   )`;
 
-interface RankedRow {
+interface RankedJson {
   user_id: string;
   points: number;
   solved: number;
-  reached_at: Date;
+  reached_at: string;
   public_name: string;
-  rank: string;
+  rank: number;
+}
+
+interface BoardRow {
+  total: number;
+  rows: RankedJson[];
+  you_rank: string | null;
+  you_name: string | null;
+  you_points: number;
+  you_solved: number;
 }
 
 export async function getLeaderboard(
@@ -53,68 +62,72 @@ export async function getLeaderboard(
   const at = now ?? (await databaseNow());
   const range = leaderboardRange(period, at);
   const bounds = [range?.startsAt ?? null, range?.endsAt ?? null];
-  const pool = getPool();
   if (userId) await reconcileSolves(userId);
 
   const offset = (page - 1) * LEADERBOARD_PAGE_SIZE;
-  const [pageRows, count, you] = await Promise.all([
-    pool.query<RankedRow>(
-      `${RANKED}
-       select user_id, points, solved, reached_at, public_name, rank from ranked
-        where position > $3 and position <= $3 + $4
-        order by position`,
-      [...bounds, offset, LEADERBOARD_PAGE_SIZE],
-    ),
-    pool.query<{ count: number }>(`${RANKED} select count(*)::int as count from ranked`, bounds),
-    userId ? getYou(userId, bounds) : Promise.resolve(null),
-  ]);
-
-  const rows = pageRows.rows.map(
-    (row): LeaderboardRow => ({
-      rank: Number(row.rank),
-      publicName: row.public_name,
-      points: row.points,
-      solved: row.solved,
-      reachedAt: row.reached_at.toISOString(),
-      isYou: row.user_id === userId,
-    }),
+  // One statement, so the ranking is computed once for the page, the count and the viewer's own
+  // rank, where three separate queries computed it three times. The viewer's own totals count
+  // even when they haven't joined; they're shown only to them. With nobody signed in, $5 is null
+  // and the viewer's parts come back empty.
+  const { rows } = await getPool().query<BoardRow>(
+    `${RANKED}
+     select (select count(*)::int from ranked) as total,
+            coalesce(
+              (select json_agg(json_build_object(
+                        'user_id', user_id, 'points', points, 'solved', solved, 'reached_at', reached_at,
+                        'public_name', public_name, 'rank', rank) order by position)
+                 from ranked where position > $3 and position <= $3 + $4),
+              '[]'::json) as rows,
+            (select rank::text from ranked where user_id = $5::uuid) as you_rank,
+            (select public_name from leaderboard_entries where user_id = $5::uuid) as you_name,
+            (select coalesce(sum(points), 0)::int from score_events
+              where user_id = $5::uuid
+                and ($1::timestamptz is null or earned_at >= $1)
+                and ($2::timestamptz is null or earned_at < $2)) as you_points,
+            (select (count(*) filter (where kind = 'solve'))::int from score_events
+              where user_id = $5::uuid
+                and ($1::timestamptz is null or earned_at >= $1)
+                and ($2::timestamptz is null or earned_at < $2)) as you_solved`,
+    [...bounds, offset, LEADERBOARD_PAGE_SIZE, userId],
   );
+  const board = rows[0];
+  const you: LeaderboardYou | null = userId
+    ? {
+        participating: board?.you_name != null,
+        publicName: board?.you_name ?? null,
+        rank: board?.you_rank == null ? null : Number(board.you_rank),
+        points: board?.you_points ?? 0,
+        solved: board?.you_solved ?? 0,
+      }
+    : null;
+
   return {
     period,
     range: range ? { startsAt: range.startsAt, endsAt: range.endsAt } : null,
     now: at.toISOString(),
     page,
     pageSize: LEADERBOARD_PAGE_SIZE,
-    totalEntries: count.rows[0]?.count ?? 0,
-    rows,
+    totalEntries: board?.total ?? 0,
+    rows: (board?.rows ?? []).map(
+      (row): LeaderboardRow => ({
+        rank: Number(row.rank),
+        publicName: row.public_name,
+        points: row.points,
+        solved: row.solved,
+        reachedAt: new Date(row.reached_at).toISOString(),
+        isYou: row.user_id === userId,
+      }),
+    ),
     you,
   };
 }
 
-/** The signed-in user's own standing. Their private totals show to them even when they haven't joined. */
-async function getYou(userId: string, bounds: (string | null)[]): Promise<LeaderboardYou> {
-  const pool = getPool();
-  const [entry, own, ranked] = await Promise.all([
-    pool.query<{ public_name: string }>("select public_name from leaderboard_entries where user_id = $1", [userId]),
-    pool.query<{ points: number; solved: number }>(
-      `select coalesce(sum(points), 0)::int as points,
-              (count(*) filter (where kind = 'solve'))::int as solved
-         from score_events
-        where user_id = $3
-          and ($1::timestamptz is null or earned_at >= $1)
-          and ($2::timestamptz is null or earned_at < $2)`,
-      [...bounds, userId],
-    ),
-    pool.query<{ rank: string }>(`${RANKED} select rank from ranked where user_id = $3`, [...bounds, userId]),
-  ]);
-  const publicName = entry.rows[0]?.public_name ?? null;
-  const rank = ranked.rows[0]?.rank;
+/** A leaderboard_entries row, or nothing when the user hasn't joined. */
+export function participationFrom(row: { public_name: string; joined_at: Date } | undefined): LeaderboardParticipation {
   return {
-    participating: publicName !== null,
-    publicName,
-    rank: rank === undefined ? null : Number(rank),
-    points: own.rows[0]?.points ?? 0,
-    solved: own.rows[0]?.solved ?? 0,
+    participating: row !== undefined,
+    publicName: row?.public_name ?? null,
+    joinedAt: row?.joined_at.toISOString() ?? null,
   };
 }
 
@@ -123,12 +136,7 @@ export async function getParticipation(userId: string): Promise<LeaderboardParti
     "select public_name, joined_at from leaderboard_entries where user_id = $1",
     [userId],
   );
-  const row = rows[0];
-  return {
-    participating: row !== undefined,
-    publicName: row?.public_name ?? null,
-    joinedAt: row?.joined_at.toISOString() ?? null,
-  };
+  return participationFrom(rows[0]);
 }
 
 export type JoinResult = { state: "ok"; participation: LeaderboardParticipation } | { state: "name_taken" };

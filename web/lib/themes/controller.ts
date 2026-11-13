@@ -64,7 +64,14 @@ export function getState(): AppearanceState {
 
 /** The full catalog, loaded on first use: it's only needed to change or resolve a theme. */
 export function loadCatalog(): Promise<readonly ThemeDefinition[]> {
-  catalog ??= import("./catalog.generated").then((module) => module.THEMES);
+  if (!catalog) {
+    const loading = import("./catalog.generated").then((module) => module.THEMES);
+    catalog = loading;
+    // A failed fetch (offline for a moment, say) isn't kept, so the next ask tries again.
+    loading.catch(() => {
+      if (catalog === loading) catalog = null;
+    });
+  }
   return catalog;
 }
 
@@ -104,13 +111,20 @@ function cached(): AppliedTheme | null {
 const same = (a: ThemePreference, b: ThemePreference) =>
   a.mode === b.mode && (a.mode === "system" || (b.mode === "theme" && a.id === b.id));
 
-/** Applies a preference and makes it what the pre-paint script uses next time. */
+/**
+ * Applies a preference and makes it what the pre-paint script uses next time. codebases Light is
+ * what the stylesheet already paints, so showing it only clears any applied tokens: it needs
+ * neither the 250 KB catalog nor a cache entry. Without this, every page load of someone on the
+ * default theme downloaded the whole catalog just to apply nothing.
+ */
 async function show(preference: ThemePreference, remember: boolean): Promise<void> {
-  const entry = await resolve(preference);
+  const entry: AppliedTheme = same(preference, DEFAULT_PREFERENCE)
+    ? { v: 1, owner, preference: DEFAULT_PREFERENCE }
+    : await resolve(preference);
   applyTokens(resolveApplied(entry));
   if (remember) {
-    // The default needs no cache: the CSS already is the default.
-    writeJson(APPLIED_KEY, same(entry.preference, DEFAULT_PREFERENCE) && owner === "guest" ? null : entry);
+    // The default needs no cache, for a guest or an account: the CSS already is the default.
+    writeJson(APPLIED_KEY, same(entry.preference, DEFAULT_PREFERENCE) ? null : entry);
     watchSystem(entry);
   }
 }

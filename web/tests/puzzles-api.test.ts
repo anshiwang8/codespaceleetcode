@@ -8,6 +8,7 @@ import { GET as listRoute } from "@/app/api/puzzles/route";
 import type { PuzzleDetail, PuzzleListResponse, StatsResponse } from "@/lib/api-types";
 import { GET as statsRoute } from "@/app/api/me/stats/route";
 import { getPool } from "@/lib/server/db";
+import { clearPuzzleCatalog } from "@/lib/server/puzzles";
 import { HANDLE_SYMBOL, PUBLISHED_PUZZLE_COUNT, ROUTER_FILE, seedFixtures, type Fixtures } from "./fixtures";
 import { expectNoAnswerData, hasDatabase, makeRequest, params, signIn } from "./helpers";
 
@@ -55,6 +56,53 @@ describe.skipIf(!hasDatabase)("puzzle reads", () => {
       expect(puzzles).toHaveLength(PUBLISHED_PUZZLE_COUNT);
       expect(puzzles.map((puzzle) => puzzle.slug)).not.toContain("fx-hidden");
       expect(puzzles.map((puzzle) => puzzle.slug)).not.toContain("fx-hidden-repo");
+    });
+
+    it("serves the public catalog from memory, with each user's own progress read fresh", async () => {
+      clearPuzzleCatalog();
+      await getList();
+      const spy = vi.spyOn(getPool(), "query");
+      // Signed out, a warm catalog needs no query.
+      await getList();
+      expect(spy).not.toHaveBeenCalled();
+      spy.mockRestore();
+
+      const first = await signIn("catalog-first");
+      const second = await signIn("catalog-second");
+      await missFile(first);
+      const firstList = await getList("", first);
+      const secondList = await getList("", second);
+      expect(firstList.puzzles.find((puzzle) => puzzle.slug === "fx-file")?.status).toBe("attempted");
+      // The other user shares the catalog but never the first user's progress.
+      expect(secondList.puzzles.find((puzzle) => puzzle.slug === "fx-file")?.status).toBe("unsolved");
+      expect((await getList()).puzzles.every((puzzle) => puzzle.status === "unsolved")).toBe(true);
+
+      // A user's own progress is one query of their rows; the catalog isn't read again.
+      const signedInSpy = vi.spyOn(getPool(), "query");
+      await getList("", first);
+      expect(signedInSpy.mock.calls.map((call) => String(call[0])).filter((sql) => !/auth_|from users|insert into users/.test(sql))).toEqual([
+        "select puzzle_id::text as puzzle_id, status from progress where user_id = $1",
+      ]);
+    });
+
+    it("shows a change to what's published once the catalog is reloaded, and filters the same way", async () => {
+      clearPuzzleCatalog();
+      const before = await getList();
+      await getPool().query("update puzzles set published = false where slug = 'fx-file'");
+      try {
+        // Within its lifetime the copy in memory still lists it; opening it already finds nothing.
+        expect((await getList()).puzzles).toHaveLength(before.puzzles.length);
+        expect((await getDetail("fx-file")).status).toBe(404);
+        clearPuzzleCatalog();
+        expect((await getList()).puzzles.map((puzzle) => puzzle.slug)).not.toContain("fx-file");
+      } finally {
+        await getPool().query("update puzzles set published = true where slug = 'fx-file'");
+        clearPuzzleCatalog();
+      }
+      const type = before.puzzles[0]?.type;
+      const filtered = await getList(`?type=${type}`);
+      expect(filtered.puzzles.length).toBeGreaterThan(0);
+      expect(filtered.puzzles.every((puzzle) => puzzle.type === type)).toBe(true);
     });
 
     it("offers filter values only from published puzzles", async () => {

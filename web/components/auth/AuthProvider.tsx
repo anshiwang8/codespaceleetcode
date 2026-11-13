@@ -5,6 +5,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import type { MeResponse } from "@/lib/api-types";
 import { ApiRequestError, api } from "@/lib/client/api";
 import { signInWithGitHub, signOutOfGitHub } from "@/lib/client/auth-client";
+import { createMeLoader, type AccountChanges } from "@/lib/client/me-loader";
 import { forgetSignedIn, rememberSignedIn } from "@/lib/returning";
 import { adoptAccount, adoptGuest } from "@/lib/themes/controller";
 
@@ -41,6 +42,11 @@ interface AuthValue {
   signOut: () => Promise<void>;
   /** Asks /api/me again, after something in the header (picture, name, email) changed. */
   refresh: () => Promise<void>;
+  /**
+   * After a save the server confirmed for `login`, shows its result in the header without asking
+   * /api/me again. If that account isn't the one on screen any more, it asks instead.
+   */
+  updateAccount: (login: string, changes: AccountChanges) => void;
 }
 
 const AuthContext = createContext<AuthValue | null>(null);
@@ -51,6 +57,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [devName, setDevName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  // One per provider: orders /api/me answers so an old one never replaces a newer sign-in state.
+  const [loader] = useState(() => createMeLoader(() => api.me(), setMe));
 
   // Whoever is signed in decides the theme: their saved one, or this browser's guest choice when
   // nobody is. Switching people replaces the theme, so one person's choice never stays for another.
@@ -71,26 +79,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let canceled = false;
-    api
-      .me()
-      .catch((): MeResponse => ({ user: null, githubAuth: false, devAuth: false }))
-      .then((response) => {
-        if (canceled) return;
-        setMe(response);
+    // Shared, so React's second run of this effect in development doesn't ask twice.
+    loader.load("shared").then(
+      (response) => {
         // Only where the dev login exists, so the real site never stores a dev name.
-        setDevName(response.devAuth ? devLoginName() : null);
-      });
+        if (!canceled && response) setDevName(response.devAuth ? devLoginName() : null);
+      },
+      () => {
+        if (!canceled && !loader.settled) setMe({ user: null, githubAuth: false, devAuth: false });
+      },
+    );
     return () => {
       canceled = true;
     };
-  }, []);
+  }, [loader]);
 
   const change = useCallback(
     async (request: () => Promise<MeResponse>) => {
       setError(null);
       setPending(true);
       try {
-        setMe(await request());
+        await loader.change(request);
         // Server components read the cookie, so progress on the page has to be fetched again.
         router.refresh();
       } catch (cause) {
@@ -99,7 +108,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setPending(false);
       }
     },
-    [router],
+    [router, loader],
   );
 
   const gitHubSignIn = useCallback(async () => {
@@ -134,15 +143,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refresh = useCallback(async () => {
     try {
-      setMe(await api.me());
+      // Fresh: a request that started before the change being reported may not include it.
+      await loader.load("fresh");
     } catch {
       // Keep what's shown; the next navigation asks again.
     }
-  }, []);
+  }, [loader]);
+
+  const updateAccount = useCallback(
+    (login: string, changes: AccountChanges) => {
+      if (!loader.update(login, changes)) void refresh();
+    },
+    [loader, refresh],
+  );
 
   const value = useMemo<AuthValue>(
     () => ({
       refresh,
+      updateAccount,
       me,
       devName,
       error,
@@ -152,7 +170,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       devSignIn: () => change(() => api.devLogin(devName ?? devLoginName())),
       signOut,
     }),
-    [me, devName, error, clearError, pending, change, gitHubSignIn, signOut, refresh],
+    [me, devName, error, clearError, pending, change, gitHubSignIn, signOut, refresh, updateAccount],
   );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

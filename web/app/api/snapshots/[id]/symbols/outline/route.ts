@@ -2,10 +2,11 @@ import { z } from "zod";
 import { fileOutline } from "@/lib/server/code-index";
 import {
   errorResponse,
-  jsonResponse,
+  publicJsonResponse,
   parseSnapshotId,
   queryParams,
   route,
+  SNAPSHOT_INDEX_CACHE,
   textValue,
 } from "@/lib/server/http";
 
@@ -21,5 +22,5 @@ export const GET = route("snapshots.outline", async (request, { params }: Contex
   const query = querySchema.safeParse(queryParams(request));
   if (!query.success) return errorResponse(400, "file is required");
   const outline = await fileOutline(snapshotId, query.data.file);
-  return outline ? jsonResponse(outline) : errorResponse(404, "File not found");
+  return outline ? publicJsonResponse(request, outline, SNAPSHOT_INDEX_CACHE) : errorResponse(404, "File not found");
 });

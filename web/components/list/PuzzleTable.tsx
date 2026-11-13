@@ -5,6 +5,7 @@ import { browseHref, DEFAULT_GROUPING, nextSort, type BrowseState, type SortColu
 import { DIFFICULTY_LABELS, languageLabel, STATUS_LABELS, TYPE_LABELS } from "@/lib/client/labels";
 import { topicLabel } from "@/lib/topics";
 import { Icon, type IconName } from "@/components/site/Icon";
+import { IntentLink } from "@/components/site/IntentLink";
 
 /** A column a group heading already states, so each row doesn't repeat it. */
 export type OmittedColumn = "difficulty" | "repo";
@@ -70,7 +71,7 @@ export function PuzzleTable({ puzzles, state, omit, showStatus }: PuzzleTablePro
               </td>
             ) : null}
             <td className={styles.title}>
-              <Link href={`/puzzles/${puzzle.slug}`}>{puzzle.title}</Link>
+              <IntentLink href={`/puzzles/${puzzle.slug}`}>{puzzle.title}</IntentLink>
             </td>
             <td className={styles.type}>{TYPE_LABELS[puzzle.type]}</td>
             {omit === "difficulty" ? null : (
@@ -87,9 +88,9 @@ export function PuzzleTable({ puzzles, state, omit, showStatus }: PuzzleTablePro
             )}
             <td className={styles.tags}>
               {puzzle.tags.map((tag) => (
-                <Link key={tag} href={browseHref({ filters: { tag }, group: DEFAULT_GROUPING })} className="chip">
+                <IntentLink key={tag} href={browseHref({ filters: { tag }, group: DEFAULT_GROUPING })} className="chip">
                   {topicLabel(tag)}
-                </Link>
+                </IntentLink>
               ))}
             </td>
           </tr>

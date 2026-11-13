@@ -37,7 +37,9 @@
     ".next-smoke/dev/types/**/*.ts",
     "**/*.mts",
     ".next-visual/types/**/*.ts",
-    ".next-visual/dev/types/**/*.ts"
+    ".next-visual/dev/types/**/*.ts",
+    ".next-perf/types/**/*.ts",
+    ".next-perf/dev/types/**/*.ts"
   ],
   "exclude": ["node_modules"]
 }

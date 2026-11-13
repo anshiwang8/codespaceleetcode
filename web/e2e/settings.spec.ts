@@ -163,13 +163,34 @@ test.describe("settings", () => {
   test("signed out, settings explain themselves and offer sign-in", async ({ page }) => {
     await page.goto("/settings");
     await expect(visible(page, "settings-signed-out")).toBeVisible();
-    await expect(page.getByTestId("details-form")).toHaveCount(0);
+    await expect(visible(page, "details-form")).toHaveCount(0);
+  });
+
+  test("every streamed section fills in, with no placeholder or error left, on a desktop and a phone", async ({ page }) => {
+    await devLogin(page, unique("streamed"));
+    for (const viewport of [{ width: 1280, height: 900 }, { width: 390, height: 844 }]) {
+      await page.setViewportSize(viewport);
+      await page.goto("/settings");
+      const main = visible(page, "settings");
+      await expect(main.getByTestId("details-form")).toBeVisible();
+      await expect(main.getByTestId("links-form")).toBeAttached();
+      await expect(main.locator('[data-testid^="theme-option-"]').first()).toBeAttached();
+      for (const id of ["appearance", "profile", "links", "leaderboard", "email"]) {
+        await expect(main.locator(`section#${id}`)).toHaveCount(1);
+      }
+      await expect(main.locator('[data-testid^="settings-loading-"]')).toHaveCount(0);
+      await expect(main.getByTestId("settings-section-error")).toHaveCount(0);
+      await expect(page.getByTestId("settings-loading")).toHaveCount(0);
+    }
+    // The email pages under /settings never borrow the overview's loading screen.
+    await page.goto("/settings/email");
+    await expect(page.getByTestId("settings-loading")).toHaveCount(0);
   });
 
   test("optional details save, survive a reload, report errors inline, and clear", async ({ page }) => {
     await devLogin(page, unique("details"));
     await page.goto("/settings");
-    const form = page.getByTestId("details-form");
+    const form = visible(page, "details-form");
     await form.getByLabel(/Display name/).fill("Ada Reader");
     await form.getByLabel(/Pronouns/).fill("she/her");
     await form.getByLabel(/Short bio/).fill("I read code for fun.");
@@ -177,8 +198,8 @@ test.describe("settings", () => {
     await form.getByTestId("details-save").click();
     await expect(form.getByTestId("details-status")).toHaveText("Saved.");
     await page.reload();
-    await expect(page.getByTestId("details-form").getByLabel(/Display name/)).toHaveValue("Ada Reader");
-    await expect(page.getByTestId("details-form").getByLabel(/Birthday/)).toHaveValue("2000-02-29");
+    await expect(visible(page, "details-form").getByLabel(/Display name/)).toHaveValue("Ada Reader");
+    await expect(visible(page, "details-form").getByLabel(/Birthday/)).toHaveValue("2000-02-29");
 
     // A future birthday can't be picked past the field's max, so it's sent through the API, as
     // a crafted request would be.
@@ -189,19 +210,19 @@ test.describe("settings", () => {
     expect(crafted.status()).toBe(400);
 
     // An invalid value keeps what was typed and marks the field.
-    await page.getByTestId("details-form").getByLabel(/Display name/).fill("Line‮break");
-    await page.getByTestId("details-form").getByTestId("details-save").click();
-    await expect(page.getByTestId("details-form").getByLabel(/Display name/)).toHaveAttribute("aria-invalid", "true");
-    await expect(page.getByTestId("details-form").getByLabel(/Display name/)).toHaveValue("Line‮break");
-    await expect(page.getByTestId("details-status")).toHaveAttribute("role", "alert");
+    await visible(page, "details-form").getByLabel(/Display name/).fill("Line‮break");
+    await visible(page, "details-form").getByTestId("details-save").click();
+    await expect(visible(page, "details-form").getByLabel(/Display name/)).toHaveAttribute("aria-invalid", "true");
+    await expect(visible(page, "details-form").getByLabel(/Display name/)).toHaveValue("Line‮break");
+    await expect(visible(page, "details-status")).toHaveAttribute("role", "alert");
 
     // Everything clears.
-    await page.getByTestId("details-form").getByLabel(/Display name/).fill("");
-    await page.getByTestId("details-form").getByLabel(/Pronouns/).fill("");
-    await page.getByTestId("details-form").getByLabel(/Short bio/).fill("");
-    await page.getByTestId("details-form").getByRole("button", { name: "Clear" }).click();
-    await page.getByTestId("details-save").click();
-    await expect(page.getByTestId("details-status")).toHaveText("Saved.");
+    await visible(page, "details-form").getByLabel(/Display name/).fill("");
+    await visible(page, "details-form").getByLabel(/Pronouns/).fill("");
+    await visible(page, "details-form").getByLabel(/Short bio/).fill("");
+    await visible(page, "details-form").getByRole("button", { name: "Clear" }).click();
+    await visible(page, "details-save").click();
+    await expect(visible(page, "details-status")).toHaveText("Saved.");
     await page.goto("/profile");
     await expect(visible(page, "profile-identity")).not.toContainText("Ada Reader");
   });
@@ -209,7 +230,7 @@ test.describe("settings", () => {
   test("links are validated, saved, and shown on the profile as plain, safe links", async ({ page }) => {
     await devLogin(page, unique("links"));
     await page.goto("/settings");
-    const form = page.getByTestId("links-form");
+    const form = visible(page, "links-form");
     await form.getByTestId("link-github").fill("javascript:alert(1)");
     await form.getByTestId("links-save").click();
     await expect(form.getByTestId("link-github")).toHaveAttribute("aria-invalid", "true");
@@ -234,19 +255,19 @@ test.describe("settings", () => {
     await page.goto("/settings");
     await expect(page.getByTestId("account-menu-button").getByTestId("avatar")).toHaveAttribute("data-kind", "silhouette");
     const picture = await sharp({ create: { width: 400, height: 300, channels: 3, background: "#cc3366" } }).png().toBuffer();
-    await page.getByTestId("avatar-file").setInputFiles({ name: "me.png", mimeType: "image/png", buffer: picture });
-    const frame = page.getByTestId("avatar-crop");
+    await visible(page, "avatar-file").setInputFiles({ name: "me.png", mimeType: "image/png", buffer: picture });
+    const frame = visible(page, "avatar-crop");
     await expect(frame).toBeVisible();
-    await page.getByTestId("avatar-zoom").fill("2");
+    await visible(page, "avatar-zoom").fill("2");
     await frame.focus();
     await page.keyboard.press("ArrowRight");
     // Cancel leaves the saved picture (none) alone.
-    await page.getByTestId("avatar-cancel").click();
-    await expect(page.getByTestId("avatar-editor").getByTestId("avatar")).toHaveAttribute("data-kind", "silhouette");
+    await visible(page, "avatar-cancel").click();
+    await expect(visible(page, "avatar-editor").getByTestId("avatar")).toHaveAttribute("data-kind", "silhouette");
 
-    await page.getByTestId("avatar-file").setInputFiles({ name: "me.png", mimeType: "image/png", buffer: picture });
-    await page.getByTestId("avatar-save").click();
-    await expect(page.getByTestId("avatar-status")).toHaveText("Picture saved.");
+    await visible(page, "avatar-file").setInputFiles({ name: "me.png", mimeType: "image/png", buffer: picture });
+    await visible(page, "avatar-save").click();
+    await expect(visible(page, "avatar-status")).toHaveText("Picture saved.");
     const header = page.getByTestId("account-menu-button").getByTestId("avatar");
     await expect(header).toHaveAttribute("data-kind", "picture");
     await expect.poll(() => header.locator("img").evaluate((image) => (image as HTMLImageElement).naturalWidth)).toBe(256);
@@ -265,8 +286,8 @@ test.describe("settings", () => {
     await page.unrouteAll();
 
     await page.goto("/settings");
-    await page.getByTestId("avatar-remove").click();
-    await expect(page.getByTestId("avatar-status")).toContainText("Picture removed");
+    await visible(page, "avatar-remove").click();
+    await expect(visible(page, "avatar-status")).toContainText("Picture removed");
     await expect(page.getByTestId("account-menu-button").getByTestId("avatar")).toHaveAttribute("data-kind", "silhouette");
   });
 
@@ -279,9 +300,9 @@ test.describe("settings", () => {
     await expect(visible(page, "email-setup-banner")).toBeVisible();
     await visible(page, "email-setup-banner").getByRole("link", { name: "Add email" }).click();
     await expect(page).toHaveURL(/\/settings\/email$/);
-    await page.getByTestId("email-input").fill(first);
-    await page.getByTestId("email-submit").click();
-    await expect(page.getByTestId("email-pending")).toContainText(first);
+    await visible(page, "email-input").fill(first);
+    await visible(page, "email-submit").click();
+    await expect(visible(page, "email-pending")).toContainText(first);
 
     const link = /https?:\/\/\S+token=\S+/.exec(outboxFor(first).at(-1)?.text ?? "")?.[0] ?? "";
     expect(link).toContain("/settings/email/verify?token=");
@@ -289,18 +310,18 @@ test.describe("settings", () => {
     await expect(page.getByTestId("verify-done")).toContainText(first);
     // The token is gone from the address bar.
     expect(new URL(page.url()).search).toBe("");
-    await expect(page.getByTestId("email-setup-banner")).toHaveCount(0);
+    await expect(visible(page, "email-setup-banner")).toHaveCount(0);
     // A link works once.
     await page.goto(link);
     await expect(page.getByTestId("verify-failed")).toContainText("isn't valid");
 
     // Change: the verified address stays until the new one is confirmed.
     await page.goto("/settings#email");
-    await page.getByTestId("email-change").click();
-    await page.getByTestId("email-input").fill(second);
-    await page.getByTestId("email-submit").click();
-    await expect(page.getByTestId("email-current")).toContainText(first);
-    await expect(page.getByTestId("email-pending")).toContainText(second);
+    await visible(page, "email-change").click();
+    await visible(page, "email-input").fill(second);
+    await visible(page, "email-submit").click();
+    await expect(visible(page, "email-current")).toContainText(first);
+    await expect(visible(page, "email-pending")).toContainText(second);
 
     // An expired link says so, and offers a new one.
     const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
@@ -314,8 +335,8 @@ test.describe("settings", () => {
     await page.goto(expired);
     await expect(page.getByTestId("verify-failed")).toContainText("expired");
     await page.goto("/settings#email");
-    await page.getByTestId("email-resend").click();
-    await expect(page.getByTestId("email-message")).toContainText("new link");
+    await visible(page, "email-resend").click();
+    await expect(visible(page, "email-message")).toContainText("new link");
     const fresh = /https?:\/\/\S+token=\S+/.exec(outboxFor(second).at(-1)?.text ?? "")?.[0] ?? "";
     await page.goto(fresh);
     await expect(page.getByTestId("verify-done")).toContainText(second);
