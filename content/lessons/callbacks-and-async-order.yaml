@@ -1,0 +1,68 @@
+slug: callbacks-and-async-order
+code: L11
+kind: lesson
+revision: 1
+title: Callbacks and async order
+minutes: 20
+summary: Tell registering a callback from calling it, and predict the order of events around an `await`.
+objective: Distinguish registering a callback from invoking it, and predict the order around an awaited promise.
+prerequisites: [call-chains-and-trace-boundaries]
+teach: |
+  A **callback** is a function you pass for someone else to call. Passing it as a value doesn't
+  call it.
+
+  In JavaScript, an `async` function runs synchronously until it first suspends at an `await`; the
+  code after the `await` resumes later. When reading a trace, keep three orders apart: the order
+  things are registered, the order they're invoked, and the order they finish.
+code_blocks:
+  - id: example
+    lang: js
+    source: |
+      const events = [];
+      async function work() {
+        events.push("A");
+        await Promise.resolve();
+        events.push("B");
+      }
+      void work();
+      events.push("C");
+example:
+  prompt: The promise on line 4 fulfills. In what order are A, B and C pushed?
+  blocks: [example]
+  explanation: |
+    Calling `work` on line 7 pushes A, then pauses at `await`. Control returns to the caller, which
+    pushes C on line 8. Only then does the continuation resume and push B. The order is A, C, B.
+exercises:
+  - id: guided
+    role: practice
+    label: Guided practice
+    kind: choice
+    prompt: 'Given `const callback = () => events.push("X");`, which event does that declaration alone append?'
+    choices:
+      - { id: x, label: '`"X"`' }
+      - { id: none, label: None }
+    key:
+      answer: none
+      explanation: "The declaration creates a function and names it. Nothing calls it, so nothing is pushed."
+      hints:
+        - Where are the parentheses that would call it?
+  - id: exit
+    role: required
+    label: Exit check
+    kind: choice
+    prompt: 'Move `events.push("C")` so it runs before `void work()`. What''s the order now?'
+    choices:
+      - { id: c-a-b, label: "C, A, B" }
+      - { id: a-b-c, label: "A, B, C" }
+      - { id: c-b-a, label: "C, B, A" }
+    key:
+      answer: c-a-b
+      explanation: "C now happens before the call. Then `work` pushes A synchronously, suspends, and pushes B when it resumes."
+mistake: |
+  Assuming an already-resolved promise lets `await` skip suspending. Mark the continuation
+  separately from the synchronous statements.
+transfer: |
+  Try the puzzle below once you can tell a function passed as a value from the function running.
+  Streams and subscriptions come back in L21.
+practice: [rxjs-trace-002]
+references: [R5, R10]

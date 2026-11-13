@@ -1,0 +1,65 @@
+slug: http-and-routing
+code: L13
+kind: lesson
+revision: 1
+title: HTTP and routing
+minutes: 18
+summary: Read a request's method, path and query, and pick the handler a router chooses under stated rules.
+objective: Identify a request's method, path, query, and status, then select its handler under stated rules.
+prerequisites: [c2-small-repository-investigation]
+prerequisite_note: C2 or equivalent
+topics: [routing]
+teach: |
+  An HTTP **request** has a method and a target, and can carry headers and a body. A **response**
+  has a status, and can carry headers and a body. A **router** connects a request to a handler.
+
+  In the toy router below, both the method and the path must match; query parameters don't choose
+  the route.
+code_blocks:
+  - id: routes
+    file: A toy router
+    lang: text
+    source: |
+      GET  /books/:id  → readBook
+      POST /books      → createBook
+      Other requests   → 404 in this toy router
+example:
+  prompt: Which handler receives `GET /books/42?format=short`, and what is `id`?
+  blocks: [routes]
+  explanation: |
+    `GET /books/42?format=short` matches the first rule, so `readBook` runs with `id` bound to the
+    string `"42"`. The format stays available as a query parameter. `POST /books` would match
+    `createBook` instead.
+exercises:
+  - id: guided
+    role: practice
+    label: Guided practice
+    kind: choice
+    prompt: Which handler receives `POST /books?format=short`?
+    choices:
+      - { id: read-book, label: "`readBook`" }
+      - { id: create-book, label: "`createBook`" }
+      - { id: neither, label: Neither }
+    key:
+      answer: create-book
+      explanation: "Without its query the path is `/books`, and the method is POST, which matches the `createBook` rule."
+      hints:
+        - Strip the query before matching this router's path.
+  - id: exit
+    role: required
+    label: Exit check
+    kind: choice
+    prompt: Under the stated rules, what happens to `POST /books/42`?
+    choices:
+      - { id: read-book, label: "`readBook` runs" }
+      - { id: create-book, label: "`createBook` runs" }
+      - { id: not-found, label: The router answers 404 }
+    key:
+      answer: not-found
+      explanation: "The first rule has a different method and the second a different path, so it falls to the 404 rule. A real router might answer 405 or behave otherwise."
+mistake: |
+  Assuming a framework's defaults are HTTP requirements. Check precedence, trailing slashes, and
+  the fallback in the pinned implementation.
+transfer: Try one of the puzzles below.
+practice: [starlette-find-001, hono-find-001]
+references: [R11, R14]

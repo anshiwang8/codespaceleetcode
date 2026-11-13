@@ -14,6 +14,7 @@ from ingest.errors import IngestError
 from ingest.fetch import fetch_repo
 from ingest.filters import filter_tree
 from ingest.indexer import run_indexer, stage_files
+from ingest.lessons import format_lesson_report, validate_lessons, write_generated
 from ingest.migrate import migrate as run_migrations
 from ingest.puzzles import CONTENT_DIR
 from ingest.repos import Repo, find_repo, load_repos
@@ -86,7 +87,7 @@ def migrate(
 def validate(
     content_dir: ContentDirOption = CONTENT_DIR, out_dir: OutDirOption = paths.OUT_DIR
 ) -> None:
-    """Run the checks in spec section 6 on every puzzle."""
+    """Run the checks in spec section 6 on every puzzle, and the Learn path's checks on every lesson."""
     try:
         report = validate_content(content_dir, out_dir)
     except IngestError as error:
@@ -94,8 +95,22 @@ def validate(
         raise typer.Exit(code=1) from error
     for line in format_report(report):
         typer.echo(line)
+    lessons = validate_lessons(content_dir)
+    for line in format_lesson_report(lessons):
+        typer.echo(line)
+    if not report.ok or not lessons.ok:
+        raise typer.Exit(code=1)
+
+
+@app.command()
+def learn(content_dir: ContentDirOption = CONTENT_DIR) -> None:
+    """Check content/lessons/ and write the Learn path's public and server-only TypeScript files."""
+    report = write_generated(content_dir)
+    for line in format_lesson_report(report):
+        typer.echo(line)
     if not report.ok:
         raise typer.Exit(code=1)
+    typer.echo("Wrote web/lib/learn/course.generated.ts and web/lib/server/learn/keys.generated.ts.")
 
 
 @app.command("blind-export")

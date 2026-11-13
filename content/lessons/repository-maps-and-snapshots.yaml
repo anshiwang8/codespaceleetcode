@@ -1,0 +1,67 @@
+slug: repository-maps-and-snapshots
+code: L07
+kind: lesson
+revision: 1
+title: Repository maps and snapshots
+minutes: 15
+summary: Pick the right starting files in an unfamiliar repository, and say why the exact commit matters.
+objective: Identify the right starting files in a new repository and explain why the commit matters.
+prerequisites: [c1-receipt-trace]
+prerequisite_note: C1 or equivalent
+topics: [code-structure]
+teach: |
+  A **repository** holds source code and usually documentation, configuration, and tests. Start
+  from your question: the README orients you, a manifest such as `package.json` names the public
+  entry points, and source or tests are evidence of behavior.
+
+  A **snapshot** freezes one revision. A branch can move on after a lesson is written; a commit
+  SHA never does. Every puzzle on codebases is pinned to one.
+code_blocks:
+  - id: tree
+    file: A small package
+    lang: text
+    source: |
+      package.json          Public export points to src/public.ts
+      README.md             What the package is for
+      src/public.ts         Source entry
+      tests/receipt.test.ts Expected receipt behavior
+example:
+  prompt: You want to trace this package's public API. Which file do you open first, and which gives you a concrete input to follow?
+  blocks: [tree]
+  explanation: |
+    The manifest maps the public export to `src/public.ts`, so begin there to trace the public API.
+    Use the test to find a concrete input and its assertion. Record file paths relative to this
+    revision, not to your own machine.
+exercises:
+  - id: guided
+    role: practice
+    label: Guided practice
+    kind: choice
+    prompt: Where do you first verify that the public entry really is `src/public.ts`?
+    choices:
+      - { id: package-json, label: "`package.json`" }
+      - { id: readme, label: "`README.md`" }
+      - { id: test, label: "`tests/receipt.test.ts`" }
+    key:
+      answer: package-json
+      explanation: "The manifest is the machine-readable package configuration that declares the entry point. The README describes; it doesn't decide."
+      hints:
+        - Look for machine-readable package configuration.
+  - id: exit
+    role: required
+    label: Exit check
+    kind: choice
+    prompt: You want another learner to find the same line next month. Which reference is best?
+    choices:
+      - { id: branch, label: A branch name plus a line number }
+      - { id: sha, label: "The full commit SHA, the relative path and the line" }
+      - { id: absolute, label: The absolute path on your computer }
+    key:
+      answer: sha
+      explanation: "A commit SHA names one revision that never changes, and a relative path works on any machine. A branch can move; an absolute path is yours alone."
+mistake: |
+  Treating familiar folder names as proof. Verify the actual manifest or import chain.
+transfer: |
+  Open the puzzle below and note the repository and snapshot it shows before you try it.
+practice: [hono-find-001]
+references: [R8, R9]

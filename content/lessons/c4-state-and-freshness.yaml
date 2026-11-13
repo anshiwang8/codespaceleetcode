@@ -1,0 +1,61 @@
+slug: c4-state-and-freshness
+code: C4
+kind: checkpoint
+revision: 1
+title: State and freshness
+minutes: 12
+summary: Compare a state transition, a reactive dependency and a cache expiry, and why each can matter.
+objective: Use the stated rules to explain a reducer step, an effect rerun, and a cache miss.
+prerequisites: [parsing-and-code-generation]
+prerequisite_note: L23, before the capstone
+scenario: |
+  A toy app stores a count, displays it only while a switch is on, and caches a separate report
+  with a TTL of 30 seconds. A reducer increments the count on `add`. The view tracks only the
+  properties it read in its latest completed run. The report cache is well below its capacity.
+
+  Each item has one accepted answer and can be retried; after a miss, the review link names the
+  lesson to revisit.
+exercises:
+  - id: transition
+    role: required
+    label: 1. Transition
+    kind: choice
+    prompt: The count starts at 2. Dispatch `add` with an amount of 3, then an unknown action. What is the count?
+    choices:
+      - { id: "2", label: "2" }
+      - { id: "5", label: "5" }
+      - { id: "8", label: "8" }
+    review: actions-and-reducers
+    key:
+      answer: "5"
+      explanation: "2 + 3 is 5, and the unknown action leaves the state alone."
+  - id: dependency
+    role: required
+    label: 2. Dependency
+    kind: choice
+    prompt: The view has rerun with the switch off. What does a change to the count alone do?
+    choices:
+      - { id: reruns, label: It reruns the view }
+      - { id: no-rerun, label: It doesn't rerun the view }
+      - { id: evicts, label: It forces a cache eviction }
+    review: reactive-dependencies
+    key:
+      answer: no-rerun
+      explanation: "The latest run read the switch but not the count, so the count isn't tracked any more."
+  - id: cache
+    role: required
+    label: 3. Cache
+    kind: choice
+    prompt: After 31 seconds the cached report isn't reused. Why?
+    choices:
+      - { id: capacity, label: Capacity eviction }
+      - { id: expiry, label: Expiry }
+      - { id: key, label: A changed key }
+    review: caches-and-storage
+    key:
+      answer: expiry
+      explanation: "The entry outlived its 30-second TTL; there was no capacity pressure and the key didn't change."
+after: |
+  **Review beyond the score.** Explain which rule answers each question. If your explanation
+  assumes a behavior the case doesn't state, rewrite it using the stated evidence. Then move on to
+  the capstone, after reviewing any misses.

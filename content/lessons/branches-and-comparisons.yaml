@@ -1,0 +1,66 @@
+slug: branches-and-comparisons
+code: L02
+kind: lesson
+revision: 1
+title: Branches and comparisons
+minutes: 14
+summary: Evaluate a comparison and say which branch of an `if` runs, including exactly at the cutoff.
+objective: Evaluate a comparison and identify which branch runs, including at the boundary.
+prerequisites: [values-and-assignments]
+teach: |
+  A **condition** is evaluated before the body of an `if`. An `else` runs when that condition is
+  false. Equality doesn't satisfy "greater than" (`>`), but it does satisfy "greater than or equal
+  to" (`>=`).
+
+  A useful reading technique: test a value just below, exactly at, and just above the cutoff.
+code_blocks:
+  - id: example
+    lang: js
+    source: |
+      let label = "wait";
+      if (age >= 18 && hasPass) {
+        label = "enter";
+      }
+example:
+  prompt: Here `age` is 18 and `hasPass` is `false`. What is `label` after the `if`? Then try it with `hasPass` set to `true`.
+  blocks: [example]
+  explanation: |
+    With `age = 18`, the first comparison, `age >= 18`, is true. The second term is false, so the
+    whole `&&` condition is false and `label` stays `"wait"`. With `hasPass = true`, both parts are
+    true and `label` changes to `"enter"`.
+exercises:
+  - id: guided
+    role: practice
+    label: Guided practice
+    kind: choice
+    prompt: Now `age` is 17 and `hasPass` is `true`. Which label remains after the `if`?
+    choices:
+      - { id: wait, label: '`"wait"`' }
+      - { id: enter, label: '`"enter"`' }
+      - { id: undefined, label: "`undefined`" }
+    key:
+      answer: wait
+      explanation: '`17 >= 18` is false, so the whole `&&` is false: the pass can''t override the age check, and `label` stays `"wait"`.'
+      hints:
+        - Both parts of `&&` must be true.
+      feedback:
+        enter: "The pass is true, but `&&` needs both parts. Check `17 >= 18` first."
+        undefined: "`label` starts as `\"wait\"` on line 1, so it always holds a string."
+  - id: exit
+    role: required
+    label: Exit check
+    kind: choice
+    prompt: 'If `n` is 5, which value does `if (n > 5) { result = "large"; } else { result = "small"; }` assign to `result`?'
+    choices:
+      - { id: large, label: '`"large"`' }
+      - { id: small, label: '`"small"`' }
+      - { id: both, label: "Both, one after the other" }
+    key:
+      answer: small
+      explanation: 'Equality makes `n > 5` false, so the `else` branch runs and assigns `"small"`. Only one branch ever runs.'
+mistake: |
+  Assuming the second test always runs. In JavaScript, `&&` skips its right operand when the left
+  one is falsy. These examples use Boolean operands, so the result is always `true` or `false` and
+  type conversion isn't a second puzzle.
+next: In the next lesson, follow a branch that runs again and again inside a loop.
+references: [R5, R6]

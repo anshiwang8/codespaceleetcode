@@ -1,0 +1,66 @@
+slug: clients-and-redirects
+code: L16
+kind: lesson
+revision: 1
+title: Clients and redirects
+minutes: 19
+summary: Separate preparing a request from sending it, and trace a redirect under a stated policy.
+objective: Separate request preparation from sending and trace a redirect under a given policy.
+prerequisites: [input-validation-and-dependencies]
+topics: [http-clients]
+teach: |
+  An HTTP client may combine per-call options with defaults, prepare a request, and choose a
+  transport. A **redirect** response can make the client create another request. For each hop,
+  check the status, the `Location`, the method, and the origin. An **origin** is the scheme, host,
+  and port together.
+
+  Don't assume all redirect codes, clients, or credential types behave alike.
+code_blocks:
+  - id: policy
+    file: A toy client's redirect policy
+    lang: text
+    source: |
+      prepare POST → send → 303 Location on a different origin
+      apply toy redirect policy → prepare GET with no body
+      remove Authorization for changed origin → send next hop
+example:
+  prompt: 'The client sends `POST https://a.example/submit` and gets a 303 with `Location: https://b.example/receipt`. What is the next request?'
+  blocks: [policy]
+  explanation: |
+    Under this toy policy, a 303 after a POST makes the next request a GET to the new URL with no
+    body, and a changed origin removes the `Authorization` header. So the next hop is
+    `GET https://b.example/receipt`, without the original body or `Authorization`. Compare the
+    general status semantics in RFC 9110.
+exercises:
+  - id: guided
+    role: practice
+    label: Guided practice
+    kind: choice
+    prompt: Under the toy policy, which rule strips `Authorization`?
+    choices:
+      - { id: every-303, label: Every 303 }
+      - { id: every-get, label: Every GET }
+      - { id: changed-origin, label: A changed origin }
+    key:
+      answer: changed-origin
+      explanation: "The method change and the credential removal are separate decisions; credentials are dropped because the origin changed."
+      hints:
+        - Treat the method and the credentials as separate decisions.
+  - id: exit
+    role: required
+    label: Exit check
+    kind: choice
+    prompt: 'Now the `Location` is `/receipt`, on the same origin. Under the toy policy, what is the next request?'
+    choices:
+      - { id: post-body, label: A POST with the body }
+      - { id: get-keep, label: "A GET without a body, keeping `Authorization`" }
+      - { id: get-remove, label: "A GET without a body, removing `Authorization`" }
+    key:
+      answer: get-keep
+      explanation: "The 303 still turns the POST into a bodyless GET, but the origin didn't change, so `Authorization` stays."
+mistake: |
+  Treating a redirect as a retry. A redirect follows a response and may change the target or the
+  method; a retry makes another attempt at the same operation.
+transfer: Start with the first puzzle below, then try the second.
+practice: [requests-trace-001, httpx-find-002]
+references: [R11, R16]

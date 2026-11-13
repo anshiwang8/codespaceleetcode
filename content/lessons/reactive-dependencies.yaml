@@ -1,0 +1,66 @@
+slug: reactive-dependencies
+code: L20
+kind: lesson
+revision: 1
+title: Reactive dependencies
+minutes: 22
+summary: Predict which changes make an effect run again under a stated tracking model.
+objective: Predict which changes cause an effect to rerun under a stated tracking model.
+prerequisites: [actions-and-reducers]
+topics: [reactivity]
+teach: |
+  In this toy model, an **effect** tracks the reactive properties it read during its most recent
+  run. A write to a tracked property schedules a rerun. On a rerun, the set of dependencies is
+  replaced by the reads from that run.
+
+  Real frameworks differ in batching, triggering, and how they clean up dependencies; read the code
+  before inferring timing.
+code_blocks:
+  - id: example
+    lang: js
+    source: |
+      // effect and state are supplied by the toy reactive system.
+      effect(() => {
+        if (state.show) render(state.count);
+        else render("hidden");
+      });
+example:
+  prompt: '`show` starts true. Then `show` becomes false, and after that `count` changes. Which of those writes reruns the effect?'
+  blocks: [example]
+  explanation: |
+    With `show = true`, the effect reads `show` and `count`. Changing `show` to false reruns it,
+    and this time it reads only `show`. So the later `count` change doesn't rerun it. (Each run is
+    assumed to finish before the next event.)
+exercises:
+  - id: guided
+    role: practice
+    label: Guided practice
+    kind: choice
+    prompt: "`show` is initially true. Which dependency set does the first run record?"
+    choices:
+      - { id: show, label: "`show` only" }
+      - { id: count, label: "`count` only" }
+      - { id: both, label: "`show` and `count`" }
+    key:
+      answer: both
+      explanation: "The condition reads `show`, and the true branch reads `count`, so both are tracked."
+      hints:
+        - Trace every property access, including the one in the condition.
+  - id: exit
+    role: required
+    label: Exit check
+    kind: choice
+    prompt: After `show` turns false and the rerun finishes, which write can rerun the effect?
+    choices:
+      - { id: count, label: "A write to `count` only" }
+      - { id: show, label: "A write to `show` only" }
+      - { id: neither, label: Neither }
+    key:
+      answer: show
+      explanation: "The latest run read only `show`, so only a write to `show` is tracked now."
+mistake: |
+  Treating every property mentioned in the source as an active dependency. Check what the effect
+  actually read on the branch it took.
+transfer: Use the puzzle below to investigate dependency cleanup in real source.
+practice: [vue-find-002]
+references: [R20]

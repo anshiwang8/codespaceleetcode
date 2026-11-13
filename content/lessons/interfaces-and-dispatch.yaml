@@ -1,0 +1,70 @@
+slug: interfaces-and-dispatch
+code: L12
+kind: lesson
+revision: 1
+title: Interfaces and dispatch
+minutes: 19
+summary: Find the declared contract, the selection rule and the concrete implementation for one configuration.
+objective: Identify the declared contract, selection rule, and concrete implementation for one configuration.
+prerequisites: [callbacks-and-async-order]
+topics: [extension-points]
+teach: |
+  An **interface** describes what an object offers. **Dispatch** is the decision about which
+  implementation handles a call. A **registry** maps names to implementations.
+
+  To trace a dispatched call, follow the configuration to the selected object, then read its
+  method. Go-to-definition may land on the interface declaration rather than the implementation
+  that actually runs.
+code_blocks:
+  - id: example
+    lang: ts
+    source: |
+      type Driver = { read(): string };
+      const registry: Record<"memory" | "disk", Driver> = {
+        memory: { read: () => "temporary" },
+        disk: { read: () => "persistent" },
+      };
+      function load(mode: "memory" | "disk") {
+        return registry[mode].read();
+      }
+example:
+  prompt: What does `load("memory")` return, and which line decided that?
+  blocks: [example]
+  explanation: |
+    With `mode = "memory"`, the lookup `registry[mode]` on line 7 returns the memory object, and
+    its `read` runs, returning `"temporary"`. The `Driver` type tells you the result is a string;
+    the argument tells you which body produced it.
+exercises:
+  - id: guided
+    role: practice
+    label: Guided practice
+    kind: choice
+    prompt: Which object receives the `read()` call for `load("disk")`?
+    choices:
+      - { id: driver, label: The `Driver` type }
+      - { id: memory, label: The memory object }
+      - { id: disk, label: The disk object }
+    key:
+      answer: disk
+      explanation: "`registry[\"disk\"]` is the disk object, so its `read` runs. A type has no body to call."
+      hints:
+        - Evaluate the lookup before following `read`.
+  - id: exit
+    role: required
+    label: Exit check
+    kind: choice
+    prompt: Without knowing the value of `mode`, which conclusion follows from the code?
+    choices:
+      - { id: disk-always, label: The disk driver always runs }
+      - { id: both, label: Both drivers run }
+      - { id: unknown, label: "A registered driver's `read` runs, but which one is unknown" }
+    key:
+      answer: unknown
+      explanation: "The selected object depends on the argument. The code guarantees one registered driver runs, not which."
+mistake: |
+  Using a method with the same name as evidence of dispatch. Find the actual object or token
+  chosen at the call site.
+transfer: |
+  After the group checkpoint, try one of the puzzles below.
+practice: [unstorage-architecture-003, hono-architecture-002]
+references: [R7, R10]

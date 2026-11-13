@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "codebases Learn lesson",
+  "description": "One lesson, checkpoint or capstone under content/lessons/. Everything except each exercise's `key` (and a reflection's `rubric`) is public and reaches the browser. `uv run python -m ingest learn` splits the two and writes web/lib/learn/course.generated.ts (public) and web/lib/server/learn/keys.generated.ts (server-only). See docs/learn-authoring.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["slug", "code", "kind", "revision", "title", "minutes", "summary", "objective", "prerequisites", "exercises"],
+  "properties": {
+    "slug": {
+      "description": "Stable kebab-case URL slug: the heading without its number. Never change it once published.",
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "maxLength": 60
+    },
+    "code": { "description": "The human ID: L01 to L24, or C1 to C4.", "type": "string", "pattern": "^(L[0-9]{2}|C[0-9])$" },
+    "kind": { "enum": ["lesson", "checkpoint", "capstone"] },
+    "revision": {
+      "description": "Bump when an exercise, its choices or its key change. Progress is kept per revision, so a learner who completed an older one sees 'Review the updated lesson'.",
+      "type": "integer",
+      "minimum": 1
+    },
+    "title": { "type": "string", "minLength": 3, "maxLength": 80 },
+    "badge": { "description": "A short note beside the duration, such as 'Start here'.", "type": "string", "maxLength": 40 },
+    "minutes": { "type": "integer", "minimum": 1, "maximum": 90 },
+    "summary": { "description": "One sentence for the catalog.", "type": "string", "minLength": 10, "maxLength": 240 },
+    "objective": { "description": "The outcome, one Markdown paragraph.", "$ref": "#/$defs/markdown" },
+    "prerequisites": {
+      "description": "Suggested earlier lessons or checkpoints, by slug. A suggestion only: nothing is locked.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/slug" },
+      "uniqueItems": true
+    },
+    "prerequisite_note": { "description": "Shown instead of the generated prerequisite line, e.g. 'C1 or equivalent'.", "type": "string", "maxLength": 120 },
+    "topics": {
+      "description": "Puzzle topics this lesson prepares for; each links to /puzzles?tag=<topic>.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/topic" },
+      "maxItems": 3,
+      "uniqueItems": true
+    },
+    "teach": { "$ref": "#/$defs/markdown" },
+    "scenario": { "description": "Capstone and checkpoints: the case being investigated.", "$ref": "#/$defs/markdown" },
+    "code_blocks": {
+      "description": "Code shown on the page. A `line` exercise refers to one by id.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/codeBlock" }
+    },
+    "example": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["prompt", "explanation"],
+      "properties": {
+        "prompt": { "$ref": "#/$defs/markdown" },
+        "blocks": { "description": "Ids from code_blocks shown with the example.", "type": "array", "items": { "$ref": "#/$defs/id" } },
+        "explanation": { "description": "The worked explanation. Public: it's a teaching example, not a check.", "$ref": "#/$defs/markdown" }
+      }
+    },
+    "mistake": { "description": "The common mistake.", "$ref": "#/$defs/markdown" },
+    "next": { "description": "What comes next, or the module review.", "$ref": "#/$defs/markdown" },
+    "transfer": { "description": "Introduces the practice puzzles. Never names a puzzle's answer.", "$ref": "#/$defs/markdown" },
+    "after": { "description": "Shown after the exercises, e.g. checkpoint review advice.", "$ref": "#/$defs/markdown" },
+    "practice": {
+      "description": "Existing puzzles to try next. Recommendations only: never a completion gate or an answer source.",
+      "type": "array",
+      "items": { "type": "string", "pattern": "^[a-z]+-(find|trace|architecture|design)-[0-9]{3}$" },
+      "uniqueItems": true,
+      "maxItems": 6
+    },
+    "references": { "type": "array", "items": { "type": "string", "pattern": "^R[0-9]{1,2}$" }, "uniqueItems": true },
+    "exercises": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/exercise" } },
+    "reflection": {
+      "description": "Capstone only: an optional explanation the learner writes for themselves. Never graded or stored.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["prompt", "rubric"],
+      "properties": {
+        "prompt": { "$ref": "#/$defs/markdown" },
+        "rubric": { "description": "Private until the learner asks for it.", "$ref": "#/$defs/markdown" }
+      }
+    },
+    "author_notes": { "description": "Never published.", "type": "string" }
+  },
+  "$defs": {
+    "slug": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "maxLength": 60 },
+    "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "maxLength": 40 },
+    "markdown": { "type": "string", "minLength": 1, "maxLength": 6000 },
+    "inline": {
+      "description": "One line of text. `code` spans and **bold** only.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 600
+    },
+    "topic": {
+      "enum": ["routing", "middleware", "request-lifecycle", "errors", "http-clients", "retries-and-timeouts", "reactivity", "compilers", "validation", "dependency-injection", "extension-points", "configuration", "state-management", "caching-and-storage", "observables", "auth-and-security", "code-structure", "command-line"]
+    },
+    "codeBlock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "lang", "source"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "file": { "description": "A label such as route.js. Original teaching code, never a real snapshot.", "type": "string", "maxLength": 60 },
+        "lang": { "enum": ["js", "ts", "py", "text"] },
+        "source": { "type": "string", "minLength": 1, "maxLength": 4000 }
+      }
+    },
+    "option": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label"],
+      "properties": { "id": { "$ref": "#/$defs/id" }, "label": { "$ref": "#/$defs/inline" } }
+    },
+    "exercise": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "role", "kind", "prompt", "key"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "role": {
+          "description": "`required` exercises decide completion; `practice` ones are for warming up.",
+          "enum": ["practice", "required"]
+        },
+        "label": { "description": "Shown above the prompt, e.g. 'Guided practice', 'Exit check', '1. Branch'.", "type": "string", "maxLength": 60 },
+        "kind": { "enum": ["choice", "line", "sequence"] },
+        "prompt": { "$ref": "#/$defs/markdown" },
+        "choices": { "description": "kind: choice.", "type": "array", "minItems": 2, "maxItems": 6, "items": { "$ref": "#/$defs/option" } },
+        "block": { "description": "kind: line. The code block whose lines are selectable.", "$ref": "#/$defs/id" },
+        "candidates": { "description": "kind: sequence. Steps to pick from, in display order.", "type": "array", "minItems": 2, "maxItems": 10, "items": { "$ref": "#/$defs/option" } },
+        "review": { "description": "The lesson to revisit after a miss.", "$ref": "#/$defs/slug" },
+        "key": {
+          "description": "PRIVATE. Never reaches the browser except through the check, hint and reveal endpoints.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["answer", "explanation"],
+          "properties": {
+            "answer": {
+              "description": "choice: the choice id. line: the 1-based line number. sequence: candidate ids in order.",
+              "oneOf": [
+                { "$ref": "#/$defs/id" },
+                { "type": "integer", "minimum": 1 },
+                { "type": "array", "minItems": 1, "maxItems": 10, "items": { "$ref": "#/$defs/id" } }
+              ]
+            },
+            "explanation": { "description": "Shown after a correct answer or a reveal.", "$ref": "#/$defs/inline" },
+            "hints": { "description": "Revealed one at a time, on request.", "type": "array", "maxItems": 3, "items": { "$ref": "#/$defs/inline" } },
+            "feedback": {
+              "description": "Optional: what to say after a particular wrong choice, by choice id.",
+              "type": "object",
+              "propertyNames": { "$ref": "#/$defs/id" },
+              "additionalProperties": { "$ref": "#/$defs/inline" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

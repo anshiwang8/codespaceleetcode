@@ -1,0 +1,175 @@
+# The Learn path: its groups, modules and the order of every lesson, checkpoint and capstone.
+# This file is the single source of ordering. Each lesson lives in content/lessons/<slug>.yaml.
+# After any change here or in a lesson, run `uv run python -m ingest learn` (from ingest/) to
+# regenerate web/lib/learn/course.generated.ts and web/lib/server/learn/keys.generated.ts;
+# `pnpm validate` fails while they're out of date. See docs/learn-authoring.md.
+
+title: A course in reading real software
+summary: >-
+  From your first line of code to an evidence-based explanation of a real system. Read small,
+  original examples, predict what they do, check yourself, then practice on real repositories.
+
+groups:
+  - id: read-a-small-program
+    title: Read a small program
+    summary: Values, branches, loops, calls, collections and failure paths, traced by hand.
+    modules:
+      - id: values-and-control-flow
+        title: Values and control flow
+        summary: Follow a value through assignments, branches and loops.
+        lessons: [values-and-assignments, branches-and-comparisons, loops-and-running-state]
+      - id: functions-and-data
+        title: Functions and data
+        summary: Calls and returns, shared collections, and the difference between a type and a check.
+        lessons: [calls-and-returns, collections-and-mutation, types-and-failure-paths]
+    checkpoint: c1-receipt-trace
+
+  - id: navigate-a-repository
+    title: Navigate a repository
+    summary: Find the right file, follow a name to its definition, and trace calls across files.
+    modules:
+      - id: evidence-and-navigation
+        title: Evidence and navigation
+        summary: Repository maps, pinned snapshots, symbol navigation, tests and defaults.
+        lessons: [repository-maps-and-snapshots, search-and-symbol-navigation, tests-and-configuration]
+      - id: tracing-across-files
+        title: Tracing across files
+        summary: Call chains with a stop rule, callbacks and async order, and dispatch.
+        lessons: [call-chains-and-trace-boundaries, callbacks-and-async-order, interfaces-and-dispatch]
+    checkpoint: c2-small-repository-investigation
+
+  - id: follow-a-web-request
+    title: Follow a web request
+    summary: Routing, middleware, validation, clients, retries and the line between identity and permission.
+    modules:
+      - id: inside-the-server
+        title: Inside the server
+        summary: How a request reaches a handler, what wraps it, and where input is checked.
+        lessons: [http-and-routing, middleware-and-error-paths, input-validation-and-dependencies]
+      - id: across-a-network-boundary
+        title: Across a network boundary
+        summary: Redirects, timeouts, retries, and the checks that guard a resource.
+        lessons: [clients-and-redirects, timeouts-and-retries, authentication-and-authorization]
+    checkpoint: c3-request-and-client-decisions
+
+  - id: reason-about-systems
+    title: Reason about systems
+    summary: State, reactivity, streams, caches and compilers, ending in an investigation of your own.
+    modules:
+      - id: state-and-events
+        title: State and events
+        summary: Reducers, reactive dependencies, and streams with subscriptions.
+        lessons: [actions-and-reducers, reactive-dependencies, streams-and-subscriptions]
+      - id: mechanisms-and-trade-offs
+        title: Mechanisms and trade-offs
+        summary: Caches, parsers and code generators, then the capstone investigation.
+        lessons: [caches-and-storage, parsing-and-code-generation, codebase-investigation-capstone]
+    # C4 comes before the capstone in the course, so it's placed after its module's second lesson.
+    checkpoint: c4-state-and-freshness
+    checkpoint_before: codebase-investigation-capstone
+
+references:
+  R1:
+    title: A Multi-National Study of Reading and Tracing Skills in Novice Programmers
+    source: Lister and colleagues, 2004
+    url: https://doi.org/10.1145/1044550.1041673
+  R2:
+    title: Organizing Instruction and Study to Improve Student Learning
+    source: Pashler and colleagues, Institute of Education Sciences, 2007
+    url: https://ies.ed.gov/ncee/WWC/Docs/PracticeGuide/20072004.pdf
+  R3:
+    title: "Test-Enhanced Learning: Taking Memory Tests Improves Long-Term Retention"
+    source: Roediger and Karpicke, 2006
+    url: https://pubmed.ncbi.nlm.nih.gov/16507066/
+  R4:
+    title: "Teaching Computer Programming with PRIMM: A Sociocultural Perspective"
+    source: Sentance, Waite and Kallia, 2019
+    url: https://eprints.gla.ac.uk/229013/
+  R5:
+    title: JavaScript Guide
+    source: MDN
+    url: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide
+  R6:
+    title: The Python Tutorial
+    source: Python documentation
+    url: https://docs.python.org/3/tutorial/
+  R7:
+    title: Narrowing
+    source: TypeScript Handbook
+    url: https://www.typescriptlang.org/docs/handbook/2/narrowing.html
+  R8:
+    title: Viewing the Commit History
+    source: Pro Git
+    url: https://git-scm.com/book/en/v2/Git-Basics-Viewing-the-Commit-History
+  R9:
+    title: Modules and Packages
+    source: Node.js documentation
+    url: https://nodejs.org/api/packages.html
+  R10:
+    title: SCIP Code Intelligence Protocol
+    source: SCIP maintainers
+    url: https://github.com/scip-code/scip
+  R11:
+    title: "RFC 9110: HTTP Semantics"
+    source: IETF
+    url: https://www.rfc-editor.org/rfc/rfc9110.html
+  R12:
+    title: Basic usage
+    source: Zod documentation
+    url: https://zod.dev/basics
+  R13:
+    title: Options
+    source: Click documentation
+    url: https://click.palletsprojects.com/en/stable/options/
+  R14:
+    title: Middleware
+    source: Hono documentation
+    url: https://hono.dev/docs/guides/middleware
+  R15:
+    title: Dependencies
+    source: FastAPI documentation
+    url: https://fastapi.tiangolo.com/tutorial/dependencies/
+  R16:
+    title: Fetch Standard
+    source: WHATWG
+    url: https://fetch.spec.whatwg.org/
+  R17:
+    title: Timeouts, retries and backoff with jitter
+    source: Amazon Builders' Library
+    url: https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/
+  R18:
+    title: Authorization Cheat Sheet
+    source: OWASP
+    url: https://cheatsheetseries.owasp.org/cheatsheets/Authorization_Cheat_Sheet.html
+  R19:
+    title: Concepts and Data Flow
+    source: Redux documentation
+    url: https://redux.js.org/tutorials/fundamentals/part-2-concepts-data-flow
+  R20:
+    title: Reactivity in Depth
+    source: Vue documentation
+    url: https://vuejs.org/guide/extras/reactivity-in-depth.html
+  R21:
+    title: RxJS source and documentation
+    source: ReactiveX
+    url: https://github.com/ReactiveX/rxjs
+  R22:
+    title: "RFC 9111: HTTP Caching"
+    source: IETF
+    url: https://www.rfc-editor.org/rfc/rfc9111.html
+  R23:
+    title: API
+    source: Jinja documentation
+    url: https://jinja.palletsprojects.com/en/stable/api/
+  R24:
+    title: "@babel/parser"
+    source: Babel documentation
+    url: https://babel.dev/docs/babel-parser
+  R25:
+    title: Getting started
+    source: Ajv documentation
+    url: https://ajv.js.org/guide/getting-started.html
+  R26:
+    title: RTK Query cache behavior
+    source: Redux Toolkit documentation
+    url: https://redux-toolkit.js.org/rtk-query/usage/cache-behavior

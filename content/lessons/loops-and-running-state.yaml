@@ -1,0 +1,72 @@
+slug: loops-and-running-state
+code: L03
+kind: lesson
+revision: 1
+title: Loops and running state
+minutes: 16
+summary: Build a small trace table that follows an accumulator through every iteration of a loop.
+objective: Build a small trace table that tracks an accumulator across loop iterations.
+prerequisites: [branches-and-comparisons]
+teach: |
+  A **loop** repeats a block. A `for...of` loop visits the values of an array in order. An
+  **accumulator** is a variable that carries a running result from one iteration to the next.
+
+  Write down its value before the first iteration, then one row per iteration, including the ones
+  where it doesn't change. Python's `for value in values:` expresses the same pattern.
+code_blocks:
+  - id: example
+    lang: js
+    source: |
+      let total = 0;
+      for (const value of [3, 1, 4]) {
+        if (value >= 3) total += value;
+      }
+      console.log(total);
+example:
+  prompt: Predict the number printed after the loop. Start with `total = 0` and add one row per value.
+  blocks: [example]
+  explanation: |
+    | `value` | Added? | `total` after |
+    |---|---|---|
+    | 3 | yes | 3 |
+    | 1 | no | 3 |
+    | 4 | yes | 7 |
+
+    The number printed is 7. The middle row matters: skipping an update is still an iteration.
+exercises:
+  - id: guided
+    role: practice
+    label: Guided practice
+    kind: choice
+    prompt: Use the values `[2, 3, 3]` instead. Which list gives `total` after each iteration, in order?
+    choices:
+      - { id: zero-three-six, label: "0, 3, 6" }
+      - { id: two-five-eight, label: "2, 5, 8" }
+      - { id: zero-three-three, label: "0, 3, 3" }
+    key:
+      answer: zero-three-six
+      explanation: "2 is below 3, so `total` stays 0. Each 3 is a separate iteration and is added: 3, then 6."
+      hints:
+        - Duplicates are separate iterations.
+      feedback:
+        two-five-eight: "That adds every value. The `if` only adds values of 3 or more."
+        zero-three-three: "The second 3 is its own iteration, and it's added too."
+  - id: exit
+    role: required
+    label: Exit check
+    kind: choice
+    prompt: A loop starts with `total = 1` and adds each **even** number in `[2, 5, 4]`. What is the final `total`?
+    choices:
+      - { id: "6", label: "6" }
+      - { id: "7", label: "7" }
+      - { id: "12", label: "12" }
+    key:
+      answer: "7"
+      explanation: "Carry the initial 1, add 2, skip 5, add 4: 1 + 2 + 4 = 7."
+mistake: |
+  Resetting the accumulator each iteration. Point to the line where it's initialized and ask how
+  often that line runs: once, before the loop.
+next: |
+  **Module review.** Before the next lesson, go back to the branches lesson and try its exit check
+  with a cutoff of exactly 3.
+references: [R5, R6]

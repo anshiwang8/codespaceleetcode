@@ -1,0 +1,65 @@
+slug: timeouts-and-retries
+code: L17
+kind: lesson
+revision: 1
+title: Timeouts and retries
+minutes: 21
+summary: Work out a bounded retry schedule, and decide when it's unsafe to retry an operation.
+objective: Calculate a bounded retry schedule and decide when it is unsafe to retry an operation.
+prerequisites: [clients-and-redirects]
+topics: [retries-and-timeouts]
+teach: |
+  A **timeout** bounds how long you wait; it doesn't prove the server did nothing. A **retry
+  policy** says which failures are eligible, how many attempts are allowed, and how long to wait
+  between them. **Backoff** makes the waits grow; **jitter** spreads retries out so callers don't
+  all retry at once.
+
+  An **idempotent** operation has the same intended effect when it's repeated; its responses
+  needn't match.
+code_blocks:
+  - id: schedule
+    file: A toy retry schedule
+    lang: text
+    source: |
+      Attempt 1: 0–100 ms      wait 50 ms
+      Attempt 2: 150–250 ms    wait 100 ms
+      Attempt 3: 350–450 ms    stop
+example:
+  prompt: The policy allows three attempts in all, a 100 ms timeout per attempt, waits of 50 ms then 100 ms, and no jitter. Every attempt times out. When does the caller give up?
+  blocks: [schedule]
+  explanation: |
+    Attempts start at 0, 150 and 350 ms. The last timeout arrives at 450 ms, assuming no other
+    overhead, and no fourth attempt happens because three is the total.
+exercises:
+  - id: guided
+    role: practice
+    label: Guided practice
+    kind: choice
+    prompt: This time attempt 2 succeeds immediately, at 150 ms. Which later attempt runs?
+    choices:
+      - { id: third-350, label: "A third, at 350 ms" }
+      - { id: third-250, label: "A third, at 250 ms" }
+      - { id: none, label: None }
+    key:
+      answer: none
+      explanation: "A success stops the policy; retries are only for eligible failures."
+      hints:
+        - Check what stops the policy on success.
+  - id: exit
+    role: required
+    label: Exit check
+    kind: choice
+    prompt: A request to create an order times out after it was sent. What does the timeout establish?
+    choices:
+      - { id: no-order, label: No order was created }
+      - { id: order, label: An order must have been created }
+      - { id: unknown, label: The outcome is unknown }
+    key:
+      answer: unknown
+      explanation: "The server may have committed before the response was lost. Use a verified deduplication contract, or check the result, before another attempt."
+mistake: |
+  Mixing up retries and attempts. Note whether a count includes the first attempt. In real
+  systems, account for an overall deadline as well as per-attempt timers.
+transfer: Try the first puzzle below, then read the policy conditions in the second.
+practice: [got-find-001, got-architecture-001]
+references: [R11, R17]

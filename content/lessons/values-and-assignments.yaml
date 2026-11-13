@@ -1,0 +1,73 @@
+slug: values-and-assignments
+code: L01
+kind: lesson
+revision: 1
+title: Values and assignments
+badge: Start here
+minutes: 12
+summary: Read literals, names, expressions and assignments, and say what a variable holds after a given line.
+objective: Read literals, names, expressions, and assignments, then state a variable's value after a named line.
+prerequisites: []
+teach: |
+  A **value** is a piece of data such as a number, string, or Boolean. A **variable** is a name the
+  program uses to refer to a value. The right-hand expression is evaluated *before* the result is
+  assigned.
+
+  In JavaScript, use `let` for a binding that is reassigned and `const` for a binding that will not
+  be reassigned. Python doesn't need either keyword.
+code_blocks:
+  - id: example
+    lang: js
+    source: |
+      let total = 4;
+      total = total + 3;
+      const copy = total;
+      total = total - 1;
+example:
+  prompt: Predict `copy` and `total` after line 4. Start with an empty table, then write each name and its new value.
+  blocks: [example]
+  explanation: |
+    After line 2, `total` is 7. Line 3 binds `copy` to the number 7; line 4 changes `total` to 6.
+    The earlier `copy` stays 7.
+
+    | After line | `total` | `copy` |
+    |---|---|---|
+    | 1 | 4 | |
+    | 2 | 7 | |
+    | 3 | 7 | 7 |
+    | 4 | 6 | 7 |
+exercises:
+  - id: guided
+    role: practice
+    label: Guided practice
+    kind: choice
+    prompt: Change the starting number on line 1 to 8. What does `copy` hold after line 4?
+    choices:
+      - { id: "8", label: "8" }
+      - { id: "10", label: "10" }
+      - { id: "11", label: "11" }
+    key:
+      answer: "11"
+      explanation: "`8 + 3` was already evaluated when `copy` was assigned, so it holds 11. Line 4 changes only `total`."
+      hints:
+        - Stop immediately after the `copy` assignment.
+      feedback:
+        "8": "8 is `total` before line 2 runs. Line 2 adds 3 first."
+        "10": "10 is `total` after line 4. Line 4 changes `total`, not `copy`."
+  - id: exit
+    role: required
+    label: Exit check
+    kind: choice
+    prompt: "After `let n = 2; n = n * 4; const saved = n; n = 0;`, what is `saved`?"
+    choices:
+      - { id: "0", label: "0" }
+      - { id: "2", label: "2" }
+      - { id: "8", label: "8" }
+    key:
+      answer: "8"
+      explanation: "`saved` was bound to 8. The later update changes `n`, not the number already stored in `saved`."
+mistake: |
+  Reading an assignment as a permanent algebra equation. Ask: *what is on the right now, and which
+  name receives it?*
+next: In the next lesson, follow a value through an `if`.
+references: [R5, R6]

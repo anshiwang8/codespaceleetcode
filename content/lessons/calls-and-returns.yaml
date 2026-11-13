@@ -1,0 +1,66 @@
+slug: calls-and-returns
+code: L04
+kind: lesson
+revision: 1
+title: Calls and returns
+minutes: 15
+summary: Name the caller, callee, argument, parameter and return value in a nested call.
+objective: Identify caller, callee, argument, parameter, and return value in a nested call.
+prerequisites: [loops-and-running-state]
+teach: |
+  A function **declaration** defines behavior. A **call** evaluates its arguments, then enters the
+  function with its parameters bound to those values. A `return` exits that invocation and passes a
+  value back to its caller. Local names in different calls are separate, even when they share a name.
+code_blocks:
+  - id: example
+    lang: js
+    source: |
+      function fee(amount) { return amount + 2; }
+      function invoice(price) {
+        return fee(price) + 1;
+      }
+      const charge = invoice(4);
+example:
+  prompt: What value does `charge` receive on line 5? Follow the calls in the order they happen, not the order they're written.
+  blocks: [example]
+  explanation: |
+    `invoice(4)` enters `invoice` with `price = 4`. To evaluate its return expression, it calls
+    `fee(4)`. That inner call returns 6. Back in `invoice`, adding 1 gives 7, which `invoice`
+    returns. The caller, line 5, receives 7.
+exercises:
+  - id: guided
+    role: practice
+    label: Guided practice
+    kind: choice
+    prompt: For `invoice(9)`, what value does the **inner** call, `fee(price)`, return?
+    choices:
+      - { id: "9", label: "9" }
+      - { id: "11", label: "11" }
+      - { id: "12", label: "12" }
+    key:
+      answer: "11"
+      explanation: "`fee(9)` returns `9 + 2`, which is 11. Twelve is what the outer call, `invoice`, returns after adding 1."
+      hints:
+        - Stop when `fee` returns.
+      feedback:
+        "9": "9 is the argument passed in. `fee` adds 2 before returning."
+        "12": "12 is the outer return. Stop when `fee` returns, before `invoice` adds 1."
+  - id: exit
+    role: required
+    label: Exit check
+    kind: choice
+    prompt: |
+      In pseudocode, `double(x)` returns `x * 2` and `finish(x)` returns `double(x - 1)`. When you
+      call `finish(6)`, what argument is passed to `double`?
+    choices:
+      - { id: "5", label: "5" }
+      - { id: "6", label: "6" }
+      - { id: "10", label: "10" }
+    key:
+      answer: "5"
+      explanation: "The argument expression `x - 1` is evaluated before `double` is entered, so `double` receives 5. It then returns 10."
+mistake: |
+  Following functions in the order they're defined in the file. Start at the call site; a
+  definition can sit above or below it.
+next: In the next lesson, see what changes when a function receives a collection rather than a number.
+references: [R5, R6]

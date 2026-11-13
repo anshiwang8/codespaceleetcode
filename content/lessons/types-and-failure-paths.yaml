@@ -1,0 +1,70 @@
+slug: types-and-failure-paths
+code: L06
+kind: lesson
+revision: 1
+title: Types and failure paths
+minutes: 19
+summary: Tell a TypeScript annotation from a runtime check, and a returned failure from a thrown error.
+objective: Distinguish a TypeScript annotation, a runtime guard, a returned failure, and a thrown error.
+prerequisites: [collections-and-mutation]
+topics: [validation, errors]
+teach: |
+  A TypeScript **annotation** documents and checks an expectation while you develop; it doesn't
+  validate arbitrary input at runtime. A **guard** checks an actual value while the program runs.
+
+  A returned error-shaped value is ordinary data the caller can inspect. A **thrown** error leaves
+  the normal path until a matching handler catches it.
+code_blocks:
+  - id: example
+    lang: ts
+    source: |
+      type Result = { ok: false } | { ok: true; value: number };
+      function doubleNumber(input: unknown): Result {
+        if (typeof input !== "number") return { ok: false };
+        return { ok: true, value: input * 2 };
+      }
+example:
+  prompt: Predict the result of `doubleNumber("3")`, and of `doubleNumber(3)`.
+  blocks: [example]
+  explanation: |
+    The string `"3"` fails the guard on line 3 and returns `{ ok: false }`. The number `3` passes
+    and returns `{ ok: true, value: 6 }`. The different literal `ok` values let TypeScript narrow
+    the result after a caller tests `result.ok`.
+exercises:
+  - id: guided
+    role: practice
+    label: Guided practice
+    kind: choice
+    prompt: What does `doubleNumber(0)` return?
+    choices:
+      - { id: failure, label: "A failure: `{ ok: false }`" }
+      - { id: success-zero, label: "A success with value 0" }
+      - { id: thrown, label: A thrown error }
+    key:
+      answer: success-zero
+      explanation: "`typeof 0` is `\"number\"`, so the guard passes and it returns `{ ok: true, value: 0 }`."
+      hints:
+        - The guard checks the type, not whether the value is truthy.
+      feedback:
+        failure: "0 is falsy, but the guard tests `typeof`, which is `\"number\"` for 0."
+        thrown: "Nothing in this version throws: every path returns."
+  - id: exit
+    role: required
+    label: Exit check
+    kind: choice
+    prompt: 'Replace line 3''s `return { ok: false }` with `throw new Error("not a number")`, then call `doubleNumber("3")`. Which path does it take?'
+    choices:
+      - { id: returned, label: A failure object is returned }
+      - { id: continues, label: Execution continues to the success return }
+      - { id: catch, label: "Control transfers to an enclosing `catch`, if there is one" }
+    key:
+      answer: catch
+      explanation: "The guard fails, so `throw` runs: the function exits without returning, and control goes to the nearest enclosing `catch`."
+mistake: |
+  Assuming an annotation converts a string into a number. Find the line that actually examines or
+  converts the value.
+transfer: |
+  After the group checkpoint, try the Zod puzzle below. Read its prompt on its own terms: this
+  lesson's example is unrelated to its answer.
+practice: [zod-find-001]
+references: [R7, R12]

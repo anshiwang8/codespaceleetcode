@@ -1,0 +1,67 @@
+slug: middleware-and-error-paths
+code: L14
+kind: lesson
+revision: 1
+title: Middleware and error paths
+minutes: 20
+summary: Trace the way in and back out through a middleware chain, and what a short circuit skips.
+objective: Trace entry, handler, and return steps through a middleware chain and identify what a short circuit skips.
+prerequisites: [http-and-routing]
+topics: [middleware, errors]
+teach: |
+  **Middleware** wraps or precedes a handler. In this example, `next()` enters the rest of the
+  chain, and code after it runs on the way back out. A middleware can return a response without
+  calling `next` at all.
+
+  If downstream work throws, an ordinary statement after the `await` is skipped unless the error is
+  caught or the statement is in a `finally` block.
+code_blocks:
+  - id: chain
+    file: A toy middleware chain
+    lang: text
+    source: |
+      outer: log outer-in; await next(); log outer-out
+      auth:  log auth-in; if denied, return response
+             otherwise await next(); log auth-out
+      route: log handler; return response
+example:
+  prompt: Write down the log for an allowed request, then for a denied one.
+  blocks: [chain]
+  explanation: |
+    Allowed: `outer-in, auth-in, handler, auth-out, outer-out`. Denied: auth returns early, so only
+    `outer-in, auth-in, outer-out` is logged. This assumes the outer middleware receives the
+    returned response normally.
+exercises:
+  - id: guided
+    role: practice
+    label: Guided practice
+    kind: choice
+    prompt: For the denied request, which stage never starts?
+    choices:
+      - { id: outer, label: outer }
+      - { id: auth, label: auth }
+      - { id: route, label: route }
+    key:
+      answer: route
+      explanation: "auth returns before calling `next()`, so the route never starts. outer and auth both started."
+      hints:
+        - Find the missing `next` call.
+  - id: exit
+    role: required
+    label: Exit check
+    kind: choice
+    prompt: The handler throws, and neither middleware catches it. Which ordinary post-`next` log runs?
+    choices:
+      - { id: auth-out, label: "`auth-out` only" }
+      - { id: outer-out, label: "`outer-out` only" }
+      - { id: neither, label: Neither }
+    key:
+      answer: neither
+      explanation: "Both `await next()` calls reject, so the statements after them are skipped in both middlewares under these assumptions."
+mistake: |
+  Reading a framework diagram as an exact error policy. Check where the implementation catches
+  errors and whether it turns them into responses before unwinding.
+transfer: |
+  Try the first puzzle below; later, compare a response post-processing question in the second.
+practice: [hono-trace-001, flask-architecture-002]
+references: [R14]
