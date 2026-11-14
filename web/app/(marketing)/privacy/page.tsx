@@ -4,6 +4,7 @@ import styles from "@/components/legal/legal.module.css";
 import {
   ContactLine,
   LegalContents,
+  ReviewNote,
   LegalPage,
   LegalTable,
   SectionHeading,
@@ -25,6 +26,7 @@ const SECTIONS = [
   { id: "github", title: "Signing in with GitHub" },
   { id: "activity", title: "Your puzzle activity" },
   { id: "progress", title: "Hints, points, challenges and achievements" },
+  { id: "learn", title: "Learn lesson progress" },
   { id: "leaderboard", title: "The leaderboard" },
   { id: "email", title: "Your contact email" },
   { id: "optional", title: "Details you choose to add" },
@@ -91,6 +93,12 @@ export default function PrivacyPage() {
         Submitting an answer and revealing hints require signing in, so browsing without an account leaves no other
         record with us.
       </p>
+      <p>
+        Learn lessons work without an account too. Checking a lesson answer, asking for a lesson hint or showing an
+        answer sends that request to us so we can grade it, but signed out we don&apos;t record any of it. Your lesson
+        progress stays in your browser ({ref("cookies")}).
+      </p>
+      <ReviewNote>New with Learn (2026-11-13): signed-out lesson checks, hints and reveals are graded but not recorded.</ReviewNote>
 
       {heading("github")}
       <p>
@@ -165,6 +173,21 @@ export default function PrivacyPage() {
         hint deduction. None of this is shown to anyone but you unless you join the leaderboard, and even then only
         your totals are ({ref("leaderboard")}).
       </p>
+
+      {heading("learn")}
+      <p>
+        When you&apos;re signed in and answer one of a lesson&apos;s required checks correctly, we record which lesson,
+        which version of it, which of its required checks you&apos;ve answered correctly, and when you finished it.
+        That&apos;s all. We don&apos;t record wrong answers, the hints you ask for, the answers you choose to show, or
+        what you write in the capstone&apos;s explanation box, which never leaves your browser. Learn progress
+        isn&apos;t shown to anyone else, and it doesn&apos;t affect points, challenges or the leaderboard.
+      </p>
+      <p>
+        Progress you made while signed out stays in that browser and isn&apos;t copied into your account when you sign
+        in.
+      </p>
+      <ReviewNote>New with Learn (2026-11-13): what lesson progress records for a signed-in account, and that it stays
+        private and apart from points.</ReviewNote>
 
       {heading("leaderboard")}
       <p>
@@ -326,6 +349,10 @@ export default function PrivacyPage() {
               <td>You delete your account.</td>
             </tr>
             <tr>
+              <td>Learn progress</td>
+              <td>You delete your account.</td>
+            </tr>
+            <tr>
               <td>Submissions, progress and history</td>
               <td>You delete your account.</td>
             </tr>
@@ -449,6 +476,13 @@ export default function PrivacyPage() {
               <code>cb-theme-guest</code>, <code>cb-theme-favorites</code> (local storage)
             </>,
             "Your theme choice and favorites while signed out. They stay in your browser and aren't sent to us",
+            UNTIL_CLEARED,
+          ],
+          [
+            <>
+              <code>cb-learn-progress</code> (local storage)
+            </>,
+            "Your Learn progress while signed out: which lessons and checks you've completed in this browser. It stays in your browser and isn't sent to us",
             UNTIL_CLEARED,
           ],
           [

@@ -16,6 +16,7 @@ import type {
   SubmitResponse,
   SymbolAtPositionResponse,
 } from "@/lib/api-types";
+import type { CheckResponse, HintResponse, LearnAnswer, RevealResponse, RubricResponse } from "@/lib/learn/types";
 
 /** A failed request. `status` is 0 when the server couldn't be reached at all. */
 export class ApiRequestError extends Error {
@@ -71,7 +72,16 @@ function send<T>(url: string, method: "PUT" | "POST" | "DELETE", body?: unknown)
   });
 }
 
+const learnPath = (slug: string, action: string) => `/api/learn/${encodeURIComponent(slug)}/${action}`;
+
 export const api = {
+  learnCheck: (slug: string, revision: number, exerciseId: string, answer: LearnAnswer) =>
+    post<CheckResponse>(learnPath(slug, "check"), { revision, exerciseId, answer }),
+  learnHint: (slug: string, revision: number, exerciseId: string, level: number) =>
+    post<HintResponse>(learnPath(slug, "hint"), { revision, exerciseId, level }),
+  learnReveal: (slug: string, revision: number, exerciseId: string) =>
+    post<RevealResponse>(learnPath(slug, "reveal"), { revision, exerciseId }),
+  learnRubric: (slug: string, revision: number) => post<RubricResponse>(learnPath(slug, "rubric"), { revision }),
   settings: () => request<SettingsResponse>("/api/me/settings"),
   saveDetails: (details: ProfileDetails) => send<ProfileDetails>("/api/me/details", "PUT", details),
   saveLinks: (links: Record<string, unknown>) => send<ProfileLinks>("/api/me/links", "PUT", links),

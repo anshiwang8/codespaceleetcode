@@ -41,6 +41,7 @@ export default function LandingPage() {
           <nav aria-label="Main" className={styles.topNav}>
             <a href="#how">How it works</a>
             <Link href={PUZZLES_PATH}>Puzzles</Link>
+            <Link href="/learn">Learn</Link>
           </nav>
         </div>
       </header>
@@ -180,6 +181,10 @@ export default function LandingPage() {
           <Link href={EASY_FIND} className={`${styles.button} ${styles.primary}`} data-testid="try-easy">
             Try an easy Find puzzle
           </Link>
+          <p className={styles.closingText} data-testid="landing-learn">
+            New to reading code? <Link href="/learn">Learn</Link> starts from your first line of code, with small examples
+            and checks you answer by choosing, before you open a real repository.
+          </p>
         </section>
       </main>
 

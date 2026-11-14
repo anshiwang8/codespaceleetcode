@@ -1,0 +1,70 @@
+slug: parsing-and-code-generation
+code: L23
+kind: lesson
+revision: 1
+title: Parsing and code generation
+minutes: 24
+summary: Name the parser, transform and generator by what each stage takes in and gives out.
+objective: Identify parser, transformation, and output generation from the representation each stage consumes and produces.
+prerequisites: [caches-and-storage]
+topics: [compilers]
+teach: |
+  A **parser** reads input text and builds structure. An **abstract syntax tree** (AST)
+  represents the meaningful parts of the input. A **transform** changes the tree. A **generator**
+  turns the result into output text or another representation.
+
+  A compiler can have other stages too, and needn't produce machine code.
+
+  The toy folder below has one rule: it replaces `Add(Number(a), Number(b))` with `Number(a + b)`,
+  and leaves every other node as it is.
+code_blocks:
+  - id: pipeline
+    file: A toy constant folder
+    lang: text
+    source: |
+      Text:        "2 + 3"
+      Parsed AST:  Add(Number(2), Number(3))
+      Transformed: Number(5)
+      Output text: "5"
+example:
+  prompt: Follow `2 + 3` through the three stages. What question does each stage answer?
+  blocks: [pipeline]
+  walkthrough: |
+    Parsing builds an `Add` node with two `Number` children. The constant-folding transform replaces
+    it with a `Number` node for 5. The generator prints `5`. In order: what is the structure, what
+    simplification is valid, and what text should be emitted?
+exercises:
+  - id: guided
+    role: practice
+    label: Guided practice
+    kind: choice
+    prompt: In this example, where does the `Add` node first become a `Number` node?
+    choices:
+      - { id: parsing, label: Parsing }
+      - { id: transformation, label: Transformation }
+      - { id: generation, label: Generation }
+    key:
+      answer: transformation
+      explanation: "The parsed tree still has `Add`; the tree after folding has `Number(5)`, so the transform made the change."
+      hints:
+        - Compare the tree before and after the fold.
+  - id: exit
+    role: required
+    label: Exit check
+    kind: choice
+    prompt: The input is `x + 3`, and nothing is known about `x`. What does the toy folding rule do?
+    choices:
+      - { id: fold, label: It folds the expression to 3 }
+      - { id: keep, label: It keeps the `Add` node }
+      - { id: reject, label: It rejects the input }
+    key:
+      answer: keep
+      explanation: "The fold needs two known numeric literals; `x` isn't one, so the `Add` node stays as it is."
+mistake: |
+  Calling all syntax processing "parsing". Identify the representation at each function boundary
+  before naming the stage.
+transfer: |
+  Try the first puzzle below to investigate a pipeline, or the second to connect compilation with
+  caching.
+practice: [vue-trace-001, ajv-architecture-003]
+references: [R24, R25]

@@ -8,6 +8,7 @@ import { PUZZLES_PATH } from "@/lib/browse";
 // Profile and Settings live in the account menu, under the signed-in user's name (AccountMenu.tsx).
 const LINKS = [
   { href: PUZZLES_PATH, label: "Puzzles" },
+  { href: "/learn", label: "Learn" },
   { href: "/challenges", label: "Challenges" },
   { href: "/leaderboard", label: "Leaderboard" },
 ] as const;

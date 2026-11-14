@@ -1,0 +1,65 @@
+slug: tests-and-configuration
+code: L09
+kind: lesson
+revision: 1
+title: Tests and configuration
+minutes: 17
+summary: Read a test's setup, action and assertion, and tell an explicit option from its default.
+objective: Read setup, action, and assertion in a test and distinguish an explicit option from its default.
+prerequisites: [search-and-symbol-navigation]
+topics: [configuration, command-line]
+teach: |
+  Tests describe expected behavior under specific inputs. A test that passes an option can't, by
+  itself, establish what happens by default. Confirm an expectation against the source at the same
+  revision. A **regression test** covers a particular case that should keep working.
+code_blocks:
+  - id: example
+    lang: js
+    source: |
+      function labelPrice(amount, digits = 2) {
+        return amount.toFixed(digits);
+      }
+      assertEqual(labelPrice(3, 1), "3.0");
+      assertEqual(labelPrice(3), "3.00");
+example:
+  prompt: Which of the two assertions tells you about the default for `digits`?
+  blocks: [example]
+  walkthrough: |
+    The default applies only when `digits` is absent or `undefined`. The first test chooses 1
+    explicitly, so it demonstrates an override. The second omits the argument, so it's the one that
+    exercises the default; reading the default parameter on line 1 confirms it.
+exercises:
+  - id: guided
+    role: practice
+    label: Guided practice
+    kind: choice
+    prompt: 'A third assertion is added: `assertEqual(labelPrice(3, undefined), "3.00");`. Which assertions exercise the default for `digits`?'
+    choices:
+      - { id: second, label: The second only }
+      - { id: second-third, label: The second and the third }
+      - { id: all, label: All three }
+    key:
+      answer: second-third
+      explanation: "A default applies when the argument is absent or `undefined`, so `labelPrice(3)` and `labelPrice(3, undefined)` both use `digits = 2`. The first passes 1."
+      hints:
+        - Reread when a default parameter applies, then check each call's second argument.
+  - id: exit
+    role: required
+    label: Exit check
+    kind: choice
+    prompt: What does `labelPrice(3, 0)` return?
+    choices:
+      - { id: three, label: '`"3"`' }
+      - { id: three-point-zero, label: '`"3.0"`' }
+      - { id: three-point-zero-zero, label: '`"3.00"`' }
+    key:
+      answer: three
+      explanation: '0 is an explicit value, not an omission, so the default doesn''t apply: `(3).toFixed(0)` is `"3"`.'
+mistake: |
+  Using a single assertion to claim how every input behaves. State the tested input and
+  configuration before you generalize.
+transfer: |
+  The puzzle below asks about a default in a different language. Read the prompt before searching,
+  and select the kind of evidence it asks for.
+practice: [click-find-004]
+references: [R5, R13]

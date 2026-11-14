@@ -1,0 +1,66 @@
+slug: authentication-and-authorization
+code: L18
+kind: lesson
+revision: 1
+title: Authentication and authorization
+minutes: 21
+summary: Find the evidence for who is asking, and separately the evidence that they're allowed.
+objective: Identify the evidence for identity and the evidence for permission at a resource boundary.
+prerequisites: [timeouts-and-retries]
+topics: [auth-and-security]
+teach: |
+  **Authentication** establishes who is making the request. **Authorization** decides whether that
+  identity may perform *this* action on *this* resource. Hiding a button in the browser is a
+  convenience, not enforcement.
+
+  When you read the code, follow the identity from a verified session to the server-side check on
+  the resource.
+code_blocks:
+  - id: policy
+    file: A toy document policy
+    lang: text
+    source: |
+      session invalid → 401
+      session valid and user is not owner → 403
+      session valid and user is owner → read document
+example:
+  prompt: Three people ask for one document. Who gets which answer?
+  blocks: [policy]
+  walkthrough: |
+    A missing or invalid session gets 401; a valid user who doesn't own the document gets 403; a
+    valid owner reaches the read. This assumes the document exists and the authentication protocol
+    supplies whatever challenge a 401 needs. Some production systems deliberately answer 404 to hide
+    that a resource exists.
+exercises:
+  - id: guided
+    role: practice
+    label: Guided practice
+    kind: choice
+    prompt: A valid user asks for someone else's document. What is the outcome?
+    choices:
+      - { id: "401", label: "401" }
+      - { id: "403", label: "403" }
+      - { id: read, label: The document is read }
+    key:
+      answer: "403"
+      explanation: "Identity succeeded, so it isn't 401; the ownership check fails, so it's 403."
+      hints:
+        - Identity succeeded. Now check permission.
+  - id: exit
+    role: required
+    label: Exit check
+    kind: choice
+    prompt: Which change would wrongly let a signed-in user who isn't the owner read the document?
+    choices:
+      - { id: hide, label: Hiding the Read button in the page }
+      - { id: verify, label: Verifying ownership on the server before reading }
+      - { id: any-session, label: Reading any document whenever a session exists }
+    key:
+      answer: any-session
+      explanation: "Reading whenever a session exists authenticates but never checks ownership, so any signed-in user gets in. Hiding a button changes nothing on the server, and verifying ownership is the check itself."
+mistake: |
+  Treating a user id from the request body as a verified identity. Trace the trusted session, and
+  check that the ownership rule applies to the resource being read.
+transfer: Try the puzzle below to look at protection at a different boundary, credential forwarding.
+practice: [httpx-find-002]
+references: [R11, R18]
