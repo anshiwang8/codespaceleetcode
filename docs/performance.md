@@ -57,7 +57,7 @@ The two builds were measured alternately, twice (before, after, after, before), 
 | Choosing a theme, 4× CPU slowdown | 12.4, 12.7 ms | 9.2, 8.9 ms |
 | Search keystroke, 4× CPU slowdown | 14.1, 14.0 ms | 12.9, 12.3 ms |
 | Repeat navigation Profile → Settings | 109, 105 ms | 65, 60 ms |
-| JavaScript decoded on `/settings` | 847 KB | 849 KB (the picker needs the theme catalog) |
+| JavaScript decoded on `/settings` | 847 KB | 849 KB (the picker needed the 250 KB theme catalog; not remeasured since the catalog shrank to eight themes, about 11 KB) |
 | `/api/me` requests on a cold load | 1 | 1 |
 
 ### Other pages, signed out (one run each)

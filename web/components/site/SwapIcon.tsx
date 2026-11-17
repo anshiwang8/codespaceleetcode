@@ -9,7 +9,7 @@ interface SwapIconProps {
 }
 
 /**
- * An icon that changes in place, such as a favorite's star or a sort direction. On a change the
+ * An icon that changes in place, such as a group's number becoming a check or a sort direction. On a change the
  * old icon blurs out while the new one sharpens in, in the same box (`.icon-swap` in
  * app/globals.css). The first render doesn't animate, so a page full of them loads still.
  */
