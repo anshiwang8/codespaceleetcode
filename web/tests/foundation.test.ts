@@ -2,7 +2,8 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
-const css = readFileSync(path.join(__dirname, "../app/globals.css"), "utf8");
+// LF endings, so the checks below also hold on a Windows checkout with CRLF.
+const css = readFileSync(path.join(__dirname, "../app/globals.css"), "utf8").replace(/\r\n/g, "\n");
 
 describe("craft foundation", () => {
   it.each([
