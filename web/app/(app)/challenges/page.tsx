@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { TooManyRequests } from "@/components/site/TooManyRequests";
 import Link from "next/link";
-import { SignInPrompt } from "@/components/auth/SignInPrompt";
-import { ChallengeCardView } from "@/components/challenges/ChallengeCardView";
+import { ChallengeBar } from "@/components/challenges/ChallengeBar";
 import styles from "@/components/challenges/challenges.module.css";
+import { ChallengeSignIn } from "@/components/challenges/ChallengeSignIn";
 import { ChallengeStreakPanel } from "@/components/challenges/ChallengeStreakPanel";
 import { HowChallengesWork } from "@/components/challenges/HowChallengesWork";
+import { Mascot } from "@/components/site/Mascot";
 import { PUZZLES_PATH } from "@/lib/browse";
 import { getCurrentUser } from "@/lib/server/auth";
 import { isPageRateLimited } from "@/lib/server/rate-limit";
@@ -39,32 +40,50 @@ export default async function ChallengesPage() {
         </Link>
       </div>
 
-      {challenges.current.length === 0 ? (
-        <div className="empty" data-testid="challenges-empty">
-          <strong>There are no challenges right now.</strong>
-          <span>Challenges are picked from the published puzzles, and none are available yet. Check back soon.</span>
-          <Link href={PUZZLES_PATH} className="btn btn-small">
-            Browse puzzles
-          </Link>
-        </div>
-      ) : (
-        <div className={styles.cards}>
-          {challenges.current.map((card) => (
-            <ChallengeCardView key={card.kind} card={card} now={challenges.now} signedIn={signedIn} />
-          ))}
-        </div>
-      )}
-
-      <div className={styles.lower}>
-        {challenges.streak && challenges.completedCounts ? (
-          <ChallengeStreakPanel streak={challenges.streak} completedCounts={challenges.completedCounts} />
+      {/* Two columns of one height: the three bars, and the streak. */}
+      <div className={styles.board}>
+        {challenges.current.length === 0 ? (
+          <div className={`empty ${styles.boardEmpty}`} data-testid="challenges-empty">
+            <strong>There are no challenges right now.</strong>
+            <span>Challenges are picked from the published puzzles, and none are available yet. Check back soon.</span>
+            <Link href={PUZZLES_PATH} className="btn btn-small">
+              Browse puzzles
+            </Link>
+          </div>
         ) : (
-          <section className={styles.signedOut} aria-label="Track your challenges" data-testid="challenges-signed-out">
-            <SignInPrompt reason="Anyone can read the challenges. Sign in to complete them, earn the bonus points and keep a daily streak." />
+          <div className={styles.bars} data-testid="challenge-bars">
+            {challenges.current.map((card) => (
+              <ChallengeBar key={card.kind} card={card} now={challenges.now} signedIn={signedIn} />
+            ))}
+          </div>
+        )}
+
+        {challenges.streak && challenges.completedCounts ? (
+          <ChallengeStreakPanel streak={challenges.streak} completedCounts={challenges.completedCounts} now={challenges.now} />
+        ) : (
+          <section
+            className={`card ${styles.panel} ${styles.signedOut}`}
+            aria-labelledby="challenge-signed-out-heading"
+            data-testid="challenges-signed-out"
+          >
+            {/* Decorative: the sentence beside it says everything. Its square is reserved in the stylesheet. */}
+            <div className={styles.mascotBox} aria-hidden="true" data-testid="challenge-mascot">
+              <Mascot form="full" className={styles.mascot} />
+            </div>
+            <div className={styles.signedOutBody}>
+              <h2 id="challenge-signed-out-heading" className="section-title">
+                Daily streak
+              </h2>
+              <p className={styles.signedOutText}>
+                Sign in to complete challenges, earn their bonus points and keep a daily streak.
+              </p>
+              <ChallengeSignIn />
+            </div>
           </section>
         )}
-        <HowChallengesWork />
       </div>
+
+      <HowChallengesWork rotations={challenges.current.map(({ kind, endsAt }) => ({ kind, endsAt }))} />
     </main>
   );
 }

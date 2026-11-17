@@ -153,7 +153,13 @@ function toCard(row: CardRow): ChallengeCard {
   };
 }
 
-/** Consecutive UTC dates with a daily completion, with the same "today or yesterday" rule as the profile. */
+/** How many UTC days, ending today, the streak calendar can show: five weeks. */
+const RECENT_DAYS = 35;
+
+/**
+ * Consecutive UTC dates with a daily completion, with the same "today or yesterday" rule as the
+ * profile, and the completed dates among the last 35 for the calendar.
+ */
 export function challengeStreakFrom(days: string[], today: string): ChallengeStreak {
   const sorted = [...new Set(days)].sort();
   let longest = 0;
@@ -166,7 +172,10 @@ export function challengeStreakFrom(days: string[], today: string): ChallengeStr
   }
   const yesterday = periodStart("daily", new Date(Date.parse(`${today}T00:00:00Z`) - 1));
   const live = previous === today || previous === yesterday;
-  return { current: live ? run : 0, longest, completedToday: previous === today, recentDays: [] };
+  // The calendar's window: today and the 34 days before it.
+  const from = new Date(Date.parse(`${today}T00:00:00Z`) - (RECENT_DAYS - 1) * 86_400_000).toISOString().slice(0, 10);
+  const recentDays = sorted.filter((day) => day >= from && day <= today);
+  return { current: live ? run : 0, longest, completedToday: previous === today, recentDays };
 }
 
 export async function getChallengeStreak(userId: string, now: Date): Promise<ChallengeStreak> {

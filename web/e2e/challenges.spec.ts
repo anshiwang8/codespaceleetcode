@@ -65,16 +65,32 @@ test.describe("challenges", () => {
     await page.goto("/challenges");
     await expect(visible(page, "challenges").getByRole("heading", { level: 1 })).toHaveText("Challenges");
     await expect(page.getByTestId("nav-challenges")).toHaveAttribute("aria-current", "page");
-    for (const kind of ["daily", "weekly", "monthly"] as const) {
-      const card = visible(page, `challenge-${kind}`);
-      await expect(card).toBeVisible();
-      await expect(card.getByTestId("challenge-puzzle")).toHaveAttribute("href", /^\/puzzles\/e2e-/);
-      await expect(card.getByTestId("challenge-time-left")).toHaveText(/^(\d+d \d+h|\d+h \d+m|\d+m|under a minute)$/);
-      await expect(card.getByTestId("challenge-rotation")).toContainText("00:00 UTC");
+    for (const [kind, type, points] of [
+      ["daily", "Daily", /^\+50\u00a0pts$/],
+      ["weekly", "Weekly", /^\+100\u00a0pts$/],
+      ["monthly", "Monthly", /^\+200\u00a0pts$/],
+    ] as const) {
+      // A bar holds its type, a countdown, its points and one button.
+      const bar = visible(page, `challenge-${kind}`);
+      await expect(bar).toBeVisible();
+      await expect(bar.getByRole("heading", { level: 2 })).toHaveText(`${type} challenge`);
+      await expect(bar.getByTestId("challenge-time-left")).toHaveText(/^(\d+d \d+h|\d+h \d+m|\d+m|under a minute)$/);
+      await expect(bar.getByTestId("challenge-bonus")).toHaveText(points);
+      await expect(bar.getByRole("link")).toHaveCount(1);
+      await expect(bar.getByTestId("challenge-puzzle")).toHaveAttribute("href", /^\/puzzles\/e2e-/);
+      await expect(bar.getByTestId("challenge-puzzle")).toHaveText("Start");
     }
-    await expect(visible(page, "challenge-daily").getByTestId("challenge-bonus")).toHaveText("+50 bonus points");
-    await expect(visible(page, "challenge-weekly").getByTestId("challenge-bonus")).toHaveText("+100 bonus points");
-    await expect(visible(page, "challenge-monthly").getByTestId("challenge-bonus")).toHaveText("+200 bonus points");
+    // The rotation times moved into the closed disclosure under the board.
+    const rules = visible(page, "challenge-rules");
+    await expect(rules).not.toHaveAttribute("open", "");
+    await expect(rules.getByTestId("challenge-rotation").first()).toBeHidden();
+    await rules.locator("summary").click();
+    await expect(rules.getByTestId("challenge-rotation")).toHaveCount(3);
+    for (const rotation of await rules.getByTestId("challenge-rotation").all()) {
+      await expect(rotation).toBeVisible();
+      await expect(rotation).toContainText("00:00 UTC");
+    }
+    await expect(rules).toContainText("to keep your streak");
     await expect(page.getByTestId("challenge-state")).toHaveCount(0);
     await expect(visible(page, "challenges-signed-out").getByRole("button", { name: /Local dev sign-in/ })).toBeVisible();
     await expect(page.getByTestId("challenge-streak")).toHaveCount(0);
@@ -83,9 +99,16 @@ test.describe("challenges", () => {
   test("solving the daily puzzle completes it, starts the streak and shows on the puzzle list", async ({ page }) => {
     await devLogin(page, uniqueLogin("daily"));
     await page.goto("/challenges");
-    await expect(visible(page, "challenge-daily").getByTestId("challenge-state")).toHaveAttribute("data-state", /not-started|solved-elsewhere|attempted/);
+    await expect(visible(page, "challenge-daily").getByTestId("challenge-puzzle")).toHaveAttribute(
+      "data-state",
+      /not-started|solved-elsewhere|attempted/,
+    );
     await expect(visible(page, "challenge-streak-current")).toHaveText("0 days");
     await expect(visible(page, "challenge-streak-today")).toContainText("Not completed yet");
+    const calendar = visible(page, "challenge-streak-calendar");
+    await expect(calendar.locator("[data-day]")).toHaveCount(35);
+    await expect(calendar.locator('[data-today="true"]')).toHaveAttribute("data-state", "open");
+    await expect(visible(page, "challenge-streak").getByRole("progressbar")).toHaveAttribute("aria-valuetext", "0 of 7 days");
 
     const { current } = await currentChallenges(page);
     const daily = current.find((card) => card.kind === "daily");
@@ -103,16 +126,67 @@ test.describe("challenges", () => {
     await page.reload();
     const card = visible(page, "challenge-daily");
     await expect(card).toHaveAttribute("data-completed", "true");
-    await expect(card.getByTestId("challenge-state")).toHaveText("Completed");
-    await expect(card).toContainText(/Completed [A-Z][a-z]{2} \d{1,2}, \d{4}, .* UTC\./);
+    await expect(card.getByTestId("challenge-puzzle")).toHaveText("Completed");
+    await expect(card.getByTestId("challenge-puzzle")).toHaveAttribute("data-state", "completed");
+    await expect(card.getByTestId("challenge-puzzle")).toHaveAttribute("href", `/puzzles/${daily.puzzle.slug}`);
     await expect(visible(page, "challenge-streak-current")).toHaveText("1 day");
     await expect(visible(page, "challenge-streak-today")).toContainText("Completed today");
+    // Today on the calendar is the server's UTC date, and it's filled.
+    const todayCell = visible(page, "challenge-streak-calendar").locator('[data-today="true"]');
+    await expect(todayCell).toHaveAttribute("data-day", daily.periodStart);
+    await expect(todayCell).toHaveAttribute("data-state", "completed");
+    await expect(visible(page, "challenge-streak").getByRole("progressbar")).toHaveAttribute("aria-valuetext", "1 of 7 days");
+    await expect(visible(page, "challenge-streak-longest")).toHaveText("1");
     await expect(visible(page, "challenge-count-daily")).toHaveText("1");
 
     await page.goto("/puzzles");
     const strip = visible(page, "today-challenge");
     await expect(strip.getByTestId("today-challenge-puzzle")).toHaveText(daily.puzzle.title);
     await expect(strip.getByTestId("today-challenge-completed")).toHaveText("Completed");
+  });
+
+  test("at 1440 wide the bars' columns line up and the two columns are one height", async ({ browser }) => {
+    const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    const page = await context.newPage();
+    const box = async (testId: string, inside?: string) => {
+      const scope = inside ? visible(page, inside) : page;
+      const target = inside ? scope.getByTestId(testId) : visible(page, testId);
+      const bounds = await target.boundingBox();
+      if (!bounds) throw new Error(`${testId} has no box`);
+      return bounds;
+    };
+    const check = async (rightColumn: string) => {
+      // Each part of a bar starts at the same x in all three, and the buttons are one width.
+      for (const part of ["challenge-time-left", "challenge-bonus", "challenge-puzzle"]) {
+        const daily = await box(part, "challenge-daily");
+        const weekly = await box(part, "challenge-weekly");
+        const monthly = await box(part, "challenge-monthly");
+        expect(Math.abs(daily.x - weekly.x), part).toBeLessThanOrEqual(1);
+        expect(Math.abs(daily.x - monthly.x), part).toBeLessThanOrEqual(1);
+        if (part !== "challenge-time-left") {
+          expect(Math.abs(daily.x + daily.width - (monthly.x + monthly.width)), part).toBeLessThanOrEqual(1);
+        }
+      }
+      const bars = await box("challenge-bars");
+      const right = await box(rightColumn);
+      expect(Math.abs(bars.height - right.height), rightColumn).toBeLessThanOrEqual(1);
+      expect(Math.abs(bars.y - right.y), rightColumn).toBeLessThanOrEqual(1);
+      // The three bars are one height, and the disclosure spans both columns.
+      const heights = await Promise.all((["daily", "weekly", "monthly"] as const).map(async (kind) => (await box(`challenge-${kind}`)).height));
+      expect(Math.max(...heights) - Math.min(...heights)).toBeLessThanOrEqual(1);
+      const rules = await box("challenge-rules");
+      expect(Math.abs(rules.x - bars.x)).toBeLessThanOrEqual(1);
+      expect(Math.abs(rules.x + rules.width - (right.x + right.width))).toBeLessThanOrEqual(1);
+    };
+    try {
+      await page.goto("/challenges");
+      await check("challenges-signed-out");
+      await devLogin(page, uniqueLogin("layout"));
+      await page.goto("/challenges");
+      await check("challenge-streak");
+    } finally {
+      await context.close();
+    }
   });
 
   test("the puzzle list strip sits above the filters without changing them", async ({ page }) => {
