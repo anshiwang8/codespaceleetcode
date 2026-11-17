@@ -89,6 +89,26 @@ describe("profile states", () => {
     expect(markup).toContain("GitHub account");
   });
 
+  it("renders markup in user-chosen fields as text, never as HTML", () => {
+    const payload = `<script>alert(1)</script><img src=x onerror="alert(2)">`;
+    const identity: ProfileIdentity = {
+      login: "octocat",
+      displayName: payload,
+      provider: "github",
+      memberSince: "2026-01-01T00:00:00.000Z",
+      githubUrl: "https://github.com/octocat",
+      pronouns: payload,
+      bio: payload,
+      links: { custom: [{ label: payload, url: "https://example.com/?q=%22%3E%3Cscript%3E" }] },
+      avatarVersion: null,
+    };
+    const markup = html(createElement(IdentityCard, { identity, progress }));
+    expect(markup).not.toContain("<script");
+    expect(markup).not.toContain("<img src=x");
+    expect(markup).not.toMatch(/<[^>]*\sonerror=/i);
+    expect(markup).toContain("&lt;script&gt;");
+  });
+
   it("continue practicing has an empty state for each situation, each linking to the list", () => {
     const fresh = html(createElement(ContinuePracticing, { unfinished: [], hasSubmissions: false, allSolved: false }));
     expect(fresh).toContain("haven&#x27;t attempted a puzzle yet");

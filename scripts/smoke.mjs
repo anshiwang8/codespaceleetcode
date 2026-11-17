@@ -100,6 +100,10 @@ try {
   };
 
   exitCode = await runNode(nextCli(), ["build"], env);
+  // Nothing server-only may reach what the browser downloads.
+  if (exitCode === 0) {
+    exitCode = await runNode("../scripts/scan-bundle.mjs", [DIST_DIR], env);
+  }
   if (exitCode === 0) exitCode = await runNode(playwrightCli(), ["install", "chromium"], {});
   if (exitCode === 0) {
     exitCode = await runNode(

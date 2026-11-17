@@ -97,6 +97,7 @@ pnpm --filter web build
 pnpm visual:review       # isolated headless screenshot gallery + motion checks; see VISUAL_REVIEW.md
 pnpm e2e                 # Playwright. Starts its own database and server, and can run beside pnpm dev
 pnpm validate            # every check in spec section 6
+pnpm smoke               # next build + next start, scans the browser bundle for secrets (scripts/scan-bundle.mjs), then web/smoke/*.spec.ts
 ```
 
 From `ingest/`:

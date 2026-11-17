@@ -1,5 +1,26 @@
 # DEVLOG
 
+## Security review: ten common attacks checked against the code
+
+Type: Addition
+
+Goal: Check the site against ten common attacks (a script in a username, changing an id in the URL, an /admin page, an API key in the browser, prompt injection, making yourself admin at sign-up, editing a price, redeeming something many times, guessing a login code, and a committed .env) and close what's open.
+
+What should be done: Look for each in the code, fix any that apply, and add a test for each so it stays fixed.
+
+What was done (technical):
+- **Already safe, now with a test.**
+  - Scripts in user fields: React escapes them, Markdown drops raw HTML, and Mermaid runs strict. `tests/profile-render.test.ts` now renders a profile whose display name, pronouns, bio and link label are all `<script>`/`<img onerror>` payloads and checks they come out as text.
+  - Admin: there is no admin area, role or flag. `smoke/smoke.spec.ts` checks `/admin`, `/api/admin` and two subpaths are 404 in a production build.
+  - Keys in the browser: the only `NEXT_PUBLIC_` variable is the snapshot CDN URL. `scripts/scan-bundle.mjs` now runs in `pnpm smoke` after `next build` and fails if anything under `.next-smoke/static` contains the value of a server-only variable (`BETTER_AUTH_SECRET`, `DATABASE_URL` and the other secrets) or a credential-shaped string. It prints only the file and the kind of match.
+  - A committed .env: `.gitignore` keeps out everything but the examples, and no `.env` was ever added. CI has a new `secrets` job that runs gitleaks 8.21.2 over the full history with `--redact`.
+- **Already safe, already tested.** Every `/api/me` query uses the signed-in user's id and takes no user id from the request. Inputs are `z.strictObject`, so an extra `admin: true` is refused (`auth.test.ts`). Points are computed on the server and unique indexes keep a solve or challenge from scoring twice (`scoring.test.ts`, concurrent submissions). Email confirmation uses a single-use, hashed 256-bit token that expires in 30 minutes, with sends and attempts rate-limited.
+- **Dependencies.** `pnpm audit --prod` found 8 advisories, and `next build` refused to run on the affected Next.js. Next.js and `eslint-config-next` go from 16.4.3 to 16.4.6 (GHSA-mfr8-8qww-v76h). `pnpm-workspace.yaml` overrides raise three transitive packages to patched versions: `dompurify` (from Monaco; one critical, one high), `zod` (from `@vercel/functions`; high) and `katex` (from Mermaid; low). The audit now finds nothing.
+- **Doesn't apply.** There are no prices, coupons, login codes or AI features.
+- **Kept as is.** The CSP still allows inline scripts, as `lib/security-headers.ts` explains: a nonce would make every page dynamic, including the static landing page. Escaping is the defense, and the new render test guards it.
+
+Still open: The gitleaks job hasn't run yet; it first runs on this branch's pull request. If it flags a test fixture, mark that line with `gitleaks:allow` rather than weakening the rules.
+
 ## Learn: a course in reading real software
 
 Type: Addition
