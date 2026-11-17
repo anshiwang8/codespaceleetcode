@@ -1,4 +1,5 @@
 import { getPool } from "@/lib/server/db";
+import { clearPuzzleCatalog } from "@/lib/server/puzzles";
 
 // KEYTOKEN appears only in answer keys and the snapshot data they point at, and SOLUTIONTOKEN only
 // in solutions. Prompts and titles never contain either, so a response scan can't false-positive.
@@ -132,6 +133,8 @@ export const SEARCH_FILE_CONTENT = [
 /** Empties the test database and loads the fixture snapshots and puzzles. */
 export async function seedFixtures(): Promise<Fixtures> {
   await getPool().query("truncate repos, auth_users restart identity cascade");
+  // The list keeps the published catalog in memory; the fixtures replace it.
+  clearPuzzleCatalog();
 
   const snapshotId = await insertRepoAndSnapshot("acme-router", "a");
   const otherSnapshotId = await insertRepoAndSnapshot("other-lib", "b");

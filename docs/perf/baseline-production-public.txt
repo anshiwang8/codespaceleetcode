@@ -1,0 +1,8 @@
+/                        200  TTFB median 28 ms (min 23, max 195)  total median 31 ms
+/puzzles                 200  TTFB median 55 ms (min 49, max 77)  total median 100 ms
+/api/me                  200  TTFB median 64 ms (min 59, max 96)  total median 67 ms
+/api/puzzles             200  TTFB median 59 ms (min 51, max 84)  total median 61 ms
+/leaderboard             200  TTFB median 66 ms (min 62, max 109)  total median 68 ms
+/api/leaderboard         200  TTFB median 60 ms (min 56, max 81)  total median 62 ms
+/settings                200  TTFB median 63 ms (min 48, max 87)  total median 65 ms
+/puzzles/hono-trace-002  200  TTFB median 61 ms (min 57, max 155)  total median 63 ms

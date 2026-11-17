@@ -43,17 +43,24 @@ export function hasRecentSignIn(user: CurrentUser, now: Date = new Date()): bool
   return user.sessionCreatedAt !== null && now.getTime() - user.sessionCreatedAt.getTime() <= RECENT_SIGN_IN_MS;
 }
 
-export async function getEmailStatus(user: CurrentUser, now: Date = new Date()): Promise<EmailStatus> {
-  const [current, pending] = await Promise.all([
-    getPool().query<{ email: string; verified_at: Date }>("select email, verified_at from user_emails where user_id = $1", [user.id]),
-    getPool().query<{ email: string; purpose: "setup" | "change"; expires_at: Date }>(
-      `select email, purpose, expires_at from email_verifications
-        where user_id = $1 and consumed_at is null order by created_at desc limit 1`,
-      [user.id],
-    ),
-  ]);
-  const verified = current.rows[0];
-  const waiting = pending.rows[0];
+export interface VerifiedEmailRow {
+  email: string;
+  verified_at: Date;
+}
+
+export interface PendingEmailRow {
+  email: string;
+  purpose: "setup" | "change";
+  expires_at: Date;
+}
+
+/** The status the owner sees, from their user_emails row and newest unconsumed verification. */
+export function emailStatusFrom(
+  user: CurrentUser,
+  verified: VerifiedEmailRow | undefined,
+  waiting: PendingEmailRow | undefined,
+  now: Date = new Date(),
+): EmailStatus {
   return {
     address: verified?.email ?? null,
     verifiedAt: verified ? verified.verified_at.toISOString() : null,
@@ -69,6 +76,19 @@ export async function getEmailStatus(user: CurrentUser, now: Date = new Date()):
     localOutbox: emailSender()?.kind === "dev-outbox",
     recentSignIn: hasRecentSignIn(user, now),
   };
+}
+
+export async function getEmailStatus(user: CurrentUser, now: Date = new Date()): Promise<EmailStatus> {
+  const [current, pending] = await Promise.all([
+    getPool().query<VerifiedEmailRow>("select email, verified_at from user_emails where user_id = $1", [user.id]),
+    // The newest unconsumed verification: the one link that can still be used.
+    getPool().query<PendingEmailRow>(
+      `select email, purpose, expires_at from email_verifications
+        where user_id = $1 and consumed_at is null order by created_at desc limit 1`,
+      [user.id],
+    ),
+  ]);
+  return emailStatusFrom(user, current.rows[0], pending.rows[0], now);
 }
 
 /** The origin verification links point at: the configured site, or this loopback dev server. */

@@ -1,6 +1,7 @@
 import "server-only";
 import { attachDatabasePool } from "@vercel/functions";
 import { Pool, type PoolClient } from "pg";
+import { instrumentPool, perfPoolMax, perfTraceFile } from "@/lib/server/perf-trace";
 
 /** The `pnpm db` port, which scripts/localdb.mjs also reads from LOCALDB_PORT. */
 function localDatabasePort(): number {
@@ -66,13 +67,15 @@ export function getPool(): Pool {
     }
     const pool = new Pool({
       connectionString,
-      max: vercel ? VERCEL_POOL_MAX : LOCAL_POOL_MAX,
+      max: perfPoolMax() ?? (vercel ? VERCEL_POOL_MAX : LOCAL_POOL_MAX),
       idleTimeoutMillis: vercel ? VERCEL_IDLE_TIMEOUT_MS : 10_000,
       connectionTimeoutMillis: 5_000,
       // The transaction pooler ignores this startup setting; it still applies on the direct and
       // session connections and locally.
       statement_timeout: 15_000,
     });
+    // Development measurement only (scripts/perf-measure.mjs); never on Vercel.
+    if (perfTraceFile()) instrumentPool(pool);
     // Without a listener, an idle connection dropping would crash the process.
     pool.on("error", (error) => console.error("[db] idle connection error:", error.message));
     // Keeps the instance awake after a request until its idle connections have closed, so a frozen

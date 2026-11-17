@@ -367,3 +367,58 @@
 .dangerActions :global(.btn-danger) {
   min-width: 235px;
 }
+
+/* Placeholders while /settings streams (SettingsShell.tsx). Heights match each section's usual
+   content, so the page doesn't jump when it arrives. */
+.sectionSkeleton {
+  min-width: 0;
+}
+
+.skeletonLede {
+  width: min(420px, 100%);
+  height: 20px;
+  margin-top: var(--space-2);
+}
+
+.skeleton-appearance {
+  height: 536px;
+}
+
+.skeleton-profile {
+  height: 655px;
+}
+
+.skeleton-links {
+  height: 655px;
+}
+
+.skeleton-leaderboard {
+  height: 254px;
+}
+
+.skeleton-email {
+  height: 153px;
+}
+
+/* Measured at 390px wide, where the forms stack. */
+@media (max-width: 640px) {
+  .skeleton-appearance {
+    height: 836px;
+  }
+
+  .skeleton-profile {
+    height: 825px;
+  }
+
+  .skeleton-links {
+    height: 720px;
+  }
+
+  .skeleton-leaderboard {
+    height: 393px;
+  }
+
+  .skeleton-email {
+    height: 264px;
+  }
+}

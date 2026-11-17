@@ -102,6 +102,10 @@
   border: 1px solid transparent;
   border-radius: calc(var(--radius-lg) - 4px);
   cursor: pointer;
+  /* Options scrolled out of the list skip layout and paint, but stay in the page, so search,
+     arrow keys between radios and screen readers still reach all of them. */
+  content-visibility: auto;
+  contain-intrinsic-size: auto 46px;
 }
 
 .option:hover {

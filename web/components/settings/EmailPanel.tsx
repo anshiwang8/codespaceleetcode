@@ -14,7 +14,7 @@ import { Icon } from "@/components/site/Icon";
  * stays in use until a new one is confirmed.
  */
 export function EmailPanel({ initial, provider }: { initial: EmailStatus; provider: "github" | "dev" }) {
-  const { refresh } = useAuth();
+  const { me, updateAccount } = useAuth();
   const [status, setStatus] = useState(initial);
   const [editing, setEditing] = useState(!initial.address && !initial.pending);
   const [address, setAddress] = useState("");
@@ -24,13 +24,16 @@ export function EmailPanel({ initial, provider }: { initial: EmailStatus; provid
   async function run(action: () => Promise<EmailStatus>, success: string) {
     setBusy(true);
     setMessage(null);
+    // The account this change is for, so its result never lands on someone who signed in since.
+    const login = me?.user?.login ?? "";
     try {
       const next = await action();
       setStatus(next);
       setEditing(false);
       setAddress("");
       setMessage({ kind: "info", text: success });
-      void refresh();
+      // The banner asking for an email stays until an address is confirmed.
+      updateAccount(login, { needsEmail: next.address === null });
     } catch (caught) {
       setMessage({
         kind: "error",

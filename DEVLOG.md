@@ -1,5 +1,34 @@
 # DEVLOG
 
+## Faster Settings, fewer queries per request, and caching for public data
+
+Type: Change
+
+Goal: Settings was slow to show anything. Make it, and the rest of the site, do less work per request without caching anyone's private data where someone else could see it.
+
+What should be done: Measure first, then cut database round trips on Settings and in every session lookup, stream Settings, keep `/api/me` answers in order, speed up the theme picker, cache only public data, and stop prefetching from rendering pages nobody opens. Document what's cached and what isn't.
+
+What was done (technical):
+- A development-only tool times pages and counts their queries: `web/scripts/perf-measure.mjs`, with `web/lib/server/perf-trace.ts`, which is off unless `PERF_TRACE_FILE` is set and never runs on Vercel.
+- Settings loads in one query (`getSettingsData` in `lib/server/settings.ts`) instead of five, and never reads the picture's bytes. `getAvatarVersion` lets `/api/me/avatar` answer a matching `If-None-Match` with a 304.
+- Settings streams, from `app/(app)/settings/(overview)/`. Its loading screen shares `components/settings/SettingsShell.tsx` with the page. Each data section has its own Suspense placeholder and `SectionBoundary`, with placeholder heights measured at 1280 and 390 pixels wide. The (overview) route group keeps the loading screen off `/settings/email`.
+- A session lookup is one query: Better Auth's `advanced.database.joins` is on. The users-row upsert runs once per user and login per server instance, then is skipped for 5 minutes. `getCurrentUser` is memoized per render with React's `cache()`. `/api/me`'s summary is one query.
+- In the browser, `lib/client/me-loader.ts` applies `/api/me` answers in the order they started, so a refresh that started before a sign-out can't put the old account back. A confirmed save updates the header through `updateAccount` instead of fetching `/api/me` again.
+- In the theme picker, options are memoized and use `content-visibility: auto`, and the list is sorted once. The Theme button preloads the catalog, and the default theme no longer loads the catalog at all. That alone took about 300 KB of decoded JavaScript off every app page for anyone on the default theme.
+- The published puzzle catalog is cached in memory (`lib/server/memo-cache.ts`, `PUZZLE_CATALOG_TTL_MS`), with each user's progress joined from their own rows.
+- Code-intelligence routes send short public caching headers with an ETag (`publicJsonResponse` in `lib/server/http.ts`).
+- The leaderboard isn't cached, so leaving it removes a name at once. It ranks in one statement instead of five queries.
+- The puzzle table, its tag chips and the profile history prefetch on intent only (`components/site/IntentLink.tsx`), and the leaderboard has a loading screen.
+- `docs/performance.md` has the caching table, the uncached endpoints and the before and after numbers. For example, with 5 ms per query: Settings' first byte went from 45–50 ms to 5 ms, its queries from 8 to 2, and `/api/me` from 5 queries to 2.
+- New tests cover the combined loaders against the separate ones, query counts, the avatar 304, the login sync with renames, held logins and deletion, `/api/me` ordering, `memoCache`, per-user isolation in the cached list, and the code-intelligence cache headers. A new e2e test checks that every streamed section fills in. Settings e2e locators use `visible()`, since streamed sections briefly appear twice while they hydrate.
+- spec section 9 has a Caching section. Section 10's note that Settings must have no `loading.tsx` is replaced: saves no longer refresh the page, and a refresh keeps the forms and their drafts mounted (checked in a browser).
+
+Still open:
+- Measure signed in on production after deploying. Only signed-out production timings were taken.
+- A hard load of Settings still makes one `/api/me` request from the browser. Seeding it from the server would race selective hydration.
+- `next build` without `BETTER_AUTH_URL` fails while collecting `/_not-found`. That's not new: production requires the variable, and Vercel sets it.
+- A local `web/.next` folder was found reloading pages in a loop under `next dev`. Deleting it is likely to fix that; a separate build folder didn't have the problem.
+
 ## Fix pages failing after switching quickly between Puzzles, Challenges and Leaderboard
 
 Type: Fix

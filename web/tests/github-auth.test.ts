@@ -1,9 +1,11 @@
 import { makeSignature } from "better-auth/crypto";
+import pg from "pg";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { GET as authGet, POST as authPost } from "@/app/api/auth/[...all]/route";
 import { GET as meRoute } from "@/app/api/me/route";
 import { POST as submitRoute } from "@/app/api/puzzles/[slug]/submit/route";
-import { getCurrentUser } from "@/lib/server/auth";
+import { forgetSyncedUsersForTests, getCurrentUser } from "@/lib/server/auth";
+import { deleteAccount } from "@/lib/server/account";
 import { getAuth, withAuth } from "@/lib/server/better-auth";
 import { getPool } from "@/lib/server/db";
 import { CONFIG_FILE, seedFixtures } from "./fixtures";
@@ -80,6 +82,67 @@ describe.skipIf(!hasDatabase)("GitHub sign-in through Better Auth", () => {
     expect(error).toHaveBeenCalledWith(expect.stringContaining("octo-reused"));
     const { rows } = await getPool().query("select id from users where github_login = 'octo-reused'");
     expect(rows).toEqual([{ id: first.userId }]);
+  });
+
+  describe("per-request cost", () => {
+    /** Every query a lookup makes, Better Auth's included: they all go through pg's Client. */
+    async function queriesDuring<T>(work: () => Promise<T>): Promise<{ result: T; sql: string[] }> {
+      const spy = vi.spyOn(pg.Client.prototype, "query");
+      try {
+        const result = await work();
+        const sql = spy.mock.calls.map((call) => {
+          const first: unknown = call[0];
+          return typeof first === "string" ? first : String((first as { text?: string }).text);
+        });
+        return { result, sql };
+      } finally {
+        spy.mockRestore();
+      }
+    }
+
+    it("looks the session up in one query, and writes the users row only the first time", async () => {
+      forgetSyncedUsersForTests();
+      const { userId, cookie } = await githubSession("octo-cost");
+      const first = await queriesDuring(() => getCurrentUser(cookieHeaders(cookie)));
+      expect(first.result).toMatchObject({ id: userId });
+      expect(first.sql.filter((text) => /insert into users/.test(text))).toHaveLength(1);
+      const again = await queriesDuring(() => getCurrentUser(cookieHeaders(cookie)));
+      expect(again.result).toMatchObject({ id: userId, login: "octo-cost" });
+      expect(again.sql).toHaveLength(1);
+      expect(again.sql[0]).toMatch(/auth_sessions/);
+      expect(again.sql[0]).toMatch(/auth_users/);
+    });
+
+    it("still follows a rename and refuses a held login after the first request was remembered", async () => {
+      forgetSyncedUsersForTests();
+      const renamed = await githubSession("octo-memo-before");
+      await getCurrentUser(cookieHeaders(renamed.cookie));
+      await getPool().query("update auth_users set github_login = 'octo-memo-after' where id = $1", [renamed.userId]);
+      expect(await getCurrentUser(cookieHeaders(renamed.cookie))).toMatchObject({ login: "octo-memo-after" });
+      expect((await getPool().query("select github_login from users where id = $1", [renamed.userId])).rows).toEqual([
+        { github_login: "octo-memo-after" },
+      ]);
+
+      // Someone else now has the old login on GitHub and the renamed user's row still holds the
+      // new one, so taking it is refused every time, not only the first.
+      const other = await githubSession("octo-memo-other");
+      await getCurrentUser(cookieHeaders(other.cookie));
+      await getPool().query("update auth_users set github_login = 'octo-memo-after' where id = $1", [other.userId]);
+      const error = vi.spyOn(console, "error").mockImplementation(() => {});
+      expect(await getCurrentUser(cookieHeaders(other.cookie))).toBeNull();
+      expect(await getCurrentUser(cookieHeaders(other.cookie))).toBeNull();
+      expect(error).toHaveBeenCalledTimes(2);
+      error.mockRestore();
+    });
+
+    it("signs a deleted account out at once, whatever was remembered about it", async () => {
+      forgetSyncedUsersForTests();
+      const { userId, cookie } = await githubSession("octo-memo-deleted");
+      expect(await getCurrentUser(cookieHeaders(cookie))).toMatchObject({ id: userId });
+      expect(await deleteAccount(userId)).toBe(true);
+      expect(await getCurrentUser(cookieHeaders(cookie))).toBeNull();
+      expect((await getPool().query("select 1 from users where id = $1", [userId])).rows).toHaveLength(0);
+    });
   });
 
   it.each([

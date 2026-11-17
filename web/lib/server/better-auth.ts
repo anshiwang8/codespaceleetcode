@@ -50,7 +50,8 @@ export function betterAuthOptions() {
     rateLimit: { customStorage: { consume: consumeAuthRateLimit } },
     telemetry: { enabled: false },
     advanced: {
-      database: { generateId: "uuid" as const },
+      // joins: a session lookup reads auth_sessions and auth_users in one query instead of two.
+      database: { generateId: "uuid" as const, joins: true },
       // Better Auth skips its origin and CSRF checks when NODE_ENV is "test". Keeping them on
       // everywhere means the tests prove they work.
       disableOriginCheck: false,

@@ -18,7 +18,7 @@ type State =
  * preview or prefetch can't confirm anything), and removed from the address bar.
  */
 export function VerifyEmail() {
-  const { me, refresh } = useAuth();
+  const { me, updateAccount } = useAuth();
   const [state, setState] = useState<State>({ kind: "waiting" });
   const started = useRef(false);
 
@@ -26,12 +26,13 @@ export function VerifyEmail() {
     if (!me?.user || started.current) return;
     const token = new URLSearchParams(window.location.search).get("token") ?? "";
     started.current = true;
+    const login = me.user.login;
     window.history.replaceState(null, "", "/settings/email/verify");
     setState({ kind: "verifying" });
     api.verifyEmail(token).then(
       (status) => {
         setState({ kind: "done", address: status.address });
-        void refresh();
+        updateAccount(login, { needsEmail: status.address === null });
       },
       (caught: unknown) =>
         setState({
@@ -40,7 +41,7 @@ export function VerifyEmail() {
           expired: caught instanceof ApiRequestError && caught.code === "expired",
         }),
     );
-  }, [me, refresh]);
+  }, [me, updateAccount]);
 
   if (me && !me.user) {
     return (

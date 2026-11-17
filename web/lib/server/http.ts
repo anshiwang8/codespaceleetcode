@@ -1,4 +1,5 @@
 import "server-only";
+import { createHash } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import type { ApiError } from "@/lib/api-types";
@@ -12,6 +13,31 @@ export function jsonResponse<T>(body: T, status = 200): NextResponse<T> {
 
 export function errorResponse(status: number, error: string): NextResponse<ApiError> {
   return jsonResponse<ApiError>({ error }, status);
+}
+
+/**
+ * For code intelligence on a snapshot (symbols, outlines, search): the same for everyone and
+ * nothing about who asks. A snapshot's SHA never changes, but rebuilding it with an improved
+ * pipeline can change its index, so this is short: a browser reuses an answer for a minute and the
+ * CDN for ten, then they revalidate against the ETag, which costs a 304 when nothing changed.
+ */
+export const SNAPSHOT_INDEX_CACHE = "public, max-age=60, s-maxage=600, stale-while-revalidate=600";
+
+function etagMatches(header: string | null, etag: string): boolean {
+  return header !== null && header.split(",").some((tag) => tag.trim().replace(/^W\//, "") === etag);
+}
+
+/**
+ * A 200 that browsers and the CDN may keep, with an ETag of its body. Only for public data that
+ * doesn't depend on the request's session: errors and anything private go through jsonResponse,
+ * which is no-store.
+ */
+export function publicJsonResponse<T>(request: Request, body: T, cacheControl: string): Response {
+  const text = JSON.stringify(body);
+  const etag = `"${createHash("sha256").update(text).digest("base64url").slice(0, 32)}"`;
+  const headers = { "Cache-Control": cacheControl, ETag: etag };
+  if (etagMatches(request.headers.get("if-none-match"), etag)) return new Response(null, { status: 304, headers });
+  return new Response(text, { headers: { ...headers, "Content-Type": "application/json" } });
 }
 
 /** Unexpected errors are logged here and never reach the client. */

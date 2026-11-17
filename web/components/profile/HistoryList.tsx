@@ -9,6 +9,7 @@ import { ApiRequestError, api } from "@/lib/client/api";
 import { DIFFICULTY_LABELS, TYPE_LABELS } from "@/lib/client/labels";
 import { formatDateTime, formatLongDay } from "@/lib/format";
 import { Icon } from "@/components/site/Icon";
+import { IntentLink } from "@/components/site/IntentLink";
 
 type ListFilters = Omit<HistoryFilters, "date">;
 
@@ -234,9 +235,9 @@ export function HistoryList({ initial, repos, date, onClearDate }: HistoryListPr
                   {entry.passed ? "Correct" : "Incorrect"}
                 </span>
                 <span className={styles.historyMain}>
-                  <Link href={`/puzzles/${entry.slug}`} className={styles.historyTitle}>
+                  <IntentLink href={`/puzzles/${entry.slug}`} className={styles.historyTitle}>
                     {entry.title}
-                  </Link>
+                  </IntentLink>
                   <span className={styles.historyMeta}>
                     <span>{entry.repoSlug}</span>
                     <span aria-hidden="true"> · </span>

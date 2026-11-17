@@ -53,3 +53,4 @@ next-env.d.ts
 
 # Local development email outbox (lib/server/email-delivery.ts)
 /.dev-outbox/
+/.next-perf/

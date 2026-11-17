@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { TooManyRequests } from "@/components/site/TooManyRequests";
 import Link from "next/link";
+import { LeaderboardHeader } from "@/components/leaderboard/LeaderboardHeader";
 import styles from "@/components/leaderboard/leaderboard.module.css";
 import { PERIOD_PHRASES, VISIBILITY_SETTINGS_HREF, leaderboardHref, parsePage, parsePeriod } from "@/components/leaderboard/links";
 import { Pagination } from "@/components/leaderboard/Pagination";
@@ -81,15 +82,7 @@ export default async function LeaderboardPage({ searchParams }: PageProps) {
 
   return (
     <main className={`page ${styles.page}`} data-testid="leaderboard">
-      <div className="page-header">
-        <div>
-          <h1 className="page-title">Leaderboard</h1>
-          <p className="page-lede">
-            Points from solving puzzles, for people who chose to appear here. Joining is optional and off until you
-            turn it on.
-          </p>
-        </div>
-      </div>
+      <LeaderboardHeader />
 
       <section className={`card ${styles.board}`} aria-labelledby="board-heading">
         <div className={styles.boardTop}>

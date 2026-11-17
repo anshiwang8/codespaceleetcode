@@ -2,11 +2,13 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/server/auth";
 import { AVATAR_MAX_BYTES, AVATAR_TOO_LARGE } from "@/lib/profile-fields";
-import { deleteAvatar, getAvatar, processAvatar, saveAvatar } from "@/lib/server/avatar";
+import { deleteAvatar, getAvatar, getAvatarVersion, processAvatar, saveAvatar } from "@/lib/server/avatar";
 import { errorResponse, isSameOriginRequest, jsonResponse, queryParams, readBytes, route } from "@/lib/server/http";
 import { consumeRateLimit } from "@/lib/server/rate-limit";
 
 const AVATAR_LIMIT = { limit: 20, windowMs: 60 * 60_000 };
+
+const cacheControl = (current: boolean) => (current ? "private, max-age=31536000, immutable" : "private, no-cache");
 
 /**
  * The signed-in user's own picture. Only its owner can read it: profiles are private. A request
@@ -15,6 +17,18 @@ const AVATAR_LIMIT = { limit: 20, windowMs: 60 * 60_000 };
 export const GET = route("me.avatar", async (request) => {
   const user = await getCurrentUser(request.headers);
   if (!user) return errorResponse(401, "Sign in to see your picture");
+  // A browser revalidating the picture it has gets a 304 from the version alone, so the bytes
+  // aren't read from the database or sent again.
+  const ifNoneMatch = request.headers.get("if-none-match");
+  if (ifNoneMatch) {
+    const version = await getAvatarVersion(user.id);
+    if (version && ifNoneMatch.split(",").some((tag) => tag.trim().replace(/^W\//, "") === `"${version}"`)) {
+      return new NextResponse(null, {
+        status: 304,
+        headers: { "Cache-Control": cacheControl(request.nextUrl.searchParams.get("v") === version), ETag: `"${version}"` },
+      });
+    }
+  }
   const avatar = await getAvatar(user.id);
   if (!avatar) return errorResponse(404, "No picture");
   const current = request.nextUrl.searchParams.get("v") === avatar.version;
@@ -22,7 +36,7 @@ export const GET = route("me.avatar", async (request) => {
     headers: {
       "Content-Type": "image/webp",
       "Content-Length": String(avatar.image.length),
-      "Cache-Control": current ? "private, max-age=31536000, immutable" : "private, no-cache",
+      "Cache-Control": cacheControl(current),
       ETag: `"${avatar.version}"`,
       "Content-Disposition": "inline",
     },

@@ -2,11 +2,12 @@ import { z } from "zod";
 import { symbolAtPosition } from "@/lib/server/code-index";
 import {
   errorResponse,
-  jsonResponse,
+  publicJsonResponse,
   parseSnapshotId,
   positiveIntParam,
   queryParams,
   route,
+  SNAPSHOT_INDEX_CACHE,
   textValue,
 } from "@/lib/server/http";
 
@@ -27,5 +28,5 @@ export const GET = route("snapshots.symbols", async (request, { params }: Contex
   if (!query.success) return errorResponse(400, "file, line and col are required");
   const { file, line, col } = query.data;
   const result = await symbolAtPosition(snapshotId, file, line, col);
-  return result ? jsonResponse(result) : errorResponse(404, "File not found");
+  return result ? publicJsonResponse(request, result, SNAPSHOT_INDEX_CACHE) : errorResponse(404, "File not found");
 });

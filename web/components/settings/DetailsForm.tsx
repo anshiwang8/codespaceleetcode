@@ -20,7 +20,7 @@ const toDraft = (details: ProfileDetails): Draft => ({
 
 /** Optional details. Every field can be left empty or cleared; nothing here is required. */
 export function DetailsForm({ initial }: { initial: ProfileDetails }) {
-  const { refresh } = useAuth();
+  const { me, updateAccount } = useAuth();
   const [saved, setSaved] = useState<Draft>(toDraft(initial));
   const [draft, setDraft] = useState<Draft>(toDraft(initial));
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -43,6 +43,8 @@ export function DetailsForm({ initial }: { initial: ProfileDetails }) {
     event.preventDefault();
     setState({ kind: "pending" });
     setErrors({});
+    // The account this save is for, so its result never lands on someone who signed in since.
+    const login = me?.user?.login ?? "";
     try {
       const result = await api.saveDetails({
         displayName: draft.displayName,
@@ -54,7 +56,7 @@ export function DetailsForm({ initial }: { initial: ProfileDetails }) {
       setSaved(next);
       setDraft(next);
       setState({ kind: "saved", text: "Saved." });
-      void refresh();
+      updateAccount(login, { displayName: result.displayName });
     } catch (caught) {
       // The entered values stay, so nothing typed is lost.
       if (caught instanceof ApiRequestError && Object.keys(caught.fields).length > 0) setErrors(caught.fields);

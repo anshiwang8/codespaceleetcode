@@ -14,6 +14,7 @@ import {
 } from "@/lib/api-types";
 import { getPool } from "@/lib/server/db";
 import { parseHints } from "@/lib/server/hints";
+import { memoCache } from "@/lib/server/memo-cache";
 import { PERIOD_KINDS, periodStart, type PeriodKind } from "@/lib/periods";
 
 // Nothing in this file may read the answer key. Only submit.ts does.
@@ -55,26 +56,34 @@ function toSummary(row: SummaryRow): PuzzleSummary {
   };
 }
 
-export async function listPuzzles(
-  userId: string | null,
-  filters: PuzzleFilters,
-): Promise<PuzzleListResponse> {
+type CatalogRow = Omit<SummaryRow, "status"> & { id: string };
+
+interface PuzzleCatalog {
+  puzzles: CatalogRow[];
+  repos: string[];
+  tags: string[];
+}
+
+/**
+ * How long one server instance reuses the published catalog. Puzzles change only when content is
+ * seeded (`ingest seed`), so in production a newly published puzzle shows in the list within five
+ * minutes, and a deployment shows it at once. An unpublished one can linger in the list as long,
+ * but opening, submitting or revealing hints for it checks `published` live and finds nothing.
+ * Locally it's a few seconds, so a seed during `pnpm dev` shows up almost at once.
+ */
+export const PUZZLE_CATALOG_TTL_MS = process.env.NODE_ENV === "production" ? 5 * 60_000 : 5_000;
+
+/** The published puzzles, repos and tags: the same for everyone, and nothing about any user. */
+const catalog = memoCache<PuzzleCatalog>(PUZZLE_CATALOG_TTL_MS, async () => {
   const pool = getPool();
   const [puzzles, repos, tags] = await Promise.all([
-    pool.query<SummaryRow>(
-      `select p.slug, p.type, p.difficulty, p.title, r.slug as repo_slug, r.language, p.tags,
-              coalesce(pr.status, 'unsolved') as status
+    pool.query<CatalogRow>(
+      `select p.id::text as id, p.slug, p.type, p.difficulty, p.title, r.slug as repo_slug, r.language, p.tags
          from puzzles p
          join snapshots s on s.id = p.snapshot_id
          join repos r on r.id = s.repo_id
-         left join progress pr on pr.puzzle_id = p.id and pr.user_id = $1
         where p.published
-          and ($2::text is null or p.type = $2)
-          and ($3::text is null or p.difficulty = $3)
-          and ($4::text is null or r.slug = $4)
-          and ($5::text is null or $5 = any (p.tags))
         order by p.id`,
-      [userId, filters.type ?? null, filters.difficulty ?? null, filters.repo ?? null, filters.tag ?? null],
     ),
     pool.query<{ slug: string }>(
       `select distinct r.slug
@@ -84,15 +93,44 @@ export async function listPuzzles(
         where p.published
         order by r.slug`,
     ),
-    pool.query<{ tag: string }>(
-      "select distinct unnest(tags) as tag from puzzles where published order by tag",
-    ),
+    pool.query<{ tag: string }>("select distinct unnest(tags) as tag from puzzles where published order by tag"),
   ]);
-  return {
-    puzzles: puzzles.rows.map(toSummary),
-    repos: repos.rows.map((row) => row.slug),
-    tags: tags.rows.map((row) => row.tag),
-  };
+  return { puzzles: puzzles.rows, repos: repos.rows.map((row) => row.slug), tags: tags.rows.map((row) => row.tag) };
+});
+
+/** Tests, and anything that has just changed puzzles in this process: the next list reads them fresh. */
+export function clearPuzzleCatalog(): void {
+  catalog.clear();
+}
+
+/**
+ * The list: the shared catalog, filtered here, with the signed-in user's own progress joined in
+ * from one query of their rows only. Signed out, it needs no query at all while the catalog is fresh.
+ */
+export async function listPuzzles(
+  userId: string | null,
+  filters: PuzzleFilters,
+): Promise<PuzzleListResponse> {
+  const [published, progress] = await Promise.all([
+    catalog.get(),
+    userId
+      ? getPool().query<{ puzzle_id: string; status: PuzzleStatus }>(
+          "select puzzle_id::text as puzzle_id, status from progress where user_id = $1",
+          [userId],
+        )
+      : null,
+  ]);
+  const statusById = new Map((progress?.rows ?? []).map((row) => [row.puzzle_id, row.status]));
+  const puzzles = published.puzzles
+    .filter(
+      (row) =>
+        (filters.type === undefined || row.type === filters.type) &&
+        (filters.difficulty === undefined || row.difficulty === filters.difficulty) &&
+        (filters.repo === undefined || row.repo_slug === filters.repo) &&
+        (filters.tag === undefined || row.tags.includes(filters.tag)),
+    )
+    .map((row) => toSummary({ ...row, status: statusById.get(row.id) ?? "unsolved" }));
+  return { puzzles, repos: published.repos, tags: published.tags };
 }
 
 interface DetailRow extends SummaryRow {

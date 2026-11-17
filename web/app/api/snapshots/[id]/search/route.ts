@@ -3,10 +3,11 @@ import { getCurrentUser } from "@/lib/server/auth";
 import { searchSnapshot } from "@/lib/server/code-index";
 import {
   errorResponse,
-  jsonResponse,
+  publicJsonResponse,
   parseSnapshotId,
   queryParams,
   route,
+  SNAPSHOT_INDEX_CACHE,
   textValue,
 } from "@/lib/server/http";
 import {
@@ -37,5 +38,5 @@ export const GET = route("snapshots.search", async (request, { params }: Context
     return errorResponse(429, TOO_MANY);
   }
   const results = await searchSnapshot(snapshotId, query.data.q);
-  return results ? jsonResponse(results) : errorResponse(404, "Snapshot not found");
+  return results ? publicJsonResponse(request, results, SNAPSHOT_INDEX_CACHE) : errorResponse(404, "Snapshot not found");
 });
