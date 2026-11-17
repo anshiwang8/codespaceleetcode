@@ -21,7 +21,7 @@
 .header {
   flex: none;
   height: var(--header-height);
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--border);
   background: var(--panel);
 }
 
@@ -161,10 +161,10 @@ button.account[aria-expanded="true"] .accountChevron {
   z-index: 50;
   min-width: 180px;
   padding: var(--space-1);
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius);
-  background: var(--panel);
-  box-shadow: 0 8px 24px var(--shadow);
+  background: var(--surface-2);
+  box-shadow: var(--shadow-float);
 }
 
 .accountPanel[hidden] {
@@ -211,7 +211,7 @@ button.account[aria-expanded="true"] .accountChevron {
 .accountDivider {
   margin-top: var(--space-1);
   padding-top: var(--space-1);
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--border);
 }
 
 .setupBanner {

@@ -30,7 +30,7 @@
   align-items: center;
   min-height: 32px;
   padding: 0 var(--space-3);
-  border: 1px solid var(--line);
+  border: 1px solid var(--border);
   border-radius: var(--radius-pill);
   background: var(--panel);
   color: var(--text-muted);
@@ -39,7 +39,7 @@
 }
 
 .toc a:hover {
-  border-color: var(--line-strong);
+  border-color: var(--border-strong);
   color: var(--text);
   text-decoration: none;
 }
@@ -145,7 +145,7 @@
   gap: var(--space-3);
   padding: var(--space-3) 0 0;
   border: 0;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--border);
 }
 
 .customRow {
@@ -304,13 +304,13 @@
   gap: var(--space-2) var(--space-4);
   margin-top: var(--space-2);
   padding-top: var(--space-4);
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--border);
 }
 
 /* Danger zone: set apart at the bottom, with a tinted edge rather than a red card. */
 
 .danger {
-  border-color: color-mix(in srgb, var(--bad) 35%, var(--line));
+  border-color: color-mix(in srgb, var(--bad) 35%, var(--border));
 }
 
 .danger > h2 {

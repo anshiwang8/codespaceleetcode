@@ -80,6 +80,25 @@
   --shadow-card: 0 1px 2px var(--shadow-soft);
 
   /*
+   * Borders: the text color at low alpha, so a border reads the same on the page, a card, a tint
+   * or a picture, in every theme. Use these for borders; --line and --line-strong stay for fills
+   * (tracks, dividers drawn as backgrounds) and for Monaco.
+   */
+  --border-subtle: color-mix(in oklch, var(--text) 8%, transparent);
+  --border: color-mix(in oklch, var(--text) 13%, transparent);
+  --border-strong: color-mix(in oklch, var(--text) 22%, transparent);
+
+  /*
+   * Elevation. Light themes raise a surface with a shadow. Dark themes raise it by making it
+   * lighter (html[data-scheme="dark"] below), because a shadow barely shows on a dark page.
+   * --surface-1 is cards; --surface-2 is what floats: menus, toasts and dialogs.
+   */
+  --surface-1: var(--panel);
+  --surface-2: var(--panel);
+  --edge-highlight: 0 0 #0000;
+  --shadow-float: 0 12px 32px var(--shadow);
+
+  /*
    * Gradients, interpolated in OKLCH, which stays vivid through the middle where sRGB turns gray.
    * Built from tokens, so every theme has them. Decorative only: never behind text.
    */
@@ -125,6 +144,18 @@
   :root {
     --page-gutter: 16px;
   }
+}
+
+/*
+ * Dark depth: each level is lighter, between --panel and --panel-raised, so text keeps the
+ * contrast the theme tests check on both. A 1px top highlight catches the light like an edge.
+ */
+html[data-scheme="dark"] {
+  --surface-1: color-mix(in oklch, var(--panel) 45%, var(--panel-raised));
+  --surface-2: var(--panel-raised);
+  --edge-highlight: inset 0 1px 0 color-mix(in oklch, var(--text) 7%, transparent);
+  --shadow-card: var(--edge-highlight);
+  --shadow-float: var(--edge-highlight), 0 16px 40px var(--shadow);
 }
 
 *,
@@ -260,9 +291,9 @@ input {
 .card {
   min-width: 0;
   padding: var(--space-5);
-  border: 1px solid var(--line);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  background: var(--panel);
+  background: var(--surface-1);
   box-shadow: var(--shadow-card);
 }
 
@@ -275,7 +306,7 @@ input {
   gap: var(--space-2);
   min-height: var(--control-height);
   padding: 0 var(--space-4);
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius);
   background: var(--panel);
   color: var(--text);
@@ -302,7 +333,7 @@ a.btn:hover {
 
 .btn:disabled,
 .btn[aria-disabled="true"] {
-  border-color: var(--line);
+  border-color: var(--border);
   background: var(--panel-raised);
   color: var(--text-faint);
   cursor: not-allowed;
@@ -375,7 +406,7 @@ a.btn:hover {
 .select {
   min-height: var(--control-height);
   padding: 0 32px 0 var(--space-3);
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius);
   /* The chevron is two gradient triangles in the theme's muted text color, so it follows the theme. */
   background-color: var(--input-bg);
@@ -402,7 +433,7 @@ a.btn:hover {
   width: 100%;
   min-height: var(--control-height);
   padding: 7px var(--space-3);
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius);
   background: var(--input-bg);
   color: var(--text);
@@ -440,11 +471,11 @@ dialog {
   max-height: calc(100vh - 32px);
   margin: auto;
   padding: var(--space-5);
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius-lg);
-  background: var(--panel);
+  background: var(--surface-2);
   color: var(--text);
-  box-shadow: 0 12px 40px var(--shadow);
+  box-shadow: var(--shadow-float);
 }
 
 dialog::backdrop {
@@ -489,7 +520,7 @@ dialog::backdrop {
 .chip {
   display: inline-block;
   padding: 1px 8px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--border);
   border-radius: var(--radius-pill);
   background: var(--panel);
   color: var(--text-muted);
@@ -499,7 +530,7 @@ dialog::backdrop {
 }
 
 a.chip:hover {
-  border-color: var(--line-strong);
+  border-color: var(--border-strong);
   color: var(--text);
   text-decoration: none;
 }
@@ -583,7 +614,7 @@ a.chip:hover {
 
 .notice {
   padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--line);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--panel);
   color: var(--text-muted);
@@ -640,7 +671,7 @@ a.chip:hover {
   justify-items: start;
   gap: var(--space-2);
   padding: var(--space-5);
-  border: 1px dashed var(--line-strong);
+  border: 1px dashed var(--border-strong);
   border-radius: var(--radius-lg);
   background: var(--surface-sunken);
   color: var(--text-muted);

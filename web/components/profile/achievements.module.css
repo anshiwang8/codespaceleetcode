@@ -16,7 +16,7 @@
 .filter {
   display: inline-flex;
   padding: 3px;
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius-lg);
   background: var(--panel);
 }
@@ -57,7 +57,7 @@
   display: grid;
   gap: var(--space-3);
   padding: var(--space-4) 0 var(--space-5);
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--border);
 }
 
 .group:first-child {
@@ -83,13 +83,13 @@
   gap: var(--space-3);
   min-width: 0;
   padding: var(--space-3);
-  border: 1px solid var(--line);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   font-variant-numeric: tabular-nums;
 }
 
 .badge[data-earned="true"] {
-  border-color: color-mix(in srgb, var(--accent) 30%, var(--line));
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
   background: var(--accent-softer);
 }
 
@@ -107,7 +107,7 @@
 }
 
 .badge[data-earned="false"] .medal {
-  border: 1.5px dashed var(--line-strong);
+  border: 1.5px dashed var(--border-strong);
   color: var(--text-faint);
 }
 
