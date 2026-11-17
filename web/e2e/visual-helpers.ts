@@ -38,7 +38,10 @@ export async function ready(page: Page) {
 export async function settled(page: Page) {
   // Bounded polling also handles a transition canceled/replaced during Strict Mode or navigation.
   // A canceled/idle Animation's `finished` promise can remain unresolved forever.
+  // Only time-based animations count: a scroll-linked one (the masked edges, .fade-edges-x) is
+  // "running" for as long as its scroller exists, and changes only when someone scrolls.
   await expect.poll(() => page.evaluate(() => document.getAnimations()
+    .filter((animation) => animation.timeline instanceof DocumentTimeline)
     .filter((animation) => animation.playState === "running" || animation.pending)
     .map((animation) => ({ state: animation.playState, target: animation.effect instanceof KeyframeEffect
       ? animation.effect.target?.nodeName : "unknown" }))), { timeout: 5_000 }).toEqual([]);

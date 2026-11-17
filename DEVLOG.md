@@ -1,5 +1,25 @@
 # DEVLOG
 
+## Design overhaul: OKLCH, alpha borders, depth, icons, masked edges, blending, fluid sizing
+
+Type: Change
+
+Goal: A more refined look in every theme without breaking contrast, motion or the workspace: OKLCH palettes and gradients, alpha borders, concentric corners, matched icon weight, blurred icon swaps, masked scroll edges, dark-mode depth, viewport-aware sizing and blend modes.
+
+What should be done: Change the shared tokens and controls, keep every theme passing its contrast checks, and check the result in light and dark.
+
+What was done (technical):
+- **OKLCH.** `lib/themes/color.ts` converts to and from OKLCH (gamut-mapped by lowering chroma). `ensureContrast` moves OKLCH lightness, so adjusted colors keep their hue, and `derive.ts` mixes surfaces in OKLab. Stored values stay hex or `rgb()`, so the pre-paint script is unchanged. Catalog and `docs/themes/MAPPING.md` regenerated; all 189 themes pass. `--gradient-accent` and `--gradient-wash` interpolate in OKLCH (the pending bar, the landing hero). `tests/color-oklch.test.ts`.
+- **Borders and depth.** `--border-subtle`, `--border` and `--border-strong` are the text color at 8, 13 and 22% alpha; every stylesheet border uses them (`--line` stays for fills and Monaco). In dark themes `--surface-1` (cards) and `--surface-2` (menus, toasts, dialogs) get lighter, between `--panel` and `--panel-raised`, with a 1px top highlight; light themes keep shadows (`--shadow-float`).
+- **Concentric corners.** The rule is documented by `--radius-pill` in `globals.css`; the account menu's items now follow it. The other nested controls already did.
+- **Icons.** `.icon` takes `stroke-width: var(--icon-stroke, 1.5)`, raised to 1.75 beside small or bold text. `components/site/SwapIcon.tsx` blurs an icon out and the next one in, in the same box, without animating the first render; used for the theme favorite star and the sort direction, never in the file tree.
+- **Masked edges.** `.fade-edges-x` (`composes: fade-edges-x from global`) fades a scroller's edge only while there's more past it, using a scroll timeline and registered `--fade-start`/`--fade-end`. On the header navigation, the activity calendar, and Markdown and Learn tables. `e2e/visual-helpers.ts`'s `settled` now waits only for time-based animations, since a scroll-linked one is always running.
+- **Blending.** The alpha tint behind a highlighted code line dropped syntax colors under 4.5:1 in most themes (worst 2.7:1). It now blends away from the text: `--blend-tint` is screen in light themes and multiply in dark ones, over `--editor-bg` (landing demo, selected Learn line). `tests/blend.test.ts` checks all 190 themes.
+- **Viewport.** `--text-xl` and `--text-2xl` scale with `clamp()`; dialogs and the theme list use `dvh`; the stacked editor uses `svh`; landing headings use `cqi`.
+- **Checks.** Lint, typecheck, 1,933 web and 529 ingest tests, and 145 e2e tests pass. Landing screenshots recaptured.
+
+Still open: `pnpm visual:review` fails 6 to 8 tests the same way before and after this change: two `details-form` elements or two status regions on Settings and the profile (a strict-mode locator), and default light's `#ffffff` check. Not caused by this change; worth a separate fix.
+
 ## Security review: ten common attacks checked against the code
 
 Type: Addition
