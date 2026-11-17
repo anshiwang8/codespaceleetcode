@@ -207,6 +207,9 @@ describe("challenge streak and archive", () => {
     expect(zero).toContain('aria-valuenow="0"');
     expect(zero).toContain("--streak-fill:0%");
     expect(zero).toContain("Next: 7 days");
+    // Only an empty streak gets the prompt to start one.
+    expect(zero).toContain("Complete today&#x27;s daily challenge to start a streak.");
+    expect(panel(1, 1, true, [])).not.toContain("to start a streak");
     const seven = panel(7, 7, true, []);
     expect(seven).toContain('aria-valuemax="14"');
     expect(seven).toContain("--streak-fill:50%");

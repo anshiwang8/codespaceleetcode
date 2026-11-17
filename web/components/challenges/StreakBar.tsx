@@ -29,6 +29,11 @@ export function StreakBar({ current, longest }: { current: number; longest: numb
         <span>{caption}</span>
         <span aria-hidden="true">{formatNumber(max)}</span>
       </div>
+      {current === 0 ? (
+        <p className={styles.streakHint} data-testid="challenge-streak-hint">
+          Complete today&apos;s daily challenge to start a streak.
+        </p>
+      ) : null}
     </div>
   );
 }

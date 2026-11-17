@@ -249,6 +249,22 @@ test.describe("challenges", () => {
         const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
         expect(overflow, path).toBeLessThanOrEqual(0);
       }
+
+      // Signed out, once the sign-in button has arrived: it and the sentence stay inside the card.
+      await page.goto("/challenges");
+      const panel = visible(page, "challenges-signed-out");
+      const signIn = panel.getByRole("button", { name: /Local dev sign-in/ });
+      await expect(signIn).toBeVisible();
+      const widths = await page.evaluate(() => ({
+        scroll: document.documentElement.scrollWidth,
+        client: document.documentElement.clientWidth,
+      }));
+      expect(widths.scroll).toBeLessThanOrEqual(widths.client);
+      const card = await panel.boundingBox();
+      const button = await signIn.boundingBox();
+      if (!card || !button) throw new Error("the signed-out panel has no box");
+      expect(button.x + button.width).toBeLessThanOrEqual(card.x + card.width);
+      expect(button.height).toBeGreaterThanOrEqual(44);
     } finally {
       await context.close();
     }
