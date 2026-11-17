@@ -1,6 +1,6 @@
 /*
- * The Learn catalog and lesson pages. Theme tokens only, so every theme applies; the one fixed
- * color is the illustration plate (--plate, app/globals.css). Motion is transitions on the
+ * The Learn catalog and lesson pages. Theme tokens only, so every theme applies, the
+ * illustration plate included (.plate, app/globals.css). Motion is transitions on the
  * shared tokens, which are 0ms under reduced motion, plus the catalog's one opening stagger.
  */
 

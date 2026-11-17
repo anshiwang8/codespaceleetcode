@@ -941,8 +941,8 @@ a.chip:hover {
 
 /*
  * Craft foundation (docs/superpowers/specs/2026-11-17-learn-challenges-brand-design.md).
- * The mascot and the illustration plate keep fixed colors on every theme; they are the only
- * colors outside the theme tokens. OKLCH values live here, never in theme tokens: the pre-paint
+ * The mascot keeps fixed colors on every theme (--mascot-*), and --plate is the cream of the
+ * brand images (icons, the preview image); they are the only colors outside the theme tokens. OKLCH values live here, never in theme tokens: the pre-paint
  * script accepts only hex and rgb().
  */
 :root {
@@ -1083,11 +1083,14 @@ body {
   animation-delay: calc(min(var(--i, 0), 5) * var(--motion-stagger));
 }
 
-/* The fixed surface behind an illustration. */
+/*
+ * The surface behind an illustration. The pictures are cut-outs with no background of their own,
+ * so the plate is the theme's: a raised surface with a little of the accent in it.
+ */
 .plate {
   overflow: hidden;
   border-radius: var(--radius-lg);
-  background: var(--plate);
+  background: color-mix(in oklch, var(--accent) 8%, var(--surface-1));
 }
 
 .plate img {
@@ -1145,10 +1148,13 @@ body {
 }
 
 /*
- * On a dark page the cream plate is the brightest thing in view: it's dimmed a little and given
- * an edge, so it reads as a lit picture rather than a hole.
+ * On a dark plate the drawings' navy outlines would sink into it. The picture gets the same
+ * light edge as the mascot, following its cut-out shape.
  */
 html[data-scheme="dark"] .plate {
-  box-shadow: 0 0 0 1px var(--border-strong);
-  filter: brightness(0.94);
+  box-shadow: 0 0 0 1px var(--border-subtle);
+}
+
+html[data-scheme="dark"] .plate img {
+  filter: drop-shadow(0 0 1px var(--mascot-edge)) drop-shadow(0 0 1px var(--mascot-edge));
 }
