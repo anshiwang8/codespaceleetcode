@@ -76,8 +76,6 @@ export interface ThemeDefinition {
   /** Shown in the picker. */
   name: string;
   scheme: ColorScheme;
-  /** The Monkeytype preset it's adapted from, or null for codebases' own defaults. */
-  source: string | null;
   tokens: ThemeTokens;
 }
 
@@ -89,3 +87,24 @@ export const TOKEN_VALUE = /^(#[0-9a-f]{6}|rgb\((25[0-5]|2[0-4]\d|1?\d?\d) (25[0
 
 export const DEFAULT_LIGHT_ID = "default-light";
 export const DEFAULT_DARK_ID = "default-dark";
+
+/**
+ * Every theme there is. A saved ID that isn't one of these (a theme from an earlier, larger
+ * catalog) reads as codebases Light on the server, in the controller and in the pre-paint script.
+ * The list is here, not in the catalog, so that check never loads the catalog;
+ * tests/themes.test.ts keeps the two in step.
+ */
+export const KNOWN_THEME_IDS: readonly string[] = [
+  DEFAULT_LIGHT_ID,
+  DEFAULT_DARK_ID,
+  "cream",
+  "periwinkle-mist",
+  "mint-mist",
+  "ink",
+  "dusk",
+  "pine",
+];
+
+export function isKnownTheme(id: string): boolean {
+  return KNOWN_THEME_IDS.includes(id);
+}

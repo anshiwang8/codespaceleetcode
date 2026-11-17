@@ -1,5 +1,4 @@
-import { isRemovedTheme } from "./removed";
-import { DEFAULT_LIGHT_ID, type ThemeDefinition } from "./tokens";
+import { DEFAULT_LIGHT_ID, isKnownTheme, type ThemeDefinition } from "./tokens";
 import {
   APPLIED_KEY,
   applyTokens,
@@ -17,7 +16,7 @@ import {
   type ThemePreference,
 } from "./runtime";
 
-// The browser's appearance state: what's saved, what's being previewed, and favorites.
+// The browser's appearance state: what's saved and what's being previewed.
 //
 // Precedence: a signed-in account's saved theme wins. Without one, the browser's guest choice
 // applies. Without either, codebases Light. "System" is a saved choice like any theme, and
@@ -27,13 +26,12 @@ import {
 // this browser is left alone, so signing out returns to it. The cache the pre-paint script reads
 // is tagged with its owner; when another person (or nobody) is signed in, it's replaced.
 //
-// A theme that has been removed (lib/themes/removed.ts) reads as codebases Light wherever it was
-// saved: a guest choice, a favorite, the pre-paint cache or an account. That's decided from the
-// short removed list, so it never loads the catalog.
+// A theme ID that isn't one of the known ones (KNOWN_THEME_IDS in tokens.ts), such as a theme from
+// the earlier, larger catalog, reads as codebases Light wherever it was saved: a guest choice, the
+// pre-paint cache or an account. That's decided from that short list, so it never loads the catalog.
 
 export interface AppearanceState {
   committed: ThemePreference;
-  favorites: string[];
   /** Set while a theme is being previewed and not yet applied. */
   previewing: ThemePreference | null;
   /** Whose choice this is. */
@@ -42,23 +40,20 @@ export interface AppearanceState {
 
 export interface AccountAppearance {
   preference: ThemePreference | null;
-  favorites: string[];
 }
 
 type Listener = () => void;
 
-let state: AppearanceState = { committed: DEFAULT_PREFERENCE, favorites: [], previewing: null, scope: "guest" };
+let state: AppearanceState = { committed: DEFAULT_PREFERENCE, previewing: null, scope: "guest" };
 let owner = "guest";
 const listeners = new Set<Listener>();
 let catalog: Promise<readonly ThemeDefinition[]> | null = null;
 let mediaListener: ((event: MediaQueryListEvent) => void) | null = null;
 
-/** A saved choice of a removed theme is the default. */
+/** A saved choice of a theme that doesn't exist is the default. */
 function kept(preference: ThemePreference): ThemePreference {
-  return preference.mode === "theme" && isRemovedTheme(preference.id) ? DEFAULT_PREFERENCE : preference;
+  return preference.mode === "theme" && !isKnownTheme(preference.id) ? DEFAULT_PREFERENCE : preference;
 }
-
-const keptFavorites = (favorites: readonly string[]) => favorites.filter((id) => !isRemovedTheme(id));
 
 function set(next: Partial<AppearanceState>): void {
   state = { ...state, ...next };
@@ -118,7 +113,7 @@ function watchSystem(entry: AppliedTheme): void {
 function cached(): AppliedTheme | null {
   const entry = readJson(APPLIED_KEY) as AppliedTheme | null;
   const preference = entry && entry.v === 1 ? parsePreference(entry.preference) : null;
-  // An entry cached for a removed theme still holds its tokens: never apply it.
+  // An entry cached for a theme that no longer exists still holds its tokens: never apply it.
   return entry && preference && kept(preference) === preference ? entry : null;
 }
 
@@ -128,7 +123,7 @@ const same = (a: ThemePreference, b: ThemePreference) =>
 /**
  * Applies a preference and makes it what the pre-paint script uses next time. codebases Light is
  * what the stylesheet already paints, so showing it only clears any applied tokens: it needs
- * neither the 250 KB catalog nor a cache entry. Without this, every page load of someone on the
+ * neither the catalog nor a cache entry. Without this, every page load of someone on the
  * default theme downloaded the whole catalog just to apply nothing.
  */
 async function show(preference: ThemePreference, remember: boolean): Promise<void> {
@@ -150,16 +145,13 @@ function guestPreference(): ThemePreference {
   return preference;
 }
 
-function guestFavorites(): string[] {
-  const value = readJson(GUEST_FAVORITES_KEY);
-  return Array.isArray(value) ? keptFavorites(value.filter((id): id is string => typeof id === "string")).slice(0, 200) : [];
-}
-
 /** Nobody is signed in: this browser's own choice applies. */
 export function adoptGuest(): void {
   owner = "guest";
   const committed = guestPreference();
-  set({ committed, favorites: guestFavorites(), previewing: null, scope: "guest" });
+  // Favorites are gone from the picker: drop the list an earlier version kept in this browser.
+  writeJson(GUEST_FAVORITES_KEY, null);
+  set({ committed, previewing: null, scope: "guest" });
   const entry = cached();
   if (!entry || entry.owner !== "guest" || !same(entry.preference, committed)) void show(committed, true);
   else watchSystem(entry);
@@ -169,7 +161,7 @@ export function adoptGuest(): void {
 export function adoptAccount(login: string, appearance: AccountAppearance | null): void {
   owner = ownerTag(login);
   const committed = kept(appearance?.preference ?? guestPreference());
-  set({ committed, favorites: keptFavorites(appearance?.favorites ?? []), previewing: null, scope: "account" });
+  set({ committed, previewing: null, scope: "account" });
   const entry = cached();
   if (!entry || entry.owner !== owner || !same(entry.preference, committed)) void show(committed, true);
   else watchSystem(entry);
@@ -193,7 +185,7 @@ export async function cancelPreview(): Promise<void> {
   else await show(state.committed, true);
 }
 
-async function saveToAccount(body: { preference?: ThemePreference; favorites?: string[] }): Promise<void> {
+async function saveToAccount(body: { preference: ThemePreference }): Promise<void> {
   const response = await fetch("/api/me/preferences", {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
@@ -222,17 +214,4 @@ export async function commit(chosen: ThemePreference): Promise<void> {
   }
   set({ committed: preference, previewing: null });
   await show(preference, true);
-}
-
-export async function toggleFavorite(id: string): Promise<void> {
-  const previous = state.favorites;
-  const favorites = previous.includes(id) ? previous.filter((item) => item !== id) : [...previous, id].slice(0, 200);
-  set({ favorites });
-  try {
-    if (state.scope === "account") await saveToAccount({ favorites });
-    else writeJson(GUEST_FAVORITES_KEY, favorites.length > 0 ? favorites : null);
-  } catch (error) {
-    set({ favorites: previous });
-    throw error;
-  }
 }

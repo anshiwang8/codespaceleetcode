@@ -10,12 +10,8 @@ test.skip(!process.env.VISUAL_REVIEW, "Run pnpm visual:review");
 const phase = process.env.VISUAL_PHASE === "before" ? "before" : "after";
 const directory = path.resolve("visual-review", phase, "themes");
 
-/**
- * Representative palettes: both defaults, a saturated dark theme, a very dark one, a light one
- * whose background was moved away from mid-gray, a dark one moved the same way, and a light theme
- * whose accent needed the biggest change.
- */
-const REPRESENTATIVE = ["default-light", "default-dark", "dracula", "arch", "botanical", "diner", "beach"] as const;
+/** Every theme: with eight, the key screens are captured in each. */
+const REPRESENTATIVE = THEMES.map((theme) => theme.id);
 
 const escape = (text: string) => text.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
 
@@ -165,7 +161,7 @@ for (const id of REPRESENTATIVE) {
   });
 }
 
-for (const id of ["default-light", "dracula"] as const) {
+for (const id of ["default-light", "ink"] as const) {
   test(`phone screens in ${id}`, async ({ page }) => {
     const theme = THEMES.find((entry) => entry.id === id);
     if (!theme) throw new Error(`Unknown theme ${id}`);

@@ -381,7 +381,7 @@
 }
 
 .skeleton-appearance {
-  height: 536px;
+  height: 356px;
 }
 
 .skeleton-profile {
@@ -403,7 +403,7 @@
 /* Measured at 390px wide, where the forms stack. */
 @media (max-width: 640px) {
   .skeleton-appearance {
-    height: 836px;
+    height: 910px;
   }
 
   .skeleton-profile {

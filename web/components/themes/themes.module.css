@@ -6,57 +6,6 @@
   min-width: 0;
 }
 
-.controls {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: var(--space-3) var(--space-4);
-}
-
-.search {
-  display: grid;
-  flex: 1 1 220px;
-  gap: var(--space-1);
-}
-
-/* Inner radius = outer radius - the 3px padding - the 1px border, here and in the list below. */
-.filters {
-  display: inline-flex;
-  padding: 3px;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-lg);
-  background: var(--panel);
-}
-
-.filter {
-  position: relative;
-  display: flex;
-  align-items: center;
-  min-height: 30px;
-  padding: 0 var(--space-3);
-  border-radius: calc(var(--radius-lg) - 4px);
-  color: var(--text-muted);
-  font-size: var(--text-sm);
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.filter:hover {
-  background: var(--hover);
-  color: var(--text);
-}
-
-.filter[data-selected] {
-  background: var(--accent-soft);
-  color: var(--accent-text);
-  font-weight: 650;
-}
-
-.filter:has(input:focus-visible) {
-  outline: 2px solid var(--focus);
-  outline-offset: 1px;
-}
-
 .themeButton {
   gap: 6px;
 }
@@ -75,42 +24,37 @@
   gap: var(--space-4);
 }
 
+/* Nine swatches (System and the eight themes): short enough to show whole, so nothing scrolls. */
 .list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-  gap: var(--space-1);
-  max-height: 460px;
-  padding: 3px;
-  overflow-y: auto;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--surface-sunken);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
 }
 
-.dialogPicker .list {
-  max-height: min(52vh, 420px);
-  max-height: min(52dvh, 420px);
+/* A dialog is as wide as its content, and the grid has no width of its own: give it one. */
+.dialogPicker {
+  width: min(780px, calc(100vw - 2 * var(--page-gutter) - 2 * var(--space-5) - 2px));
 }
 
 .option {
-  /* Anchors the visually hidden radio, which would otherwise sit outside the scrolling list and stretch the page. */
+  /* Anchors the visually hidden radio. */
   position: relative;
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  min-height: 44px;
-  padding: 6px var(--space-2);
-  border: 1px solid transparent;
-  border-radius: calc(var(--radius-lg) - 4px);
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  padding: 5px 5px var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--panel);
   cursor: pointer;
-  /* Options scrolled out of the list skip layout and paint, but stay in the page, so search,
-     arrow keys between radios and screen readers still reach all of them. */
-  content-visibility: auto;
-  contain-intrinsic-size: auto 46px;
+  transition: border-color var(--motion-control) var(--motion-ease), background-color var(--motion-control) var(--motion-ease);
 }
 
-.option:hover {
-  background: var(--hover);
+@media (hover: hover) and (pointer: fine) {
+  .option:hover {
+    border-color: var(--border-strong);
+    background: var(--hover);
+  }
 }
 
 .option[data-checked] {
@@ -120,37 +64,42 @@
 
 .option:has(input:focus-visible) {
   outline: 2px solid var(--focus);
-  outline-offset: -1px;
+  outline-offset: 2px;
 }
 
 .swatches {
-  display: inline-flex;
-  flex: none;
+  display: flex;
   gap: 3px;
 }
 
-/* A theme in miniature: its page, with its accent and text colors on it. */
+/* A theme in miniature: its page, with its text and accent colors on it. Inner radius = the
+   option's radius - its 5px padding - its 1px border. */
 .swatch {
-  display: inline-flex;
+  display: flex;
+  flex: 1;
   align-items: center;
-  justify-content: center;
-  gap: 3px;
-  width: 34px;
-  height: 22px;
+  justify-content: space-between;
+  min-width: 0;
+  height: 52px;
+  padding: 0 10px;
   border: 1px solid var(--border-strong);
-  border-radius: var(--radius-sm);
+  border-radius: max(2px, calc(var(--radius-lg) - 6px));
+  font-size: var(--text-sm);
+  font-weight: 650;
 }
 
 .swatch span {
   display: block;
-  width: 8px;
-  height: 8px;
+  flex: none;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
 }
 
 .optionText {
   display: grid;
   min-width: 0;
+  padding: 0 3px;
 }
 
 .optionName {
@@ -165,18 +114,6 @@
 .optionDetail {
   color: var(--text-muted);
   font-size: var(--text-xs);
-}
-
-.star {
-  margin-left: 4px;
-  color: var(--warn);
-}
-
-.none {
-  grid-column: 1 / -1;
-  padding: var(--space-4);
-  color: var(--text-muted);
-  font-size: var(--text-sm);
 }
 
 .side {
@@ -316,27 +253,20 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .list {
-    max-height: 320px;
-  }
 
-  /* On a phone the dialog keeps Apply and Cancel in reach: above the preview, under a shorter list. */
-  .dialogPicker .list {
-    max-height: min(36vh, 320px);
-    max-height: min(36dvh, 320px);
-  }
-
+  /* On a phone the dialog keeps Apply and Cancel in reach: above the preview. */
   .dialogPicker .actions {
     order: -1;
   }
+}
 
-  .filters {
-    display: flex;
-    width: 100%;
+@media (max-width: 480px) {
+  .list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .filter {
-    flex: 1;
-    justify-content: center;
+  /* Shorter swatches, so the five rows leave Apply and Cancel on a phone's screen. */
+  .swatch {
+    height: 40px;
   }
 }

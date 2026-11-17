@@ -24,6 +24,7 @@ export interface AppliedTheme {
 
 export const APPLIED_KEY = "cb-theme";
 export const GUEST_PREFERENCE_KEY = "cb-theme-guest";
+/** Where favorites were kept while the picker had them. Nothing reads it now; the controller deletes it. */
 export const GUEST_FAVORITES_KEY = "cb-theme-favorites";
 export const THEME_EVENT = "codebases:theme";
 

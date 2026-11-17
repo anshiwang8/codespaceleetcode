@@ -20,7 +20,6 @@ import { getEmailStatus } from "@/lib/server/email";
 import { getParticipation, joinLeaderboard } from "@/lib/server/leaderboard";
 import { getAccountSummary, getAppearance, getProfileRecord, getSettingsData } from "@/lib/server/settings";
 import { setEmailSenderForTests, type EmailMessage } from "@/lib/server/email-delivery";
-import { REMOVED_THEME_IDS } from "@/lib/themes/removed";
 import { seedFixtures } from "./fixtures";
 import { hasDatabase, makeRequest, signIn } from "./helpers";
 
@@ -178,50 +177,92 @@ describe.skipIf(!hasDatabase)("settings", () => {
   });
 
   describe("preferences", () => {
-    it("saves a known theme and favorites, refuses unknown themes, and drops unknown favorites", async () => {
+    it("saves a known theme and refuses unknown ones", async () => {
       const cookie = await signIn("settings-theme");
       const put = (body: unknown) => preferencesRoute(call("/api/me/preferences", "PUT", cookie, body), undefined);
       expect((await put({ preference: { mode: "theme", id: "no-such-theme" } })).status).toBe(400);
-      expect((await put({ preference: { mode: "theme", id: "DRACULA" } })).status).toBe(400);
-      const saved = await put({ preference: { mode: "theme", id: "dracula" }, favorites: ["nord", "made-up", "nord"] });
-      expect(await json(saved)).toEqual({ preference: { mode: "theme", id: "dracula" }, favorites: ["nord"] });
-      // Favorites alone leave the theme.
-      expect(await json(await put({ favorites: [] }))).toEqual({ preference: { mode: "theme", id: "dracula" }, favorites: [] });
+      expect((await put({ preference: { mode: "theme", id: "INK" } })).status).toBe(400);
+      // A theme from the earlier catalog can't be saved now.
+      expect((await put({ preference: { mode: "theme", id: "dracula" } })).status).toBe(400);
+      for (const id of ["default-light", "default-dark", "cream", "periwinkle-mist", "mint-mist", "ink", "dusk", "pine"]) {
+        expect(await json(await put({ preference: { mode: "theme", id } })), id).toEqual({ preference: { mode: "theme", id }, favorites: [] });
+      }
+      expect(await json(await put({ preference: { mode: "system" } }))).toEqual({ preference: { mode: "system" }, favorites: [] });
+      expect(await json(await put({ preference: { mode: "theme", id: "ink" } }))).toEqual({ preference: { mode: "theme", id: "ink" }, favorites: [] });
       const me = await json<MeResponse>(await getMe(makeRequest("/api/me", { cookie }), undefined));
-      expect(me.user?.appearance).toEqual({ preference: { mode: "theme", id: "dracula" }, favorites: [] });
+      expect(me.user?.appearance).toEqual({ preference: { mode: "theme", id: "ink" }, favorites: [] });
       // Another user doesn't get it.
       const other = await signIn("settings-theme-other");
       const theirs = await json<MeResponse>(await getMe(makeRequest("/api/me", { cookie: other }), undefined));
       expect(theirs.user?.appearance).toEqual({ preference: null, favorites: [] });
     });
 
-    it("reads a saved theme that has since been removed as the default, and drops it from favorites", async () => {
-      const removed = REMOVED_THEME_IDS[0] ?? "";
-      expect(removed).not.toBe("");
+    it("reads a saved theme that's no longer in the catalog as the default", async () => {
+      const gone = "dracula";
       const cookie = await signIn("settings-theme-removed");
       const put = (body: unknown) => preferencesRoute(call("/api/me/preferences", "PUT", cookie, body), undefined);
-      expect((await put({ preference: { mode: "theme", id: "dracula" } })).status).toBe(200);
+      expect((await put({ preference: { mode: "theme", id: "pine" } })).status).toBe(200);
       // What the account saved while the theme still existed.
       const stored = await getPool().query(
-        `update user_preferences set theme_id = $2, favorite_themes = $3
+        `update user_preferences set theme_id = $2
          where user_id = (select id from users where github_login = $1)`,
-        ["settings-theme-removed", removed, [removed, "nord"]],
+        ["settings-theme-removed", gone],
       );
       expect(stored.rowCount).toBe(1);
-      const fallback = { preference: { mode: "theme", id: "default-light" }, favorites: ["nord"] };
+      const fallback = { preference: { mode: "theme", id: "default-light" }, favorites: [] };
       const me = await json<MeResponse>(await getMe(makeRequest("/api/me", { cookie }), undefined));
       expect(me.user?.appearance).toEqual(fallback);
       const settings = await json<SettingsResponse>(await settingsRoute(makeRequest("/api/me/settings", { cookie }), undefined));
       expect(settings.appearance).toEqual(fallback);
-      // It can't be saved again, as a theme or a favorite.
-      expect((await put({ preference: { mode: "theme", id: removed } })).status).toBe(400);
-      expect(await json(await put({ favorites: [removed, "nord"] }))).toEqual(fallback);
-      // The stored choice is left alone, so bringing the theme back brings the choice back.
-      const { rows } = await getPool().query<{ theme_id: string }>(
-        "select theme_id from user_preferences where user_id = (select id from users where github_login = $1)",
-        ["settings-theme-removed"],
+      expect((await put({ preference: { mode: "theme", id: gone } })).status).toBe(400);
+      // Reading doesn't rewrite the row; choosing a theme does.
+      const themeId = async () =>
+        (
+          await getPool().query<{ theme_id: string | null }>(
+            "select theme_id from user_preferences where user_id = (select id from users where github_login = $1)",
+            ["settings-theme-removed"],
+          )
+        ).rows[0]?.theme_id;
+      expect(await themeId()).toBe(gone);
+      expect((await put({ preference: { mode: "theme", id: "cream" } })).status).toBe(200);
+      expect(await themeId()).toBe("cream");
+    });
+
+    it("ignores favorites: old lists naming removed themes neither fail nor come back", async () => {
+      const cookie = await signIn("settings-theme-favorites");
+      const put = (body: unknown) => preferencesRoute(call("/api/me/preferences", "PUT", cookie, body), undefined);
+      expect((await put({ preference: { mode: "theme", id: "dusk" } })).status).toBe(200);
+      // What the account saved while the picker had favorites.
+      const old = ["dracula", "nord", "menthol", "default-dark"];
+      const favorites = async () =>
+        (
+          await getPool().query<{ favorite_themes: string[] }>(
+            "select favorite_themes from user_preferences where user_id = (select id from users where github_login = $1)",
+            ["settings-theme-favorites"],
+          )
+        ).rows[0]?.favorite_themes;
+      await getPool().query(
+        "update user_preferences set favorite_themes = $2 where user_id = (select id from users where github_login = $1)",
+        ["settings-theme-favorites", old],
       );
-      expect(rows[0]?.theme_id).toBe(removed);
+      const expected = { preference: { mode: "theme", id: "dusk" }, favorites: [] };
+      const me = await json<MeResponse>(await getMe(makeRequest("/api/me", { cookie }), undefined));
+      expect(me.user?.appearance).toEqual(expected);
+      const settings = await json<SettingsResponse>(await settingsRoute(makeRequest("/api/me/settings", { cookie }), undefined));
+      expect(settings.appearance).toEqual(expected);
+      // A browser on an older build may still send a list, alone or with a theme: accepted, not saved.
+      const alone = await put({ favorites: ["dracula", "nord", "ink"] });
+      expect(alone.status).toBe(200);
+      expect(await json(alone)).toEqual(expected);
+      const both = await put({ preference: { mode: "theme", id: "pine" }, favorites: ["dracula"] });
+      expect(await json(both)).toEqual({ preference: { mode: "theme", id: "pine" }, favorites: [] });
+      expect(await favorites()).toEqual(old);
+      // Favorites alone, for an account with no saved preferences, make no row.
+      const fresh = await signIn("settings-theme-favorites-fresh");
+      const first = await preferencesRoute(call("/api/me/preferences", "PUT", fresh, { favorites: ["nord"] }), undefined);
+      expect(await json(first)).toEqual({ preference: null, favorites: [] });
+      // An empty body is still refused.
+      expect((await put({})).status).toBe(400);
     });
   });
 
