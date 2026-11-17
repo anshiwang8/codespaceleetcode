@@ -891,7 +891,7 @@ a.chip:hover {
     border-color var(--motion-control) var(--motion-feedback),
     color var(--motion-control) var(--motion-feedback),
     box-shadow var(--motion-control) var(--motion-feedback),
-    transform var(--motion-press) var(--motion-feedback);
+    transform var(--press-time) var(--press-ease);
 }
 
 /* Inset feedback doesn't change a target's position or its dimensions. */
@@ -952,8 +952,20 @@ a.chip:hover {
   --measure-prose: 68ch;
   --measure-lede: 60ch;
   --hit-min: 44px;
-  --motion-press: 160ms;
-  --press-scale: 0.97;
+  /*
+   * Press and release. Pressing is quick; letting go springs once past full size and settles.
+   * Both are one transition on transform, so a press released early, or dragged off the control,
+   * returns from wherever it got to, with an overshoot in proportion to how far it was pressed.
+   */
+  --press-scale: 0.96;
+  --press-scale-soft: 0.985;
+  --press-scale-icon: 0.92;
+  --press-in: 90ms;
+  --press-in-ease: cubic-bezier(0.2, 0, 0.4, 1);
+  --press-out: 420ms;
+  --spring-release: var(--motion-feedback);
+  --press-time: var(--press-out);
+  --press-ease: var(--spring-release);
 
   --plate: oklch(0.977 0.008 70); /* #fcf7f2 */
   --mascot-body: oklch(0.733 0.136 278); /* #959ffd */
@@ -980,10 +992,36 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* Press: the control gives under the finger, and a reversed press retargets mid-way. */
+/* Without linear() the release is the plain ease, with no overshoot. */
+@supports (transition-timing-function: linear(0, 1)) {
+  :root {
+    --spring-release: linear(0, 0.62 8%, 1.18 17%, 1.56 26%, 1.72 34%, 1.66 43%, 1.38 55%, 1.1 68%, 0.96 80%, 0.99 90%, 1);
+  }
+}
+
+/* Press: the control gives under the finger; the base rule's timing springs it back. */
 .btn:active:not(:disabled):not([aria-disabled="true"]) {
+  --press-time: var(--press-in);
+  --press-ease: var(--press-in-ease);
   transform: scale(var(--press-scale));
 }
+
+/*
+ * The same press for a pressable surface that isn't a .btn: a row, a card link, an index item
+ * (.press-soft) or a small icon control (.press-icon). A module that sets its own transition
+ * list adds `transform var(--press-time) var(--press-ease)` to it.
+ */
+.press-soft, .press-icon {
+  transition: transform var(--press-time) var(--press-ease);
+}
+
+.press-soft:active, .press-icon:active {
+  --press-time: var(--press-in);
+  --press-ease: var(--press-in-ease);
+}
+
+.press-soft:active { transform: scale(var(--press-scale-soft)); }
+.press-icon:active { transform: scale(var(--press-scale-icon)); }
 
 /*
  * Origin-aware press: components/site/PressOrigin.tsx records where the pointer went down, and
@@ -1070,6 +1108,8 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .btn:active:not(:disabled):not([aria-disabled="true"]),
+  .press-soft:active,
+  .press-icon:active,
   .btn-forward:hover .icon:last-child {
     transform: none;
   }
