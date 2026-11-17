@@ -1085,3 +1085,13 @@ body {
     animation-delay: 0s !important;
   }
 }
+
+/*
+ * A lesson's pager is a sticky bar at the bottom of a phone screen. Scrolling a focused control
+ * into view stops above it, so the bar never covers what the keyboard is on.
+ */
+@media (max-width: 640px) {
+  html:has(nav[aria-label="Lessons"]) {
+    scroll-padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  }
+}
