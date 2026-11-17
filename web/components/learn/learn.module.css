@@ -61,6 +61,7 @@
 }
 
 .tableScroll {
+  composes: fade-edges-x from global;
   overflow-x: auto;
 }
 

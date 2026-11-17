@@ -676,6 +676,42 @@ a.chip:hover {
   background: var(--ok);
 }
 
+/*
+ * Masked edges for sideways scrollers: a side fades out only while there's more content past it,
+ * so a row that fits shows no fade, and a hidden scrollbar still says "there's more". Driven by
+ * the element's own scroll position (a scroll timeline, not time), so nothing moves on its own.
+ * Browsers without scroll timelines show no fade. Use with `composes: fade-edges-x from global`.
+ * Not for the puzzle workspace's tabs or trail, or anything with a border: the mask fades both.
+ */
+@property --fade-start {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --fade-end {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@keyframes fade-edges-x {
+  0% { --fade-start: 0px; --fade-end: 24px; }
+  4% { --fade-start: 24px; }
+  96% { --fade-end: 24px; }
+  100% { --fade-start: 24px; --fade-end: 0px; }
+}
+
+@supports (animation-timeline: scroll()) {
+  .fade-edges-x {
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 var(--fade-start), #000 calc(100% - var(--fade-end)), transparent);
+    mask-image: linear-gradient(to right, transparent, #000 var(--fade-start), #000 calc(100% - var(--fade-end)), transparent);
+    animation: fade-edges-x linear both;
+    animation-duration: auto;
+    animation-timeline: scroll(self inline);
+  }
+}
+
 /* Notices */
 
 .notice {

@@ -84,6 +84,7 @@
 
 /* Only the calendar scrolls sideways on a narrow screen; it opens scrolled to the newest dates. */
 .scroll {
+  composes: fade-edges-x from global;
   overflow-x: auto;
   padding-bottom: var(--space-1);
   transition: opacity var(--motion-control) var(--motion-feedback);

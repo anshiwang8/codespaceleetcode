@@ -145,6 +145,7 @@
 
 /* Tables scroll sideways in their own box. */
 .tableScroll {
+  composes: fade-edges-x from global;
   max-width: 100%;
   overflow-x: auto;
   border: 1px solid var(--border);
