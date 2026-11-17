@@ -397,6 +397,8 @@ button.account[aria-expanded="true"] .accountChevron {
   button.account { min-height: var(--hit-min); }
   .auth :global(.btn),
   .auth :global(.btn-small) { min-height: var(--hit-min); }
+  .setupBanner :global(.btn),
+  .authBanner :global(.btn) { min-height: var(--hit-min); }
   .accountPanel a,
   .accountPanel button { min-height: var(--hit-min); }
 }

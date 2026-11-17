@@ -61,3 +61,12 @@
     align-items: flex-start;
   }
 }
+
+/* Under a finger each footer link is a full-size target; the row keeps its visual rhythm. */
+@media (pointer: coarse) {
+  .nav a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--hit-min);
+  }
+}

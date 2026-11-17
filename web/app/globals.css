@@ -1095,3 +1095,20 @@ body {
     scroll-padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
   }
 }
+
+/* Under a finger, every page button is a full-size target. The workspace keeps its denser controls. */
+@media (pointer: coarse) {
+  .page .btn,
+  .page .btn-small {
+    min-height: var(--hit-min);
+  }
+}
+
+/*
+ * On a dark page the cream plate is the brightest thing in view: it's dimmed a little and given
+ * an edge, so it reads as a lit picture rather than a hole.
+ */
+html[data-scheme="dark"] .plate {
+  box-shadow: 0 0 0 1px var(--border-strong);
+  filter: brightness(0.94);
+}
