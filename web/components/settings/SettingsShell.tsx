@@ -40,7 +40,7 @@ const TITLES: Record<SectionId, string> = {
 const LEDES: Partial<Record<SectionId, React.ReactNode>> = {
   appearance: (
     <>
-      189 themes, light and dark. Choosing one previews it here; Apply saves it to your account, so it follows you to
+      175 themes, light and dark. Choosing one previews it here; Apply saves it to your account, so it follows you to
       any browser you sign in on.
     </>
   ),

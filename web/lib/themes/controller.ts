@@ -1,3 +1,4 @@
+import { isRemovedTheme } from "./removed";
 import { DEFAULT_LIGHT_ID, type ThemeDefinition } from "./tokens";
 import {
   APPLIED_KEY,
@@ -25,6 +26,10 @@ import {
 // Signed in, choices are saved to the account (PUT /api/me/preferences) and the guest choice in
 // this browser is left alone, so signing out returns to it. The cache the pre-paint script reads
 // is tagged with its owner; when another person (or nobody) is signed in, it's replaced.
+//
+// A theme that has been removed (lib/themes/removed.ts) reads as codebases Light wherever it was
+// saved: a guest choice, a favorite, the pre-paint cache or an account. That's decided from the
+// short removed list, so it never loads the catalog.
 
 export interface AppearanceState {
   committed: ThemePreference;
@@ -47,6 +52,13 @@ let owner = "guest";
 const listeners = new Set<Listener>();
 let catalog: Promise<readonly ThemeDefinition[]> | null = null;
 let mediaListener: ((event: MediaQueryListEvent) => void) | null = null;
+
+/** A saved choice of a removed theme is the default. */
+function kept(preference: ThemePreference): ThemePreference {
+  return preference.mode === "theme" && isRemovedTheme(preference.id) ? DEFAULT_PREFERENCE : preference;
+}
+
+const keptFavorites = (favorites: readonly string[]) => favorites.filter((id) => !isRemovedTheme(id));
 
 function set(next: Partial<AppearanceState>): void {
   state = { ...state, ...next };
@@ -105,7 +117,9 @@ function watchSystem(entry: AppliedTheme): void {
 
 function cached(): AppliedTheme | null {
   const entry = readJson(APPLIED_KEY) as AppliedTheme | null;
-  return entry && entry.v === 1 && parsePreference(entry.preference) ? entry : null;
+  const preference = entry && entry.v === 1 ? parsePreference(entry.preference) : null;
+  // An entry cached for a removed theme still holds its tokens: never apply it.
+  return entry && preference && kept(preference) === preference ? entry : null;
 }
 
 const same = (a: ThemePreference, b: ThemePreference) =>
@@ -130,12 +144,15 @@ async function show(preference: ThemePreference, remember: boolean): Promise<voi
 }
 
 function guestPreference(): ThemePreference {
-  return parsePreference(readJson(GUEST_PREFERENCE_KEY)) ?? DEFAULT_PREFERENCE;
+  const saved = parsePreference(readJson(GUEST_PREFERENCE_KEY)) ?? DEFAULT_PREFERENCE;
+  const preference = kept(saved);
+  if (preference !== saved) writeJson(GUEST_PREFERENCE_KEY, null);
+  return preference;
 }
 
 function guestFavorites(): string[] {
   const value = readJson(GUEST_FAVORITES_KEY);
-  return Array.isArray(value) ? value.filter((id): id is string => typeof id === "string").slice(0, 200) : [];
+  return Array.isArray(value) ? keptFavorites(value.filter((id): id is string => typeof id === "string")).slice(0, 200) : [];
 }
 
 /** Nobody is signed in: this browser's own choice applies. */
@@ -151,15 +168,16 @@ export function adoptGuest(): void {
 /** Someone is signed in: their saved choice applies, or this browser's when they have none. */
 export function adoptAccount(login: string, appearance: AccountAppearance | null): void {
   owner = ownerTag(login);
-  const committed = appearance?.preference ?? guestPreference();
-  set({ committed, favorites: appearance?.favorites ?? [], previewing: null, scope: "account" });
+  const committed = kept(appearance?.preference ?? guestPreference());
+  set({ committed, favorites: keptFavorites(appearance?.favorites ?? []), previewing: null, scope: "account" });
   const entry = cached();
   if (!entry || entry.owner !== owner || !same(entry.preference, committed)) void show(committed, true);
   else watchSystem(entry);
 }
 
 /** Shows a theme without saving it. cancelPreview() or commit() ends it. */
-export async function preview(preference: ThemePreference): Promise<void> {
+export async function preview(chosen: ThemePreference): Promise<void> {
+  const preference = kept(chosen);
   set({ previewing: preference });
   const entry = await resolve(preference);
   // A later preview, a cancel or a commit may have happened while the catalog loaded.
@@ -188,7 +206,8 @@ async function saveToAccount(body: { preference?: ThemePreference; favorites?: s
  * Saves and applies a theme. Signed in, it's saved to the account first; if that fails the
  * previous theme comes back and the error is thrown for the caller to show.
  */
-export async function commit(preference: ThemePreference): Promise<void> {
+export async function commit(chosen: ThemePreference): Promise<void> {
+  const preference = kept(chosen);
   const previous = state.committed;
   if (state.scope === "account") {
     try {

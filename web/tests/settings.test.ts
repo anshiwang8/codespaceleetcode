@@ -20,6 +20,7 @@ import { getEmailStatus } from "@/lib/server/email";
 import { getParticipation, joinLeaderboard } from "@/lib/server/leaderboard";
 import { getAccountSummary, getAppearance, getProfileRecord, getSettingsData } from "@/lib/server/settings";
 import { setEmailSenderForTests, type EmailMessage } from "@/lib/server/email-delivery";
+import { REMOVED_THEME_IDS } from "@/lib/themes/removed";
 import { seedFixtures } from "./fixtures";
 import { hasDatabase, makeRequest, signIn } from "./helpers";
 
@@ -192,6 +193,35 @@ describe.skipIf(!hasDatabase)("settings", () => {
       const other = await signIn("settings-theme-other");
       const theirs = await json<MeResponse>(await getMe(makeRequest("/api/me", { cookie: other }), undefined));
       expect(theirs.user?.appearance).toEqual({ preference: null, favorites: [] });
+    });
+
+    it("reads a saved theme that has since been removed as the default, and drops it from favorites", async () => {
+      const removed = REMOVED_THEME_IDS[0] ?? "";
+      expect(removed).not.toBe("");
+      const cookie = await signIn("settings-theme-removed");
+      const put = (body: unknown) => preferencesRoute(call("/api/me/preferences", "PUT", cookie, body), undefined);
+      expect((await put({ preference: { mode: "theme", id: "dracula" } })).status).toBe(200);
+      // What the account saved while the theme still existed.
+      const stored = await getPool().query(
+        `update user_preferences set theme_id = $2, favorite_themes = $3
+         where user_id = (select id from users where github_login = $1)`,
+        ["settings-theme-removed", removed, [removed, "nord"]],
+      );
+      expect(stored.rowCount).toBe(1);
+      const fallback = { preference: { mode: "theme", id: "default-light" }, favorites: ["nord"] };
+      const me = await json<MeResponse>(await getMe(makeRequest("/api/me", { cookie }), undefined));
+      expect(me.user?.appearance).toEqual(fallback);
+      const settings = await json<SettingsResponse>(await settingsRoute(makeRequest("/api/me/settings", { cookie }), undefined));
+      expect(settings.appearance).toEqual(fallback);
+      // It can't be saved again, as a theme or a favorite.
+      expect((await put({ preference: { mode: "theme", id: removed } })).status).toBe(400);
+      expect(await json(await put({ favorites: [removed, "nord"] }))).toEqual(fallback);
+      // The stored choice is left alone, so bringing the theme back brings the choice back.
+      const { rows } = await getPool().query<{ theme_id: string }>(
+        "select theme_id from user_preferences where user_id = (select id from users where github_login = $1)",
+        ["settings-theme-removed"],
+      );
+      expect(rows[0]?.theme_id).toBe(removed);
     });
   });
 
