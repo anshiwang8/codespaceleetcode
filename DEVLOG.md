@@ -1,5 +1,31 @@
 # DEVLOG
 
+## Learn path, Challenges layout, mascot logo, button motion and craft details
+
+Type: Change
+
+Goal: Make Learn a guided path a first-time learner understands in one screen, balance the Challenges page with a visual streak, replace the logo with the mascot, make buttons feel physical, and apply sixteen named craft details, so the pages read as designed rather than generated. Design: `docs/superpowers/specs/2026-11-17-learn-challenges-brand-design.md`; plan: `docs/superpowers/plans/2026-11-17-learn-challenges-brand.md`.
+
+What should be done: Rebuild `/learn` and the lesson page, rebuild `/challenges`, redraw the owner's mascot as vector art for the logo and icons, add an illustration per course group, give every button press and hover feedback, remove the themes that clash with the fixed illustration plate, and check the result with a critic at phone and desktop sizes in light and dark.
+
+What was done (technical):
+- **Foundation** (`app/globals.css`, "Craft foundation"). Tokens for tracking, measure (68ch prose, 60ch ledes) and a 44px minimum target; `.btn` press at `scale(0.97)` over 160ms as a transition, so a reversed press retargets; every `.btn` hover behind `(hover: hover) and (pointer: fine)`; `.btn-forward` slides its arrow; `PressOrigin.tsx` records where a press began so the primary button's highlight spreads from the pointer; `.hit-area`, `.stagger-in`, `.plate`; view-transition rules; `viewportFit: "cover"` with safe-area page gutters; page buttons, the header, banner and footer links are 44px under a coarse pointer; the account menu opens from its trigger corner (`motion-pop`). `tests/foundation.test.ts`.
+- **Brand.** The mascot is redrawn as SVG in `components/site/mascot-geometry.ts` (head and full figure) from the owner's reference; `Logo.tsx` is the head plus a one-path wordmark in the text color; `Mascot.tsx` draws either form in fixed `--mascot-*` colors (OKLCH, with hex twins for the icon script and the preview image) and a light edge on dark schemes. `scripts/brand-icons.mjs` writes the favicon (a simplified head), app icons and `public/brand/`. `mark.ts` is gone. Comparison sheet: `docs/superpowers/specs/assets/mascot-compare.png`.
+- **Learn catalog.** A Continue panel above the fold (progress bar, count, one button naming the next lesson, height reserved before progress loads), three starting points, and each group as a section with its illustration plate, its own progress and a continuous rail of lesson nodes; each row is one link at least 44px tall; a sticky group index on wide screens; the first six rows stagger in once. The "Suggested first" line left the rows.
+- **Lesson page.** One 685px column for prose, code and exercises; a section index; a boxed worked-example summary; Check is the one primary button once something is selected, and a failed request is kept apart from a graded result and restores the previous one; status and catalog progress update from the graded response; a single-line sticky pager on phones with safe-area padding; inline code uses `font-size-adjust: 0.508`, the system UI font's x-height measured on macOS. The lesson's code and title morph from the catalog row into the header with React's `ViewTransition` (`lesson-<slug>`); the pair forms when the row is on screen.
+- **Challenges.** Three `ChallengeBar` bars (type, time left, points, one button) beside an equal-height streak panel: `StreakBar` on the scale from `lib/streak-display.ts`, `StreakCalendar` (five weeks, Monday first, UTC, today from the server's clock) and the stats. `ChallengeStreak.recentDays` comes from the query the streak already ran. The rules, rotation times and `LocalRotation` moved into a closed disclosure. A puzzle solved before its period began says "Solved", not "Completed". Signed out, the panel is the mascot and a sign-in prompt.
+- **Illustrations.** `web/public/learn/group-<n>-{480,960}.webp` are interim vector scenes drawn by `scripts/learn-illustrations.mjs` in the mascot's style.
+- **Themes.** 14 of 189 themes are removed because their page background clashes with the plate and mascot (`lib/themes/removed.ts`, one reason each; `clash.ts` is the test; contact sheet in `docs/superpowers/specs/assets/theme-clash.png`). 175 remain. A saved removed theme falls back to the default on the server, in the controller and in the pre-paint script, with no catalog load and no flash.
+- **Checks.** Lint, typecheck, 1,893 web and 529 ingest tests, `pnpm validate` (141 puzzles, 28 lessons) and `pnpm smoke` (8 tests, no secrets in the bundle) pass. `pnpm e2e` passes with 148 tests; an earlier run, started while the machine was loaded, failed three unrelated tests (hints, landing sign-out, profile activity) that passed alone and in the next full run. A plain `pnpm --filter web build` stops at the production guard for `BETTER_AUTH_URL` on a machine without it; the smoke run builds with it set. A critic reviewed `/learn`, a lesson and `/challenges` at 1440 and 375 wide in light and two dark themes, and its findings were fixed or are listed below. Landing screenshots recaptured.
+
+Still open:
+- The four illustrations were meant to be generated with ChatGPT. It was signed out in the owner's browser, so interim vector scenes stand in; three reuse one mascot pose. Replacements go at the same paths (`web/public/learn/README.md`).
+- The "Finish setting up your account" banner pushes the page down about 47px when sign-in state resolves (CLS about 0.03). Reserving its height before paint needs one more flag in browser storage and a line on `/privacy`, which is the owner's decision.
+- The browser's toolbar color (`themeColor`) is still fixed white; following the applied theme needs a runtime change beside the pre-paint script.
+- The theme picker is a centered dialog, so it has no trigger corner to open from.
+- Inline code's x-height match was measured on macOS only.
+- At 900 to 1023px wide the Challenges skeleton can be about 37px shorter than a signed-in zero-streak panel.
+
 ## Design overhaul: OKLCH, alpha borders, depth, icons, masked edges, blending, fluid sizing
 
 Type: Change
