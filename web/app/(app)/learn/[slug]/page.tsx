@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SmoothAnchor } from "@/components/site/SmoothAnchor";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ViewTransition } from "react";
@@ -99,7 +100,7 @@ export default async function LessonPage({ params }: PageProps) {
           <ul>
             {sections.map((section) => (
               <li key={section.id}>
-                <a href={`#${section.id}`}>{section.label}</a>
+                <SmoothAnchor href={`#${section.id}`} className="press-soft">{section.label}</SmoothAnchor>
               </li>
             ))}
           </ul>

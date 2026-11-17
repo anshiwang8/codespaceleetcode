@@ -30,8 +30,6 @@ const STARTS = [
  */
 export default function LearnPage() {
   const lessons = allLessons();
-  const minutes = lessons.reduce((sum, lesson) => sum + lesson.minutes, 0);
-  const count = (kind: PublicLesson["kind"]) => lessons.filter((lesson) => lesson.kind === kind).length;
   const entries = lessons.map((lesson) => ({ slug: lesson.slug, revision: lesson.revision, title: lesson.title, code: lesson.code }));
   const starts = STARTS.flatMap((start) => {
     const lesson = lessons.find((item) => item.code === start.code);
@@ -42,7 +40,7 @@ export default function LearnPage() {
     const firstRow = last ? last.firstRow + rowCount(last) : 0;
     return [...done, { ...layoutGroup(group), firstRow }];
   }, []);
-  // The lede is the course summary's first sentence; the rest is said under "How it works".
+  // The lede is the course summary's first sentence.
   const lede = COURSE.summary.match(/^.*?[.!?](?=\s|$)/)?.[0] ?? COURSE.summary;
 
   return (
@@ -80,20 +78,6 @@ export default function LearnPage() {
                 </Link>
               </li>
             ))}
-          </ul>
-        </section>
-
-        <section className={styles.introRow} aria-labelledby="learn-how">
-          <h2 id="learn-how" className={styles.introTitle}>
-            How it works
-          </h2>
-          <ul className={styles.facts}>
-            <li>
-              {count("lesson")} lessons, {count("checkpoint")} checkpoints and a capstone, about {Math.round(minutes / 60)}
-              &nbsp;hours in all. You need only a browser.
-            </li>
-            <li>Each lesson has a worked example, practice and an exit check. You select answers; nothing runs code.</li>
-            <li>A correct exit check completes a lesson. Showing the answer doesn&apos;t, but you can still check afterwards.</li>
           </ul>
         </section>
       </div>
