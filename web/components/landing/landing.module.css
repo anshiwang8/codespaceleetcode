@@ -355,7 +355,9 @@
 /* The line a reader would put the cursor on. A bar and a tint, not just a color. */
 .codePicked {
   box-shadow: inset 3px 0 0 var(--accent);
-  background: var(--accent-soft);
+  /* The tint blends with the editor below it, away from the text (--blend-tint in globals.css). */
+  background: linear-gradient(var(--accent-soft), var(--accent-soft)), var(--editor-bg);
+  background-blend-mode: var(--blend-tint), normal;
 }
 
 .lineNumber {

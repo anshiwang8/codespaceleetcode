@@ -318,6 +318,12 @@
   background: var(--accent-soft);
 }
 
+/* A selected line of code: the tint blends with the editor, away from the text (--blend-tint). */
+.lineChoice[data-selected] {
+  background: linear-gradient(var(--accent-soft), var(--accent-soft)), var(--editor-bg);
+  background-blend-mode: var(--blend-tint), normal;
+}
+
 .choice:has(input:focus-visible),
 .lineChoice:has(input:focus-visible) {
   outline: 2px solid var(--focus);

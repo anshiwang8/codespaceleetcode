@@ -99,6 +99,15 @@
   --shadow-float: 0 12px 32px var(--shadow);
 
   /*
+   * Blending a tint behind code. Syntax colors sit right at 4.5:1 on the editor, so a tint that
+   * moves the background toward the text breaks them (a plain alpha tint did, in most themes).
+   * The tint is blended in the direction away from the text instead: screen (lighter) under dark
+   * text, multiply (darker) under light text. tests/blend.test.ts checks every theme. The 3px
+   * accent bar or border is what marks the line; the tint only supports it.
+   */
+  --blend-tint: screen;
+
+  /*
    * Gradients, interpolated in OKLCH, which stays vivid through the middle where sRGB turns gray.
    * Built from tokens, so every theme has them. Decorative only: never behind text.
    */
@@ -163,6 +172,7 @@ html[data-scheme="dark"] {
   --edge-highlight: inset 0 1px 0 color-mix(in oklch, var(--text) 7%, transparent);
   --shadow-card: var(--edge-highlight);
   --shadow-float: var(--edge-highlight), 0 16px 40px var(--shadow);
+  --blend-tint: multiply;
 }
 
 *,
