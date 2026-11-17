@@ -120,7 +120,7 @@ describe("the generated course", () => {
     };
     for (const directory of ["app", "components", "lib"]) walk(path.join(WEB, directory));
     expect(offenders).toEqual([]);
-    expect(readFileSync(path.join(WEB, "lib/server/learn/keys.generated.ts"), "utf8")).toMatch(/^(\/\/.*\n)+import "server-only";/);
+    expect(readFileSync(path.join(WEB, "lib/server/learn/keys.generated.ts"), "utf8")).toMatch(/^(\/\/.*\r?\n)+import "server-only";/);
   });
 
   it("numbers code lines the way the validator does, so line answers point at real lines", () => {
