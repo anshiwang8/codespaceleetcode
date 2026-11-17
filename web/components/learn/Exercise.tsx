@@ -5,6 +5,7 @@ import { useId, useState } from "react";
 import styles from "@/components/learn/learn.module.css";
 import { InlineText } from "@/components/learn/InlineText";
 import { Icon } from "@/components/site/Icon";
+import { SwapIcon } from "@/components/site/SwapIcon";
 import { ApiRequestError, api } from "@/lib/client/api";
 import { recordCheck, useLearnProgress } from "@/lib/client/learn-progress";
 import { codeLines } from "@/lib/learn/code";
@@ -23,11 +24,11 @@ interface ExerciseProps {
   review?: { href: string; title: string };
 }
 
-type Result =
-  | { kind: "correct"; explanation: string }
-  | { kind: "wrong"; feedback: string }
-  | { kind: "stale"; message: string }
-  | { kind: "error"; message: string };
+/** What the server said about the last checked answer. Only ever set from its response. */
+type Result = { kind: "correct"; explanation: string } | { kind: "wrong"; feedback: string };
+
+/** A request that didn't get an answer: the lesson changed (stale), or it failed. */
+type Failure = { kind: "stale"; message: string } | { kind: "error"; message: string };
 
 function sameAnswer(a: LearnAnswer, b: LearnAnswer): boolean {
   if (a.kind === "choice" && b.kind === "choice") return a.choiceId === b.choiceId;
@@ -49,6 +50,7 @@ export function Exercise({ slug, revision, requiredIds, exercise, prompt, block,
   const [steps, setSteps] = useState<string[]>([]);
   const [busy, setBusy] = useState<"check" | "hint" | "reveal" | null>(null);
   const [result, setResult] = useState<Result | null>(null);
+  const [failure, setFailure] = useState<Failure | null>(null);
   const [hints, setHints] = useState<string[]>([]);
   const [revealed, setRevealed] = useState<{ answer: LearnAnswer; explanation: string } | null>(null);
 
@@ -65,20 +67,27 @@ export function Exercise({ slug, revision, requiredIds, exercise, prompt, block,
           ? null
           : { kind: "sequence", steps };
 
+  // Selecting shows at once: it's the learner's own choice, held in this page. A result never is.
   const changed = () => {
-    if (result?.kind === "wrong" || result?.kind === "correct" || result?.kind === "error") setResult(null);
+    setResult(null);
+    if (failure?.kind === "error") setFailure(null);
   };
 
-  const failure = (error: unknown): Result =>
+  /** `kept` says what state the page is back in, so a failure never looks like a result. */
+  const failed = (error: unknown, kept: string): Failure =>
     error instanceof ApiRequestError && error.status === 409
       ? { kind: "stale", message: error.message }
-      : { kind: "error", message: error instanceof ApiRequestError ? error.message : "Something went wrong. Try again." };
+      : { kind: "error", message: `${error instanceof ApiRequestError ? error.message : "Something went wrong. Try again."} ${kept}` };
 
   async function check(event: React.FormEvent) {
     event.preventDefault();
     if (!answer || busy) return;
     const owner = progress.owner;
+    // The last result steps aside while the server grades, and comes back if the request fails.
+    const previous = result;
     setBusy("check");
+    setResult(null);
+    setFailure(null);
     try {
       const response = await api.learnCheck(slug, revision, exercise.id, answer);
       if (response.correct) {
@@ -88,7 +97,8 @@ export function Exercise({ slug, revision, requiredIds, exercise, prompt, block,
         setResult({ kind: "wrong", feedback: response.feedback ?? "Not quite. Try again." });
       }
     } catch (error) {
-      setResult(failure(error));
+      setResult(previous);
+      setFailure(failed(error, "Your answer wasn't checked; your selection is still here."));
     } finally {
       setBusy(null);
     }
@@ -97,11 +107,12 @@ export function Exercise({ slug, revision, requiredIds, exercise, prompt, block,
   async function nextHint() {
     if (busy) return;
     setBusy("hint");
+    setFailure(null);
     try {
       const response = await api.learnHint(slug, revision, exercise.id, hints.length + 1);
       setHints((current) => (current.length < response.level ? [...current, response.hint] : current));
     } catch (error) {
-      setResult(failure(error));
+      setFailure(failed(error, "No hint was shown."));
     } finally {
       setBusy(null);
     }
@@ -110,10 +121,11 @@ export function Exercise({ slug, revision, requiredIds, exercise, prompt, block,
   async function reveal() {
     if (busy) return;
     setBusy("reveal");
+    setFailure(null);
     try {
       setRevealed(await api.learnReveal(slug, revision, exercise.id));
     } catch (error) {
-      setResult(failure(error));
+      setFailure(failed(error, "The answer wasn't shown."));
     } finally {
       setBusy(null);
     }
@@ -130,7 +142,7 @@ export function Exercise({ slug, revision, requiredIds, exercise, prompt, block,
       className={`${styles.exercise} ${required ? styles.required : ""}`}
       aria-labelledby={legendId}
       data-testid={`exercise-${exercise.id}`}
-      data-state={result?.kind ?? "idle"}
+      data-state={failure?.kind ?? result?.kind ?? (busy === "check" ? "checking" : "idle")}
     >
       <form onSubmit={(event) => void check(event)}>
         <div className={styles.exerciseHead}>
@@ -157,7 +169,7 @@ export function Exercise({ slug, revision, requiredIds, exercise, prompt, block,
                   }}
                   data-testid={`choice-${item.id}`}
                 />
-                <span>
+                <span className={styles.choiceLabel}>
                   <InlineText text={item.label} />
                 </span>
               </label>
@@ -307,6 +319,7 @@ export function Exercise({ slug, revision, requiredIds, exercise, prompt, block,
             aria-busy={busy === "check"}
             data-testid="check"
           >
+            <SwapIcon name={busy === "check" ? "clock" : "check"} />
             Check
           </button>
           {exercise.hintCount > hints.length ? (
@@ -378,17 +391,17 @@ export function Exercise({ slug, revision, requiredIds, exercise, prompt, block,
             </p>
           </div>
         ) : null}
-        {result?.kind === "stale" ? (
+        {failure?.kind === "stale" ? (
           <div className="notice notice-error" data-testid="result-stale">
-            <p>{result.message}</p>
+            <p>{failure.message}</p>
             <button type="button" className="btn btn-small" onClick={() => window.location.reload()}>
               Reload the lesson
             </button>
           </div>
         ) : null}
-        {result?.kind === "error" ? (
+        {failure?.kind === "error" ? (
           <p className="notice notice-error" data-testid="result-error">
-            {result.message}
+            {failure.message}
           </p>
         ) : null}
       </div>

@@ -1,4 +1,8 @@
-/* The Learn catalog and lesson pages. Theme tokens only, so every theme applies. No motion. */
+/*
+ * The Learn catalog and lesson pages. Theme tokens only, so every theme applies; the one fixed
+ * color is the illustration plate (--plate, app/globals.css). Motion is transitions on the
+ * shared tokens, which are 0ms under reduced motion, plus the catalog's one opening stagger.
+ */
 
 .page {
   display: grid;
@@ -10,6 +14,8 @@
 }
 
 .lessonPage {
+  /* The body font's x-height, as a share of its size: inline code is fitted to it. */
+  --x-height: 0.52;
   max-width: 820px;
 }
 
@@ -22,16 +28,23 @@
   overflow-wrap: anywhere;
 }
 
+/* Reading text keeps a 68-character measure; code, tables and exercises may run wider. */
+.prose > :is(p, ul, ol, blockquote, h3, h4) {
+  max-width: var(--measure-prose);
+}
+
 .prose > * + * {
   margin-top: var(--space-3);
 }
 
+/* Inline code is set at the text's size and fitted to its x-height, so a line keeps one rhythm. */
 .prose code {
   padding: 1px 4px;
   border-radius: var(--radius-sm);
   background: var(--surface-sunken);
   font-family: var(--font-mono);
-  font-size: 0.92em;
+  font-size: 1em;
+  font-size-adjust: var(--x-height, 0.52);
 }
 
 .prose pre {
@@ -45,6 +58,8 @@
 .prose pre code {
   padding: 0;
   background: none;
+  font-size: var(--text-sm);
+  font-size-adjust: none;
 }
 
 .prose ul,
@@ -173,10 +188,32 @@
   gap: var(--space-2);
 }
 
+/* One box, so the code and title travel from the catalog row as a single shared element. */
+.lessonHeadline {
+  display: inline-block;
+}
+
 .lessonCode {
   color: var(--text-muted);
   font-family: var(--font-mono);
   font-size: 0.8em;
+  font-variant-numeric: tabular-nums;
+}
+
+.lessonMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--tracking-label);
+}
+
+.lessonMeta > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
 .lessonStatus {
@@ -186,6 +223,8 @@
   min-height: 1.6em;
   color: var(--text-muted);
   font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+  transition: color var(--motion-control) var(--motion-feedback);
 }
 
 .lessonStatus[data-status="complete"] {
@@ -194,6 +233,35 @@
 
 .lessonStatus[data-status="updated"] {
   color: var(--warn);
+}
+
+/* The page's sections, as anchors. Each link is a full-height target. */
+.sectionIndex {
+  margin-top: var(--space-2);
+  border-block: 1px solid var(--border-subtle);
+}
+
+.sectionIndex ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-5);
+}
+
+.sectionIndex a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--hit-min);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  text-decoration: none;
+  transition: color var(--motion-control) var(--motion-feedback);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .sectionIndex a:hover {
+    color: var(--text);
+  }
 }
 
 .block {
@@ -205,19 +273,42 @@
   color: var(--text);
   font-size: var(--text-lg);
   font-weight: 600;
+  letter-spacing: var(--tracking-heading);
+  scroll-margin-top: var(--space-5);
 }
 
+/* The worked explanation: a boxed control that opens in place. */
 .worked {
-  padding: var(--space-3);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--panel);
 }
 
 .worked > summary {
-  cursor: pointer;
-  color: var(--accent-text);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--hit-min);
+  padding: var(--space-2) var(--space-3);
+  border-radius: inherit;
+  color: var(--text);
   font-weight: 500;
+  list-style: none;
+  cursor: pointer;
+  transition: background-color var(--motion-control) var(--motion-feedback);
+}
+
+.worked > summary::-webkit-details-marker {
+  display: none;
+}
+
+.worked > summary :global(.icon) {
+  color: var(--text-muted);
+  transition: transform var(--motion-control) var(--motion-feedback);
+}
+
+.worked[open] > summary :global(.icon) {
+  transform: rotate(90deg);
 }
 
 .worked > summary:focus-visible {
@@ -225,8 +316,15 @@
   outline-offset: 2px;
 }
 
-.worked[open] > summary {
-  margin-bottom: var(--space-3);
+@media (hover: hover) and (pointer: fine) {
+  .worked > summary:hover {
+    background: var(--hover);
+  }
+}
+
+.workedBody {
+  padding: var(--space-3);
+  border-top: 1px solid var(--border-subtle);
 }
 
 /* Exercises */
@@ -267,11 +365,13 @@
   color: var(--text);
   font-size: var(--text-md);
   font-weight: 600;
+  letter-spacing: var(--tracking-heading);
 }
 
 .exerciseRole {
   color: var(--text-muted);
   font-size: var(--text-xs);
+  letter-spacing: var(--tracking-label);
 }
 
 .exercisePrompt {
@@ -288,28 +388,53 @@
   border: 0;
 }
 
+/* The whole row is the target. The radio is centered on the label's first line, however many follow. */
 .choice {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-2);
-  min-height: 44px;
-  padding: var(--space-2) var(--space-3);
+  --choice-line: calc(var(--text-md) * 1.5);
+  --choice-radio: 16px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  column-gap: var(--space-3);
+  min-height: var(--hit-min);
+  padding: 9px var(--space-3);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--input-bg);
+  line-height: var(--choice-line);
   cursor: pointer;
+  transition:
+    background-color var(--motion-control) var(--motion-feedback),
+    border-color var(--motion-control) var(--motion-feedback);
 }
 
 .choice input,
 .lineChoice input {
   flex: none;
-  margin-top: 3px;
   accent-color: var(--accent);
 }
 
-.choice:hover,
-.lineChoice:hover {
-  background: var(--hover);
+.choice input {
+  width: var(--choice-radio);
+  height: var(--choice-radio);
+  margin: calc((var(--choice-line) - var(--choice-radio)) / 2) 0 0;
+}
+
+.lineChoice input {
+  width: 14px;
+  height: 14px;
+  margin: calc((var(--text-sm) * 1.6 - 14px) / 2) 0 0;
+}
+
+.choiceLabel {
+  min-width: 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .choice:hover,
+  .lineChoice:hover {
+    background: var(--hover);
+  }
 }
 
 .choice[data-selected],
@@ -336,7 +461,8 @@
 .hints code,
 .sequence code {
   font-family: var(--font-mono);
-  font-size: 0.92em;
+  font-size: 1em;
+  font-size-adjust: var(--x-height, 0.52);
 }
 
 .lineChoices {
@@ -439,7 +565,14 @@
 .exerciseActions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: var(--space-2);
+}
+
+@media (pointer: coarse) {
+  .exerciseActions :global(.btn) {
+    min-height: var(--hit-min);
+  }
 }
 
 .hints {
@@ -500,165 +633,661 @@
 
 /* Catalog */
 
-.intro,
-.group {
+.catalog {
+  /* The left column the intro's labels and the groups' illustrations share. */
+  --learn-aside: 264px;
+  /* The rail's column: wide enough for a milestone node. */
+  --node-col: 28px;
+  /* A row's first line, which the node, minutes and status all center on. */
+  --row-line: 24px;
+  --row-pad: 10px;
+  --x-height: 0.52;
+  gap: var(--space-6);
+}
+
+.catalogHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-5);
+}
+
+.lede {
+  text-wrap: balance;
+}
+
+/* The mascot's square, held open before the picture is there. */
+.mascotBox {
+  flex: none;
+  width: 96px;
+  aspect-ratio: 1;
+}
+
+@media (max-width: 639px) {
+  .mascotBox {
+    display: none;
+  }
+}
+
+/* Continue: progress and the one next step. Every line is reserved before progress loads. */
+
+.continue {
   display: grid;
   gap: var(--space-3);
+  padding: var(--space-5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface-1);
 }
 
-.introList {
-  display: grid;
-  gap: var(--space-1);
-  padding-left: var(--space-5);
+.continueCount {
   color: var(--text-muted);
-  list-style: disc;
+  font-variant-numeric: tabular-nums;
 }
 
-.introPlacement {
-  font-size: var(--text-sm);
+.continueNumber {
+  color: var(--text);
+  font-weight: 650;
 }
 
-.catalogProgress {
+.continueCount[data-pending],
+.groupProgress[data-pending],
+.indexCount[data-pending] {
+  visibility: hidden;
+}
+
+.continueMeter {
+  height: 10px;
+}
+
+.continueActions {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   gap: var(--space-2) var(--space-4);
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--border);
+  min-height: var(--hit-min);
 }
 
-.progressCount {
-  min-width: 10ch;
-  font-weight: 600;
+.continueButton {
+  flex: none;
+  max-width: 100%;
+  min-height: var(--hit-min);
 }
 
-.progressDone {
+.continueDone {
   display: flex;
+  flex: none;
   align-items: center;
   gap: var(--space-1);
   color: var(--ok);
+  font-weight: 500;
 }
 
-.progressNote {
-  flex-basis: 100%;
+.continueNote {
+  flex: 1;
+  min-width: 0;
   color: var(--text-muted);
   font-size: var(--text-sm);
+  line-height: 1.5;
 }
 
-.groupSummary,
-.moduleSummary {
-  color: var(--text-muted);
+.continueNote[data-failed] {
+  color: var(--bad);
 }
 
-.module {
+@media (max-width: 719px) {
+  .continue {
+    padding: var(--space-4);
+  }
+
+  .continueActions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  /* A lesson's full name can need two lines on a phone. */
+  .continueButton {
+    justify-content: space-between;
+    padding-block: var(--space-2);
+    text-align: left;
+    white-space: normal;
+  }
+
+  /* Room for the longest note at 320px wide, so the panel is its final height from the start. */
+  .continueNote {
+    flex: none;
+    min-height: 4.5em;
+  }
+}
+
+/* Where to start, and how it works: a label in the aside column, the content beside it. No card. */
+
+.intro {
   display: grid;
-  gap: var(--space-2);
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--border);
+  gap: var(--space-5);
 }
 
-.moduleTitle {
+.introRow {
+  display: grid;
+  grid-template-columns: var(--learn-aside) minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-3) var(--space-6);
+}
+
+.introTitle {
   color: var(--text);
   font-size: var(--text-md);
-  font-weight: 600;
+  font-weight: 650;
+  letter-spacing: var(--tracking-heading);
 }
 
-.catalogList {
-  display: grid;
-  gap: var(--space-2);
-}
-
-.checkpointList {
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--border);
-}
-
-.catalogItem {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-2);
-  padding: var(--space-3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--panel);
-}
-
-.catalogMain {
-  display: flex;
-  flex: 1 1 320px;
-  gap: var(--space-3);
-  min-width: 0;
-}
-
-.catalogCode {
-  flex: none;
-  width: 3.5ch;
-  color: var(--text-muted);
-  font-family: var(--font-mono);
-  font-size: var(--text-sm);
-  line-height: 1.6;
-}
-
-.catalogTitle {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2);
-  font-size: var(--text-md);
-  font-weight: 600;
-}
-
-.catalogSummary {
+.introNote {
   margin-top: 2px;
   color: var(--text-muted);
   font-size: var(--text-sm);
 }
 
-.catalogMeta {
+.startChoices {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-5);
+}
+
+.startChoice {
+  display: grid;
+  align-content: start;
+  gap: 2px;
+  height: 100%;
+  min-height: var(--hit-min);
+  padding: var(--space-3) 0 var(--space-2);
+  border-top: 2px solid var(--border);
+  color: var(--text);
+  text-decoration: none;
+  transition: border-color var(--motion-control) var(--motion-feedback);
+}
+
+.startWho {
+  font-weight: 600;
+}
+
+.startFit {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.startGo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
+  color: var(--accent-text);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.startGo :global(.icon) {
+  transition: transform var(--motion-control) var(--motion-feedback);
+}
+
+.startChoice:hover {
+  text-decoration: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .startChoice:hover {
+    border-top-color: var(--accent);
+  }
+
+  .startChoice:hover .startGo :global(.icon) {
+    transform: translateX(2px);
+  }
+}
+
+.facts {
+  display: grid;
+  gap: var(--space-1);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+@media (max-width: 719px) {
+  .introRow {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .startChoices {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+
+  .startChoice {
+    border-top-width: 1px;
+  }
+}
+
+/* The path: the groups, with their index beside them on wide screens. */
+
+.path {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* The rows' opening stagger plays once a visit: StaggerOnce.tsx leaves this marker on a return. */
+.arrived ~ .groups :global(.stagger-in) {
+  animation: none;
+}
+
+.groups {
+  display: grid;
+  gap: var(--space-8);
+  min-width: 0;
+}
+
+.group {
+  display: grid;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+.groupHead {
+  display: grid;
+  grid-template-columns: var(--learn-aside) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-4) var(--space-6);
+}
+
+/* The plate holds its 3:2 box with or without the picture, so nothing moves when it loads. */
+.groupPlate {
+  position: relative;
+  aspect-ratio: 3 / 2;
+}
+
+.groupPlate .plateImage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.groupPlate .plateImage[data-missing] {
+  visibility: hidden;
+}
+
+.groupText {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.groupTitle {
+  color: var(--text);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: var(--tracking-heading);
+  scroll-margin-top: var(--space-5);
+}
+
+.groupNumber {
+  margin-right: 0.6ch;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.groupSummary {
+  max-width: var(--measure-lede);
+  color: var(--text-muted);
+}
+
+.groupProgress {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-1) var(--space-3);
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 1.5em;
   margin-top: var(--space-1);
   color: var(--text-muted);
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
 }
 
-.catalogMeta > span {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.statusSlot {
-  min-width: 1px;
-}
-
-.status {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px var(--space-2);
-  border-radius: var(--radius-pill);
-  font-size: var(--text-xs);
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-.status-complete {
-  background: var(--ok-soft);
+.groupProgress[data-done] {
   color: var(--ok);
 }
 
-.status-updated {
-  background: var(--warn-soft);
+@media (max-width: 719px) {
+  .groupHead {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.module {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.moduleHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--space-3);
+}
+
+.moduleTitle {
+  color: var(--text);
+  font-size: var(--text-md);
+  font-weight: 650;
+  letter-spacing: var(--tracking-heading);
+}
+
+.moduleSummary {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+/*
+ * The rail. Rows touch, so there's no dead gap between targets, and each row draws its own
+ * stretch of the line behind its node. The rows hang 8px into the margin so their hover
+ * surface has padding while their text stays on the page's left edge.
+ */
+.rail {
+  display: grid;
+  margin-inline: calc(-1 * var(--space-2));
+}
+
+.row {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--node-col) minmax(0, 1fr) auto 11ch;
+  align-items: start;
+  column-gap: var(--space-3);
+  min-height: var(--hit-min);
+  padding: var(--row-pad) var(--space-2);
+  border-radius: var(--radius);
+  color: var(--text);
+  text-decoration: none;
+  transition: background-color var(--motion-control) var(--motion-feedback);
+}
+
+.row:hover {
+  text-decoration: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .row:hover {
+    background: var(--hover);
+  }
+}
+
+.row::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(var(--space-2) + var(--node-col) / 2 - 1px);
+  width: 2px;
+  background: var(--border);
+}
+
+.railItem:first-child .row::before {
+  top: calc(var(--row-pad) + var(--row-line) / 2);
+}
+
+.railItem:last-child .row::before {
+  bottom: auto;
+  height: calc(var(--row-pad) + var(--row-line) / 2);
+}
+
+.railItem:only-child .row::before {
+  display: none;
+}
+
+.nodeCell {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-column: 1;
+  grid-row: 1;
+  place-items: center;
+  height: var(--row-line);
+}
+
+/* Not started: an open ring. The same box in every state. */
+.node {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--border-strong);
+  border-radius: 50%;
+  background: var(--bg);
+  color: var(--bg);
+  font-size: 10px;
+  --icon-stroke: 2.5;
+  transition:
+    background-color var(--motion-control) var(--motion-feedback),
+    border-color var(--motion-control) var(--motion-feedback);
+}
+
+.node[data-milestone] {
+  width: 24px;
+  height: 24px;
+  color: var(--text-muted);
+  font-size: 13px;
+  --icon-stroke: 1.75;
+}
+
+/* In progress: half the ring is filled. */
+.node[data-status="started"] {
+  border-color: var(--accent);
+  background: linear-gradient(90deg, var(--accent) 50%, var(--bg) 50%);
+}
+
+.node[data-status="complete"] {
+  border-color: var(--ok);
+  background: var(--ok);
+  color: var(--bg);
+}
+
+/* Completed before the lesson changed: a dot, and the label beside the row says so. */
+.node[data-status="updated"] {
+  border-color: var(--warn);
+  background: radial-gradient(circle, var(--warn) 0 28%, var(--bg) 32%);
+}
+
+.rowBody {
+  display: grid;
+  grid-row: 1;
+  grid-column: 2;
+  gap: 2px;
+  min-width: 0;
+}
+
+.rowHeadline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px var(--space-2);
+  min-height: var(--row-line);
+  line-height: var(--row-line);
+}
+
+/* One box, so the code and title travel to the lesson's header as a single shared element. */
+.rowHead {
+  display: inline-block;
+}
+
+.rowCode {
+  display: inline-block;
+  min-width: 3.5ch;
+  margin-right: var(--space-1);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 1em;
+  font-size-adjust: var(--x-height);
+  font-variant-numeric: tabular-nums;
+}
+
+.rowTitle {
+  font-weight: 550;
+}
+
+.railItem:not([data-kind="lesson"]) .rowTitle {
+  font-weight: 650;
+}
+
+.rowSummary {
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rowSummary code {
+  font-family: var(--font-mono);
+  font-size: 1em;
+  font-size-adjust: var(--x-height);
+}
+
+.rowMinutes,
+.rowStatus {
+  grid-row: 1;
+  line-height: var(--row-line);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.rowMinutes {
+  grid-column: 3;
+  min-width: 6ch;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  text-align: right;
+}
+
+/* A fixed slot, so a status arriving moves nothing. */
+.rowStatus {
+  grid-column: 4;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  letter-spacing: var(--tracking-label);
+}
+
+.rowStatus[data-status="complete"] {
+  color: var(--ok);
+}
+
+.rowStatus[data-status="started"] {
+  color: var(--accent-text);
+}
+
+.rowStatus[data-status="updated"] {
   color: var(--warn);
 }
 
-.status-started {
-  background: var(--accent-soft);
-  color: var(--accent-text);
+/* On a phone the node alone shows the status; its words stay for screen readers. */
+@media (max-width: 639px) {
+  .row {
+    grid-template-columns: var(--node-col) minmax(0, 1fr) auto;
+  }
+
+  .rowStatus {
+    display: none;
+  }
+
+  /* The summary runs under the minutes too, so it keeps as many words as the row has room for. */
+  .rowBody {
+    display: contents;
+  }
+
+  .rowHeadline {
+    grid-row: 1;
+    grid-column: 2;
+  }
+
+  .rowSummary {
+    grid-row: 2;
+    grid-column: 2 / -1;
+    margin-top: 2px;
+  }
+}
+
+/* The group index: beside the path on wide screens, where the rows would otherwise run to empty space. */
+
+.index {
+  display: none;
+}
+
+@media (min-width: 1100px) {
+  .path {
+    grid-template-columns: minmax(0, 1fr) 216px;
+    column-gap: var(--space-7);
+  }
+
+  .index {
+    position: sticky;
+    top: var(--space-5);
+    display: block;
+    align-self: start;
+  }
+}
+
+.indexLink {
+  display: grid;
+  grid-template-columns: 1.5ch minmax(0, 1fr);
+  align-content: center;
+  column-gap: var(--space-2);
+  min-height: var(--hit-min);
+  padding: var(--space-2) var(--space-3);
+  border-left: 2px solid var(--border);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  text-decoration: none;
+  transition:
+    border-color var(--motion-control) var(--motion-feedback),
+    color var(--motion-control) var(--motion-feedback);
+}
+
+.indexLink:hover {
+  text-decoration: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .indexLink:hover {
+    color: var(--text);
+  }
+}
+
+.indexLink[aria-current] {
+  border-left-color: var(--accent);
+  color: var(--text);
+}
+
+.indexNumber {
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.indexCount {
+  grid-column: 2;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--tracking-label);
+}
+
+.indexCount[data-done] {
+  color: var(--ok);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .startChoice:hover .startGo :global(.icon),
+  .pagerLink:hover .pagerLabel :global(.icon) {
+    transform: none;
+  }
 }
 
 /* Practice, references and the pager */
@@ -697,37 +1326,92 @@
   border-top: 1px solid var(--border);
 }
 
-.pager a {
+.pagerLink {
   display: grid;
+  align-content: center;
   gap: 2px;
-  padding: var(--space-3);
+  min-width: 0;
+  min-height: var(--hit-min);
+  padding: var(--space-3) var(--space-4);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--panel);
+  color: var(--text);
   font-weight: 500;
+  text-decoration: none;
+  transition: border-color var(--motion-control) var(--motion-feedback);
 }
 
-.pager a:hover {
-  border-color: var(--border-strong);
+.pagerLink:hover {
   text-decoration: none;
 }
 
 .pagerNext {
+  justify-items: end;
   text-align: right;
 }
 
 .pagerLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
   color: var(--text-muted);
   font-size: var(--text-xs);
   font-weight: 400;
+  letter-spacing: var(--tracking-label);
 }
 
-@media (max-width: 480px) {
-  .pager {
-    grid-template-columns: minmax(0, 1fr);
+.pagerLabel :global(.icon) {
+  transition: transform var(--motion-control) var(--motion-feedback);
+}
+
+.pagerTitle {
+  min-width: 0;
+  max-width: 100%;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .pagerLink:hover {
+    border-color: var(--border-strong);
   }
 
-  .pagerNext {
-    text-align: left;
+  .pagerLink:hover .pagerLabel :global(.icon) {
+    transform: translateX(2px);
+  }
+}
+
+/*
+ * On a phone the two links ride in a bar at the foot of the screen, clear of the home indicator.
+ * The page stops being a grid there: a sticky box can't leave its own grid row.
+ */
+@media (max-width: 639px) {
+  .lessonPage {
+    display: block;
+  }
+
+  .lessonPage > * + * {
+    margin-top: var(--space-5);
+  }
+
+  .pager {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    gap: var(--space-2);
+    margin-inline: calc(-1 * var(--page-gutter));
+    padding: var(--space-2) var(--page-gutter) max(var(--space-2), env(safe-area-inset-bottom, 0px));
+    background: var(--bg);
+  }
+
+  .pagerLink {
+    padding: var(--space-1) var(--space-3);
+  }
+
+  .pagerTitle {
+    overflow: hidden;
+    font-size: var(--text-sm);
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
