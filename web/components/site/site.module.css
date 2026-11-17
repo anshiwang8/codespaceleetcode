@@ -162,7 +162,7 @@ button.account[aria-expanded="true"] .accountChevron {
   min-width: 180px;
   padding: var(--space-1);
   border: 1px solid var(--border-strong);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   background: var(--surface-2);
   box-shadow: var(--shadow-float);
 }
@@ -184,7 +184,8 @@ button.account[aria-expanded="true"] .accountChevron {
   min-height: 36px;
   padding: 0 var(--space-3);
   border: 0;
-  border-radius: var(--radius-sm);
+  /* Concentric with .accountPanel: its radius less its padding and border. */
+  border-radius: max(2px, calc(var(--radius-lg) - var(--space-1) - 1px));
   background: none;
   color: var(--text);
   font: inherit;

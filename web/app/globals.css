@@ -130,6 +130,13 @@
   --radius: 6px;
   --radius-lg: 10px;
   --radius-pill: 999px;
+  /*
+   * Concentric corners: a rounded box inside a padded, rounded one gets the outer radius minus the
+   * gap between their edges (padding plus border), never under 2px:
+   *   border-radius: max(2px, calc(var(--radius-lg) - <padding> - <border>));
+   * When the gap is wider than the outer radius (a card's 24px padding), the inner box keeps its
+   * own radius: the curves no longer read as nested.
+   */
   --control-height: 38px;
   --control-height-sm: 30px;
   --page-width: 1120px;
