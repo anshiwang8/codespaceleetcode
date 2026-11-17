@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 /** The three places to start, by what the reader can already do. */
 const STARTS = [
   { code: "L01", who: "New to code", fit: "Variables or branches are new to you." },
-  { code: "L07", who: "Comfortable with small programs", fit: "You can complete checkpoint C1 without help." },
+  { code: "L07", who: "Can trace small programs", fit: "You can complete checkpoint C1 without help." },
   { code: "L13", who: "Comfortable in a repository", fit: "Checkpoint C2 is comfortable." },
 ];
 

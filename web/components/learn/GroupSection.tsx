@@ -25,7 +25,7 @@ export interface GroupLayout {
  * One lesson on the rail. The whole row is the link. Its code and title carry the lesson's
  * shared-element name, so they travel into the lesson page's header.
  */
-function LessonRow({ lesson, row }: { lesson: PublicLesson; row: number }) {
+function LessonRow({ lesson, row, end }: { lesson: PublicLesson; row: number; end?: "first" | "last" | "only" }) {
   const milestone = lesson.kind !== "lesson";
   return (
     <li
@@ -33,6 +33,7 @@ function LessonRow({ lesson, row }: { lesson: PublicLesson; row: number }) {
       style={row < STAGGERED_ROWS ? ({ "--i": row } as React.CSSProperties) : undefined}
       data-testid={`catalog-${lesson.slug}`}
       data-kind={lesson.kind}
+      data-end={end}
     >
       <IntentLink href={`/learn/${lesson.slug}`} className={styles.row}>
         <LessonNode slug={lesson.slug} revision={lesson.revision} milestone={milestone} />
@@ -63,6 +64,9 @@ function LessonRow({ lesson, row }: { lesson: PublicLesson; row: number }) {
  */
 export function GroupSection({ group, modules, trailing, firstRow }: GroupLayout) {
   const lessons = [...modules.flatMap((item) => item.items), ...(trailing ? [trailing] : [])];
+  // The rail runs unbroken from the group's first lesson to its last, through the module titles.
+  const endOf = (place: number) =>
+    lessons.length === 1 ? "only" : place === 0 ? "first" : place === lessons.length - 1 ? "last" : undefined;
   const moduleStart = (index: number) => firstRow + modules.slice(0, index).reduce((count, item) => count + item.items.length, 0);
   return (
     <section className={styles.group} aria-labelledby={`group-${group.id}`} data-learn-group={group.id}>
@@ -94,14 +98,19 @@ export function GroupSection({ group, modules, trailing, firstRow }: GroupLayout
           </div>
           <ol className={styles.rail}>
             {items.map((lesson, index) => (
-              <LessonRow key={lesson.slug} lesson={lesson} row={moduleStart(moduleIndex) + index} />
+              <LessonRow
+                key={lesson.slug}
+                lesson={lesson}
+                row={moduleStart(moduleIndex) + index}
+                end={endOf(moduleStart(moduleIndex) + index - firstRow)}
+              />
             ))}
           </ol>
         </div>
       ))}
       {trailing ? (
         <ol className={`${styles.rail} ${styles.railTrailing}`}>
-          <LessonRow lesson={trailing} row={firstRow + lessons.length - 1} />
+          <LessonRow lesson={trailing} row={firstRow + lessons.length - 1} end={endOf(lessons.length - 1)} />
         </ol>
       ) : null}
     </section>

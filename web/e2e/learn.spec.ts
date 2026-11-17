@@ -33,6 +33,39 @@ function privateStrings(): string[] {
 /** How HTML and React's flight data would write a string: escaped quotes and ampersands. */
 const forms = (value: string) => [value, value.replaceAll('"', '\\"'), value.replaceAll("'", "&#x27;").replaceAll('"', "&quot;")];
 
+/**
+ * Records, for each view transition the page starts, which pseudo-elements are animating once
+ * it's ready. It lives on `window`, so it lasts until the next full page load.
+ */
+async function watchViewTransitions(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const seen: string[] = [];
+    (window as unknown as { __transitions: string[] }).__transitions = seen;
+    const start = document.startViewTransition.bind(document);
+    document.startViewTransition = ((update?: Parameters<typeof start>[0]) => {
+      const transition = start(update);
+      void transition.ready
+        .then(() => {
+          for (const animation of document.getAnimations()) {
+            const pseudo = (animation.effect as KeyframeEffect | null)?.pseudoElement;
+            if (pseudo) seen.push(pseudo);
+          }
+        })
+        .catch(() => {});
+      return transition;
+    }) as typeof document.startViewTransition;
+  });
+}
+
+/** Whether a lesson's code and title moved as a shared element in a recorded transition. */
+const morphed = (page: Page, slug: string) =>
+  page.evaluate(
+    (name) => ((window as unknown as { __transitions?: string[] }).__transitions ?? []).includes(`::view-transition-group(${name})`),
+    `lesson-${slug}`,
+  );
+
+const movesAllowed = (page: Page) => page.evaluate(() => !window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+
 test.describe("Learn", () => {
   test("the catalog lists every group, module and lesson, and the header links to it", async ({ page }) => {
     await page.goto("/learn");
@@ -257,10 +290,23 @@ test.describe("Learn", () => {
     await expect(page.getByText("Suggested first")).toHaveCount(0);
     // Anywhere on the row is the link: click its reading time, not its title.
     const row = visible(page, "catalog-values-and-assignments");
+    await watchViewTransitions(page);
     await row.getByText(/^\d+\smin$/).click();
     await expect(page).toHaveURL(/\/learn\/values-and-assignments$/);
     const lesson = visible(page, "lesson");
     await expect(lesson.getByRole("heading", { level: 1 })).toHaveText("L01 Values and assignments");
+    // The row's code and title travel into the header as one shared element.
+    if (await movesAllowed(page)) await expect.poll(() => morphed(page, "values-and-assignments")).toBe(true);
+
+    // The same from the keyboard, with no pointer near the row: back, focus the next row, Enter.
+    await lesson.getByRole("navigation", { name: "Breadcrumb" }).getByRole("link", { name: "Learn" }).click();
+    await expect(page).toHaveURL(/\/learn$/);
+    await page.mouse.move(0, 0);
+    await visible(page, "catalog-branches-and-comparisons").getByRole("link").focus();
+    await page.keyboard.press("Enter");
+    await expect(page).toHaveURL(/\/learn\/branches-and-comparisons$/);
+    if (await movesAllowed(page)) await expect.poll(() => morphed(page, "branches-and-comparisons")).toBe(true);
+    await page.goto("/learn/values-and-assignments");
     await expect(lesson.getByTestId("section-index").getByRole("link")).toHaveText(["Outcome", "Example", "Checks", "Next"]);
 
     // A request that fails says so, and leaves the selection and the lesson as they were.

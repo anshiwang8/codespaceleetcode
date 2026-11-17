@@ -29,8 +29,8 @@ export function ContinuePanel({ entries }: { entries: CatalogEntry[] }) {
   let note = " ";
   if (ready) {
     if (progress.failed) note = "Your saved progress couldn't be loaded. Reload the page to try again.";
-    else if (progress.signedIn) note = "Saved to your account.";
-    else note = "Sign in to keep progress with your account. Progress from before you sign in isn't copied over.";
+    else if (progress.signedIn) note = "Saved to your account, so it's here in any browser you sign in on.";
+    else note = "Sign in to keep progress with your account. Earlier progress isn't copied over.";
   }
 
   return (

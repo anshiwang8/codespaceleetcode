@@ -1092,7 +1092,7 @@ body {
  */
 @media (max-width: 640px) {
   html:has(nav[aria-label="Lessons"]) {
-    scroll-padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    scroll-padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
   }
 }
 

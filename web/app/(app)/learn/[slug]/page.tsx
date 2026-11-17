@@ -269,22 +269,31 @@ export default async function LessonPage({ params }: PageProps) {
         </section>
       ) : null}
 
+      {/* The label "Lessons" is what the site's scroll padding looks for; keep it. */}
       <nav className={styles.pager} aria-label="Lessons">
         {previous ? (
-          <Link href={lessonHref(previous.slug)} rel="prev" className={styles.pagerLink} data-testid="previous-lesson">
-            <span className={styles.pagerLabel}>Previous</span>
-            <span className={styles.pagerTitle}>{displayTitle(previous)}</span>
+          <Link href={lessonHref(previous.slug)} rel="prev" className={`${styles.pagerLink} ${styles.pagerPrev}`} data-testid="previous-lesson">
+            <span className={styles.pagerLabel}>
+              <Icon name="arrow-right" />
+              <span className={styles.pagerWord}>Previous</span>
+            </span>
+            <span className={styles.pagerTitle}>
+              {previous.code} <span className={styles.pagerRest}>{previous.title}</span>
+            </span>
           </Link>
         ) : (
-          <Link href={LEARN_PATH} className={styles.pagerLink}>
-            <span className={styles.pagerLabel}>Back to</span>
+          <Link href={LEARN_PATH} className={`${styles.pagerLink} ${styles.pagerPrev}`}>
+            <span className={styles.pagerLabel}>
+              <Icon name="arrow-right" />
+              <span className={styles.pagerWord}>Back to</span>
+            </span>
             <span className={styles.pagerTitle}>All lessons</span>
           </Link>
         )}
         {next ? (
           <Link href={lessonHref(next.slug)} rel="next" className={`${styles.pagerLink} ${styles.pagerNext}`} data-testid="next-lesson">
             <span className={styles.pagerLabel}>
-              Next
+              <span className={styles.pagerWord}>Next</span>
               <Icon name="arrow-right" />
             </span>
             <span className={styles.pagerTitle}>{displayTitle(next)}</span>
@@ -292,7 +301,7 @@ export default async function LessonPage({ params }: PageProps) {
         ) : (
           <Link href={LEARN_PATH} className={`${styles.pagerLink} ${styles.pagerNext}`}>
             <span className={styles.pagerLabel}>
-              Finished?
+              <span className={styles.pagerWord}>Finished?</span>
               <Icon name="arrow-right" />
             </span>
             <span className={styles.pagerTitle}>All lessons</span>
