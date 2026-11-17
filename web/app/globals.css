@@ -956,13 +956,14 @@ a.chip:hover {
   --press-scale: 0.97;
 
   --plate: oklch(0.977 0.008 70); /* #fcf7f2 */
-  --mascot-body: oklch(0.69 0.14 280); /* #8e8ff0 */
-  --mascot-body-deep: oklch(0.57 0.16 280); /* #6b6bd6 */
-  --mascot-mint: oklch(0.87 0.13 165); /* #86f0c2 */
-  --mascot-teal: oklch(0.59 0.09 205); /* #1e8e9a */
-  --mascot-ink: oklch(0.23 0.09 275); /* #141845 */
+  --mascot-body: oklch(0.733 0.136 278); /* #959ffd */
+  --mascot-body-deep: oklch(0.543 0.169 278); /* #5c5fcf */
+  --mascot-mint: oklch(0.901 0.118 168); /* #88f8d0 */
+  --mascot-teal: oklch(0.636 0.105 213); /* #1f9bb0 */
+  --mascot-ink: oklch(0.242 0.104 273); /* #121650 */
   --mascot-face: oklch(1 0 0); /* #ffffff */
-  --mascot-blush: oklch(0.89 0.045 20); /* #fad4d0 */
+  --mascot-blush: oklch(0.929 0.036 24); /* #ffdfdc */
+  --mascot-tongue: oklch(0.799 0.115 21); /* #ff9f9e */
   --mascot-edge: transparent;
 }
 

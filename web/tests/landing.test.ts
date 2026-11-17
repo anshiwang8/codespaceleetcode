@@ -2,7 +2,13 @@ import { readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { LANDING_EXAMPLES } from "@/components/landing/examples";
-import { MARK_NODES, MARK_PATH, markSvgBody } from "@/components/site/mark";
+import {
+  MASCOT_COLORS,
+  MASCOT_FORMS,
+  MASCOT_PAINT_VARIABLES,
+  WORDMARK,
+  mascotSvgBody,
+} from "@/components/site/mascot-geometry";
 
 // The landing page quotes real puzzles and shows one worked example. These checks keep both honest:
 // the quoted puzzles exist and are published, the quotes match, and the worked example's answer
@@ -67,10 +73,11 @@ describe("landing page examples", () => {
   });
 });
 
-// The static brand files are written from components/site/mark.ts by scripts/brand-icons.mjs, so
-// the favicon, the brand SVGs and the inline logo can't drift apart.
+// The static brand files are written from components/site/mascot-geometry.ts by scripts/brand-icons.mjs, so
+// the favicon, the brand SVGs, the social preview and the inline logo can't drift apart.
 describe("brand files", () => {
   const WEB = path.resolve(import.meta.dirname, "..");
+  const read = (file: string) => readFileSync(path.join(WEB, file), "utf8");
   const svgs = [
     "app/icon.svg",
     "public/brand/mark-light.svg",
@@ -78,24 +85,84 @@ describe("brand files", () => {
     "public/brand/logo-light.svg",
     "public/brand/logo-dark.svg",
   ];
+  const head = MASCOT_FORMS.head;
+  const details = head.shapes.filter((shape) => shape.detail);
+  const essentials = head.shapes.filter((shape) => !shape.detail);
+
+  it("the mascot has a head and a full form, each on a square grid with details to drop", () => {
+    expect(Object.keys(MASCOT_FORMS).sort()).toEqual(["full", "head"]);
+    for (const form of Object.values(MASCOT_FORMS)) {
+      expect(form.box).toHaveLength(3);
+      expect(form.iconBox).toHaveLength(3);
+      expect(form.shapes.length).toBeGreaterThan(10);
+      for (const shape of form.shapes) expect(shape.d, shape.d).toMatch(/^M[-\d. ,MLCAZ]+$/);
+    }
+    expect(details.length).toBeGreaterThan(0);
+    expect(essentials.length).toBeGreaterThan(details.length);
+  });
+
+  it("every mascot color is a hex value with a --mascot custom property", () => {
+    for (const [paint, hex] of Object.entries(MASCOT_COLORS)) {
+      expect(hex, paint).toMatch(/^#[0-9a-f]{6}$/);
+      expect(MASCOT_PAINT_VARIABLES[paint as keyof typeof MASCOT_COLORS], paint).toMatch(/^var\(--mascot-[a-z-]+/);
+    }
+  });
 
   for (const file of svgs) {
-    it(`${file} draws the current mark`, () => {
-      const text = readFileSync(path.join(WEB, file), "utf8");
-      expect(text).toContain(`d="${MARK_PATH}"`);
-      for (const { cx, cy } of MARK_NODES) expect(text).toContain(`cx="${cx}" cy="${cy}"`);
+    it(`${file} draws the current head`, () => {
+      const text = read(file);
+      for (const shape of essentials) expect(text).toContain(`d="${shape.d}"`);
       expect(text).toContain("<title>codebases</title>");
+      expect(text).toMatch(/^<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg" viewBox="/);
     });
   }
 
-  it("the favicon is codebases Light's mark", () => {
-    const text = readFileSync(path.join(WEB, "app/icon.svg"), "utf8");
-    expect(text).toContain(markSvgBody({ tile: "#2563eb", ink: "#ffffff" }));
+  it("the favicon is the head alone, simplified: no spark lines, blush or highlights", () => {
+    const text = read("app/icon.svg");
+    expect(text).toContain(mascotSvgBody("head", { simple: true }));
+    for (const shape of details) expect(text).not.toContain(`d="${shape.d}"`);
+    expect(text).not.toContain(WORDMARK.d);
+    const [x, y, size] = head.iconBox;
+    expect(text).toContain(`viewBox="${x} ${y} ${size} ${size}"`);
   });
 
-  it("the lockups spell the name in lowercase", () => {
+  it("the marks keep the details, and only the dark one has the light edge", () => {
+    expect(read("public/brand/mark-light.svg")).toContain(mascotSvgBody("head"));
+    expect(read("public/brand/mark-light.svg")).not.toContain(MASCOT_COLORS.edge);
+    expect(read("public/brand/mark-dark.svg")).toContain(mascotSvgBody("head", { edge: MASCOT_COLORS.edge }));
+  });
+
+  it("the lockups draw the name as paths, never as text in a font", () => {
     for (const file of ["public/brand/logo-light.svg", "public/brand/logo-dark.svg"]) {
-      expect(readFileSync(path.join(WEB, file), "utf8")).toMatch(/>codebases<\/text>/);
+      const text = read(file);
+      expect(text).toContain(`d="${WORDMARK.d}"`);
+      expect(text).not.toContain("<text");
+      expect(text).not.toContain("font-family");
     }
+  });
+
+  it("the inline logo draws the word as paths in the theme's text color", () => {
+    const logo = read("components/site/Logo.tsx");
+    expect(logo).toContain("WORDMARK.d");
+    expect(logo).toContain('fill="currentColor"');
+    expect(logo).not.toMatch(/#[0-9a-f]{6}\b/i);
+    // Still named for assistive technology, and still one logo.
+    expect(logo).toContain("codebases");
+    expect(logo).toContain('data-testid="logo"');
+  });
+
+  it("the mascot component is decorative and colored by the mascot tokens", () => {
+    const mascot = read("components/site/Mascot.tsx");
+    expect(mascot).toContain('aria-hidden="true"');
+    expect(mascot).toContain('focusable="false"');
+    expect(mascot).toContain("MASCOT_PAINT_VARIABLES");
+    expect(mascot).toContain("var(--mascot-edge)");
+    expect(mascot).not.toMatch(/#[0-9a-f]{6}\b/i);
+  });
+
+  it("the logo never animates in a loop, and the old mark is gone", () => {
+    expect(read("components/site/logo.module.css")).not.toMatch(/infinite|animation/);
+    expect(readdirSync(path.join(WEB, "components/site"))).not.toContain("mark.ts");
+    expect(read("app/opengraph-image.tsx")).toContain("@/components/site/mascot-geometry");
   });
 });

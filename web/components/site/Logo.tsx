@@ -1,5 +1,6 @@
 import styles from "@/components/site/logo.module.css";
-import { MARK_NODE_RADIUS, MARK_NODES, MARK_PATH, MARK_RADIUS, MARK_SIZE, MARK_STROKE } from "@/components/site/mark";
+import { Mascot } from "@/components/site/Mascot";
+import { WORDMARK } from "@/components/site/mascot-geometry";
 
 export type LogoSize = "small" | "medium" | "large";
 export type LogoVariant = "lockup" | "mark";
@@ -11,31 +12,22 @@ const SIZE_CLASS: Record<LogoSize, string | undefined> = {
 };
 
 /**
- * The mark alone (components/site/mark.ts), in the theme's accent and accent ink. Decorative:
- * whatever holds it gives the accessible name.
+ * The mark alone: the mascot's head (components/site/mascot-geometry.ts), in the mascot's fixed colors.
+ * Decorative: whatever holds it gives the accessible name.
  */
 export function LogoMark({ className }: { className?: string }) {
   return (
-    <svg
-      className={[styles.mark, className].filter(Boolean).join(" ")}
-      viewBox={`0 0 ${MARK_SIZE} ${MARK_SIZE}`}
-      aria-hidden="true"
-      focusable="false"
-    >
-      <rect className={styles.tile} width={MARK_SIZE} height={MARK_SIZE} rx={MARK_RADIUS} />
-      <path className={styles.glyph} d={MARK_PATH} strokeWidth={MARK_STROKE} />
-      {MARK_NODES.map(({ cx, cy }) => (
-        <circle key={`${cx},${cy}`} className={styles.node} cx={cx} cy={cy} r={MARK_NODE_RADIUS} />
-      ))}
-    </svg>
+    <span className={[styles.mark, className].filter(Boolean).join(" ")}>
+      <Mascot form="head" />
+    </span>
   );
 }
 
 /**
- * The logo: the mark, then the word "codebases" in the UI font. `variant="mark"` shows the mark
- * alone. Either way its accessible name is "codebases". Its colors are theme tokens, so it follows
- * every theme. `wordClassName` lets a container hide the word visually at some widths (the header
- * does on a tablet), keeping it for screen readers.
+ * The logo: the mascot's head, then the word "codebases" drawn as paths in the theme's text color.
+ * `variant="mark"` shows the head alone. Either way its accessible name is "codebases".
+ * `wordClassName` lets a container hide the word visually at some widths (the header does on a
+ * tablet), keeping it for screen readers.
  */
 export function Logo({
   size = "small",
@@ -54,7 +46,17 @@ export function Logo({
       {variant === "mark" ? (
         <span className="visually-hidden">codebases</span>
       ) : (
-        <span className={[styles.word, wordClassName].filter(Boolean).join(" ")}>codebases</span>
+        <span className={[styles.word, wordClassName].filter(Boolean).join(" ")}>
+          <svg
+            className={styles.wordmark}
+            viewBox={`0 0 ${WORDMARK.width} ${WORDMARK.height}`}
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path d={WORDMARK.d} fill="currentColor" />
+          </svg>
+          <span className="visually-hidden">codebases</span>
+        </span>
       )}
     </span>
   );

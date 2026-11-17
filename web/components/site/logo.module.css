@@ -1,47 +1,49 @@
 /*
- * The logo: the mark (an accent tile with a brace drawn as a branching path) and the word. Sizes
- * are in em from the size class, so the mark and the word scale together. Colors are tokens.
+ * The logo: the mascot's head and the word, drawn as paths. Sizes are in em from the size class,
+ * so the head and the word scale together. One em is the size of text whose x-height matches the
+ * word's: the reference's pixel is 0.0073em, the head's 272-unit box is 2em and the word's
+ * 639 by 105 box is 4.68em by 0.77em. The head keeps the mascot's fixed colors; the word is the
+ * theme's text color. Nothing here moves.
  */
 
 .logo {
   position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 0.42em;
+  gap: 0.05em;
   font-family: var(--font-ui);
   font-size: 17px;
   font-weight: 700;
   line-height: 1;
-  letter-spacing: -0.03em;
   white-space: nowrap;
 }
 
+/*
+ * The head's box is 2em, but the figure fills only its middle 1.5em, so the box gives the empty
+ * bands back. Optical alignment: in the reference the head's box sits 0.07em below the middle of
+ * the word's box, which puts the face on the word's x-height band rather than centering the two
+ * boxes.
+ */
 .mark {
+  position: relative;
+  top: 0.07em;
   display: block;
   flex: none;
-  width: 1.4em;
-  height: 1.4em;
+  width: 2em;
+  height: 2em;
+  margin-block: -0.26em;
 }
 
-.tile {
-  fill: var(--accent);
-}
-
-.glyph {
-  fill: none;
-  stroke: var(--accent-ink);
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.node {
-  fill: var(--accent-ink);
-}
-
-/* Optical alignment: the lowercase word sits a touch high against the square mark. */
 .word {
-  padding-bottom: 0.06em;
+  display: block;
   color: var(--text);
+}
+
+.wordmark {
+  display: block;
+  width: auto;
+  height: 0.77em;
+  aspect-ratio: 639 / 105;
 }
 
 .small {
@@ -54,5 +56,4 @@
 
 .large {
   font-size: clamp(40px, 11vw, 72px);
-  letter-spacing: -0.04em;
 }

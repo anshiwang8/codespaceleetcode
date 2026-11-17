@@ -1,8 +1,9 @@
 import { ImageResponse } from "next/og";
-import { MARK_NODE_RADIUS, MARK_NODES, MARK_PATH, MARK_RADIUS, MARK_SIZE, MARK_STROKE } from "@/components/site/mark";
+import { MASCOT_COLORS, MASCOT_FORMS, WORDMARK, mascotShapes } from "@/components/site/mascot-geometry";
 
 // The preview shown when a link to the site is shared. Made at build time from this markup, with
-// the mark of components/site/mark.ts and the colors of codebases Light (app/globals.css).
+// the head and wordmark of components/site/mascot-geometry.ts and the colors of codebases Light
+// (app/globals.css).
 export const alt = "codebases: practice reading real code";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
@@ -11,8 +12,10 @@ export const dynamic = "force-static";
 const TEXT = "#111827";
 const MUTED = "#4b5563";
 const LINE = "#e5e7eb";
-const ACCENT = "#2563eb";
-const ACCENT_INK = "#ffffff";
+const [HEAD_X, HEAD_Y, HEAD_SIDE] = MASCOT_FORMS.head.box;
+// The word is 84px tall text: its x-height band is 71 of the wordmark's 105 units.
+const WORD_HEIGHT = 66;
+const HEAD_SIZE = Math.round((WORD_HEIGHT * HEAD_SIDE) / WORDMARK.height);
 
 export default function OpengraphImage() {
   return new ImageResponse(
@@ -31,23 +34,28 @@ export default function OpengraphImage() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center" }}>
-          <svg width={104} height={104} viewBox={`0 0 ${MARK_SIZE} ${MARK_SIZE}`}>
-            <rect width={MARK_SIZE} height={MARK_SIZE} rx={MARK_RADIUS} fill={ACCENT} />
-            <path
-              d={MARK_PATH}
-              fill="none"
-              stroke={ACCENT_INK}
-              strokeWidth={MARK_STROKE}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            {MARK_NODES.map(({ cx, cy }) => (
-              <circle key={`${cx},${cy}`} cx={cx} cy={cy} r={MARK_NODE_RADIUS} fill={ACCENT_INK} />
+          <svg width={HEAD_SIZE} height={HEAD_SIZE} viewBox={`${HEAD_X} ${HEAD_Y} ${HEAD_SIDE} ${HEAD_SIDE}`}>
+            {mascotShapes("head").map((shape, index) => (
+              <path
+                key={index}
+                d={shape.d}
+                fill={shape.fill ? MASCOT_COLORS[shape.fill] : "none"}
+                stroke={shape.stroke ? MASCOT_COLORS[shape.stroke] : undefined}
+                strokeWidth={shape.stroke ? shape.width : undefined}
+                strokeLinecap={shape.butt ? "butt" : "round"}
+                strokeLinejoin="round"
+                opacity={shape.opacity}
+              />
             ))}
           </svg>
-          <div style={{ display: "flex", marginLeft: 32, fontSize: 84, fontWeight: 700, letterSpacing: "-0.04em" }}>
-            codebases
-          </div>
+          <svg
+            width={Math.round((WORD_HEIGHT * WORDMARK.width) / WORDMARK.height)}
+            height={WORD_HEIGHT}
+            viewBox={`0 0 ${WORDMARK.width} ${WORDMARK.height}`}
+            style={{ marginLeft: 3, marginBottom: 12 }}
+          >
+            <path d={WORDMARK.d} fill={TEXT} />
+          </svg>
         </div>
         <div
           style={{
