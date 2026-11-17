@@ -6,14 +6,16 @@ import {
   hueDistance,
   isDark,
   minContrast,
-  mix,
+  mixOklch,
   normalizeHex,
   toHsl,
   withAlpha,
 } from "./color";
 import type { ColorScheme, ThemeTokens } from "./tokens";
 
-// Turns a source palette into codebases' semantic tokens. A source palette has a background, an
+// Turns a source palette into codebases' semantic tokens. Mixes and contrast moves happen in OKLCH
+// (lib/themes/color.ts), so surfaces step evenly and adjusted colors keep their hue; the stored
+// values are still hex or rgb(), the only forms the pre-paint script applies. A source palette has a background, an
 // accent, body and secondary text, a second surface and an error color. codebases needs more than
 // that (status, difficulty, data, syntax), so the rest is derived, and every text and state color
 // is moved, if needed, until it meets its contrast target on every surface it's drawn on.
@@ -118,16 +120,16 @@ export function deriveTheme(source: SourcePalette): Derived {
   // a small step toward the text color.
   const subAlt = normalizeHex(source.subAlt);
   const subtleAlt = contrast(subAlt, bg) > 1.02 && contrast(subAlt, bg) < 1.45;
-  const panelRaised = subtleAlt ? subAlt : mix(bg, ink, dark ? 0.06 : 0.035);
-  const surfaceSunken = mix(bg, ink, dark ? 0.035 : 0.02);
-  const hover = mix(bg, ink, dark ? 0.09 : 0.05);
-  const inputBg = dark ? mix(bg, ink, 0.03) : bg;
+  const panelRaised = subtleAlt ? subAlt : mixOklch(bg, ink, dark ? 0.06 : 0.035);
+  const surfaceSunken = mixOklch(bg, ink, dark ? 0.035 : 0.02);
+  const hover = mixOklch(bg, ink, dark ? 0.09 : 0.05);
+  const inputBg = dark ? mixOklch(bg, ink, 0.03) : bg;
   const surfaces = [bg, panelRaised, surfaceSunken, inputBg];
 
   // Text.
   const text = ensureContrast(ink, [...surfaces, hover], TARGETS.text);
   if (text !== ink) adjustments.push(`text ${contrast(ink, bg).toFixed(1)}→${contrast(text, bg).toFixed(1)}:1`);
-  const textMuted = ensureContrast(mix(text, bg, 0.25), [...surfaces, hover], TARGETS.secondaryText);
+  const textMuted = ensureContrast(mixOklch(text, bg, 0.25), [...surfaces, hover], TARGETS.secondaryText);
   const sub = normalizeHex(source.sub);
   const textFaint = ensureContrast(sub, [...surfaces, hover], TARGETS.secondaryText);
   if (textFaint !== sub) {
@@ -179,13 +181,13 @@ export function deriveTheme(source: SourcePalette): Derived {
   );
 
   // Data: five steps from a quiet zero to the accent, the strongest one clearly visible.
-  const heat0 = mix(bg, text, dark ? 0.1 : 0.07);
+  const heat0 = mixOklch(bg, text, dark ? 0.1 : 0.07);
   const heat4 = ensureContrast(accentSource, [bg], TARGETS.indicator);
-  const heat = [heat0, mix(heat0, heat4, 0.3), mix(heat0, heat4, 0.55), mix(heat0, heat4, 0.78), heat4];
+  const heat = [heat0, mixOklch(heat0, heat4, 0.3), mixOklch(heat0, heat4, 0.55), mixOklch(heat0, heat4, 0.78), heat4];
 
   // Code: hues spread around the wheel from the accent, each readable on the editor.
   const editorBg = bg;
-  const code = [editorBg, mix(bg, text, 0.06)];
+  const code = [editorBg, mixOklch(bg, text, 0.06)];
   const accentHue = toHsl(accentSource).h;
   const syntax = (hue: number) =>
     ensureContrast(fromHsl({ h: hue, s: Math.min(Math.max(saturation(accentSource), 45), 75), l: dark ? 68 : 36 }), code, TARGETS.secondaryText);
@@ -206,8 +208,8 @@ export function deriveTheme(source: SourcePalette): Derived {
     "editor-bg": editorBg,
     hover,
     overlay: withAlpha("#000000", dark ? 0.6 : 0.4),
-    line: mix(bg, text, dark ? 0.16 : 0.1),
-    "line-strong": mix(bg, text, dark ? 0.3 : 0.2),
+    line: mixOklch(bg, text, dark ? 0.16 : 0.1),
+    "line-strong": mixOklch(bg, text, dark ? 0.3 : 0.2),
     text,
     "text-muted": textMuted,
     "text-faint": textFaint,
@@ -243,8 +245,8 @@ export function deriveTheme(source: SourcePalette): Derived {
     "syntax-number": num,
     "syntax-comment": ensureContrast(textFaint, code, TARGETS.secondaryText),
     "editor-selection": withAlpha(accentSource, dark ? 0.3 : 0.2),
-    "editor-line-highlight": mix(bg, text, dark ? 0.06 : 0.035),
-    "editor-line-number": ensureContrast(mix(textFaint, bg, 0.2), code, TARGETS.secondaryText),
+    "editor-line-highlight": mixOklch(bg, text, dark ? 0.06 : 0.035),
+    "editor-line-number": ensureContrast(mixOklch(textFaint, bg, 0.2), code, TARGETS.secondaryText),
     // A neutral gray that a white silhouette reads on (4.5:1 or better) on any page.
     "avatar-bg": dark ? "#4b5563" : "#6b7280",
     "avatar-fg": WHITE,

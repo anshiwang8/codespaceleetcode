@@ -1,10 +1,19 @@
 // Small color helpers for building and checking themes. Colors are `#rrggbb` strings; WCAG
-// contrast uses relative luminance. No dependency: the math is a few lines each.
+// contrast uses relative luminance. Lightness moves and surface mixes happen in OKLCH, where equal
+// steps look equal and changing lightness keeps the hue; alpha compositing stays in sRGB, because
+// that's how the browser blends. No dependency: the math is a few lines each.
 
 export interface Rgb {
   r: number;
   g: number;
   b: number;
+}
+
+/** OKLCH: lightness 0–1, chroma 0 to about 0.37, hue 0–360. */
+export interface Oklch {
+  l: number;
+  c: number;
+  h: number;
 }
 
 export interface Hsl {
@@ -65,6 +74,82 @@ export function contrast(a: string, b: string): number {
 /** True when white text reads better on this color than near-black text. */
 export function isDark(color: string): boolean {
   return contrast(color, "#ffffff") >= contrast(color, "#000000");
+}
+
+const toLinear = (value: number) => {
+  const c = value / 255;
+  return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+};
+const fromLinear = (value: number) => 255 * (value <= 0.0031308 ? 12.92 * value : 1.055 * value ** (1 / 2.4) - 0.055);
+
+/** OKLab from sRGB (Björn Ottosson's matrices). */
+function toOklab(color: string): { l: number; a: number; b: number } {
+  const { r, g, b } = parseHex(color);
+  const [lr, lg, lb] = [toLinear(r), toLinear(g), toLinear(b)];
+  const l = Math.cbrt(0.4122214708 * lr + 0.5363325363 * lg + 0.0514459929 * lb);
+  const m = Math.cbrt(0.2119034982 * lr + 0.6806995451 * lg + 0.1073969566 * lb);
+  const s = Math.cbrt(0.0883024619 * lr + 0.2817188376 * lg + 0.6299787005 * lb);
+  return {
+    l: 0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s,
+    a: 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s,
+    b: 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s,
+  };
+}
+
+/** Linear sRGB from OKLab; channels can fall outside 0–1 when the color is out of gamut. */
+function oklabToLinear(L: number, A: number, B: number): [number, number, number] {
+  const l = (L + 0.3963377774 * A + 0.2158037573 * B) ** 3;
+  const m = (L - 0.1055613458 * A - 0.0638541728 * B) ** 3;
+  const s = (L - 0.0894841775 * A - 1.291485548 * B) ** 3;
+  return [
+    4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+    -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+    -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
+  ];
+}
+
+export function toOklch(color: string): Oklch {
+  const { l, a, b } = toOklab(color);
+  const c = Math.hypot(a, b);
+  const h = c < 1e-4 ? 0 : (((Math.atan2(b, a) * 180) / Math.PI) % 360 + 360) % 360;
+  return { l, c, h };
+}
+
+/**
+ * The hex for an OKLCH color. Out-of-gamut colors keep their lightness and hue and lose chroma
+ * until they fit, the way CSS gamut-maps `oklch()`.
+ */
+export function fromOklch({ l, c, h }: Oklch): string {
+  const L = clamp(l, 0, 1);
+  const rad = (h * Math.PI) / 180;
+  const inGamut = (chroma: number) =>
+    oklabToLinear(L, chroma * Math.cos(rad), chroma * Math.sin(rad)).every((v) => v >= -1e-4 && v <= 1 + 1e-4);
+  let chroma = Math.max(0, c);
+  if (!inGamut(chroma)) {
+    let low = 0;
+    let high = chroma;
+    for (let i = 0; i < 24; i++) {
+      const mid = (low + high) / 2;
+      if (inGamut(mid)) low = mid;
+      else high = mid;
+    }
+    chroma = low;
+  }
+  const [r, g, b] = oklabToLinear(L, chroma * Math.cos(rad), chroma * Math.sin(rad));
+  return toHex({ r: fromLinear(clamp(r, 0, 1)), g: fromLinear(clamp(g, 0, 1)), b: fromLinear(clamp(b, 0, 1)) });
+}
+
+/**
+ * `a` moved toward `b` by `amount` in OKLab, so a ladder of surfaces steps evenly to the eye. For
+ * what a translucent color looks like over another, use `composite` (sRGB), as the browser does.
+ */
+export function mixOklch(a: string, b: string, amount: number): string {
+  const x = toOklab(a);
+  const y = toOklab(b);
+  const L = x.l + (y.l - x.l) * amount;
+  const A = x.a + (y.a - x.a) * amount;
+  const B = x.b + (y.b - x.b) * amount;
+  return fromOklch({ l: L, c: Math.hypot(A, B), h: (((Math.atan2(B, A) * 180) / Math.PI) % 360 + 360) % 360 });
 }
 
 /** `a` moved toward `b` by `amount` (0 keeps `a`, 1 gives `b`), in sRGB. */
@@ -130,13 +215,14 @@ export function minContrast(color: string, backgrounds: readonly string[]): numb
 }
 
 /**
- * `color` with its lightness moved, a step at a time, away from the backgrounds until it reaches
- * `ratio` against all of them. Hue and saturation are kept, so the color stays recognizable. If
- * no lightness is enough, the end of the range (black or white) is used.
+ * `color` with its OKLCH lightness moved, a step at a time, away from the backgrounds until it
+ * reaches `ratio` against all of them. Hue and chroma are kept (chroma only shrinks where the
+ * gamut runs out), so the color stays recognizable: an HSL lightness move drifts blues toward
+ * purple and yellows toward brown. If no lightness is enough, black or white is used.
  */
 export function ensureContrast(color: string, backgrounds: readonly string[], ratio: number): string {
   if (minContrast(color, backgrounds) >= ratio) return normalizeHex(color);
-  const hsl = toHsl(color);
+  const lch = toOklch(color);
   const darkBackground = backgrounds.every((background) => isDark(background));
   const lightBackground = backgrounds.every((background) => !isDark(background));
   const directions = darkBackground ? [1] : lightBackground ? [-1] : [1, -1];
@@ -144,7 +230,7 @@ export function ensureContrast(color: string, backgrounds: readonly string[], ra
   let bestRatio = minContrast(best, backgrounds);
   for (const direction of directions) {
     for (let step = 1; step <= 100; step++) {
-      const candidate = fromHsl({ ...hsl, l: hsl.l + direction * step });
+      const candidate = fromOklch({ ...lch, l: lch.l + direction * step * 0.01 });
       const candidateRatio = minContrast(candidate, backgrounds);
       if (candidateRatio >= ratio) return candidate;
       if (candidateRatio > bestRatio) {
