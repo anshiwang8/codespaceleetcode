@@ -15,6 +15,7 @@ import {
 import { DEFAULT_PREFERENCE, SYSTEM_THEMES, type ThemePreference } from "@/lib/themes/runtime";
 import { DEFAULT_LIGHT_ID, type ThemeDefinition } from "@/lib/themes/tokens";
 import { Icon } from "@/components/site/Icon";
+import { SwapIcon } from "@/components/site/SwapIcon";
 
 type Filter = "all" | "light" | "dark" | "favorites";
 const FILTERS: { value: Filter; label: string }[] = [
@@ -240,7 +241,7 @@ export function ThemePicker({ variant, onClose }: ThemePickerProps) {
               }
               data-testid="theme-favorite"
             >
-              <Icon name={favorites.has(candidate.id) ? "star-filled" : "star"} />
+              <SwapIcon name={favorites.has(candidate.id) ? "star-filled" : "star"} />
               {favorites.has(candidate.id) ? "Remove from favorites" : "Add to favorites"}
             </button>
           ) : null}

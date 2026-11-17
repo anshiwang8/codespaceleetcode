@@ -239,6 +239,65 @@ time,
 .icon {
   flex: none;
   vertical-align: -0.125em;
+  /*
+   * Matched weight: the stroke follows the text beside it. Strokes scale with the em, so small
+   * text would get hairlines and bold text would look heavier than its icon; both step up.
+   * The SVG's own stroke-width="1.5" is the fallback when CSS hasn't loaded.
+   */
+  stroke-width: var(--icon-stroke, 1.5);
+}
+
+small,
+.badge,
+.chip,
+.btn-small,
+.field-label {
+  --icon-stroke: 1.75;
+}
+
+strong,
+b,
+th,
+h1,
+h2,
+h3,
+.page-title,
+.section-title,
+.btn-primary,
+.btn-danger {
+  --icon-stroke: 1.75;
+}
+
+/*
+ * Swapping one icon for another in place (components/site/SwapIcon.tsx): the old one blurs and
+ * shrinks out while the new one sharpens in, in the same box, so nothing around it moves. Finite,
+ * and instant under reduced motion (--motion-control is 0ms there).
+ */
+.icon-swap {
+  display: inline-grid;
+  flex: none;
+  vertical-align: -0.125em;
+}
+
+.icon-swap > .icon {
+  grid-area: 1 / 1;
+  vertical-align: 0;
+}
+
+.icon-swap-in {
+  animation: icon-swap-in var(--motion-control) var(--motion-ease) both;
+}
+
+.icon-swap-out {
+  animation: icon-swap-out var(--motion-control) var(--motion-ease) both;
+}
+
+@keyframes icon-swap-in {
+  from { opacity: 0; filter: blur(2px); transform: scale(0.6); }
+}
+
+@keyframes icon-swap-out {
+  to { opacity: 0; filter: blur(2px); transform: scale(0.6); }
 }
 
 ul,
