@@ -166,7 +166,7 @@ export function challengeStreakFrom(days: string[], today: string): ChallengeStr
   }
   const yesterday = periodStart("daily", new Date(Date.parse(`${today}T00:00:00Z`) - 1));
   const live = previous === today || previous === yesterday;
-  return { current: live ? run : 0, longest, completedToday: previous === today };
+  return { current: live ? run : 0, longest, completedToday: previous === today, recentDays: [] };
 }
 
 export async function getChallengeStreak(userId: string, now: Date): Promise<ChallengeStreak> {

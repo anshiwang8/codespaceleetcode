@@ -16,6 +16,7 @@ export type IconName =
   | "chevron-down"
   | "arrow-up"
   | "arrow-down"
+  | "arrow-right"
   | "sort-up"
   | "sort-down"
   | "star"
@@ -56,6 +57,7 @@ const PATHS: Record<IconName, React.ReactNode> = {
   "chevron-down": <path d="M3.5 6l4.5 4.5L12.5 6" />,
   "arrow-up": <path d="M8 13V3.5M4 7.5l4-4 4 4" />,
   "arrow-down": <path d="M8 3v9.5M4 8.5l4 4 4-4" />,
+  "arrow-right": <path d="M3 8h9.5M8.5 4l4 4-4 4" />,
   "sort-up": <path d="M4 10l4-4 4 4" />,
   "sort-down": <path d="M4 6l4 4 4-4" />,
   star: <path d="M8 2.25l1.8 3.7 4 .55-2.9 2.8.7 4L8 11.4l-3.6 1.9.7-4-2.9-2.8 4-.55z" />,
