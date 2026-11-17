@@ -121,8 +121,9 @@
   --text-sm: 14px;
   --text-md: 16px;
   --text-lg: 18px;
-  --text-xl: 22px;
-  --text-2xl: 30px;
+  /* The two largest sizes scale with the viewport, from a phone (375px) to a laptop (about 900px). */
+  --text-xl: clamp(19px, 16.9px + 0.56vw, 22px);
+  --text-2xl: clamp(24px, 19.7px + 1.15vw, 30px);
 
   /* Spacing */
   --space-1: 4px;
@@ -545,6 +546,8 @@ textarea.input {
 dialog {
   max-width: min(960px, calc(100vw - 2 * var(--page-gutter)));
   max-height: calc(100vh - 32px);
+  /* The dynamic viewport: on a phone, the space left by the browser's toolbars right now. */
+  max-height: calc(100dvh - 32px);
   margin: auto;
   padding: var(--space-5);
   border: 1px solid var(--border-strong);

@@ -89,6 +89,7 @@
 
 .dialogPicker .list {
   max-height: min(52vh, 420px);
+  max-height: min(52dvh, 420px);
 }
 
 .option {
@@ -322,6 +323,7 @@
   /* On a phone the dialog keeps Apply and Cancel in reach: above the preview, under a shorter list. */
   .dialogPicker .list {
     max-height: min(36vh, 320px);
+    max-height: min(36dvh, 320px);
   }
 
   .dialogPicker .actions {

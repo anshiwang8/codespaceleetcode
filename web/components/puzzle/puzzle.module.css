@@ -952,6 +952,9 @@
 
   .editorColumn {
     height: 70vh;
+    /* The small viewport, which doesn't change as a phone's toolbars show and hide, so the
+       editor isn't resized while someone scrolls. */
+    height: 70svh;
   }
 
   .tray {
