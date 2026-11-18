@@ -1,23 +1,23 @@
-// Writes the static brand files from the mark's geometry in components/site/mark.ts:
-//   app/icon.svg                         the favicon
+// Writes the static brand files from the mascot's geometry in components/site/mascot-geometry.ts:
+//   app/icon.svg                         the favicon: the head alone, simplified to read at 16px
 //   app/apple-icon.png                   180×180, full bleed (iOS rounds the corners itself)
-//   public/brand/mark-{light,dark}.svg   the mark alone
-//   public/brand/logo-{light,dark}.svg   the mark and the word
+//   public/brand/mark-{light,dark}.svg   the head alone
+//   public/brand/logo-{light,dark}.svg   the head and the word
 //   public/brand/icon-{192,512}.png      the web app manifest's icons (app/manifest.ts)
 //   public/brand/icon-maskable-512.png   full bleed, for platforms that crop icons to a shape
 //
-// Run from web/ after changing the mark or the default themes' accent, text or accent ink:
+// Run from web/ after changing the mascot, the wordmark or the default themes' text color:
 //   node scripts/brand-icons.mjs
-// Needs a Node that runs TypeScript directly (22.18 or later), since it imports mark.ts.
+// Needs a Node that runs TypeScript directly (22.18 or later), since it imports mascot.ts.
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
-import { MARK_SIZE, markSvgBody } from "../components/site/mark.ts";
+import { LOCKUP, MASCOT_COLORS, MASCOT_FORMS, lockupSvgBody, mascotSvgBody } from "../components/site/mascot-geometry.ts";
 
 const root = new URL("../", import.meta.url);
 const out = (path) => new URL(path, root);
 
-// The two default themes' colors, read from the generated catalog, so the files match the site.
+// The two default themes' colors, read from the generated catalog, so the word matches the site.
 const catalog = readFileSync(out("lib/themes/catalog.generated.ts"), "utf8");
 const theme = (id) => {
   const line = catalog.split("\n").find((text) => text.trim().startsWith(`{"id":"${id}"`));
@@ -29,40 +29,41 @@ const SCHEMES = {
   dark: theme("default-dark"),
 };
 
-// The word, as in components/site/logo.module.css: the UI font stack, bold, tracked in by 0.03em,
-// 1/1.4 of the mark's height, 0.42em after it. textLength holds the measured width of
-// system-ui bold, so a fallback font keeps the same layout.
-const FONT = `ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif`;
-const FONT_SIZE = 23;
-const WORD_X = 41.75;
-const WORD_WIDTH = 108.75;
-const BASELINE = 24.25;
-const LOCKUP_WIDTH = Math.ceil(WORD_X + WORD_WIDTH + 2);
-
-const svg = (width, height, body, title) =>
-  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" role="img" aria-label="${title}">` +
+const svg = ([x, y, width, height], body, title) =>
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x} ${y} ${width} ${height}" width="${width}" height="${height}" role="img" aria-label="${title}">` +
   `<title>${title}</title>${body}</svg>\n`;
 
-const mark = (tokens, options = {}) => markSvgBody({ tile: tokens.accent, ink: tokens["accent-ink"], ...options });
+const square = ([x, y, side]) => [x, y, side, side];
+const HEAD = MASCOT_FORMS.head;
 
-const lockup = (tokens) =>
-  svg(
-    LOCKUP_WIDTH,
-    MARK_SIZE,
-    mark(tokens) +
-      `<text x="${WORD_X}" y="${BASELINE}" fill="${tokens.text}" font-family="${FONT}" font-size="${FONT_SIZE}" ` +
-      `font-weight="700" letter-spacing="-0.69" textLength="${WORD_WIDTH}" lengthAdjust="spacing">codebases</text>`,
-    "codebases",
-  );
+// The app icons: the simplified head on the light plate. `bleed` fills the whole square, for
+// icons the platform crops to its own shape, and keeps the head inside the middle 80% circle.
+const PLATE = "#fcf7f2";
+const tile = ({ bleed = false } = {}) => {
+  const [x, y, side] = HEAD.iconBox;
+  const pad = side * (bleed ? 0.2 : 0.09);
+  const box = [x - pad, y - pad, side + 2 * pad];
+  const radius = bleed ? 0 : box[2] * 0.22;
+  return {
+    box: square(box),
+    body:
+      `<rect x="${box[0]}" y="${box[1]}" width="${box[2]}" height="${box[2]}" rx="${radius}" fill="${PLATE}"/>` +
+      mascotSvgBody("head", { simple: true }),
+  };
+};
 
 mkdirSync(out("public/brand/"), { recursive: true });
 
 const files = {
-  "app/icon.svg": svg(MARK_SIZE, MARK_SIZE, mark(SCHEMES.light), "codebases"),
-  "public/brand/mark-light.svg": svg(MARK_SIZE, MARK_SIZE, mark(SCHEMES.light), "codebases"),
-  "public/brand/mark-dark.svg": svg(MARK_SIZE, MARK_SIZE, mark(SCHEMES.dark), "codebases"),
-  "public/brand/logo-light.svg": lockup(SCHEMES.light),
-  "public/brand/logo-dark.svg": lockup(SCHEMES.dark),
+  "app/icon.svg": svg(square(HEAD.iconBox), mascotSvgBody("head", { simple: true }), "codebases"),
+  "public/brand/mark-light.svg": svg(square(HEAD.box), mascotSvgBody("head"), "codebases"),
+  "public/brand/mark-dark.svg": svg(square(HEAD.box), mascotSvgBody("head", { edge: MASCOT_COLORS.edge }), "codebases"),
+  "public/brand/logo-light.svg": svg(LOCKUP.box, lockupSvgBody({ text: SCHEMES.light.text }), "codebases"),
+  "public/brand/logo-dark.svg": svg(
+    LOCKUP.box,
+    lockupSvgBody({ text: SCHEMES.dark.text, edge: MASCOT_COLORS.edge }),
+    "codebases",
+  ),
 };
 for (const [path, text] of Object.entries(files)) {
   writeFileSync(out(path), text);
@@ -70,16 +71,16 @@ for (const [path, text] of Object.entries(files)) {
 }
 
 // PNGs are rendered from the same SVG at a high density, then resized, so edges stay crisp.
-async function png(path, size, body) {
-  const source = Buffer.from(svg(MARK_SIZE, MARK_SIZE, body, "codebases"));
-  await sharp(source, { density: Math.ceil((72 * size * 4) / MARK_SIZE) })
+async function png(path, size, { box, body }) {
+  const source = Buffer.from(svg(box, body, "codebases"));
+  await sharp(source, { density: Math.ceil((72 * size * 4) / box[2]) })
     .resize(size, size)
     .png({ compressionLevel: 9 })
     .toFile(fileURLToPath(out(path)));
   console.log(`wrote ${path}`);
 }
 
-await png("app/apple-icon.png", 180, mark(SCHEMES.light, { bleed: true }));
-await png("public/brand/icon-192.png", 192, mark(SCHEMES.light));
-await png("public/brand/icon-512.png", 512, mark(SCHEMES.light));
-await png("public/brand/icon-maskable-512.png", 512, mark(SCHEMES.light, { bleed: true }));
+await png("app/apple-icon.png", 180, tile({ bleed: true }));
+await png("public/brand/icon-192.png", 192, tile());
+await png("public/brand/icon-512.png", 512, tile());
+await png("public/brand/icon-maskable-512.png", 512, tile({ bleed: true }));

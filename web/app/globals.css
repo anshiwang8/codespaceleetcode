@@ -334,7 +334,8 @@ input {
   width: 100%;
   max-width: var(--page-width);
   margin: 0 auto;
-  padding: var(--space-6) var(--page-gutter) var(--space-8);
+  padding: var(--space-6) max(var(--page-gutter), env(safe-area-inset-right, 0px)) var(--space-8)
+    max(var(--page-gutter), env(safe-area-inset-left, 0px));
 }
 
 .page-header {
@@ -350,11 +351,11 @@ input {
   font-size: var(--text-2xl);
   font-weight: 700;
   line-height: 1.2;
-  letter-spacing: -0.015em;
+  letter-spacing: var(--tracking-title);
 }
 
 .page-lede {
-  max-width: 640px;
+  max-width: var(--measure-lede);
   margin-top: var(--space-1);
   color: var(--text-muted);
 }
@@ -363,6 +364,7 @@ input {
   font-size: var(--text-lg);
   font-weight: 650;
   line-height: 1.3;
+  letter-spacing: var(--tracking-heading);
 }
 
 .card {
@@ -399,13 +401,17 @@ input {
     color 120ms ease;
 }
 
+@media (hover: hover) and (pointer: fine) {
 a.btn:hover {
   text-decoration: none;
 }
+}
 
+@media (hover: hover) and (pointer: fine) {
 .btn:hover:not(:disabled):not([aria-disabled="true"]) {
   border-color: var(--text-faint);
   background: var(--hover);
+}
 }
 
 .btn:disabled,
@@ -427,9 +433,11 @@ a.btn:hover {
   font-weight: 600;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .btn-primary:hover:not(:disabled):not([aria-disabled="true"]) {
   border-color: var(--accent-hover);
   background: var(--accent-hover);
+}
 }
 
 /* For actions that can't be undone, such as deleting an account. */
@@ -440,9 +448,11 @@ a.btn:hover {
   font-weight: 600;
 }
 
+@media (hover: hover) and (pointer: fine) {
 .btn-danger:hover:not(:disabled):not([aria-disabled="true"]) {
   border-color: var(--bad-hover);
   background: var(--bad-hover);
+}
 }
 
 /* A secondary action that leads to deleting something. */
@@ -451,9 +461,11 @@ a.btn:hover {
   color: var(--bad);
 }
 
+@media (hover: hover) and (pointer: fine) {
 .btn-danger-outline:hover:not(:disabled):not([aria-disabled="true"]) {
   border-color: var(--bad);
   background: var(--bad-soft);
+}
 }
 
 .btn-quiet {
@@ -462,9 +474,11 @@ a.btn:hover {
   color: var(--text-muted);
 }
 
+@media (hover: hover) and (pointer: fine) {
 .btn-quiet:hover:not(:disabled):not([aria-disabled="true"]) {
   border-color: transparent;
   color: var(--text);
+}
 }
 
 .btn-quiet:disabled {
@@ -859,6 +873,12 @@ a.chip:hover {
   100% { opacity: 1; transform: scale(1); }
 }
 
+/* A menu grows out of its trigger: set transform-origin to the corner nearest it. Never from 0. */
+@keyframes motion-pop {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+
 @keyframes motion-confirm {
   from { box-shadow: inset 3px 0 0 var(--accent); }
   to { box-shadow: inset 0 0 0 transparent; }
@@ -870,7 +890,8 @@ a.chip:hover {
   transition: background-color var(--motion-control) var(--motion-feedback),
     border-color var(--motion-control) var(--motion-feedback),
     color var(--motion-control) var(--motion-feedback),
-    box-shadow var(--motion-control) var(--motion-feedback);
+    box-shadow var(--motion-control) var(--motion-feedback),
+    transform var(--motion-press) var(--motion-feedback);
 }
 
 /* Inset feedback doesn't change a target's position or its dimensions. */
@@ -916,4 +937,178 @@ a.chip:hover {
   *, *::before, *::after {
     animation-delay: 0ms !important;
   }
+}
+
+/*
+ * Craft foundation (docs/superpowers/specs/2026-11-17-learn-challenges-brand-design.md).
+ * The mascot and the illustration plate keep fixed colors on every theme; they are the only
+ * colors outside the theme tokens. OKLCH values live here, never in theme tokens: the pre-paint
+ * script accepts only hex and rgb().
+ */
+:root {
+  --tracking-title: -0.015em;
+  --tracking-heading: -0.01em;
+  --tracking-label: 0.01em;
+  --measure-prose: 68ch;
+  --measure-lede: 60ch;
+  --hit-min: 44px;
+  --motion-press: 160ms;
+  --press-scale: 0.97;
+
+  --plate: oklch(0.977 0.008 70); /* #fcf7f2 */
+  --mascot-body: oklch(0.733 0.136 278); /* #959ffd */
+  --mascot-body-deep: oklch(0.543 0.169 278); /* #5c5fcf */
+  --mascot-mint: oklch(0.901 0.118 168); /* #88f8d0 */
+  --mascot-teal: oklch(0.636 0.105 213); /* #1f9bb0 */
+  --mascot-ink: oklch(0.242 0.104 273); /* #121650 */
+  --mascot-face: oklch(1 0 0); /* #ffffff */
+  --mascot-blush: oklch(0.929 0.036 24); /* #ffdfdc */
+  --mascot-tongue: oklch(0.799 0.115 21); /* #ff9f9e */
+  --mascot-edge: transparent;
+}
+
+/* The applied theme sets data-scheme; the OS setting alone never does. */
+html[data-scheme="dark"] {
+  --mascot-edge: oklch(0.96 0.01 280 / 0.85);
+}
+
+body {
+  font-kerning: normal;
+}
+
+.page-title {
+  text-rendering: optimizeLegibility;
+}
+
+/* Press: the control gives under the finger, and a reversed press retargets mid-way. */
+.btn:active:not(:disabled):not([aria-disabled="true"]) {
+  transform: scale(var(--press-scale));
+}
+
+/*
+ * Origin-aware press: components/site/PressOrigin.tsx records where the pointer went down, and
+ * the highlight appears there and fades once on release. Without the script it sits at the center.
+ */
+.btn-primary {
+  position: relative;
+}
+
+.btn-primary::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    circle at var(--press-x, 50%) var(--press-y, 50%),
+    color-mix(in oklch, var(--accent-ink) 24%, transparent),
+    transparent 62%
+  );
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 300ms var(--motion-feedback);
+}
+
+.btn-primary:active:not(:disabled):not([aria-disabled="true"])::before {
+  opacity: 1;
+  transition-duration: 0ms;
+}
+
+/* A forward action's trailing arrow leans the way it goes. */
+.btn-forward .icon:last-child {
+  transition: transform var(--motion-control) var(--motion-feedback);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btn-forward:hover:not(:disabled):not([aria-disabled="true"]) .icon:last-child {
+    transform: translateX(2px);
+  }
+}
+
+/* A small control keeps its look and still offers a full-size target. */
+.hit-area {
+  position: relative;
+}
+
+.hit-area::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max(100%, var(--hit-min));
+  height: max(100%, var(--hit-min));
+  transform: translate(-50%, -50%);
+}
+
+/* Rows arrive in order, once. Set --i to the row's index; the sixth and later arrive together. */
+.stagger-in {
+  animation: motion-enter var(--motion-panel) var(--motion-ease) backwards;
+  animation-delay: calc(min(var(--i, 0), 5) * var(--motion-stagger));
+}
+
+/* The fixed surface behind an illustration. */
+.plate {
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  background: var(--plate);
+}
+
+.plate img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Shared element transitions (React's ViewTransition, share="morph"). */
+::view-transition {
+  pointer-events: none;
+}
+
+::view-transition-group(.morph) {
+  animation-duration: var(--motion-panel);
+  animation-timing-function: var(--motion-ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn:active:not(:disabled):not([aria-disabled="true"]),
+  .btn-forward:hover .icon:last-child {
+    transform: none;
+  }
+
+  .stagger-in {
+    animation: none;
+  }
+
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}
+
+/*
+ * A lesson's pager is a sticky bar at the bottom of a phone screen. Scrolling a focused control
+ * into view stops above it, so the bar never covers what the keyboard is on.
+ */
+@media (max-width: 640px) {
+  html:has(nav[aria-label="Lessons"]) {
+    scroll-padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* Under a finger, every page button is a full-size target. The workspace keeps its denser controls. */
+@media (pointer: coarse) {
+  .page .btn,
+  .page .btn-small {
+    min-height: var(--hit-min);
+  }
+}
+
+/*
+ * On a dark page the cream plate is the brightest thing in view: it's dimmed a little and given
+ * an edge, so it reads as a lit picture rather than a hole.
+ */
+html[data-scheme="dark"] .plate {
+  box-shadow: 0 0 0 1px var(--border-strong);
+  filter: brightness(0.94);
 }

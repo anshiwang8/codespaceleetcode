@@ -37,6 +37,7 @@
   display: inline-flex;
   flex: none;
   align-items: center;
+  min-height: var(--hit-min);
   padding: 4px;
   margin-left: -4px;
   border-radius: var(--radius);
@@ -357,7 +358,8 @@ button.account[aria-expanded="true"] .accountChevron {
 .nav a { transition: background-color var(--motion-control) var(--motion-feedback), color var(--motion-control) var(--motion-feedback); }
 .nav a[aria-current]::after { animation: var(--motion-fade) var(--motion-control) var(--motion-ease); }
 .authBanner { animation: var(--motion-fade) var(--motion-panel) var(--motion-ease); }
-.accountPanel { animation: var(--motion-fade) var(--motion-control) var(--motion-ease); }
+/* The panel hangs from the button's right edge, so it opens from that corner. */
+.accountPanel { transform-origin: top right; animation: motion-pop var(--motion-control) var(--motion-ease); }
 .accountChevron { transition: transform var(--motion-control) var(--motion-feedback); }
 
 @media (max-width: 640px) {
@@ -386,4 +388,17 @@ button.account[aria-expanded="true"] .accountChevron {
 
 @media (max-width: 640px) {
   .auth :global(.btn-small) { padding-inline: var(--space-2); }
+}
+
+/* Under a finger every header control is a full-size target; the 56px header has room for it. */
+@media (pointer: coarse) {
+  .nav a,
+  .nav a:global(.btn) { height: var(--hit-min); }
+  button.account { min-height: var(--hit-min); }
+  .auth :global(.btn),
+  .auth :global(.btn-small) { min-height: var(--hit-min); }
+  .setupBanner :global(.btn),
+  .authBanner :global(.btn) { min-height: var(--hit-min); }
+  .accountPanel a,
+  .accountPanel button { min-height: var(--hit-min); }
 }

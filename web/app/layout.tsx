@@ -1,3 +1,4 @@
+import { PressOrigin } from "@/components/site/PressOrigin";
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { RETURNING_SCRIPT } from "@/lib/returning";
@@ -19,6 +20,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   themeColor: "#ffffff",
   colorScheme: "light",
+  // Lets env(safe-area-inset-*) report real insets, which the page frame pads for.
+  viewportFit: "cover",
 };
 
 // The app's header and sign-in live in app/(app)/layout.tsx, so the landing page stays static.
@@ -35,7 +38,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         */}
         <script dangerouslySetInnerHTML={{ __html: PREPAINT_SCRIPT + RETURNING_SCRIPT }} />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <PressOrigin />
+      </body>
     </html>
   );
 }

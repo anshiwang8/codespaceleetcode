@@ -1,6 +1,9 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import LearnPage from "@/app/(app)/learn/page";
 import { POST as checkRoute } from "@/app/api/learn/[slug]/check/route";
 import { POST as hintRoute } from "@/app/api/learn/[slug]/hint/route";
 import { POST as revealRoute } from "@/app/api/learn/[slug]/reveal/route";
@@ -15,6 +18,9 @@ import { findExercise, grade, revealedAnswer } from "@/lib/server/learn/grade";
 import { KEYS } from "@/lib/server/learn/keys.generated";
 import { seedFixtures } from "./fixtures";
 import { hasDatabase, makeRequest, params, signIn } from "./helpers";
+
+// The catalog renders here the way the server sends it: before anyone's sign-in state is known.
+vi.mock("@/components/auth/AuthProvider", () => ({ useAuth: () => ({ me: null }) }));
 
 const ORIGIN = "http://localhost:3000";
 const WEB = path.resolve(__dirname, "..");
@@ -126,6 +132,72 @@ describe("the generated course", () => {
         expect(block, `${slug}/${exercise.id}`).toBeDefined();
         if (answer.kind === "line" && block) expect(codeLines(block.source)[answer.line - 1]?.trim()).not.toBe("");
       }
+    }
+  });
+});
+
+describe("the catalog page", () => {
+  const markup = () => renderToStaticMarkup(createElement(LearnPage));
+  const css = readFileSync(path.join(WEB, "components/learn/learn.module.css"), "utf8");
+  /** The declarations of every rule whose selector is exactly this class. */
+  const rule = (name: string) =>
+    [...css.matchAll(new RegExp(`(?:^|\\n)\\.${name}\\s*\\{([^}]*)\\}`, "g"))].map((match) => match[1]).join("\n");
+
+  /** The opening tag that carries a test ID. */
+  const tag = (html: string, testId: string) => html.match(new RegExp(`<[^>]*data-testid="${testId}"[^>]*>`))?.[0] ?? "";
+
+  it("links every lesson once, as a whole row, and never repeats the suggested prerequisite", () => {
+    const html = markup();
+    for (const slug of COURSE.order) {
+      const row = html.match(new RegExp(`<li[^>]*data-testid="catalog-${slug}"[^>]*>(.*?)</li>`, "s"))?.[1];
+      expect(row, slug).toBeDefined();
+      // The row's only child is its link, so the whole row is the target.
+      expect(row, slug).toMatch(new RegExp(`^<a [^>]*href="/learn/${slug}"[^>]*>.*</a>$`, "s"));
+      expect(html.split(`data-testid="catalog-${slug}"`), slug).toHaveLength(2);
+    }
+    expect(html).not.toContain("Suggested first");
+    expect(html.match(/Nothing is locked/g)).toHaveLength(1);
+  });
+
+  it("gives every row link and control a 44px target", () => {
+    for (const name of ["row", "startChoice", "indexLink"]) {
+      expect(rule(name), name).toContain("min-height: var(--hit-min)");
+    }
+    expect(css).not.toMatch(/transition:\s*all/);
+  });
+
+  it("shows the continue button and an empty progress bar from first paint, marked busy", () => {
+    const html = markup();
+    const panel = html.match(/<section[^>]*data-testid="learn-progress"[^>]*>[\s\S]*?<\/section>/)?.[0] ?? "";
+    expect(panel).toContain('aria-busy="true"');
+    expect(panel).toContain('role="progressbar"');
+    expect(tag(panel, "continue-learning")).toMatch(new RegExp(`^<a [^>]*href="/learn/${COURSE.order[0]}"`));
+    // Nobody's progress is known yet, so no count is announced and no row claims a status.
+    expect(panel).not.toContain('data-testid="learn-progress-count"');
+    expect(html).not.toContain('data-testid="status-');
+  });
+
+  it("offers three places to start and reserves each group's illustration", () => {
+    const html = markup();
+    for (const code of ["L01", "L07", "L13"]) {
+      const slug = Object.values(COURSE.lessons).find((item) => item.code === code)?.slug;
+      expect(tag(html, `start-${code}`)).toMatch(new RegExp(`^<a [^>]*href="/learn/${slug}"`));
+    }
+    for (const group of COURSE.groups) {
+      const image = html.match(new RegExp(`<img[^>]*src="/learn/group-${group.number}-480\\.webp"[^>]*>`))?.[0] ?? "";
+      expect(image, group.id).toContain('width="480"');
+      expect(image, group.id).toContain('height="320"');
+      expect(image, group.id).toContain('alt=""');
+      expect(image, group.id).toContain(`loading="${group.number === 1 ? "eager" : "lazy"}"`);
+    }
+    expect(rule("groupPlate")).toContain("aspect-ratio: 3 / 2");
+  });
+
+  it("keeps the new client components away from the course data", () => {
+    for (const name of ["ContinuePanel", "LessonNode", "GroupIndex"]) {
+      const text = readFileSync(path.join(WEB, `components/learn/${name}.tsx`), "utf8");
+      expect(text, name).toMatch(/^"use client";/);
+      expect(text, name).not.toMatch(/learn\/course|server\/learn/);
     }
   });
 });

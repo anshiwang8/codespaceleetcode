@@ -15,119 +15,136 @@
   margin-bottom: 0;
 }
 
-/* The three open challenges */
+/*
+ * The board: the three challenge bars beside the streak panel, as two columns of one height.
+ * Whichever column is taller sets the height and the other stretches to it. Under 900px the bars
+ * come first and the panel follows.
+ */
 
-.cards {
+.board {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   align-items: stretch;
   gap: var(--space-4);
 }
 
-.challenge {
-  display: flex;
-  flex-direction: column;
+/* A container, so a bar lays itself out by the column's width, not the window's. */
+.bars {
+  container-type: inline-size;
+  display: grid;
+  grid-auto-rows: minmax(0, 1fr);
   gap: var(--space-3);
-  padding: var(--space-5);
+}
+
+.boardEmpty {
+  align-content: center;
+}
+
+/*
+ * One challenge: type, time left, points, button. The column widths are fixed, so the three
+ * bars' columns line up; only the time's column takes what's left.
+ */
+.bar {
+  display: grid;
+  grid-template-columns: 6.25rem minmax(0, 1fr) 4.5rem 8.5rem;
+  grid-template-areas: "kind ends points action";
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  min-height: 88px;
+  padding: var(--space-3) var(--space-5);
   font-variant-numeric: tabular-nums;
 }
 
-.challenge[data-completed="true"] {
-  border-color: color-mix(in srgb, var(--ok) 45%, var(--border));
+.bar[data-completed="true"] {
+  border-color: color-mix(in oklch, var(--ok) 45%, var(--border));
 }
 
-.challengeHead {
+.barKind {
+  grid-area: kind;
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
-}
-
-.kind {
-  display: inline-flex;
   align-items: center;
   gap: var(--space-2);
   font-size: 15px;
   font-weight: 650;
   line-height: 1.3;
+  letter-spacing: var(--tracking-heading);
 }
 
-.kind :global(.icon) {
+.barKind :global(.icon) {
   color: var(--accent-text);
 }
 
-.bonus {
-  color: var(--accent-text);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.period {
-  margin-top: calc(-1 * var(--space-2));
-  color: var(--text-muted);
-  font-size: var(--text-sm);
-}
-
-.puzzle {
+.barEnds {
+  grid-area: ends;
   display: grid;
-  gap: var(--space-2);
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--border);
+  gap: 1px;
+  min-width: 0;
 }
 
-.puzzleTitle {
-  color: var(--text);
-  font-size: var(--text-lg);
-  font-weight: 650;
-  line-height: 1.3;
-  text-wrap: balance;
-}
-
-.puzzleTitle:hover {
-  color: var(--accent-text);
-}
-
-.meta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-  font-size: var(--text-xs);
-}
-
-.repo {
-  color: var(--text-muted);
-  overflow-wrap: anywhere;
-}
-
-.withdrawn {
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--border);
-  color: var(--text-muted);
-  font-size: var(--text-sm);
-}
-
-.timing {
-  display: grid;
-  gap: 2px;
-}
-
-.timing dt {
+.barLabel {
   color: var(--text-muted);
   font-size: var(--text-xs);
+  letter-spacing: var(--tracking-label);
 }
 
-.timeLeft {
+.barTime {
   font-size: var(--text-xl);
   font-weight: 700;
   line-height: 1.2;
+  letter-spacing: var(--tracking-heading);
 }
 
-.rotation {
+.barPoints {
+  grid-area: points;
+  color: var(--accent-text);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.barAction {
+  grid-area: action;
+  display: grid;
+  align-items: center;
+}
+
+/* Every bar's button is the column's width, so the three are one size whatever they say. */
+.barAction :global(.btn) {
+  width: 100%;
+  padding: 0 var(--space-3);
+}
+
+.barDone :global(.icon) {
+  color: var(--ok);
+}
+
+.barWithdrawn {
   color: var(--text-muted);
-  font-size: var(--text-xs);
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
+/* A narrow column: type and points on the first line, time and button on the second. */
+@container (max-width: 479px) {
+  .bar {
+    grid-template-columns: minmax(0, 1fr) 8.5rem;
+    grid-template-areas:
+      "kind points"
+      "ends action";
+    padding: var(--space-3) var(--space-4);
+  }
+}
+
+@media (pointer: coarse) {
+  .barAction :global(.btn) {
+    min-height: var(--hit-min);
+  }
+}
+
+.withdrawn {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
 }
 
 .ended {
@@ -149,130 +166,358 @@
   text-underline-offset: 2px;
 }
 
-.state {
-  display: grid;
-  justify-items: start;
-  gap: var(--space-1);
+/* The right column: the streak, or the invitation to sign in. */
+
+.panel {
+  padding: var(--space-5);
 }
 
-.stateNote {
-  color: var(--text-muted);
-  font-size: var(--text-sm);
-}
-
-.reward {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-2);
-  color: var(--text-muted);
-  font-size: var(--text-sm);
-}
-
-.reward :global(.icon) {
-  color: var(--text-faint);
-}
-
-/* Pinned to the card's bottom, so the three buttons line up. */
-.open {
-  align-self: flex-start;
-  margin-top: auto;
-}
-
-/* Streak and rules */
-
-.lower {
-  display: grid;
-  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-  align-items: start;
-  gap: var(--space-4);
-}
-
+/* A container, so the stats row follows the panel's width, not the window's. */
 .streak {
+  container-type: inline-size;
   display: grid;
-  gap: var(--space-4);
-}
-
-.figures {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  border-top: 1px solid var(--border);
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: var(--space-4) var(--space-5);
   font-variant-numeric: tabular-nums;
 }
 
-.figures > div {
-  display: grid;
-  align-content: start;
-  gap: 2px;
-  padding: var(--space-3) var(--space-4);
+.streakMain {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
 }
 
-/* The weekly and monthly counts sit on their own row, under a rule. */
-.figures > div:nth-child(n + 4) {
-  border-top: 1px solid var(--border);
+.streakHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-3);
 }
 
-.figures > div:nth-child(3n + 1) {
-  padding-left: 0;
+.streakNumber {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
 }
 
-.figures > div:not(:nth-child(3n + 1)) {
-  border-left: 1px solid var(--border);
+/* Trimmed to its cap height where the browser can, so the figure sits on the grid, not its line box. */
+.streakCount {
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.025em;
+  text-box: trim-both cap alphabetic;
 }
 
-.figures dt {
+.streakUnit {
   color: var(--text-muted);
   font-size: var(--text-sm);
   font-weight: 500;
 }
 
-.figure {
-  font-size: var(--text-xl);
-  font-weight: 700;
-  line-height: 1.2;
+/* The bar sits on the panel's floor, level with the calendar's last week. */
+.streakBar {
+  display: grid;
+  gap: 6px;
+  margin-top: auto;
 }
 
-.today {
-  padding-top: 4px;
+.streakTrack {
+  position: relative;
+  height: 10px;
+  border-radius: var(--radius-pill);
+  background: var(--border);
 }
 
-/* Weekly and monthly support the daily streak, so they read quieter. */
-.figureQuiet .figure {
+/*
+ * The fill spans the whole scale and is clipped to the streak, so its color at any point means
+ * the same streak length whatever the value. Interpolated in OKLCH, from theme tokens. It grows
+ * once on arrival; a later value retargets the same transition.
+ */
+.streakFill {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    in oklch to right,
+    color-mix(in oklch, var(--accent) 55%, var(--surface-1)),
+    var(--accent)
+  );
+  clip-path: inset(0 calc(100% - var(--streak-fill, 0%)) 0 0 round var(--radius-pill));
+  transition: clip-path var(--motion-progress) var(--motion-ease);
+}
+
+@starting-style {
+  .streakFill {
+    clip-path: inset(0 100% 0 0 round var(--radius-pill));
+  }
+}
+
+.streakScale {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: 18px;
   color: var(--text-muted);
+  font-size: var(--text-xs);
+  line-height: 18px;
+  letter-spacing: var(--tracking-label);
+}
+
+/* Shown only at a streak of zero. Two lines at most beside the calendar; the bars' height allows for them. */
+.streakHint {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  line-height: 18px;
+}
+
+/* Five weeks, Monday first. */
+
+.calendar {
+  --day: 24px;
+  --day-gap: 4px;
+  display: grid;
+  align-content: end;
+  gap: 6px;
+}
+
+.weekdays,
+.days {
+  display: grid;
+  grid-template-columns: repeat(7, var(--day));
+  gap: var(--day-gap);
+}
+
+.weekdays {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  line-height: 16px;
+  text-align: center;
+}
+
+.day {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: var(--day);
+  border-radius: var(--radius);
+  background: color-mix(in oklch, var(--text) 9%, transparent);
+  color: var(--accent-ink);
+  font-size: 12px;
+}
+
+.day[data-state="completed"] {
+  background: var(--accent);
+}
+
+.day[data-state="future"] {
+  background: none;
+  box-shadow: inset 0 0 0 1px var(--border-subtle);
+}
+
+.day[data-today] {
+  outline: 2px solid var(--accent-text);
+  outline-offset: 2px;
+}
+
+/* Current, longest and the three counts, in one row under a rule. */
+
+.stats {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(5, auto);
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
+}
+
+.stats > div {
+  display: grid;
+  gap: 2px;
+}
+
+.stats dt {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-label);
+  white-space: nowrap;
+}
+
+.stats dd {
   font-size: var(--text-lg);
+  font-weight: 650;
+  line-height: 1.3;
 }
 
-.streakNote {
-  color: var(--text-muted);
-  font-size: var(--text-sm);
+/* A narrower panel: the two streaks on one line, the three counts on the next. */
+@container (max-width: 460px) {
+  .stats {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    justify-content: stretch;
+  }
+
+  .stats > div {
+    grid-column: span 2;
+  }
+
+  .stats > div:nth-child(-n + 2) {
+    grid-column: span 3;
+  }
 }
+
+/* A phone: one stat per line, its label on the left and its number on the right. */
+@container (max-width: 369px) {
+  .stats {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    padding-top: var(--space-2);
+  }
+
+  .stats > div:nth-child(n) {
+    grid-column: auto;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding: 5px 0;
+  }
+
+  .stats dt {
+    font-size: var(--text-sm);
+    letter-spacing: 0;
+  }
+
+  .stats dd {
+    font-size: 15px;
+  }
+}
+
+/* Signed out: the mascot, one sentence, the way in. */
 
 .signedOut {
   display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-5);
 }
 
-.rules {
+/* The mascot's square, reserved whether or not it has loaded. */
+.mascotBox {
+  width: 128px;
+  aspect-ratio: 1;
+}
+
+.mascot {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.signedOutBody {
   display: grid;
-  align-content: start;
-  gap: var(--space-3);
-  padding: var(--space-4) var(--space-5);
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.signedOutText {
+  max-width: 34ch;
+  color: var(--text-muted);
+}
+
+.signIn {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+  margin-top: var(--space-2);
+}
+
+/* As tall as a button, so the buttons arriving doesn't move anything. */
+.signInActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--control-height);
+}
+
+.signInError {
+  color: var(--bad);
+  font-size: var(--text-sm);
+}
+
+@media (pointer: coarse) {
+  .signInActions,
+  .signInActions :global(.btn) {
+    min-height: var(--hit-min);
+  }
+}
+
+/* How challenges work: closed until asked for, across the full width. */
+
+.rules {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background: var(--surface-sunken);
 }
 
-.rules ul {
+.rulesSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: 48px;
+  padding: 0 var(--space-5);
+  border-radius: inherit;
+  list-style: none;
+  cursor: pointer;
+}
+
+.rulesSummary::-webkit-details-marker {
+  display: none;
+}
+
+.rulesTitle {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: var(--tracking-heading);
+}
+
+.rulesSummary :global(.icon) {
+  color: var(--text-muted);
+  transition: transform var(--motion-control) var(--motion-feedback);
+}
+
+.rules[open] .rulesSummary :global(.icon) {
+  transform: rotate(180deg);
+}
+
+.rulesBody {
   display: grid;
-  gap: var(--space-2);
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  align-items: start;
+  gap: var(--space-4) var(--space-6);
+  padding: var(--space-1) var(--space-5) var(--space-5);
   color: var(--text-muted);
   font-size: var(--text-sm);
 }
 
-.rules li {
+.rulesList {
+  display: grid;
+  gap: var(--space-2);
+  max-width: var(--measure-prose);
+}
+
+.rulesList li {
   position: relative;
   padding-left: var(--space-4);
 }
 
-.rules li::before {
+.rulesList li::before {
   content: "";
   position: absolute;
   top: 0.62em;
@@ -280,7 +525,24 @@
   width: 5px;
   height: 5px;
   border-radius: var(--radius-pill);
-  background: var(--line-strong);
+  background: var(--border-strong);
+}
+
+.rotations {
+  display: grid;
+  gap: var(--space-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.rotations > div {
+  display: grid;
+  grid-template-columns: 4.5rem minmax(0, 1fr);
+  gap: var(--space-3);
+}
+
+.rotations dt {
+  color: var(--text);
+  font-weight: 600;
 }
 
 /* Archive */
@@ -462,11 +724,19 @@
   white-space: nowrap;
 }
 
-/* Loading */
+/* Loading: the page's own grid, with each block at the height its content will have. */
 
 .skeletons {
   display: grid;
   gap: var(--space-6);
+}
+
+.skeletonHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3) var(--space-5);
 }
 
 .skeletonHeader {
@@ -474,8 +744,49 @@
   height: 72px;
 }
 
-.skeletonCard {
-  height: 380px;
+/* The title and its lede: two lines of lede on a wide screen, three on a phone. */
+.skeletonLede {
+  width: min(520px, 100%);
+  height: 90px;
+}
+
+.skeletonButton {
+  width: 148px;
+  height: var(--control-height);
+  border-radius: var(--radius);
+}
+
+@media (pointer: coarse) {
+  .skeletonButton {
+    height: var(--hit-min);
+  }
+}
+
+.skeletonBar {
+  min-height: 88px;
+  border-radius: var(--radius-lg);
+}
+
+.skeletonPanel {
+  min-height: 288px;
+  border-radius: var(--radius-lg);
+}
+
+@container (max-width: 479px) {
+  .skeletonBar {
+    min-height: 100px;
+  }
+}
+
+/* Two narrow columns: the streak's heading wraps, so the panel is taller. */
+@media (min-width: 900px) and (max-width: 1023px) {
+  .skeletonPanel {
+    min-height: 331px;
+  }
+}
+
+.skeletonRules {
+  height: 50px;
   border-radius: var(--radius-lg);
 }
 
@@ -488,49 +799,74 @@
   height: 52px;
 }
 
-@media (max-width: 960px) {
-  .cards {
+@media (max-width: 899px) {
+  .board {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .skeletonCard {
-    height: 240px;
+  /*
+   * One column: the panel is below the bars, and its height depends on who's signed in, which
+   * isn't known yet. Reserve the shorter, signed-out height, so the streak panel grows downward
+   * rather than the page pulling up.
+   */
+  .skeletonPanel {
+    min-height: 259px;
   }
 
-  .lower {
+  .rulesBody {
     grid-template-columns: minmax(0, 1fr);
   }
 }
 
 @media (max-width: 640px) {
-  .page {
+  .page,
+  .skeletons {
     gap: var(--space-5);
   }
 
-  .challenge {
+  .panel {
     padding: var(--space-4);
   }
 
-  .figures {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* The calendar goes under the number and takes the panel's width. */
+  .streak {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
   }
 
-  .figures > div:nth-child(n) {
-    padding-left: var(--space-4);
-    border-left: 1px solid var(--border);
+  .weekdays,
+  .days {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
   }
 
-  .figures > div:nth-child(odd) {
-    padding-left: 0;
-    border-left: 0;
+  .signedOut {
+    gap: var(--space-4);
   }
 
-  .figures > div:nth-child(n + 3) {
-    border-top: 1px solid var(--border);
+  .mascotBox {
+    width: 88px;
   }
 
-  .rules {
-    padding: var(--space-4);
+  /* Sign-in buttons take the column's width, and a long name wraps inside its button. */
+  .signInActions :global(.btn) {
+    width: 100%;
+    min-width: 0;
+    padding-block: var(--space-2);
+    white-space: normal;
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+
+  .skeletonLede {
+    height: 107px;
+  }
+
+  .rulesSummary {
+    padding: 0 var(--space-4);
+  }
+
+  .rulesBody {
+    padding: var(--space-1) var(--space-4) var(--space-4);
   }
 
   .segmented {
@@ -564,5 +900,26 @@
 
   .stripLink {
     margin-left: 0;
+  }
+}
+
+/* A narrow phone: the mascot sits above the sentence, so the text and buttons get the full width. */
+@media (max-width: 480px) {
+  .signedOut {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: start;
+    gap: var(--space-3);
+  }
+
+  .mascotBox {
+    width: 72px;
+  }
+
+  .signedOutText {
+    max-width: none;
+  }
+
+  .signIn {
+    width: 100%;
   }
 }

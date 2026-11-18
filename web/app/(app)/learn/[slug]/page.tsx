@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ViewTransition } from "react";
 import { connection } from "next/server";
 import { CodeBlockView } from "@/components/learn/CodeBlockView";
 import { Exercise } from "@/components/learn/Exercise";
@@ -58,6 +59,13 @@ export default async function LessonPage({ params }: PageProps) {
     (block) => !exampleBlocks.has(block.id) && (lesson.kind !== "lesson" || !lineBlocks.has(block.id)),
   );
 
+  const sections = [
+    { id: "outcome", label: "Outcome" },
+    ...(lesson.example ? [{ id: "example", label: "Example" }] : []),
+    { id: "checks", label: "Checks" },
+    ...(lesson.next ? [{ id: "next-up", label: "Next" }] : []),
+  ];
+
   return (
     <main className={`page ${styles.page} ${styles.lessonPage}`} data-testid="lesson" data-lesson={lesson.slug}>
       <nav className={styles.breadcrumbs} aria-label="Breadcrumb">
@@ -72,16 +80,30 @@ export default async function LessonPage({ params }: PageProps) {
 
       <header className={styles.lessonHeader}>
         <h1 className="page-title">
-          <span className={styles.lessonCode}>{lesson.code}</span> {lesson.title}
+          {/* The same name as this lesson's row in the catalog, so the code and title travel between them. */}
+          <ViewTransition name={"lesson-" + lesson.slug} share="morph" default="none">
+            <span className={styles.lessonHeadline}>
+              <span className={styles.lessonCode}>{lesson.code}</span> {lesson.title}
+            </span>
+          </ViewTransition>
         </h1>
-        <p className={styles.catalogMeta}>
+        <p className={styles.lessonMeta}>
           <span>
-            <Icon name="clock" /> {lesson.minutes} min
+            <Icon name="clock" /> {lesson.minutes}&nbsp;min
           </span>
           {lesson.badge ? <span>{lesson.badge}</span> : null}
           {prerequisite ? <span>{prerequisite}</span> : null}
         </p>
         <LessonProgressNote slug={lesson.slug} revision={lesson.revision} requiredCount={lesson.requiredIds.length} />
+        <nav className={styles.sectionIndex} aria-label="On this page" data-testid="section-index">
+          <ul>
+            {sections.map((section) => (
+              <li key={section.id}>
+                <a href={`#${section.id}`}>{section.label}</a>
+              </li>
+            ))}
+          </ul>
+        </nav>
       </header>
 
       <section className={styles.block} aria-labelledby="outcome">
@@ -123,8 +145,13 @@ export default async function LessonPage({ params }: PageProps) {
             return block ? <CodeBlockView key={id} block={block} /> : null;
           })}
           <details className={styles.worked} data-testid="worked-example">
-            <summary>Predict first, then show the worked explanation</summary>
-            <LessonMarkdown source={lesson.example.walkthrough} />
+            <summary>
+              <Icon name="chevron-right" />
+              Predict first, then show the worked explanation
+            </summary>
+            <div className={styles.workedBody}>
+              <LessonMarkdown source={lesson.example.walkthrough} />
+            </div>
           </details>
         </section>
       ) : null}
@@ -242,27 +269,42 @@ export default async function LessonPage({ params }: PageProps) {
         </section>
       ) : null}
 
+      {/* The label "Lessons" is what the site's scroll padding looks for; keep it. */}
       <nav className={styles.pager} aria-label="Lessons">
         {previous ? (
-          <Link href={lessonHref(previous.slug)} rel="prev" data-testid="previous-lesson">
-            <span className={styles.pagerLabel}>Previous</span>
-            {displayTitle(previous)}
+          <Link href={lessonHref(previous.slug)} rel="prev" className={`${styles.pagerLink} ${styles.pagerPrev}`} data-testid="previous-lesson">
+            <span className={styles.pagerLabel}>
+              <Icon name="arrow-right" />
+              <span className={styles.pagerWord}>Previous</span>
+            </span>
+            <span className={styles.pagerTitle}>
+              {previous.code} <span className={styles.pagerRest}>{previous.title}</span>
+            </span>
           </Link>
         ) : (
-          <Link href={LEARN_PATH}>
-            <span className={styles.pagerLabel}>Back to</span>
-            All lessons
+          <Link href={LEARN_PATH} className={`${styles.pagerLink} ${styles.pagerPrev}`}>
+            <span className={styles.pagerLabel}>
+              <Icon name="arrow-right" />
+              <span className={styles.pagerWord}>Back to</span>
+            </span>
+            <span className={styles.pagerTitle}>All lessons</span>
           </Link>
         )}
         {next ? (
-          <Link href={lessonHref(next.slug)} rel="next" className={styles.pagerNext} data-testid="next-lesson">
-            <span className={styles.pagerLabel}>Next</span>
-            {displayTitle(next)}
+          <Link href={lessonHref(next.slug)} rel="next" className={`${styles.pagerLink} ${styles.pagerNext}`} data-testid="next-lesson">
+            <span className={styles.pagerLabel}>
+              <span className={styles.pagerWord}>Next</span>
+              <Icon name="arrow-right" />
+            </span>
+            <span className={styles.pagerTitle}>{displayTitle(next)}</span>
           </Link>
         ) : (
-          <Link href={LEARN_PATH} className={styles.pagerNext}>
-            <span className={styles.pagerLabel}>Finished?</span>
-            All lessons
+          <Link href={LEARN_PATH} className={`${styles.pagerLink} ${styles.pagerNext}`}>
+            <span className={styles.pagerLabel}>
+              <span className={styles.pagerWord}>Finished?</span>
+              <Icon name="arrow-right" />
+            </span>
+            <span className={styles.pagerTitle}>All lessons</span>
           </Link>
         )}
       </nav>

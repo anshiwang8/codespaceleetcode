@@ -1,10 +1,10 @@
 # Themes
 
-codebases has 189 themes: its own default light and default dark themes, and 187 themes adapted from the color palettes of Monkeytype's preset themes.
+codebases has 175 themes: its own default light and default dark themes, and 173 themes adapted from the color palettes of Monkeytype's preset themes.
 
 ## Source and attribution
 
-The 187 adapted themes start from the preset palettes in Monkeytype, a typing-test site by the Monkeytype contributors, at commit [`0e07023d4a7af1d0c2d8497afdff30eaff615279`](https://github.com/monkeytypegame/monkeytype/tree/0e07023d4a7af1d0c2d8497afdff30eaff615279) (`frontend/src/ts/constants/themes.ts`), read on 2026-11-06. Monkeytype is licensed under GPL-3.0. codebases isn't affiliated with or endorsed by Monkeytype, and these aren't Monkeytype themes. Only the palette colors are used, as a starting point. No names, logos, CSS effects, images or code from Monkeytype are used. 52 of the source presets also ship custom CSS effects (gradients, animations, images); none of those are reproduced.
+Fourteen more were adapted and then removed because their page background clashes with the illustration plate and the mascot (`web/lib/themes/removed.ts` gives each reason). The adapted themes start from the preset palettes in Monkeytype, a typing-test site by the Monkeytype contributors, at commit [`0e07023d4a7af1d0c2d8497afdff30eaff615279`](https://github.com/monkeytypegame/monkeytype/tree/0e07023d4a7af1d0c2d8497afdff30eaff615279) (`frontend/src/ts/constants/themes.ts`), read on 2026-11-06. Monkeytype is licensed under GPL-3.0. codebases isn't affiliated with or endorsed by Monkeytype, and these aren't Monkeytype themes. Only the palette colors are used, as a starting point. No names, logos, CSS effects, images or code from Monkeytype are used. 52 of the source presets also ship custom CSS effects (gradients, animations, images); none of those are reproduced.
 
 `monkeytype-presets.json` holds the source colors (background, main, caret, sub, sub-alt, text and four error colors per preset). It was extracted by reading the file as text, without running it. It's development input only and is never sent to browsers.
 

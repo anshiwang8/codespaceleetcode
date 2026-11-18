@@ -22,7 +22,8 @@ import { getPool } from "@/lib/server/db";
 import { emailStatusFrom, type PendingEmailRow, type VerifiedEmailRow } from "@/lib/server/email";
 import { participationFrom } from "@/lib/server/leaderboard";
 import { THEMES } from "@/lib/themes/catalog.generated";
-import type { ThemePreference } from "@/lib/themes/runtime";
+import { isRemovedTheme } from "@/lib/themes/removed";
+import { DEFAULT_PREFERENCE, type ThemePreference } from "@/lib/themes/runtime";
 
 // Editable profile details, links and appearance. Every function takes the signed-in user's id
 // from the caller (who got it from getCurrentUser) and touches only that user's rows. Writes go to
@@ -192,6 +193,10 @@ function appearanceFrom(row: AppearanceRow | undefined): AppearanceSettings {
   if (row?.theme_mode === "system") preference = { mode: "system" };
   else if (row?.theme_mode === "theme" && row.theme_id && THEME_IDS.has(row.theme_id)) {
     preference = { mode: "theme", id: row.theme_id };
+  } else if (row?.theme_mode === "theme" && row.theme_id && isRemovedTheme(row.theme_id)) {
+    // A saved theme that has since been removed reads as the default. The row keeps its ID, so
+    // the choice returns if the theme does.
+    preference = DEFAULT_PREFERENCE;
   }
   return { preference, favorites: (row?.favorite_themes ?? []).filter((id) => THEME_IDS.has(id)) };
 }

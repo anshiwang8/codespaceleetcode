@@ -87,26 +87,50 @@ describe("challengeStreakFrom", () => {
       current: 3,
       longest: 3,
       completedToday: true,
+      recentDays: ["2026-11-09", "2026-11-10", "2026-11-11"],
     });
     expect(challengeStreakFrom(["2026-11-09", "2026-11-10"], "2026-11-11")).toEqual({
       current: 2,
       longest: 2,
       completedToday: false,
+      recentDays: ["2026-11-09", "2026-11-10"],
     });
     expect(challengeStreakFrom(["2026-11-01", "2026-11-02", "2026-11-03", "2026-11-09"], "2026-11-11")).toEqual({
       current: 0,
       longest: 3,
       completedToday: false,
+      recentDays: ["2026-11-01", "2026-11-02", "2026-11-03", "2026-11-09"],
     });
-    expect(challengeStreakFrom([], "2026-11-11")).toEqual({ current: 0, longest: 0, completedToday: false });
+    expect(challengeStreakFrom([], "2026-11-11")).toEqual({ current: 0, longest: 0, completedToday: false, recentDays: [] });
   });
 
   it("ignores duplicate completions of a day", () => {
-    expect(challengeStreakFrom(["2026-11-11", "2026-11-11", "2026-11-10"], "2026-11-11").current).toBe(2);
+    const streak = challengeStreakFrom(["2026-11-11", "2026-11-11", "2026-11-10"], "2026-11-11");
+    expect(streak.current).toBe(2);
+    expect(streak.recentDays).toEqual(["2026-11-10", "2026-11-11"]);
   });
 
   it("crosses month and year boundaries", () => {
     expect(challengeStreakFrom(["2026-12-30", "2026-12-31", "2027-01-01"], "2027-01-01").current).toBe(3);
+  });
+
+  it("gives the completed days of the last 35 UTC days, today included, ascending", () => {
+    // 34 days before 2026-11-11 is 2026-10-08: the first of the 35.
+    const streak = challengeStreakFrom(
+      ["2026-11-11", "2026-10-08", "2026-10-07", "2026-01-01", "2026-10-20", "2026-11-12"],
+      "2026-11-11",
+    );
+    expect(streak.recentDays).toEqual(["2026-10-08", "2026-10-20", "2026-11-11"]);
+    // The streak itself still counts every day it was given.
+    expect(streak.longest).toBe(2);
+    const everyDay = Array.from({ length: 60 }, (_, back) =>
+      new Date(Date.UTC(2026, 10, 11) - back * 86_400_000).toISOString().slice(0, 10),
+    );
+    const long = challengeStreakFrom(everyDay, "2026-11-11");
+    expect(long.current).toBe(60);
+    expect(long.recentDays).toHaveLength(35);
+    expect(long.recentDays[0]).toBe("2026-10-08");
+    expect(long.recentDays.at(-1)).toBe("2026-11-11");
   });
 });
 
@@ -234,7 +258,11 @@ describe.skipIf(!hasDatabase)("challenge completion", () => {
     const id = await userIdFor("challenger");
     const response = await getChallenges(id);
     expect(response.current.find((c) => c.kind === "daily")).toMatchObject({ completed: true, status: "solved" });
-    expect(response.streak).toMatchObject({ current: 1, completedToday: true });
+    expect(response.streak).toMatchObject({
+      current: 1,
+      completedToday: true,
+      recentDays: [response.now.slice(0, 10)],
+    });
     expect(response.completedCounts).toEqual({ daily: 1, weekly: 0, monthly: 0 });
   });
 

@@ -33,6 +33,39 @@ function privateStrings(): string[] {
 /** How HTML and React's flight data would write a string: escaped quotes and ampersands. */
 const forms = (value: string) => [value, value.replaceAll('"', '\\"'), value.replaceAll("'", "&#x27;").replaceAll('"', "&quot;")];
 
+/**
+ * Records, for each view transition the page starts, which pseudo-elements are animating once
+ * it's ready. It lives on `window`, so it lasts until the next full page load.
+ */
+async function watchViewTransitions(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const seen: string[] = [];
+    (window as unknown as { __transitions: string[] }).__transitions = seen;
+    const start = document.startViewTransition.bind(document);
+    document.startViewTransition = ((update?: Parameters<typeof start>[0]) => {
+      const transition = start(update);
+      void transition.ready
+        .then(() => {
+          for (const animation of document.getAnimations()) {
+            const pseudo = (animation.effect as KeyframeEffect | null)?.pseudoElement;
+            if (pseudo) seen.push(pseudo);
+          }
+        })
+        .catch(() => {});
+      return transition;
+    }) as typeof document.startViewTransition;
+  });
+}
+
+/** Whether a lesson's code and title moved as a shared element in a recorded transition. */
+const morphed = (page: Page, slug: string) =>
+  page.evaluate(
+    (name) => ((window as unknown as { __transitions?: string[] }).__transitions ?? []).includes(`::view-transition-group(${name})`),
+    `lesson-${slug}`,
+  );
+
+const movesAllowed = (page: Page) => page.evaluate(() => !window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+
 test.describe("Learn", () => {
   test("the catalog lists every group, module and lesson, and the header links to it", async ({ page }) => {
     await page.goto("/learn");
@@ -203,6 +236,108 @@ test.describe("Learn", () => {
     await expect(reflection.getByTestId("rubric")).toContainText("one point");
   });
 
+  test("the continue button is on the first screen and nothing moves when progress loads", async ({ page }) => {
+    // Signed in, progress comes from the server; hold that answer to see the page before it.
+    await devLogin(page, unique("waiting"));
+    let release: () => void = () => {};
+    let held: Promise<void> = Promise.resolve();
+    await page.route("**/api/me/learn", async (route) => {
+      await held;
+      await route.continue();
+    });
+    for (const size of [{ width: 1440, height: 900 }, { width: 375, height: 812 }]) {
+      held = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      await page.setViewportSize(size);
+      await page.goto("/learn");
+      const panel = visible(page, "learn-progress");
+      const button = visible(page, "continue-learning");
+      const row = visible(page, "catalog-values-and-assignments");
+      // Who's signed in is known first (the header and any account notice settle); progress follows.
+      await expect(visible(page, "account-menu-button")).toBeVisible();
+      await expect(panel).toHaveAttribute("aria-busy", "true");
+      await expect(button).toBeInViewport({ ratio: 1 });
+      await expect(panel.getByRole("progressbar")).toBeVisible();
+      // The opening stagger has to finish before a row's position means anything.
+      await expect.poll(() => row.evaluate((element) => element.getAnimations().length)).toBe(0);
+      const before = { button: await button.boundingBox(), row: await row.boundingBox(), panel: await panel.boundingBox() };
+
+      release();
+      await expect(panel).not.toHaveAttribute("aria-busy", "true");
+      await expect(visible(page, "learn-progress-count")).toHaveText("0 of 28 completed");
+      expect({ button: await button.boundingBox(), row: await row.boundingBox(), panel: await panel.boundingBox() }).toEqual(before);
+
+      // Every row is one link, at least 44px tall, with no gap before the next.
+      const rows = await page.locator('[data-testid^="catalog-"] > a').evaluateAll((links) =>
+        links.map((link) => ({ height: link.getBoundingClientRect().height, only: link.parentElement?.childElementCount === 1 })),
+      );
+      expect(rows).toHaveLength(COURSE.order.length);
+      for (const item of rows) {
+        expect(item.height).toBeGreaterThanOrEqual(44);
+        expect(item.only).toBe(true);
+      }
+    }
+    // The group index is beside the path on a wide screen only.
+    await expect(page.getByTestId("group-index")).toBeHidden();
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await expect(visible(page, "group-index").getByRole("link")).toHaveCount(COURSE.groups.length);
+  });
+
+  test("a row opens its lesson, and a correct check shows in the lesson and the catalog without a reload", async ({ page }) => {
+    await page.goto("/learn");
+    await expect(visible(page, "learn-progress-count")).toHaveText("0 of 28 completed in this browser");
+    await expect(page.getByText("Suggested first")).toHaveCount(0);
+    // Anywhere on the row is the link: click its reading time, not its title.
+    const row = visible(page, "catalog-values-and-assignments");
+    await watchViewTransitions(page);
+    await row.getByText(/^\d+\smin$/).click();
+    await expect(page).toHaveURL(/\/learn\/values-and-assignments$/);
+    const lesson = visible(page, "lesson");
+    await expect(lesson.getByRole("heading", { level: 1 })).toHaveText("L01 Values and assignments");
+    // The row's code and title travel into the header as one shared element.
+    if (await movesAllowed(page)) await expect.poll(() => morphed(page, "values-and-assignments")).toBe(true);
+
+    // The same from the keyboard, with no pointer near the row: back, focus the next row, Enter.
+    await lesson.getByRole("navigation", { name: "Breadcrumb" }).getByRole("link", { name: "Learn" }).click();
+    await expect(page).toHaveURL(/\/learn$/);
+    await page.mouse.move(0, 0);
+    await visible(page, "catalog-branches-and-comparisons").getByRole("link").focus();
+    await page.keyboard.press("Enter");
+    await expect(page).toHaveURL(/\/learn\/branches-and-comparisons$/);
+    if (await movesAllowed(page)) await expect.poll(() => morphed(page, "branches-and-comparisons")).toBe(true);
+    await page.goto("/learn/values-and-assignments");
+    await expect(lesson.getByTestId("section-index").getByRole("link")).toHaveText(["Outcome", "Example", "Checks", "Next"]);
+
+    // A request that fails says so, and leaves the selection and the lesson as they were.
+    const exit = lesson.getByTestId("exercise-exit");
+    const check = exit.getByTestId("check");
+    await expect(check).toBeDisabled();
+    await exit.getByTestId("choice-8").check();
+    await expect(check).toBeEnabled();
+    await page.route("**/api/learn/*/check", (route) => route.abort());
+    await check.click();
+    await expect(exit.getByTestId("result-error")).toContainText("your selection is still here");
+    await expect(exit.getByTestId("result-correct")).toHaveCount(0);
+    await expect(exit.getByTestId("choice-8")).toBeChecked();
+    await expect(lesson.getByTestId("lesson-status")).not.toContainText("Completed");
+    await page.unroute("**/api/learn/*/check");
+
+    // The result waits for the server; once it answers, the status changes with it.
+    await check.click();
+    await expect(exit.getByTestId("result-correct")).toBeVisible();
+    await expect(exit.getByTestId("result-error")).toHaveCount(0);
+    await expect(lesson.getByTestId("lesson-status")).toHaveText("Completed in this browser.");
+
+    // Back to the catalog inside the app: no reload, and the progress is already there.
+    await lesson.getByRole("navigation", { name: "Breadcrumb" }).getByRole("link", { name: "Learn" }).click();
+    await expect(page).toHaveURL(/\/learn$/);
+    await expect(visible(page, "learn-progress-count")).toHaveText("1 of 28 completed in this browser");
+    await expect(visible(page, "learn-progress").getByRole("progressbar")).toHaveAttribute("aria-valuenow", "1");
+    await expect(visible(page, "status-values-and-assignments")).toHaveAttribute("data-status", "complete");
+    await expect(visible(page, "continue-learning")).toContainText("Continue learning: L02");
+  });
+
   test("no lesson page carries an answer, explanation, hint, feedback or rubric", async ({ page }) => {
     const secrets = privateStrings();
     expect(secrets.length).toBeGreaterThan(60);
@@ -222,6 +357,10 @@ test.describe("Learn", () => {
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
       expect(overflow, slug).toBeLessThanOrEqual(0);
     }
+    // On a phone the previous and next links stay at the foot of the screen.
+    await page.goto("/learn/branches-and-comparisons");
+    await expect(visible(page, "previous-lesson")).toBeInViewport({ ratio: 1 });
+    await expect(visible(page, "next-lesson")).toBeInViewport({ ratio: 1 });
     await expect(page.getByTestId("nav-learn")).toBeVisible();
     const missing = await page.goto("/learn/not-a-lesson");
     expect(missing?.status()).toBe(404);

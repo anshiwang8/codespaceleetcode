@@ -151,6 +151,8 @@ export interface ChallengeStreak {
   current: number;
   longest: number;
   completedToday: boolean;
+  /** Completed UTC dates (YYYY-MM-DD, ascending) in the last 35 days, today included. */
+  recentDays: string[];
 }
 
 /** GET /api/challenges */

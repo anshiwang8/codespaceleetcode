@@ -2,9 +2,11 @@ import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { THEMES } from "@/lib/themes/catalog.generated";
+import { clashOf } from "@/lib/themes/clash";
 import { composite, contrast, hueDistance, isDark, isHex, minContrast, parseHex } from "@/lib/themes/color";
 import { DEFAULT_DARK_SOURCE, DEFAULT_LIGHT_TOKENS, deriveTheme, TARGETS, type SourcePalette } from "@/lib/themes/derive";
 import { THEME_NAMES, themeIdFor } from "@/lib/themes/names";
+import { isRemovedTheme, REMOVED_THEME_IDS, REMOVED_THEMES } from "@/lib/themes/removed";
 import { DEFAULT_DARK_ID, DEFAULT_LIGHT_ID, TOKEN_NAMES, TOKEN_VALUE, type ThemeDefinition } from "@/lib/themes/tokens";
 import { fromHsl, toHsl } from "@/lib/themes/color";
 
@@ -23,6 +25,9 @@ interface Built {
   theme: ThemeDefinition;
   adjustments: string[];
 }
+
+/** Every theme, including the ones lib/themes/removed.ts leaves out of the catalog. */
+let everyTheme: Built[] = [];
 
 function build(): Built[] {
   const built: Built[] = [
@@ -63,7 +68,10 @@ function build(): Built[] {
       adjustments: notes,
     });
   }
-  return built;
+  everyTheme = built;
+  // A removed theme is still derived above, so the themes that share its palette keep the accent
+  // they had while it existed.
+  return built.filter(({ theme }) => theme.source === null || !(theme.source in REMOVED_THEMES));
 }
 
 const built = build();
@@ -91,6 +99,7 @@ function mappingSource(): string {
       const notes = `${css}${adjustments.join("; ")}` || "none";
       return `| \`${theme.source}\` | \`${theme.id}\` | ${theme.name} | ${theme.scheme} | ${notes} |`;
     });
+  const removedRows = Object.entries(REMOVED_THEMES).map(([key, reason]) => `| \`${key}\` | \`${themeIdFor(key)}\` | ${reason} |`);
   return [
     "# Theme mapping",
     "",
@@ -101,6 +110,14 @@ function mappingSource(): string {
     "| Source preset | codebases ID | codebases name | Scheme | Adjustments |",
     "| --- | --- | --- | --- | --- |",
     ...rows,
+    "",
+    "## Removed themes",
+    "",
+    `${removedRows.length} adapted presets are left out because their page background clashes with the cream illustration plate and the mascot's colors. The list and each reason are in \`web/lib/themes/removed.ts\`; a saved choice of one falls back to codebases Light.`,
+    "",
+    "| Source preset | codebases ID | Reason |",
+    "| --- | --- | --- |",
+    ...removedRows,
     "",
   ].join("\n");
 }
@@ -116,11 +133,36 @@ describe("theme catalog", () => {
     expect(THEMES).toEqual(built.map(({ theme }) => theme));
   });
 
-  it("covers every source preset once, plus the two defaults", () => {
+  it("covers every source preset once, plus the two defaults, less the removed themes", () => {
+    const removed = Object.keys(REMOVED_THEMES);
     expect(Object.keys(sources)).toHaveLength(187);
-    expect(THEMES).toHaveLength(189);
+    expect(removed).toHaveLength(14);
+    expect(THEMES).toHaveLength(189 - removed.length);
     expect(Object.keys(THEME_NAMES).sort()).toEqual(Object.keys(sources).sort());
-    expect(new Set(THEMES.map((theme) => theme.source).filter(Boolean)).size).toBe(187);
+    const kept = THEMES.map((theme) => theme.source).filter((source): source is string => source !== null);
+    expect(new Set(kept).size).toBe(187 - removed.length);
+    expect([...kept, ...removed].sort()).toEqual(Object.keys(sources).sort());
+  });
+
+  it("removes exactly the themes whose background clashes with the plate, each with a reason", () => {
+    // Every source theme, kept or not, against the test in lib/themes/clash.ts.
+    const clashing = everyTheme.filter(({ theme }) => clashOf(theme.tokens.bg).clash).map(({ theme }) => theme.id);
+    expect([...REMOVED_THEME_IDS].sort()).toEqual(clashing.sort());
+    for (const [key, reason] of Object.entries(REMOVED_THEMES)) {
+      expect(sources[key], key).toBeDefined();
+      expect(reason.length, key).toBeGreaterThan(20);
+      expect(isRemovedTheme(themeIdFor(key))).toBe(true);
+    }
+    // The defaults can't be removed, and a neutral page never clashes.
+    for (const id of [DEFAULT_LIGHT_ID, DEFAULT_DARK_ID]) {
+      expect(isRemovedTheme(id)).toBe(false);
+      expect(THEMES.some((theme) => theme.id === id)).toBe(true);
+    }
+    for (const neutral of ["#ffffff", "#f6f8fa", "#0f141b", "#000000", "#808080", "#1e1e2e"]) {
+      expect(clashOf(neutral).clash, neutral).toBe(false);
+    }
+    // Removing more than about a quarter would mean the test is too loose.
+    expect(REMOVED_THEME_IDS.length).toBeLessThan(189 / 4);
   });
 
   it("has unique IDs and names, none empty, none a source name", () => {
