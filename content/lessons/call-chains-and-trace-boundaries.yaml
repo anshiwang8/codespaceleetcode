@@ -1,0 +1,66 @@
+slug: call-chains-and-trace-boundaries
+code: L10
+kind: lesson
+revision: 1
+title: Call chains and trace boundaries
+minutes: 18
+summary: Produce an ordered trace between a given start and stop, following the branch the input takes.
+objective: Produce an ordered trace between an explicit start and stop, following the branch taken by the given input.
+prerequisites: [tests-and-configuration]
+topics: [request-lifecycle]
+teach: |
+  A **direct** call is one the current function makes itself. A **transitive** call happens
+  further down the chain. The codebases index helps you find candidates, but a reported reference
+  isn't proof that the call runs for *this* input.
+
+  Record the caller, the callee and your evidence, and stop exactly where the question says.
+code_blocks:
+  - id: example
+    lang: js
+    source: |
+      function serve(n) { return n > 0 ? pack(n) : empty(); }
+      function pack(n) { return write({ count: n }); }
+      function write(data) { return data.count; }
+      function empty() { return 0; }
+example:
+  prompt: Starting at `serve(5)`, include the start and stop at the first entry to `write`. Which functions are entered, in order?
+  blocks: [example]
+  walkthrough: |
+    `5 > 0` is true, so `serve` calls `pack`, which calls `write`: the trace is
+    `serve → pack → write`. The other branch, `empty`, isn't taken. Returning to `serve` afterwards
+    isn't another entry to `serve`.
+exercises:
+  - id: guided
+    role: practice
+    label: Guided practice
+    kind: choice
+    prompt: For `serve(0)`, stop at the first helper entered. Which order is right?
+    choices:
+      - { id: serve-pack, label: "`serve`, `pack`" }
+      - { id: serve-empty, label: "`serve`, `empty`" }
+      - { id: empty-serve, label: "`empty`, `serve`" }
+    key:
+      answer: serve-empty
+      explanation: "`0 > 0` is false, so `serve` takes the `empty()` branch. The trace starts at `serve`, so it comes first."
+      hints:
+        - Evaluate the condition again at equality.
+  - id: exit
+    role: required
+    label: Exit check
+    kind: choice
+    prompt: For `serve(5)`, which function **directly** calls `write`?
+    choices:
+      - { id: serve, label: "`serve`" }
+      - { id: pack, label: "`pack`" }
+      - { id: write, label: "`write`" }
+    key:
+      answer: pack
+      explanation: "`pack` contains the call `write(...)`. `serve` reaches `write` only through `pack`, which makes it a transitive caller."
+mistake: |
+  Listing every name visible in the function. Use the input, follow the branch it takes, and apply
+  the stop rule.
+transfer: |
+  Try one of the Trace puzzles below. Each Trace prompt defines which calls count and where the
+  trace starts and ends; read those rules on each puzzle.
+practice: [hono-trace-002, requests-trace-001]
+references: [R10]

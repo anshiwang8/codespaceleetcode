@@ -1,0 +1,66 @@
+slug: streams-and-subscriptions
+code: L21
+kind: lesson
+revision: 1
+title: Streams and subscriptions
+minutes: 22
+summary: Follow values through stream operators, and say what completion and unsubscribing stop.
+objective: Follow values through an operator and identify the effect of completion or unsubscribe.
+prerequisites: [reactive-dependencies]
+topics: [observables]
+teach: |
+  A **stream** can deliver values over time. A **subscription** connects an observer to a
+  producer. An **operator** can transform or filter what reaches the observer. **Completion** ends
+  delivery normally; an **error** ends it abnormally.
+
+  **Unsubscribing** stops future delivery to that observer. Don't assume it sends a completion
+  notification, or stops shared upstream work.
+code_blocks:
+  - id: marbles
+    file: A toy stream
+    lang: text
+    source: |
+      Source:    1  2  3  complete
+      After map: 2  4  6  complete
+      Observer:     4  6  complete
+example:
+  prompt: The source emits 1, 2 and 3, then completes. `map` doubles each value, then `filter` keeps values greater than 3. What does the observer see?
+  blocks: [marbles]
+  walkthrough: |
+    Doubling gives 2, 4 and 6; the filter drops 2, so the observer sees 4, 6, then completion. If
+    you reverse the two operators, no source value passes the filter first, so the observer sees
+    only completion.
+exercises:
+  - id: guided
+    role: practice
+    label: Guided practice
+    kind: choice
+    prompt: If the filter keeps values greater than 4 instead, which value is delivered?
+    choices:
+      - { id: "2", label: "2" }
+      - { id: "4", label: "4" }
+      - { id: "6", label: "6" }
+    key:
+      answer: "6"
+      explanation: "After doubling, only 6 is greater than 4. 4 itself is excluded, because greater than excludes equality."
+      hints:
+        - Greater than excludes equality.
+  - id: exit
+    role: required
+    label: Exit check
+    kind: choice
+    prompt: In a timed version of the same stream, the observer unsubscribes right after receiving 4, before the source emits 3. Which notification can still reach this observer from this subscription?
+    choices:
+      - { id: six, label: "6" }
+      - { id: complete, label: Completion }
+      - { id: neither, label: Neither }
+    key:
+      answer: neither
+      explanation: "Unsubscribing ends delivery to this observer: no later value, and no completion notification."
+mistake: |
+  Assuming every stream is asynchronous, shared, or replayed. Check the producer and the exact
+  subscription behavior.
+transfer: |
+  Try the first puzzle below; after it, return to the second if you skipped it in L11.
+practice: [rxjs-architecture-001, rxjs-trace-002]
+references: [R21]

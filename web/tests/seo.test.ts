@@ -1,6 +1,7 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import robots from "@/app/robots";
 import sitemap from "@/app/sitemap";
+import { COURSE } from "@/lib/learn/course.generated";
 import { getPool } from "@/lib/server/db";
 import { siteOrigin } from "@/lib/server/site";
 import { seedFixtures } from "./fixtures";
@@ -45,7 +46,7 @@ describe.skipIf(!hasDatabase)("sitemap.xml", () => {
     await seedFixtures();
   });
 
-  it("lists the landing page, the puzzle list, the legal pages and every published puzzle", async () => {
+  it("lists the landing page, the puzzle list, Learn and every lesson, the legal pages and every published puzzle", async () => {
     vi.stubEnv("BETTER_AUTH_URL", "https://codebases.example");
     const entries = await sitemap();
     const { rows } = await getPool().query<{ slug: string }>(
@@ -55,11 +56,13 @@ describe.skipIf(!hasDatabase)("sitemap.xml", () => {
     expect(entries.map((entry) => entry.url)).toEqual([
       "https://codebases.example/",
       "https://codebases.example/puzzles",
+      "https://codebases.example/learn",
+      ...COURSE.order.map((slug) => `https://codebases.example/learn/${slug}`),
       "https://codebases.example/privacy",
       "https://codebases.example/terms",
       ...rows.map((row) => `https://codebases.example/puzzles/${row.slug}`),
     ]);
-    for (const entry of entries.slice(4)) expect(entry.lastModified).toBeInstanceOf(Date);
+    for (const entry of entries.filter((item) => item.url.includes("/puzzles/"))) expect(entry.lastModified).toBeInstanceOf(Date);
   });
 
   it("leaves out unpublished puzzles", async () => {

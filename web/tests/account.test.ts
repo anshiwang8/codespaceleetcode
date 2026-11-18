@@ -1,4 +1,6 @@
 import { makeSignature } from "better-auth/crypto";
+import { POST as learnCheckRoute } from "@/app/api/learn/[slug]/check/route";
+import { COURSE } from "@/lib/learn/course.generated";
 import { beforeAll, describe, expect, it } from "vitest";
 import { DELETE as deleteMe, GET as getMe } from "@/app/api/me/route";
 import { PUT as leaderboardRoute } from "@/app/api/me/leaderboard/route";
@@ -61,6 +63,7 @@ async function traces(id: string) {
     achievements: await count("select count(*) as n from user_achievements where user_id = $1", id),
     leaderboard: await count("select count(*) as n from leaderboard_entries where user_id = $1", id),
     profile: await count("select count(*) as n from user_profiles where user_id = $1", id),
+    learn: await count("select count(*) as n from learn_progress where user_id = $1", id),
   };
 }
 
@@ -78,6 +81,7 @@ const NOTHING = {
   achievements: 0,
   leaderboard: 0,
   profile: 0,
+  learn: 0,
 };
 
 /** Gives a user a row in every table migration 0009 added, through the real code paths. */
@@ -102,8 +106,19 @@ async function useEveryFeature(cookie: string, id: string): Promise<void> {
     [id],
   );
   await getPool().query("insert into user_profiles (user_id, display_name) values ($1, 'Leaving')", [id]);
+  // A Learn completion, through the real check route.
+  const lesson = COURSE.lessons["values-and-assignments"];
+  const check = await learnCheckRoute(
+    makeRequest("/api/learn/values-and-assignments/check", {
+      cookie,
+      headers: { origin: ORIGIN },
+      body: { revision: lesson?.revision, exerciseId: "exit", answer: { kind: "choice", choiceId: "8" } },
+    }),
+    params({ slug: "values-and-assignments" }),
+  );
+  expect(await check.json()).toMatchObject({ correct: true });
   const left = await traces(id);
-  for (const key of ["hintReveals", "scoreEvents", "challengeCompletions", "achievements", "leaderboard", "profile"] as const) {
+  for (const key of ["hintReveals", "scoreEvents", "challengeCompletions", "achievements", "leaderboard", "profile", "learn"] as const) {
     expect(left[key], key).toBeGreaterThan(0);
   }
 }

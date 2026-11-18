@@ -1,0 +1,73 @@
+slug: c2-small-repository-investigation
+code: C2
+kind: checkpoint
+revision: 1
+title: Small repository investigation
+minutes: 10
+summary: Start at an entry point, resolve a re-export, and pick the branch a small file set runs.
+objective: Resolve a re-export, read what a test covers, and trace the branch one input takes.
+prerequisites: [interfaces-and-dispatch]
+scenario: |
+  Three files, three items. Each item has one accepted answer and can be retried; after a miss,
+  the review link names the lesson to revisit. Nothing is locked by your score.
+code_blocks:
+  - id: index
+    file: index.ts
+    lang: ts
+    source: |
+      export { charge as quote } from "./pricing";
+  - id: pricing
+    file: pricing.ts
+    lang: ts
+    source: |
+      export function charge(n: number, fee = 2) {
+        return n > 0 ? add(n, fee) : 0;
+      }
+      function add(n: number, fee: number) { return n + fee; }
+  - id: test
+    file: pricing.test.ts
+    lang: ts
+    source: |
+      import { quote } from "./index";
+      assertEqual(quote(3), 5);
+exercises:
+  - id: find
+    role: required
+    label: 1. Find
+    kind: choice
+    prompt: Where is the body behind `quote`?
+    choices:
+      - { id: index, label: "`index.ts`" }
+      - { id: pricing, label: "`pricing.ts`" }
+      - { id: test, label: "`pricing.test.ts`" }
+    review: search-and-symbol-navigation
+    key:
+      answer: pricing
+      explanation: "`index.ts` only exports `charge` under the alias `quote`; the body lives in `pricing.ts`."
+  - id: evidence
+    role: required
+    label: 2. Evidence
+    kind: choice
+    prompt: Which `fee` case does the assertion in `pricing.test.ts` cover?
+    choices:
+      - { id: omitted, label: The omitted fee only }
+      - { id: zero, label: An explicit zero fee only }
+      - { id: both, label: Both }
+    review: tests-and-configuration
+    key:
+      answer: omitted
+      explanation: "`quote(3)` passes no fee, so it exercises the default of 2. Nothing here passes a fee of 0."
+  - id: trace
+    role: required
+    label: 3. Trace
+    kind: choice
+    prompt: For `quote(0)`, start at the original definition and list the functions entered through the return, leaving out built-ins.
+    choices:
+      - { id: charge, label: "`charge` only" }
+      - { id: charge-add, label: "`charge`, then `add`" }
+      - { id: add, label: "`add` only" }
+    review: call-chains-and-trace-boundaries
+    key:
+      answer: charge
+      explanation: "`0 > 0` is false, so `charge` returns 0 from the other branch without calling the helper."
+after: Revisit any missed item the next day, then try a Trace puzzle in a repository you haven't read yet.

@@ -7,7 +7,9 @@ export const LEGAL = {
     // Approved 2026-11-12 (M11), after the rewrite covering the verified email, profile details,
     // pictures, themes, Gmail over SMTP, hints, points, challenges, achievements, the opt-in
     // leaderboard and deletion from Settings → Danger zone.
-    privacy: { reviewed: true, lastUpdated: "2026-11-12" },
+    // Back to draft 2026-11-13 for Learn: lesson progress for signed-in accounts and the
+    // cb-learn-progress browser key. Its <ReviewNote>s mark what changed.
+    privacy: { reviewed: false, lastUpdated: "2026-11-13" },
     // Approved 2026-11-05 (M7), and again 2026-11-12 (M11) with leaderboard names, points and
     // deletion from Settings.
     terms: { reviewed: true, lastUpdated: "2026-11-12" },

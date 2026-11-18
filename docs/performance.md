@@ -85,11 +85,14 @@ Not measured:
 | Users row in step with GitHub login | Each server instance's memory (`lib/server/auth.ts`) | 5 minutes per user and login | Holds only an id and a login. It is consulted only after Better Auth has validated the session on that request, so it never decides who is signed in. A different login always upserts again. A row renamed by hand to resolve a login collision takes up to 5 minutes to be noticed. |
 | Session lookup within one server render | React `cache()` | One request | Never shared between requests or people. |
 | Who's signed in, in the browser (`MeResponse`) | `AuthProvider`'s memory (`lib/client/me-loader.ts`) | The page's lifetime | Answers are applied in the order they started. A sign-in, sign-out or deletion wins over anything that started before it. A confirmed save (name, picture, email) updates the header in place, but only for the account that made it, and never during a sign-in or sign-out. Nothing is written to storage. |
+| Learn course content | The page server's own bundle (`lib/learn/course.generated.ts`) | Until the next deploy | Content ships with the code, so a change needs a deploy. `/learn` is static; a lesson page renders per request only so its practice links follow the cached puzzle catalog, and needs no query while that catalog is fresh. The browser gets one lesson's public data, never the course or the keys. |
+| Learn progress (client) | Memory for a signed-in user, `localStorage` (`cb-learn-progress`) for a guest | The page's lifetime, or until cleared | Loaded once per signed-in person from `GET /api/me/learn` (`no-store`), updated from each check's response, and dropped when the person changes. |
 | Theme catalog (client) | One shared dynamic import | The page's lifetime | Loaded only to preview or apply a non-default theme, or when the picker opens or the Theme button is hovered or focused. A failed fetch isn't kept. |
 | Applied theme for first paint | `localStorage` (`cb-applied`), tagged with its owner | Until it changes | Unchanged by this pass. The default theme needs no entry. |
 
 ## What is deliberately not cached
 
+- **`/api/learn/*` and `/api/me/learn`.** Checks, hints and reveals are `no-store`; a guest's check touches no database, and a signed-in check writes only after a correct required answer.
 - **Anything under `/api/me`, and every signed-in page.** These are `no-store` and rendered per request. Settings data isn't kept on the client either: the server renders it, and each form keeps its own edits.
 - **The leaderboard.** Leaving it "removes your entry and public name". A shared rankings cache would keep a departed person's name visible on other instances. Instead, the page, the count and the viewer's own standing are one statement that ranks once, where there used to be five queries that ranked three times.
 - **Challenges.** Each period's puzzle is chosen and stored once, and completions are decided on the database's clock.

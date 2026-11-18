@@ -1,0 +1,60 @@
+slug: c3-request-and-client-decisions
+code: C3
+kind: checkpoint
+revision: 1
+title: Request and client decisions
+minutes: 10
+summary: Tell a rejected request, a denied request and a timed-out attempt apart, each by its own evidence.
+objective: Use separate evidence for input rejection, permission, and an upstream timeout.
+prerequisites: [authentication-and-authorization]
+scenario: |
+  A toy endpoint parses a decimal item id and rejects non-numeric input with 400. It then checks
+  ownership using an already authenticated session: a valid user who isn't the owner gets 403,
+  before any upstream call. Finally it reads an upstream service. An upstream timeout says only
+  that the local caller didn't get a result before its deadline.
+
+  Each item has one accepted answer and can be retried; after a miss, the review link names the
+  lesson to revisit.
+exercises:
+  - id: input
+    role: required
+    label: 1. Input
+    kind: choice
+    prompt: For the id `"abc"`, where does the path first stop?
+    choices:
+      - { id: parse, label: Parsing }
+      - { id: authorization, label: Authorization }
+      - { id: upstream, label: The upstream call }
+    review: input-validation-and-dependencies
+    key:
+      answer: parse
+      explanation: "`\"abc\"` isn't decimal digits, so parsing rejects it with 400 and ownership is never consulted."
+  - id: permission
+    role: required
+    label: 2. Permission
+    kind: choice
+    prompt: A signed-in user who doesn't own item 42 sends the id `"42"`. What happens?
+    choices:
+      - { id: "400", label: "400" }
+      - { id: "403", label: "403" }
+      - { id: upstream, label: The upstream call is made }
+    review: authentication-and-authorization
+    key:
+      answer: "403"
+      explanation: "The id parses, the session is valid, but the user isn't the owner, so it's 403 before any upstream call. Signing in doesn't grant every resource."
+  - id: timing
+    role: required
+    label: 3. Timing
+    kind: choice
+    prompt: An authorized upstream call times out. What do you know?
+    choices:
+      - { id: never-received, label: The upstream definitely never received it }
+      - { id: failed, label: The upstream definitely failed }
+      - { id: unknown, label: The upstream outcome is unknown }
+    review: timeouts-and-retries
+    key:
+      answer: unknown
+      explanation: "A timeout only says the local caller stopped waiting. Whether to retry depends on the operation's policy and semantics."
+after: |
+  For each item, say which rule decided it. If your explanation assumes a behavior the case doesn't
+  state, rewrite it from the stated evidence.

@@ -1,0 +1,68 @@
+slug: caches-and-storage
+code: L22
+kind: lesson
+revision: 1
+title: Caches and storage
+minutes: 24
+summary: Tell a cache's key, freshness, invalidation and eviction apart, and reason about a mechanism's cost.
+objective: Distinguish cache identity, freshness, invalidation, and eviction; infer the cost of a stated mechanism.
+prerequisites: [streams-and-subscriptions]
+topics: [caching-and-storage]
+teach: |
+  A **cache key** identifies a result. A **TTL** (time to live) says how long an entry counts as
+  fresh in this example. **Invalidation** marks an entry unusable, or removes it, after a relevant
+  change. **Eviction** frees space under a capacity policy. **LRU** evicts the least recently used
+  entry.
+
+  How much an operation costs depends on the implementation, not on the policy's name.
+code_blocks:
+  - id: lru
+    file: An LRU cache with capacity 2
+    lang: text
+    source: |
+      After insert A: A
+      After insert B: A B      oldest first
+      After read A:   B A
+      After insert C: A C      B evicted
+example:
+  prompt: Capacity is 2 and every entry is fresh. Insert A, insert B, read A, then insert C. Which entry is evicted?
+  blocks: [lru]
+  walkthrough: |
+    Reading A makes it the most recent, so inserting C evicts B. In a simple list, finding or
+    removing a key may need a scan. A hash map plus a linked list supports expected constant-time
+    lookup and recency updates, under the usual hashing assumptions, at the cost of extra memory.
+exercises:
+  - id: guided
+    role: practice
+    label: Guided practice
+    kind: choice
+    prompt: Skip the read of A. Which entry is evicted when C arrives?
+    choices:
+      - { id: a, label: A }
+      - { id: b, label: B }
+      - { id: c, label: C }
+    key:
+      answer: a
+      explanation: "Without the read, the recency order before the last insert is A, B, so A is least recently used and evicted."
+      hints:
+        - Write the recency order before the last insert.
+  - id: exit
+    role: required
+    label: Exit check
+    kind: choice
+    prompt: There's room in the cache, and entry A expires before a read. Which rule causes the miss?
+    choices:
+      - { id: ttl, label: The TTL }
+      - { id: lru, label: LRU capacity }
+      - { id: key, label: A change in the cache key }
+    key:
+      answer: ttl
+      explanation: "Capacity was never exceeded and the key didn't change; the entry simply stopped being fresh."
+mistake: |
+  Assuming an LRU cache guarantees fresh data, or that private results can share a cache key
+  without regard to who owns them.
+transfer: |
+  Try the first puzzle below, then one of the others. This lesson's example gives no detail of
+  their implementations.
+practice: [jinja-design-001, unstorage-design-001, rtk-design-001]
+references: [R22, R23, R26]

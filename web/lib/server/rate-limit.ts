@@ -26,6 +26,8 @@ export const SHORT_SEARCH_CHARS = 3;
 export const HINT_LIMIT: RateLimit = { limit: 30, windowMs: 60_000 };
 /** Leaderboard and challenge reads, which aggregate over many rows. */
 export const BOARD_LIMIT: RateLimit = { limit: 120, windowMs: 60_000 };
+/** Signed-in Learn checks, which write progress. Guests' checks touch no database and aren't counted. */
+export const LEARN_CHECK_LIMIT: RateLimit = { limit: 120, windowMs: 60_000 };
 /** Joining, renaming or leaving the leaderboard. */
 export const LEADERBOARD_CHANGE_LIMIT: RateLimit = { limit: 20, windowMs: 60 * 60_000 };
 /** Account deletion attempts, which each check a recent sign-in. */

@@ -1,0 +1,726 @@
+/* The Learn catalog and lesson pages. Theme tokens only, so every theme applies. No motion. */
+
+.page {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.page > * {
+  min-width: 0;
+}
+
+.lessonPage {
+  max-width: 820px;
+}
+
+/* Prose: a reading size, wider spacing than the puzzle panel's Markdown. */
+.prose {
+  min-width: 0;
+  color: var(--text);
+  font-size: var(--text-md);
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+
+.prose > * + * {
+  margin-top: var(--space-3);
+}
+
+.prose code {
+  padding: 1px 4px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+}
+
+.prose pre {
+  overflow-x: auto;
+  padding: var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--editor-bg);
+}
+
+.prose pre code {
+  padding: 0;
+  background: none;
+}
+
+.prose ul,
+.prose ol {
+  padding-left: var(--space-5);
+}
+
+.prose ul {
+  list-style: disc;
+}
+
+.prose ol {
+  list-style: decimal;
+}
+
+.tableScroll {
+  overflow-x: auto;
+}
+
+.prose table {
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.prose th,
+.prose td {
+  padding: 4px var(--space-3);
+  border: 1px solid var(--line);
+  text-align: left;
+}
+
+.prose th {
+  background: var(--panel-raised);
+  font-weight: 600;
+}
+
+.muted {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+/* Code blocks */
+
+.code {
+  margin: var(--space-3) 0 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--editor-bg);
+  overflow: hidden;
+}
+
+.codeCaption {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: 4px var(--space-3);
+  border-bottom: 1px solid var(--line);
+  background: var(--panel-raised);
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+.codeFile {
+  color: var(--text);
+  font-family: var(--font-mono);
+}
+
+.codeLang {
+  margin-left: auto;
+}
+
+.codePre {
+  margin: 0;
+  padding: var(--space-2) 0;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+}
+
+.codePre:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+
+.codeLine {
+  display: flex;
+  min-width: max-content;
+  padding-right: var(--space-3);
+}
+
+.lineNumber {
+  flex: none;
+  width: 3ch;
+  margin-right: var(--space-3);
+  padding-left: var(--space-2);
+  color: var(--editor-line-number);
+  text-align: right;
+  user-select: none;
+}
+
+.lineText {
+  white-space: pre;
+  font-family: var(--font-mono);
+}
+
+/* Header and blocks */
+
+.breadcrumbs ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.breadcrumbs li + li::before {
+  content: "/";
+  margin-right: var(--space-2);
+  color: var(--text-faint);
+}
+
+.lessonHeader {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.lessonCode {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+}
+
+.lessonStatus {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 1.6em;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.lessonStatus[data-status="complete"] {
+  color: var(--ok);
+}
+
+.lessonStatus[data-status="updated"] {
+  color: var(--warn);
+}
+
+.block {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.blockTitle {
+  color: var(--text);
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.worked {
+  padding: var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+.worked > summary {
+  cursor: pointer;
+  color: var(--accent-text);
+  font-weight: 500;
+}
+
+.worked > summary:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.worked[open] > summary {
+  margin-bottom: var(--space-3);
+}
+
+/* Exercises */
+
+.exercises {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.exercise {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--panel);
+}
+
+.exercise form {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.required {
+  border-color: var(--line-strong);
+  box-shadow: var(--shadow-soft);
+}
+
+.exerciseHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.exerciseTitle {
+  color: var(--text);
+  font-size: var(--text-md);
+  font-weight: 600;
+}
+
+.exerciseRole {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+.exercisePrompt {
+  min-width: 0;
+}
+
+.choices,
+.lineChoices {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.choice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--input-bg);
+  cursor: pointer;
+}
+
+.choice input,
+.lineChoice input {
+  flex: none;
+  margin-top: 3px;
+  accent-color: var(--accent);
+}
+
+.choice:hover,
+.lineChoice:hover {
+  background: var(--hover);
+}
+
+.choice[data-selected],
+.lineChoice[data-selected] {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.choice:has(input:focus-visible),
+.lineChoice:has(input:focus-visible) {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+
+.choice code,
+.result code,
+.revealed code,
+.hints code,
+.sequence code {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+}
+
+.lineChoices {
+  gap: 0;
+  padding: var(--space-1) 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--editor-bg);
+  overflow-x: auto;
+}
+
+.lineLegend {
+  float: left;
+  width: 100%;
+  padding: 0 var(--space-3) var(--space-1);
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+.lineChoice,
+.lineBlank {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-1);
+  min-width: max-content;
+  min-height: 32px;
+  padding: 3px var(--space-3) 3px var(--space-2);
+  border: 1px solid transparent;
+  font-size: var(--text-sm);
+  line-height: 1.6;
+}
+
+.lineChoice {
+  cursor: pointer;
+}
+
+.lineBlank {
+  min-height: 1.6em;
+  padding-left: calc(var(--space-2) + 13px + var(--space-1));
+}
+
+.sequence {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-4);
+}
+
+@media (max-width: 640px) {
+  .sequence {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.sequenceHeading {
+  margin-bottom: var(--space-2);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.sequenceEmpty {
+  padding: var(--space-3);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.sequenceList {
+  display: grid;
+  gap: var(--space-1);
+  padding-left: var(--space-5);
+  list-style: decimal;
+}
+
+.sequenceStep {
+  padding: 2px 0;
+}
+
+.sequenceStep > * {
+  vertical-align: middle;
+}
+
+.stepText {
+  display: inline-block;
+  margin-right: var(--space-2);
+}
+
+.stepButtons {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.candidateList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.exerciseActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.hints {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-6);
+  border-radius: var(--radius);
+  background: var(--warn-soft);
+  color: var(--text);
+  font-size: var(--text-sm);
+  list-style: decimal;
+}
+
+.resultSlot:empty {
+  display: none;
+}
+
+.result,
+.revealed {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  font-size: var(--text-sm);
+}
+
+.resultOk {
+  border-color: var(--ok);
+  background: var(--ok-soft);
+}
+
+.resultBad {
+  border-color: var(--bad);
+  background: var(--bad-soft);
+}
+
+.revealed {
+  background: var(--panel-raised);
+}
+
+.resultHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+  font-weight: 600;
+}
+
+.resultNext {
+  color: var(--text-muted);
+}
+
+.reflectionField {
+  display: grid;
+  gap: var(--space-1);
+}
+
+/* Catalog */
+
+.intro,
+.group {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.introList {
+  display: grid;
+  gap: var(--space-1);
+  padding-left: var(--space-5);
+  color: var(--text-muted);
+  list-style: disc;
+}
+
+.introPlacement {
+  font-size: var(--text-sm);
+}
+
+.catalogProgress {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line);
+}
+
+.progressCount {
+  min-width: 10ch;
+  font-weight: 600;
+}
+
+.progressDone {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--ok);
+}
+
+.progressNote {
+  flex-basis: 100%;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.groupSummary,
+.moduleSummary {
+  color: var(--text-muted);
+}
+
+.module {
+  display: grid;
+  gap: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line);
+}
+
+.moduleTitle {
+  color: var(--text);
+  font-size: var(--text-md);
+  font-weight: 600;
+}
+
+.catalogList {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.checkpointList {
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line);
+}
+
+.catalogItem {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+.catalogMain {
+  display: flex;
+  flex: 1 1 320px;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.catalogCode {
+  flex: none;
+  width: 3.5ch;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+}
+
+.catalogTitle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-md);
+  font-weight: 600;
+}
+
+.catalogSummary {
+  margin-top: 2px;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.catalogMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  margin-top: var(--space-1);
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+.catalogMeta > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.statusSlot {
+  min-width: 1px;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.status-complete {
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+
+.status-updated {
+  background: var(--warn-soft);
+  color: var(--warn);
+}
+
+.status-started {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+
+/* Practice, references and the pager */
+
+.practiceList,
+.references {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.practiceList li {
+  display: grid;
+  gap: 2px;
+}
+
+.practiceMeta {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+.topics {
+  font-size: var(--text-sm);
+}
+
+.references {
+  padding-left: var(--space-5);
+  font-size: var(--text-sm);
+  list-style: disc;
+}
+
+.pager {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--line);
+}
+
+.pager a {
+  display: grid;
+  gap: 2px;
+  padding: var(--space-3);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  font-weight: 500;
+}
+
+.pager a:hover {
+  border-color: var(--line-strong);
+  text-decoration: none;
+}
+
+.pagerNext {
+  text-align: right;
+}
+
+.pagerLabel {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  font-weight: 400;
+}
+
+@media (max-width: 480px) {
+  .pager {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .pagerNext {
+    text-align: left;
+  }
+}

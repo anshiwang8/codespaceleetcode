@@ -1,0 +1,65 @@
+slug: input-validation-and-dependencies
+code: L15
+kind: lesson
+revision: 1
+title: Input validation and dependencies
+minutes: 21
+summary: Separate parsing, validation, dependency resolution and the handler's own work.
+objective: Separate input parsing, validation, dependency resolution, and handler behavior.
+prerequisites: [middleware-and-error-paths]
+topics: [validation, dependency-injection]
+teach: |
+  **Parsing** turns input into a representation the program can use. **Validation** checks rules
+  on that representation. **Dependency injection** supplies a collaborator from outside the
+  handler.
+
+  Read each boundary on its own: where raw data enters, which rules reject it, and where the
+  handler receives its collaborator.
+code_blocks:
+  - id: pipeline
+    file: A toy endpoint
+    lang: text
+    source: |
+      raw query value → parse decimal digits (leading zeros allowed) → check 1 through 100
+      accepted number → resolve store provider → store.read(number)
+      parse or range failure → return 400 before resolving the store
+example:
+  prompt: Follow the raw value `"08"` through the stages. What does the store receive?
+  blocks: [pipeline]
+  walkthrough: |
+    The parse step accepts decimal digit strings, leading zeros included, and turns `"08"` into 8.
+    The range check then accepts 8, so the injected store receives `read(8)`. The toy order is parse, validate,
+    resolve the store, handle; real frameworks may interleave these steps.
+exercises:
+  - id: guided
+    role: practice
+    label: Guided practice
+    kind: choice
+    prompt: With the raw value `"101"`, where does the request first fail?
+    choices:
+      - { id: parse, label: Parsing }
+      - { id: range, label: Range validation }
+      - { id: storage, label: Storage }
+    key:
+      answer: range
+      explanation: "`\"101\"` is valid decimal digits, so parsing succeeds; 101 is above 100, so the range check rejects it with 400."
+      hints:
+        - 101 is a valid decimal integer, even though it's out of range.
+  - id: exit
+    role: required
+    label: Exit check
+    kind: choice
+    prompt: A test swaps the real store for a fake. In this design, which stage changes?
+    choices:
+      - { id: parsing, label: The parsing rules }
+      - { id: resolution, label: How the collaborator is resolved }
+      - { id: method, label: HTTP method matching }
+    key:
+      answer: resolution
+      explanation: "Injection supplies the store from outside, so only which store is resolved changes. The same input rules still run."
+mistake: |
+  Assuming that successful parsing guarantees acceptable data, or that TypeScript checks an
+  incoming HTTP payload.
+transfer: Try one of the puzzles below.
+practice: [fastapi-architecture-002, zod-find-001]
+references: [R7, R12, R15]

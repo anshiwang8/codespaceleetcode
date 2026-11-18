@@ -559,3 +559,10 @@ details[open] > .groupSummary::before {
 
 /* Pending text shares a label line, so it never moves the filters or grouping control. */
 .updating { position: absolute; top: 0; right: 0; }
+
+/* The pointer to Learn under the list's lede. */
+.learnLink {
+  margin-top: var(--space-1);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}

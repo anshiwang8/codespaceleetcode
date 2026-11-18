@@ -1,0 +1,67 @@
+slug: search-and-symbol-navigation
+code: L08
+kind: lesson
+revision: 1
+title: Search and symbol navigation
+minutes: 17
+summary: Tell a definition from a use and a re-export, and follow a public name to its implementation.
+objective: Distinguish a definition, use, and re-export, then navigate to the implementation behind a public name.
+prerequisites: [repository-maps-and-snapshots]
+topics: [code-structure]
+teach: |
+  A **symbol** is a named program entity, such as a function or class. Text search proposes
+  candidates, but it can match a comment or an unrelated symbol with the same name. A
+  go-to-definition jump follows an indexed relationship. A **re-export** exposes an existing
+  symbol, under the same name or a new one.
+
+  If the index has no edge between two names, read the imports and source yourself, and don't
+  claim an inferred link is verified.
+code_blocks:
+  - id: files
+    lang: ts
+    source: |
+      // public.ts
+      export { basePrice as price } from "./cost";
+      // cost.ts
+      export function basePrice(count: number) { return count * 4; }
+      // demo.ts
+      import { price } from "./public";
+      const quoted = price(3);
+example:
+  prompt: The caller in `demo.ts` uses `price`. Where is the body that runs?
+  blocks: [files]
+  walkthrough: |
+    `demo.ts` imports `price` from the public module. That module re-exports `basePrice` under the
+    name `price`. The function body is in `cost.ts`. So: search for the public name, follow the
+    re-export, then read the body.
+exercises:
+  - id: guided
+    role: practice
+    label: Guided practice
+    kind: choice
+    prompt: 'Suppose line 2 instead read `export { basePrice as price } from "./prices";`, and `prices.ts` held only `export { basePrice } from "./cost";`. Which file holds the body now?'
+    choices:
+      - { id: public, label: "`public.ts`" }
+      - { id: prices, label: "`prices.ts`" }
+      - { id: cost, label: "`cost.ts`" }
+    key:
+      answer: cost
+      explanation: "Each re-export only passes the name along. Follow `public.ts` to `prices.ts` to `cost.ts`, the file with the block holding a `return` expression."
+      hints:
+        - Keep following re-exports until you reach a block with a return expression.
+  - id: exit
+    role: required
+    label: Exit check
+    kind: line
+    block: files
+    prompt: The task asks for the **call site**, not the definition. Select the line that calls the function.
+    key:
+      answer: 7
+      explanation: "Line 7, `price(3)`, invokes the function with an argument. Line 6 imports the name and line 2 re-exports it; neither calls it."
+mistake: |
+  Assuming "references" means "runtime calls". A reference can be a type, an alias, or a function
+  passed as a value.
+transfer: |
+  Try the symbol navigation in the puzzle below. No answer path is supplied: start from its prompt.
+practice: [rtk-architecture-001]
+references: [R9, R10]

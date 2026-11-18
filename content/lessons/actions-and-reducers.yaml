@@ -1,0 +1,69 @@
+slug: actions-and-reducers
+code: L19
+kind: lesson
+revision: 1
+title: Actions and reducers
+minutes: 20
+summary: Predict a state transition from an action, and know where to look for side effects.
+objective: Predict a state transition from an action and identify where side effects should be inspected.
+prerequisites: [c3-request-and-client-decisions]
+prerequisite_note: C3 or equivalent
+topics: [state-management]
+teach: |
+  **State** is the current data the system holds. An **action** describes an event. A **reducer**
+  computes the next state from the previous state and an action. In this example, the reducer
+  returns a new object when it handles an action, and the original object for actions it doesn't
+  know. `action.type === "add"` compares strings exactly, capital letters included.
+
+  A **store** coordinates dispatching actions; middleware around it may handle asynchronous work.
+code_blocks:
+  - id: example
+    lang: js
+    source: |
+      function reducer(state, action) {
+        if (action.type === "add") {
+          return { ...state, count: state.count + action.amount };
+        }
+        return state;
+      }
+example:
+  prompt: 'Start at `{ count: 4 }`. Dispatch `{ type: "add", amount: 2 }`, then `{ type: "ping" }`. What is the state after each?'
+  blocks: [example]
+  walkthrough: |
+    The first action returns a new object with `count` 6. The second isn't handled, so the reducer
+    returns the existing object unchanged. Neither action implies a network request.
+exercises:
+  - id: guided
+    role: practice
+    label: Guided practice
+    kind: choice
+    prompt: Starting at a count of 4, apply add with an amount of -1, then add with 3. What is the count?
+    choices:
+      - { id: "3", label: "3" }
+      - { id: "6", label: "6" }
+      - { id: "7", label: "7" }
+    key:
+      answer: "6"
+      explanation: "4 + (-1) is 3, and that result feeds the next action: 3 + 3 is 6."
+      hints:
+        - Feed each result into the next action.
+  - id: exit
+    role: required
+    label: Exit check
+    kind: choice
+    prompt: 'Starting at `{ count: 4 }`, the reducer receives `{ type: "Add", amount: 1 }`. What does it return?'
+    choices:
+      - { id: changes, label: "A new object with `count` 5" }
+      - { id: network, label: It performs network I/O first }
+      - { id: same, label: "The same state object, unchanged" }
+    key:
+      answer: same
+      explanation: "`\"Add\" === \"add\"` is false: string comparison is exact, case included. No branch handles it, so line 5 returns the original state object."
+mistake: |
+  Assuming syntax that looks like mutation always mutates stored state. Some libraries hand the
+  reducer a draft wrapper; check whether one is in use before concluding anything.
+transfer: |
+  After reviewing L05 Collections and mutation, try the puzzle below. Read what it asks rather than assuming this toy
+  reducer's rule applies.
+practice: [rtk-find-001]
+references: [R19]

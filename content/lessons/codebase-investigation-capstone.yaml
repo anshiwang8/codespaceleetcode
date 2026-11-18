@@ -1,0 +1,132 @@
+slug: codebase-investigation-capstone
+code: L24
+kind: capstone
+revision: 1
+title: Codebase investigation capstone
+minutes: 30
+summary: Investigate an unfamiliar code path, and back a design claim with an input, a call sequence and a line.
+objective: Investigate an unfamiliar code path and support a design claim with the input, call sequence, and a line of evidence.
+prerequisites: [c3-request-and-client-decisions, actions-and-reducers, reactive-dependencies, streams-and-subscriptions, caches-and-storage, parsing-and-code-generation]
+prerequisite_note: C3 and L19 to L23
+topics: [caching-and-storage, code-structure]
+scenario: |
+  A toy endpoint serves a report from a cache or from a backing store. The three files below are an
+  original, fixed teaching fixture. Assume every call is synchronous, valid ids are positive
+  integers, the cache and the store already exist, and the store always succeeds.
+
+  Each of the four tasks is scored on its own. Read the requirements once, then use the file list
+  rather than reading every file top to bottom. Record your choices before you check them.
+code_blocks:
+  - id: route
+    file: route.js
+    lang: js
+    source: |
+      import { loadReport } from "./service.js";
+      export function getReport(id) {
+        if (!Number.isInteger(id) || id <= 0) return { status: 400 };
+        return { status: 200, body: loadReport(id) };
+      }
+  - id: service
+    file: service.js
+    lang: js
+    source: |
+      import { cache, store } from "./adapters.js";
+      export function loadReport(id) {
+        const hit = cache.get(id);
+        if (hit !== undefined) return hit;
+        const report = store.read(id);
+        cache.set(id, report);
+        return report;
+      }
+  - id: adapters
+    file: adapters.js
+    lang: js
+    source: |
+      // Teaching fixture: cache is a Map; store.read returns a report object.
+      export const cache = new Map();
+      export const store = { read: (id) => ({ id, title: "Report" }) };
+exercises:
+  - id: find
+    role: required
+    label: 1. Find
+    kind: line
+    block: route
+    prompt: In `route.js`, select the line that rejects a non-positive id.
+    review: branches-and-comparisons
+    key:
+      answer: 3
+      explanation: "Line 3, the guard beginning `if (!Number.isInteger(id)`, returns 400 before the service runs. Line 4 is the successful path, not the rejecting condition."
+      hints:
+        - First separate invalid input from a valid request.
+  - id: trace
+    role: required
+    label: 2. Trace
+    kind: sequence
+    prompt: |
+      For id 7 with an empty cache, start at `getReport` and stop at the first call to `cache.set`.
+      Add the functions entered, in order, including the start and the end. Leave out built-ins
+      other than the named cache operations.
+    candidates:
+      - { id: get-report, label: "`getReport`" }
+      - { id: number-is-integer, label: "`Number.isInteger`" }
+      - { id: load-report, label: "`loadReport`" }
+      - { id: cache-get, label: "`cache.get`" }
+      - { id: store-read, label: "`store.read`" }
+      - { id: cache-set, label: "`cache.set`" }
+    review: call-chains-and-trace-boundaries
+    key:
+      answer: [get-report, load-report, cache-get, store-read, cache-set]
+      explanation: "`getReport → loadReport → cache.get → store.read → cache.set`. The lookup returns `undefined` for the empty Map, so execution continues past the early return. A return to a function isn't a second entry. On a hit, the trace would stop after `cache.get` with no `store.read` or `cache.set`."
+      hints:
+        - Inspect the value `cache.get` returns under the stated cache state.
+  - id: architecture
+    role: required
+    label: 3. Architecture
+    kind: choice
+    prompt: Which file owns the choice between a cached result and a backing-store read?
+    choices:
+      - { id: route, label: "`route.js`" }
+      - { id: service, label: "`service.js`" }
+      - { id: adapters, label: "`adapters.js`" }
+    review: interfaces-and-dispatch
+    key:
+      answer: service
+      explanation: "`service.js` owns the policy. `route.js` validates and shapes the response; `adapters.js` supplies the concrete cache and store. Swapping the storage adapter and changing the hit policy are different decisions."
+      hints:
+        - Ask which file decides between the two sources, not which file provides them.
+  - id: design
+    role: required
+    label: 4. Design
+    kind: choice
+    prompt: The store's report for id 7 changes while the process stays up. What can happen on the next read?
+    choices:
+      - { id: always-new, label: The next read always sees the new report }
+      - { id: stale, label: A cached old report may be returned }
+      - { id: clears, label: The cache always clears on a second read }
+    review: caches-and-storage
+    key:
+      answer: stale
+      explanation: "A hit returns before the store read, and nothing here expires or invalidates entries. The cache saves a store read, but it may keep serving stale data."
+      hints:
+        - Compare the hit branch with the lines after it.
+reflection:
+  prompt: |
+    State the benefit of this cache, its limitation, and one remedy. Cite the branch or the write
+    that supports each claim. This is for you: it's never graded or saved.
+  rubric: |
+    Give yourself one point for naming the work the cache saves, one for linking stale data to the early return on a hit, and one for a plausible remedy plus its cost or limitation.
+
+    Example: write-side invalidation on updates reduces staleness, but every relevant writer has to take part. A TTL is an alternative when the product can tolerate a bounded stale interval under its refresh policy.
+
+    This reflection doesn't change the four-task score.
+after: |
+  **If you missed a task**, the review link on it names the lesson to revisit: L02 for the guard,
+  L10 for the call order, L12 for policy versus implementation, and L22 for the cache behavior.
+  Then retry with a cache-hit input or an invalid id before moving on.
+transfer: |
+  Independently attempt the first two puzzles below and one Design puzzle. For a stretch, try a
+  Trace in FastAPI or Nest. On each, write a private evidence note with the question, the input,
+  the branch, and the stop rule, and submit only the code selections the puzzle asks for. After
+  solving, read its solution through the puzzle page.
+practice: [hono-trace-001, unstorage-architecture-003, unstorage-design-001, vue-design-001, fastapi-trace-001, nest-trace-001]
+references: [R10, R15, R20, R22]

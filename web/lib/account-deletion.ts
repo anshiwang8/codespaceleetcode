@@ -9,6 +9,7 @@ export const DELETED_DATA = [
   "Your link to your GitHub account, and the GitHub access token stored for it",
   "Every submission, your progress on every puzzle, and the solutions you unlocked",
   "Revealed hints, points, challenge completions, streaks and achievements",
+  "Your Learn progress",
   "Your leaderboard entry and public name",
   "Your profile details, links, picture, theme preference and contact email",
 ] as const;

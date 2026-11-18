@@ -4,13 +4,14 @@ Operational rules for working in this repo. Read `spec.md` before any non-trivia
 
 ## Project
 
-The site is named **codebases**. LeetCode-style puzzles set inside real open-source repos pinned to a commit. v1 has four puzzle types: Find, Trace, Architecture, and Design (a system-design interview question answered from a real implementation, spec section 2). Users navigate code in a browser IDE and submit a precise answer, which is graded server-side against a canonical answer key.
+The site is named **codebases**. LeetCode-style puzzles set inside real open-source repos pinned to a commit. v1 has four puzzle types: Find, Trace, Architecture, and Design (a system-design interview question answered from a real implementation, spec section 2), plus Learn, a read-only course of lessons (spec section 10, "Learn"). Users navigate code in a browser IDE and submit a precise answer, which is graded server-side against a canonical answer key.
 
 ## Layout
 
 - `web/` is the Next.js App Router app (TypeScript strict), deployed on Vercel.
 - `ingest/` is the Python pipeline (uv): clone, filter, SCIP index, upload to R2, seed, validate.
-- `content/` holds `repos.yaml`, `schema/`, `puzzles/<repo-slug>/<id>.yaml`, `solutions/<id>.md`, and `blind-attempts.json` (each blind solver's first graded result).
+- `content/` holds `repos.yaml`, `schema/`, `puzzles/<repo-slug>/<id>.yaml`, `solutions/<id>.md`, `blind-attempts.json` (each blind solver's first graded result), and `lessons/` (the Learn path).
+- Learn: lessons are YAML in `content/lessons/` (`course.yaml` is the one source of order; `docs/learn-authoring.md` is the guide). After any change run `cd ingest && uv run python -m ingest learn`, which validates them and rewrites `web/lib/learn/course.generated.ts` (public) and `web/lib/server/learn/keys.generated.ts` (answers, explanations, hints, feedback, rubric; imports `server-only`); `pnpm validate` fails while either is stale, and neither is edited by hand. Only `web/lib/server/learn/grade.ts` reads the keys, through `/api/learn/:slug/{check,hint,reveal,rubric}`; no `"use client"` file may import `course.generated.ts`, `lib/learn/course.ts` or `lib/server/learn` (`web/tests/learn.test.ts`). Pages pass one lesson's public data to the client. Checks are selections (a choice, a line, an ordered list of steps), never typed text, run code or AI grading. `learn_progress` (migration 0010) is written only after a server-graded correct required answer; signed-out progress stays in `cb-learn-progress` and is never copied into an account. Bump a lesson's `revision` when its exercises or keys change. Lesson examples are original; never quote or reveal a puzzle's answer (the validator checks practice puzzles).
 - `supabase/migrations/` holds SQL migrations. Never edit an applied migration; add a new one. Apply a new migration to production (`python -m ingest migrate`, spec section 14 M2) before the code that reads it deploys. Hosted Supabase gives clients every privilege on a new table or sequence, so a migration that adds one must enable RLS, revoke `anon` and `authenticated`, and grant back only what clients may read. `web/tests/rls.test.ts` checks this.
 - `supabase/local/shim.sql` adds what hosted Supabase provides, for the local database only.
 - `web/app/(marketing)/page.tsx` is the static landing page at `/`, and must render without the database. `web/app/(app)/` holds every page under the site header, including the puzzle list at `/puzzles`.
@@ -105,6 +106,7 @@ uv run python -m ingest snapshot <slug>   # fetch, filter, index, write to inges
 uv run python -m ingest snapshot-all [--force]   # every repo in repos.yaml. --force after any pipeline change, since finished snapshots are skipped
 uv run python -m ingest seed [--force]    # validate, then load snapshots and puzzles into Postgres
 uv run python -m ingest blind-export --out <file> [--repo <slug>]   # puzzles with only what a solver may see
+uv run python -m ingest learn                  # validate content/lessons/ and regenerate the Learn course and keys
 uv run python -m ingest blind-check <answers.json> --solver <name> [--write]   # grade a blind solve; prints pass or fail, never the key. One graded attempt per solver per puzzle version
 uv run python -m pytest         # always `python -m`: Windows Application Control can block generated .exe launchers
 uv run ruff check .
