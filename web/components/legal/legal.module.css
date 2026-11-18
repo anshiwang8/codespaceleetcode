@@ -113,7 +113,7 @@
 .contents {
   margin: 20px 0 8px;
   padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--line);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--surface-sunken);
 }
@@ -149,7 +149,7 @@
 /* Wide tables scroll inside their box, so the page itself never scrolls sideways on a phone. */
 .tableWrap {
   overflow-x: auto;
-  border: 1px solid var(--line);
+  border: 1px solid var(--border);
   border-radius: 6px;
 }
 
@@ -174,7 +174,7 @@
 
 .table tr + tr td,
 .table thead + tbody tr:first-child td {
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--border);
 }
 
 .table td:first-child {
@@ -204,7 +204,7 @@
   }
 
   .stacking tr + tr {
-    border-top: 1px solid var(--line);
+    border-top: 1px solid var(--border);
   }
 
   .table.stacking tr + tr td,

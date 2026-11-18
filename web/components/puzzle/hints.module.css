@@ -65,7 +65,7 @@
   display: grid;
   gap: 2px;
   padding: 6px 8px 7px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--border);
   border-left: 2px solid var(--accent);
   border-radius: 0 var(--radius) var(--radius) 0;
   background: var(--surface-sunken);
@@ -136,7 +136,7 @@ a.featuredChip {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
   color: var(--accent-text);
 }
 

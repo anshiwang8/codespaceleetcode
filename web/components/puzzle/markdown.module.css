@@ -35,7 +35,7 @@
 
 .markdown h2 {
   padding-bottom: 4px;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--border);
   font-size: 14px;
 }
 
@@ -100,7 +100,7 @@
 
 .markdown hr {
   border: 0;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--border);
 }
 
 .markdown blockquote {
@@ -117,7 +117,7 @@
 
 .markdown code {
   padding: 1px 4px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--border);
   border-radius: 4px;
   background: var(--panel-raised);
   font-family: var(--font-mono);
@@ -128,7 +128,7 @@
 .markdown pre {
   padding: 8px 10px;
   overflow-x: auto;
-  border: 1px solid var(--line);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--panel-raised);
   line-height: 1.45;
@@ -145,9 +145,10 @@
 
 /* Tables scroll sideways in their own box. */
 .tableScroll {
+  composes: fade-edges-x from global;
   max-width: 100%;
   overflow-x: auto;
-  border: 1px solid var(--line);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
 }
 
@@ -160,7 +161,7 @@
 .markdown th,
 .markdown td {
   padding: 5px 8px;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--border);
   text-align: left;
   vertical-align: top;
   overflow-wrap: normal;
@@ -168,7 +169,7 @@
 
 .markdown th + th,
 .markdown td + td {
-  border-left: 1px solid var(--line);
+  border-left: 1px solid var(--border);
 }
 
 .markdown th {
@@ -201,7 +202,7 @@
   max-width: 100%;
   padding: 10px;
   overflow-x: auto;
-  border: 1px solid var(--line);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--panel);
   text-align: center;
@@ -218,7 +219,7 @@
   right: 6px;
   z-index: 1;
   padding: 2px 8px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--panel);
   color: var(--accent-text);
@@ -239,13 +240,14 @@
 .diagramDialog {
   width: min(1100px, calc(100vw - 32px));
   max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
   margin: auto;
   padding: 12px 16px 16px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background: var(--panel);
+  background: var(--surface-2);
   color: var(--text);
-  box-shadow: 0 20px 50px var(--shadow);
+  box-shadow: var(--shadow-float);
 }
 
 .diagramDialog::backdrop {
@@ -261,6 +263,7 @@
 .diagramDialogBody {
   overflow: auto;
   max-height: calc(100vh - 110px);
+  max-height: calc(100dvh - 110px);
   text-align: center;
 }
 
@@ -269,6 +272,7 @@
   max-width: 100%;
   height: auto;
   max-height: calc(100vh - 120px);
+  max-height: calc(100dvh - 120px);
 }
 
 .diagramFallback {

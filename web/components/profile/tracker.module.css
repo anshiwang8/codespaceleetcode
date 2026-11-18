@@ -31,8 +31,8 @@
 .stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
   font-variant-numeric: tabular-nums;
 }
 
@@ -43,7 +43,7 @@
 }
 
 .stats > div + div {
-  border-left: 1px solid var(--line);
+  border-left: 1px solid var(--border);
 }
 
 .stats dt {
@@ -84,6 +84,7 @@
 
 /* Only the calendar scrolls sideways on a narrow screen; it opens scrolled to the newest dates. */
 .scroll {
+  composes: fade-edges-x from global;
   overflow-x: auto;
   padding-bottom: var(--space-1);
   transition: opacity var(--motion-control) var(--motion-feedback);
@@ -277,7 +278,7 @@
 .table th,
 .table td {
   padding: 4px 8px 4px 0;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--border);
   text-align: left;
 }
 
@@ -308,7 +309,7 @@
   }
 
   .stats > div:nth-child(n + 3) {
-    border-top: 1px solid var(--line);
+    border-top: 1px solid var(--border);
   }
 }
 

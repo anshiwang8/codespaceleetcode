@@ -23,7 +23,7 @@
 .filters {
   display: inline-flex;
   padding: 3px;
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius-lg);
   background: var(--panel);
 }
@@ -82,13 +82,14 @@
   max-height: 460px;
   padding: 3px;
   overflow-y: auto;
-  border: 1px solid var(--line);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background: var(--surface-sunken);
 }
 
 .dialogPicker .list {
   max-height: min(52vh, 420px);
+  max-height: min(52dvh, 420px);
 }
 
 .option {
@@ -136,7 +137,7 @@
   gap: 3px;
   width: 34px;
   height: 22px;
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
 }
 
@@ -196,7 +197,7 @@
 /* The preview draws with the theme's own tokens, set on this element. */
 .preview {
   overflow: hidden;
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius-lg);
   background: var(--bg);
   color: var(--text);
@@ -207,7 +208,7 @@
   align-items: center;
   gap: var(--space-3);
   padding: 6px var(--space-3);
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--border);
   background: var(--panel);
   color: var(--text-muted);
   font-size: var(--text-xs);
@@ -248,7 +249,7 @@
 .previewCode {
   margin: 0;
   padding: 6px 8px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--editor-bg);
   color: var(--text);
@@ -304,7 +305,7 @@
 
 .previewName {
   padding: 6px var(--space-3);
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--border);
   background: var(--panel-raised);
   color: var(--text-muted);
   font-size: var(--text-xs);
@@ -322,6 +323,7 @@
   /* On a phone the dialog keeps Apply and Cancel in reach: above the preview, under a shorter list. */
   .dialogPicker .list {
     max-height: min(36vh, 320px);
+    max-height: min(36dvh, 320px);
   }
 
   .dialogPicker .actions {

@@ -22,10 +22,10 @@
   align-items: start;
   gap: 8px;
   padding: 10px 6px 10px 12px;
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius-lg);
-  background: var(--panel);
-  box-shadow: 0 6px 20px var(--shadow), var(--shadow-card);
+  background: var(--surface-2);
+  box-shadow: var(--shadow-float);
   color: var(--text);
   font-size: 13px;
   line-height: 1.45;

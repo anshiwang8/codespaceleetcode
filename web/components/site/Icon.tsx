@@ -1,5 +1,6 @@
 /**
- * The site's one icon set. Every icon is drawn on the same 16-unit grid with the same 1.5 stroke,
+ * The site's one icon set. Every icon is drawn on the same 16-unit grid with a 1.5 stroke (CSS
+ * raises it to 1.75 beside small or bold text: `.icon` in app/globals.css),
  * round caps and joins, and sized in em, so it matches the text beside it. Icons are decoration:
  * the text or an aria-label always says the same thing, so each one is hidden from assistive
  * technology. Use these instead of text glyphs such as ✓ or ▲, which every font draws differently.

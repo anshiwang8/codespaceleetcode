@@ -5,6 +5,7 @@ import { browseHref, DEFAULT_GROUPING, nextSort, type BrowseState, type SortColu
 import { DIFFICULTY_LABELS, languageLabel, STATUS_LABELS, TYPE_LABELS } from "@/lib/client/labels";
 import { topicLabel } from "@/lib/topics";
 import { Icon, type IconName } from "@/components/site/Icon";
+import { SwapIcon } from "@/components/site/SwapIcon";
 import { IntentLink } from "@/components/site/IntentLink";
 
 /** A column a group heading already states, so each row doesn't repeat it. */
@@ -41,7 +42,7 @@ function SortHeader({ state, column, label }: { state: BrowseState; column: Sort
       <Link href={browseHref({ ...state, sort: nextSort(state.sort, column) })} data-testid={`sort-${column}`}>
         {label}
         <span aria-hidden="true" className={styles.sortMark}>
-          {active ? <Icon name={active.descending ? "sort-down" : "sort-up"} /> : null}
+          {active ? <SwapIcon name={active.descending ? "sort-down" : "sort-up"} /> : null}
         </span>
       </Link>
     </th>

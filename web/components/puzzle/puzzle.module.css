@@ -80,7 +80,7 @@
   flex: none;
   gap: 2px;
   padding: 0 8px;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--border);
   background: var(--panel);
 }
 
@@ -192,7 +192,7 @@
   gap: 8px;
   margin-top: 24px;
   padding: 20px 14px;
-  border: 1px dashed var(--line-strong);
+  border: 1px dashed var(--border-strong);
   border-radius: var(--radius);
   color: var(--text-muted);
   text-align: center;
@@ -222,7 +222,7 @@
 .sidebarTabs {
   display: flex;
   flex: none;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--border);
 }
 
 .sidebarTab,
@@ -284,7 +284,7 @@
   display: block;
   width: 100%;
   padding: 2px 6px;
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius);
   background: var(--editor-bg);
   font-size: 12px;
@@ -348,7 +348,7 @@
   width: 18px;
   height: 18px;
   margin-right: 4px;
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--border-strong);
   border-radius: 3px;
   background: var(--panel-raised);
   color: var(--text);
@@ -375,7 +375,7 @@
   flex: 2 1 0;
   flex-direction: column;
   min-height: 0;
-  border-top: 1px solid var(--line-strong);
+  border-top: 1px solid var(--border-strong);
 }
 
 .outlineHeading {
@@ -486,7 +486,7 @@
 .tabsEmpty {
   flex: none;
   height: 27px;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--border);
   background: var(--panel);
 }
 
@@ -495,7 +495,7 @@
   flex: none;
   height: 27px;
   overflow-x: auto;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--border);
   background: var(--panel);
   scrollbar-width: thin;
 }
@@ -505,7 +505,7 @@
   display: flex;
   flex: none;
   align-items: center;
-  border-right: 1px solid var(--line);
+  border-right: 1px solid var(--border);
 }
 
 .tabActive {
@@ -553,7 +553,7 @@
   min-height: 22px;
   padding: 2px 8px;
   overflow-x: auto;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--border);
   font-size: 11px;
   white-space: nowrap;
   scrollbar-width: none;
@@ -610,7 +610,7 @@
 .viewerNotice {
   flex: none;
   padding: 2px 10px;
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid var(--border);
   color: var(--text-muted);
   font-size: 11px;
 }
@@ -642,7 +642,7 @@
 .actionBar {
   flex: none;
   padding: 4px 8px;
-  border-top: 1px solid var(--line-strong);
+  border-top: 1px solid var(--border-strong);
   background: var(--panel);
 }
 
@@ -708,7 +708,7 @@
 
 .nothingYet {
   padding: 10px;
-  border: 1px dashed var(--line-strong);
+  border: 1px dashed var(--border-strong);
   border-radius: var(--radius);
   color: var(--text-faint);
   text-align: center;
@@ -751,7 +751,7 @@
   grid-template-columns: 16px minmax(0, 1fr);
   gap: 2px 4px;
   padding: 4px;
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius);
   background: var(--panel-raised);
   cursor: grab;
@@ -787,13 +787,13 @@
   align-items: flex-start;
   gap: 8px;
   padding: 5px 6px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   cursor: pointer;
 }
 
 .choice:hover {
-  border-color: var(--line-strong);
+  border-color: var(--border-strong);
 }
 
 .choice:has(input:checked) {
@@ -900,7 +900,7 @@
   align-items: center;
   gap: 2px 14px;
   padding: 2px 10px;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--border);
   background: var(--panel-raised);
   color: var(--text-muted);
   font-size: 11px;
@@ -929,7 +929,7 @@
   .narrowNote {
     display: block;
     padding: 6px 12px;
-    border-bottom: 1px solid var(--line);
+    border-bottom: 1px solid var(--border);
     color: var(--text-muted);
     font-size: 12px;
   }
@@ -952,10 +952,13 @@
 
   .editorColumn {
     height: 70vh;
+    /* The small viewport, which doesn't change as a phone's toolbars show and hide, so the
+       editor isn't resized while someone scrolls. */
+    height: 70svh;
   }
 
   .tray {
-    border-top: 1px solid var(--line-strong);
+    border-top: 1px solid var(--border-strong);
   }
 
   /* Attribution stays on screen however far the stacked page scrolls. */

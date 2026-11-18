@@ -30,7 +30,7 @@ The site is named **codebases**. LeetCode-style puzzles set inside real open-sou
 - `web/components/site/Icon.tsx` is the one icon set (16-unit grid, 1.5 stroke, em-sized). Use it rather than text glyphs like ✓, ▲ or ⚠. Labels are sentence case, never all caps, and monospace is only for code, paths, IDs and SHAs.
 - `web/components/challenges/LocalRotation.tsx` is the one place a time is shown in the reader's own zone, next to the UTC time; everything else is UTC.
 - `web/public/landing/workspace-{light,dark}.png` are real captures of the workspace on `hono-trace-002`, shown on the landing page. Recapture both with `web/scripts/capture-landing.mjs` after a visible workspace change (spec section 10), and never show more of an answer than the prompt gives.
-- `web/app/globals.css` holds the design tokens and shared controls. Use them instead of new hard-coded colors or sizes. The puzzle workspace keeps its denser sizing in `components/puzzle/puzzle.module.css`; check its height and nested scrolling after changing anything shared.
+- `web/app/globals.css` holds the design tokens and shared controls. Use them instead of new hard-coded colors or sizes. Borders use `--border-subtle`/`--border`/`--border-strong` (text at low alpha), never `--line`; raised surfaces use `--surface-1`/`--surface-2`, which lighten in dark themes; nested rounded boxes follow the concentric rule there. A tint behind code blends with `--blend-tint` (screen light, multiply dark) so syntax colors keep 4.5:1, which `web/tests/blend.test.ts` checks. An icon that changes in place uses `SwapIcon.tsx`; a sideways scroller outside the workspace composes `fade-edges-x`. The puzzle workspace keeps its denser sizing in `components/puzzle/puzzle.module.css`; check its height and nested scrolling after changing anything shared.
 - `web/lib/format.ts` formats dates and numbers, always with `en-US`, and dates in UTC, the zone the profile groups activity by.
 - `web/lib/api-types.ts` holds the API response shapes the routes and UI share.
 - Caching is listed in `docs/performance.md`; keep it current. Anything personal is `jsonResponse` (`no-store`). `publicJsonResponse` in `web/lib/server/http.ts` is only for data that's the same for everyone and doesn't depend on the session. `web/lib/server/memo-cache.ts` holds public data in instance memory, has no key, and must never hold anything user-specific; the puzzle catalog uses it (`PUZZLE_CATALOG_TTL_MS`). Don't cache the leaderboard, challenges or anything under `/api/me`. In the browser, `web/lib/client/me-loader.ts` orders `/api/me` answers; go through `useAuth()` (`refresh`, `updateAccount`) rather than setting who's signed in directly.
@@ -97,6 +97,7 @@ pnpm --filter web build
 pnpm visual:review       # isolated headless screenshot gallery + motion checks; see VISUAL_REVIEW.md
 pnpm e2e                 # Playwright. Starts its own database and server, and can run beside pnpm dev
 pnpm validate            # every check in spec section 6
+pnpm smoke               # next build + next start, scans the browser bundle for secrets (scripts/scan-bundle.mjs), then web/smoke/*.spec.ts
 ```
 
 From `ingest/`:

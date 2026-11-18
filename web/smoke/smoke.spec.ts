@@ -74,6 +74,12 @@ test("the dev login and its other routes are 404", async ({ request }) => {
   expect(me).toMatchObject({ devAuth: false, user: null });
 });
 
+test("there is no admin area to find", async ({ request }) => {
+  for (const path of ["/admin", "/api/admin", "/admin/users", "/api/admin/users"]) {
+    expect((await request.get(path)).status(), path).toBe(404);
+  }
+});
+
 test("robots.txt and the sitemap use the site's own origin", async ({ request, baseURL }) => {
   expect(await (await request.get("/robots.txt")).text()).toContain(`Sitemap: ${baseURL}/sitemap.xml`);
   expect(await (await request.get("/sitemap.xml")).text()).toContain(`<loc>${baseURL}/puzzles/e2e-find-symbol</loc>`);

@@ -79,6 +79,41 @@
   --scrollbar: rgb(17 24 39 / 8%);
   --shadow-card: 0 1px 2px var(--shadow-soft);
 
+  /*
+   * Borders: the text color at low alpha, so a border reads the same on the page, a card, a tint
+   * or a picture, in every theme. Use these for borders; --line and --line-strong stay for fills
+   * (tracks, dividers drawn as backgrounds) and for Monaco.
+   */
+  --border-subtle: color-mix(in oklch, var(--text) 8%, transparent);
+  --border: color-mix(in oklch, var(--text) 13%, transparent);
+  --border-strong: color-mix(in oklch, var(--text) 22%, transparent);
+
+  /*
+   * Elevation. Light themes raise a surface with a shadow. Dark themes raise it by making it
+   * lighter (html[data-scheme="dark"] below), because a shadow barely shows on a dark page.
+   * --surface-1 is cards; --surface-2 is what floats: menus, toasts and dialogs.
+   */
+  --surface-1: var(--panel);
+  --surface-2: var(--panel);
+  --edge-highlight: 0 0 #0000;
+  --shadow-float: 0 12px 32px var(--shadow);
+
+  /*
+   * Blending a tint behind code. Syntax colors sit right at 4.5:1 on the editor, so a tint that
+   * moves the background toward the text breaks them (a plain alpha tint did, in most themes).
+   * The tint is blended in the direction away from the text instead: screen (lighter) under dark
+   * text, multiply (darker) under light text. tests/blend.test.ts checks every theme. The 3px
+   * accent bar or border is what marks the line; the tint only supports it.
+   */
+  --blend-tint: screen;
+
+  /*
+   * Gradients, interpolated in OKLCH, which stays vivid through the middle where sRGB turns gray.
+   * Built from tokens, so every theme has them. Decorative only: never behind text.
+   */
+  --gradient-accent: linear-gradient(in oklch 90deg, var(--accent), var(--accent-text));
+  --gradient-wash: radial-gradient(in oklch 70% 60% at 50% 0%, var(--accent-softer), transparent);
+
   /* Type */
   --font-ui: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
@@ -86,8 +121,9 @@
   --text-sm: 14px;
   --text-md: 16px;
   --text-lg: 18px;
-  --text-xl: 22px;
-  --text-2xl: 30px;
+  /* The two largest sizes scale with the viewport, from a phone (375px) to a laptop (about 900px). */
+  --text-xl: clamp(19px, 16.9px + 0.56vw, 22px);
+  --text-2xl: clamp(24px, 19.7px + 1.15vw, 30px);
 
   /* Spacing */
   --space-1: 4px;
@@ -104,6 +140,13 @@
   --radius: 6px;
   --radius-lg: 10px;
   --radius-pill: 999px;
+  /*
+   * Concentric corners: a rounded box inside a padded, rounded one gets the outer radius minus the
+   * gap between their edges (padding plus border), never under 2px:
+   *   border-radius: max(2px, calc(var(--radius-lg) - <padding> - <border>));
+   * When the gap is wider than the outer radius (a card's 24px padding), the inner box keeps its
+   * own radius: the curves no longer read as nested.
+   */
   --control-height: 38px;
   --control-height-sm: 30px;
   --page-width: 1120px;
@@ -118,6 +161,19 @@
   :root {
     --page-gutter: 16px;
   }
+}
+
+/*
+ * Dark depth: each level is lighter, between --panel and --panel-raised, so text keeps the
+ * contrast the theme tests check on both. A 1px top highlight catches the light like an edge.
+ */
+html[data-scheme="dark"] {
+  --surface-1: color-mix(in oklch, var(--panel) 45%, var(--panel-raised));
+  --surface-2: var(--panel-raised);
+  --edge-highlight: inset 0 1px 0 color-mix(in oklch, var(--text) 7%, transparent);
+  --shadow-card: var(--edge-highlight);
+  --shadow-float: var(--edge-highlight), 0 16px 40px var(--shadow);
+  --blend-tint: multiply;
 }
 
 *,
@@ -194,6 +250,65 @@ time,
 .icon {
   flex: none;
   vertical-align: -0.125em;
+  /*
+   * Matched weight: the stroke follows the text beside it. Strokes scale with the em, so small
+   * text would get hairlines and bold text would look heavier than its icon; both step up.
+   * The SVG's own stroke-width="1.5" is the fallback when CSS hasn't loaded.
+   */
+  stroke-width: var(--icon-stroke, 1.5);
+}
+
+small,
+.badge,
+.chip,
+.btn-small,
+.field-label {
+  --icon-stroke: 1.75;
+}
+
+strong,
+b,
+th,
+h1,
+h2,
+h3,
+.page-title,
+.section-title,
+.btn-primary,
+.btn-danger {
+  --icon-stroke: 1.75;
+}
+
+/*
+ * Swapping one icon for another in place (components/site/SwapIcon.tsx): the old one blurs and
+ * shrinks out while the new one sharpens in, in the same box, so nothing around it moves. Finite,
+ * and instant under reduced motion (--motion-control is 0ms there).
+ */
+.icon-swap {
+  display: inline-grid;
+  flex: none;
+  vertical-align: -0.125em;
+}
+
+.icon-swap > .icon {
+  grid-area: 1 / 1;
+  vertical-align: 0;
+}
+
+.icon-swap-in {
+  animation: icon-swap-in var(--motion-control) var(--motion-ease) both;
+}
+
+.icon-swap-out {
+  animation: icon-swap-out var(--motion-control) var(--motion-ease) both;
+}
+
+@keyframes icon-swap-in {
+  from { opacity: 0; filter: blur(2px); transform: scale(0.6); }
+}
+
+@keyframes icon-swap-out {
+  to { opacity: 0; filter: blur(2px); transform: scale(0.6); }
 }
 
 ul,
@@ -253,9 +368,9 @@ input {
 .card {
   min-width: 0;
   padding: var(--space-5);
-  border: 1px solid var(--line);
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  background: var(--panel);
+  background: var(--surface-1);
   box-shadow: var(--shadow-card);
 }
 
@@ -268,7 +383,7 @@ input {
   gap: var(--space-2);
   min-height: var(--control-height);
   padding: 0 var(--space-4);
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius);
   background: var(--panel);
   color: var(--text);
@@ -295,7 +410,7 @@ a.btn:hover {
 
 .btn:disabled,
 .btn[aria-disabled="true"] {
-  border-color: var(--line);
+  border-color: var(--border);
   background: var(--panel-raised);
   color: var(--text-faint);
   cursor: not-allowed;
@@ -368,7 +483,7 @@ a.btn:hover {
 .select {
   min-height: var(--control-height);
   padding: 0 32px 0 var(--space-3);
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius);
   /* The chevron is two gradient triangles in the theme's muted text color, so it follows the theme. */
   background-color: var(--input-bg);
@@ -395,7 +510,7 @@ a.btn:hover {
   width: 100%;
   min-height: var(--control-height);
   padding: 7px var(--space-3);
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius);
   background: var(--input-bg);
   color: var(--text);
@@ -431,13 +546,15 @@ textarea.input {
 dialog {
   max-width: min(960px, calc(100vw - 2 * var(--page-gutter)));
   max-height: calc(100vh - 32px);
+  /* The dynamic viewport: on a phone, the space left by the browser's toolbars right now. */
+  max-height: calc(100dvh - 32px);
   margin: auto;
   padding: var(--space-5);
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--border-strong);
   border-radius: var(--radius-lg);
-  background: var(--panel);
+  background: var(--surface-2);
   color: var(--text);
-  box-shadow: 0 12px 40px var(--shadow);
+  box-shadow: var(--shadow-float);
 }
 
 dialog::backdrop {
@@ -482,7 +599,7 @@ dialog::backdrop {
 .chip {
   display: inline-block;
   padding: 1px 8px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--border);
   border-radius: var(--radius-pill);
   background: var(--panel);
   color: var(--text-muted);
@@ -492,7 +609,7 @@ dialog::backdrop {
 }
 
 a.chip:hover {
-  border-color: var(--line-strong);
+  border-color: var(--border-strong);
   color: var(--text);
   text-decoration: none;
 }
@@ -572,11 +689,47 @@ a.chip:hover {
   background: var(--ok);
 }
 
+/*
+ * Masked edges for sideways scrollers: a side fades out only while there's more content past it,
+ * so a row that fits shows no fade, and a hidden scrollbar still says "there's more". Driven by
+ * the element's own scroll position (a scroll timeline, not time), so nothing moves on its own.
+ * Browsers without scroll timelines show no fade. Use with `composes: fade-edges-x from global`.
+ * Not for the puzzle workspace's tabs or trail, or anything with a border: the mask fades both.
+ */
+@property --fade-start {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --fade-end {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@keyframes fade-edges-x {
+  0% { --fade-start: 0px; --fade-end: 24px; }
+  4% { --fade-start: 24px; }
+  96% { --fade-end: 24px; }
+  100% { --fade-start: 24px; --fade-end: 0px; }
+}
+
+@supports (animation-timeline: scroll()) {
+  .fade-edges-x {
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 var(--fade-start), #000 calc(100% - var(--fade-end)), transparent);
+    mask-image: linear-gradient(to right, transparent, #000 var(--fade-start), #000 calc(100% - var(--fade-end)), transparent);
+    animation: fade-edges-x linear both;
+    animation-duration: auto;
+    animation-timeline: scroll(self inline);
+  }
+}
+
 /* Notices */
 
 .notice {
   padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--line);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--panel);
   color: var(--text-muted);
@@ -633,7 +786,7 @@ a.chip:hover {
   justify-items: start;
   gap: var(--space-2);
   padding: var(--space-5);
-  border: 1px dashed var(--line-strong);
+  border: 1px dashed var(--border-strong);
   border-radius: var(--radius-lg);
   background: var(--surface-sunken);
   color: var(--text-muted);
@@ -747,7 +900,7 @@ a.chip:hover {
   bottom: 0;
   left: 0;
   height: 2px;
-  background: var(--accent);
+  background: var(--gradient-accent);
   animation: motion-fade var(--motion-panel) var(--motion-ease);
 }
 

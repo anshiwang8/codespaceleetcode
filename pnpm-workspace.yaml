@@ -9,3 +9,10 @@ allowBuilds:
   '@embedded-postgres/windows-x64': false
   sharp: false
   unrs-resolver: false
+
+# Patched versions of transitive dependencies with security advisories (pnpm audit --prod).
+# Remove an entry once every parent depends on a patched version itself.
+overrides:
+  'dompurify@<3.4.17': '^3.4.17'
+  'katex@<0.18.2': '~0.18.2'
+  'zod@<4.6.6': '^4.6.6'
