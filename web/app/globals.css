@@ -891,7 +891,7 @@ a.chip:hover {
     border-color var(--motion-control) var(--motion-feedback),
     color var(--motion-control) var(--motion-feedback),
     box-shadow var(--motion-control) var(--motion-feedback),
-    transform var(--motion-press) var(--motion-feedback);
+    transform var(--press-time) var(--press-ease);
 }
 
 /* Inset feedback doesn't change a target's position or its dimensions. */
@@ -941,8 +941,8 @@ a.chip:hover {
 
 /*
  * Craft foundation (docs/superpowers/specs/2026-11-17-learn-challenges-brand-design.md).
- * The mascot and the illustration plate keep fixed colors on every theme; they are the only
- * colors outside the theme tokens. OKLCH values live here, never in theme tokens: the pre-paint
+ * The mascot keeps fixed colors on every theme (--mascot-*), and --plate is the cream of the
+ * brand images (icons, the preview image); they are the only colors outside the theme tokens. OKLCH values live here, never in theme tokens: the pre-paint
  * script accepts only hex and rgb().
  */
 :root {
@@ -952,8 +952,20 @@ a.chip:hover {
   --measure-prose: 68ch;
   --measure-lede: 60ch;
   --hit-min: 44px;
-  --motion-press: 160ms;
-  --press-scale: 0.97;
+  /*
+   * Press and release. Pressing is quick; letting go springs once past full size and settles.
+   * Both are one transition on transform, so a press released early, or dragged off the control,
+   * returns from wherever it got to, with an overshoot in proportion to how far it was pressed.
+   */
+  --press-scale: 0.96;
+  --press-scale-soft: 0.985;
+  --press-scale-icon: 0.92;
+  --press-in: 90ms;
+  --press-in-ease: cubic-bezier(0.2, 0, 0.4, 1);
+  --press-out: 420ms;
+  --spring-release: var(--motion-feedback);
+  --press-time: var(--press-out);
+  --press-ease: var(--spring-release);
 
   --plate: oklch(0.977 0.008 70); /* #fcf7f2 */
   --mascot-body: oklch(0.733 0.136 278); /* #959ffd */
@@ -980,10 +992,36 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-/* Press: the control gives under the finger, and a reversed press retargets mid-way. */
+/* Without linear() the release is the plain ease, with no overshoot. */
+@supports (transition-timing-function: linear(0, 1)) {
+  :root {
+    --spring-release: linear(0, 0.62 8%, 1.18 17%, 1.56 26%, 1.72 34%, 1.66 43%, 1.38 55%, 1.1 68%, 0.96 80%, 0.99 90%, 1);
+  }
+}
+
+/* Press: the control gives under the finger; the base rule's timing springs it back. */
 .btn:active:not(:disabled):not([aria-disabled="true"]) {
+  --press-time: var(--press-in);
+  --press-ease: var(--press-in-ease);
   transform: scale(var(--press-scale));
 }
+
+/*
+ * The same press for a pressable surface that isn't a .btn: a row, a card link, an index item
+ * (.press-soft) or a small icon control (.press-icon). A module that sets its own transition
+ * list adds `transform var(--press-time) var(--press-ease)` to it.
+ */
+.press-soft, .press-icon {
+  transition: transform var(--press-time) var(--press-ease);
+}
+
+.press-soft:active, .press-icon:active {
+  --press-time: var(--press-in);
+  --press-ease: var(--press-in-ease);
+}
+
+.press-soft:active { transform: scale(var(--press-scale-soft)); }
+.press-icon:active { transform: scale(var(--press-scale-icon)); }
 
 /*
  * Origin-aware press: components/site/PressOrigin.tsx records where the pointer went down, and
@@ -1045,11 +1083,14 @@ body {
   animation-delay: calc(min(var(--i, 0), 5) * var(--motion-stagger));
 }
 
-/* The fixed surface behind an illustration. */
+/*
+ * The surface behind an illustration. The pictures are cut-outs with no background of their own,
+ * so the plate is the theme's: a raised surface with a little of the accent in it.
+ */
 .plate {
   overflow: hidden;
   border-radius: var(--radius-lg);
-  background: var(--plate);
+  background: color-mix(in oklch, var(--accent) 8%, var(--surface-1));
 }
 
 .plate img {
@@ -1070,6 +1111,8 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .btn:active:not(:disabled):not([aria-disabled="true"]),
+  .press-soft:active,
+  .press-icon:active,
   .btn-forward:hover .icon:last-child {
     transform: none;
   }
@@ -1105,10 +1148,13 @@ body {
 }
 
 /*
- * On a dark page the cream plate is the brightest thing in view: it's dimmed a little and given
- * an edge, so it reads as a lit picture rather than a hole.
+ * On a dark plate the drawings' navy outlines would sink into it. The picture gets the same
+ * light edge as the mascot, following its cut-out shape.
  */
 html[data-scheme="dark"] .plate {
-  box-shadow: 0 0 0 1px var(--border-strong);
-  filter: brightness(0.94);
+  box-shadow: 0 0 0 1px var(--border-subtle);
+}
+
+html[data-scheme="dark"] .plate img {
+  filter: drop-shadow(0 0 1px var(--mascot-edge)) drop-shadow(0 0 1px var(--mascot-edge));
 }

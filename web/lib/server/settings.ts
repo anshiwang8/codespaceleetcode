@@ -21,16 +21,13 @@ import type { CurrentUser } from "@/lib/server/auth";
 import { getPool } from "@/lib/server/db";
 import { emailStatusFrom, type PendingEmailRow, type VerifiedEmailRow } from "@/lib/server/email";
 import { participationFrom } from "@/lib/server/leaderboard";
-import { THEMES } from "@/lib/themes/catalog.generated";
-import { isRemovedTheme } from "@/lib/themes/removed";
 import { DEFAULT_PREFERENCE, type ThemePreference } from "@/lib/themes/runtime";
+import { isKnownTheme } from "@/lib/themes/tokens";
 
 // Editable profile details, links and appearance. Every function takes the signed-in user's id
 // from the caller (who got it from getCurrentUser) and touches only that user's rows. Writes go to
 // codebases' own tables, never to Better Auth's: a GitHub sign-in can't overwrite them, and editing
 // them can't change the login, provider or account ownership.
-
-const THEME_IDS = new Set(THEMES.map((theme) => theme.id));
 
 /** Field errors keyed by field name, for the form to show next to each field. */
 export type FieldErrors = Record<string, string>;
@@ -185,48 +182,48 @@ export async function saveLinks(userId: string, links: ProfileLinks): Promise<vo
 interface AppearanceRow {
   theme_mode: string | null;
   theme_id: string | null;
-  favorite_themes: string[] | null;
 }
 
 function appearanceFrom(row: AppearanceRow | undefined): AppearanceSettings {
   let preference: ThemePreference | null = null;
   if (row?.theme_mode === "system") preference = { mode: "system" };
-  else if (row?.theme_mode === "theme" && row.theme_id && THEME_IDS.has(row.theme_id)) {
-    preference = { mode: "theme", id: row.theme_id };
-  } else if (row?.theme_mode === "theme" && row.theme_id && isRemovedTheme(row.theme_id)) {
-    // A saved theme that has since been removed reads as the default. The row keeps its ID, so
-    // the choice returns if the theme does.
-    preference = DEFAULT_PREFERENCE;
+  else if (row?.theme_mode === "theme" && row.theme_id) {
+    // A saved theme that isn't in the catalog (one from the earlier, larger catalog) reads as the
+    // default. The row keeps its ID; nothing rewrites it until the user chooses again.
+    preference = isKnownTheme(row.theme_id) ? { mode: "theme", id: row.theme_id } : DEFAULT_PREFERENCE;
   }
-  return { preference, favorites: (row?.favorite_themes ?? []).filter((id) => THEME_IDS.has(id)) };
+  // Favorites left the picker. The column stays, unread; the field stays in the response, empty,
+  // for clients that still expect it.
+  return { preference, favorites: [] };
 }
 
 export async function getAppearance(userId: string): Promise<AppearanceSettings> {
   const { rows } = await getPool().query<AppearanceRow>(
-    "select theme_mode, theme_id, favorite_themes from user_preferences where user_id = $1",
+    "select theme_mode, theme_id from user_preferences where user_id = $1",
     [userId],
   );
   return appearanceFrom(rows[0]);
 }
 
-/** Saves the theme and/or favorites. Unknown theme IDs are refused; unknown favorites dropped. */
+/**
+ * Saves the theme. Unknown theme IDs are refused. `favorites` is accepted, so a browser running
+ * an older build doesn't fail, and ignored: the stored list is neither read nor changed.
+ */
 export async function saveAppearance(
   userId: string,
   body: z.infer<typeof preferencesBody>,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
-  if (body.preference?.mode === "theme" && !THEME_IDS.has(body.preference.id)) return { ok: false, error: "Unknown theme" };
-  const favorites = body.favorites ? [...new Set(body.favorites.filter((id) => THEME_IDS.has(id)))] : null;
-  const mode = body.preference?.mode ?? null;
-  const id = body.preference?.mode === "theme" ? body.preference.id : null;
+  if (body.preference === undefined) return { ok: true };
+  if (body.preference.mode === "theme" && !isKnownTheme(body.preference.id)) return { ok: false, error: "Unknown theme" };
+  const id = body.preference.mode === "theme" ? body.preference.id : null;
   await getPool().query(
-    `insert into user_preferences (user_id, theme_mode, theme_id, favorite_themes, updated_at)
-     values ($1, $2, $3, coalesce($4::text[], '{}'), now())
+    `insert into user_preferences (user_id, theme_mode, theme_id, updated_at)
+     values ($1, $2, $3, now())
      on conflict (user_id) do update set
-       theme_mode = case when $5 then excluded.theme_mode else user_preferences.theme_mode end,
-       theme_id = case when $5 then excluded.theme_id else user_preferences.theme_id end,
-       favorite_themes = coalesce($4::text[], user_preferences.favorite_themes),
+       theme_mode = excluded.theme_mode,
+       theme_id = excluded.theme_id,
        updated_at = now()`,
-    [userId, mode, id, favorites, body.preference !== undefined],
+    [userId, body.preference.mode, id],
   );
   return { ok: true };
 }
@@ -241,7 +238,7 @@ export async function getAccountSummary(userId: string): Promise<{
   const { rows } = await getPool().query<
     AppearanceRow & { display_name: string | null; version: string | null; has_email: boolean }
   >(
-    `select p.display_name, a.version, pref.theme_mode, pref.theme_id, pref.favorite_themes,
+    `select p.display_name, a.version, pref.theme_mode, pref.theme_id,
             exists (select 1 from user_emails e where e.user_id = u.id) as has_email
        from (select $1::uuid as id) u
        left join user_profiles p on p.user_id = u.id
@@ -287,7 +284,7 @@ type SettingsRow = ProfileRow &
 export async function getSettingsData(user: CurrentUser, now: Date = new Date()): Promise<SettingsData> {
   const { rows } = await getPool().query<SettingsRow>(
     `select p.display_name, p.pronouns, p.bio, to_char(p.birthday, 'YYYY-MM-DD') as birthday, p.links,
-            pref.theme_mode, pref.theme_id, pref.favorite_themes,
+            pref.theme_mode, pref.theme_id,
             a.version as avatar_version,
             e.email as verified_email, e.verified_at,
             v.email as pending_email, v.purpose as pending_purpose, v.expires_at as pending_expires_at,

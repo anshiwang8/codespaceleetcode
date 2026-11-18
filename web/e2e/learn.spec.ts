@@ -278,10 +278,24 @@ test.describe("Learn", () => {
         expect(item.only).toBe(true);
       }
     }
-    // The group index is beside the path on a wide screen only.
-    await expect(page.getByTestId("group-index")).toBeHidden();
-    await page.setViewportSize({ width: 1440, height: 900 });
+    // The group index is a row of chips above the path on a phone, and the "How it works" list is gone.
+    await expect(page.getByText("How it works")).toHaveCount(0);
     await expect(visible(page, "group-index").getByRole("link")).toHaveCount(COURSE.groups.length);
+    await expect(page.getByText("Your path")).toBeHidden();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+
+    // On a wide screen it is a card beside the path. Following a link scrolls to that group,
+    // marks it, and leaves its heading in view and focused.
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await expect(page.getByText("Your path")).toBeVisible();
+    const third = COURSE.groups[2]!;
+    await page.getByTestId(`index-${third.id}`).click();
+    await expect(page.getByTestId(`index-${third.id}`)).toHaveAttribute("aria-current", "location");
+    const heading = page.locator(`#group-${third.id}`);
+    await expect(heading).toBeInViewport();
+    await expect(heading).toBeFocused();
+    await expect(page).toHaveURL(new RegExp(`#group-${third.id}$`));
+    await expect(page.getByTestId(`index-${third.id}`)).toHaveAttribute("aria-current", "location");
   });
 
   test("a row opens its lesson, and a correct check shows in the lesson and the catalog without a reload", async ({ page }) => {

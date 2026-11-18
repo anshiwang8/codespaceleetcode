@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import styles from "@/components/learn/learn.module.css";
 import { Icon } from "@/components/site/Icon";
+import { followAnchor } from "@/components/site/SmoothAnchor";
+import { SwapIcon } from "@/components/site/SwapIcon";
 import { statusOf, useLearnProgress } from "@/lib/client/learn-progress";
 
 interface GroupLessons {
@@ -32,22 +34,50 @@ export function GroupProgress({ lessons }: GroupLessons) {
   );
 }
 
-function IndexCount({ lessons }: GroupLessons) {
-  const { ready, done, total } = useGroupCount({ lessons });
+/** One group in the index: its number, title, count and a bar that fills as lessons complete. */
+function IndexItem({ group, current, onFollow }: { group: IndexGroup; current: boolean; onFollow: (event: React.MouseEvent<HTMLAnchorElement>) => void }) {
+  const { ready, done, total } = useGroupCount(group);
+  const complete = ready && done === total;
   return (
-    <span className={styles.indexCount} data-pending={ready ? undefined : true} data-done={(ready && done === total) || undefined}>
+    <a
+      href={`#group-${group.id}`}
+      className={styles.indexLink}
+      aria-current={current ? "location" : undefined}
+      data-testid={`index-${group.id}`}
+      onClick={onFollow}
+    >
+      <span className={styles.indexNumber}>{complete ? <SwapIcon name="check" /> : group.number}</span>
+      <span className={styles.indexTitle}>{group.title}</span>
+      <span className={styles.indexCount} data-pending={ready ? undefined : true} data-done={complete || undefined}>
+        {done} of {total}
+      </span>
+      <span className={styles.indexBar} aria-hidden="true">
+        <span className={styles.indexBarFill} data-done={complete || undefined} style={{ transform: `scaleX(${ready && total > 0 ? done / total : 0})` }} />
+      </span>
+    </a>
+  );
+}
+
+function IndexTotal({ groups }: { groups: IndexGroup[] }) {
+  const { ready, done, total } = useGroupCount({ lessons: groups.flatMap((group) => group.lessons) });
+  return (
+    <span className={styles.indexTotal} data-pending={ready ? undefined : true}>
       {done} of {total}
     </span>
   );
 }
 
 /**
- * The four groups, kept in view beside the path on wide screens, with each one's progress and
- * the one being read marked. The stylesheet hides it below 1100px, where the groups' own headers
- * carry the same counts.
+ * The four groups, kept in view while the path scrolls: a card beside it on wide screens, a row
+ * of chips above it on narrow ones. Each group shows its progress, and one marker slides to the
+ * group being read. Following a link scrolls there; until that scroll ends the marker stays on
+ * the group that was chosen, rather than ticking through the ones passed on the way.
  */
 export function GroupIndex({ groups }: { groups: IndexGroup[] }) {
   const [current, setCurrent] = useState(groups[0]?.id ?? "");
+  const [marker, setMarker] = useState<{ top: number; height: number } | null>(null);
+  const list = useRef<HTMLOListElement>(null);
+  const locked = useRef(false);
 
   useEffect(() => {
     const sections = [...document.querySelectorAll<HTMLElement>("[data-learn-group]")];
@@ -61,6 +91,7 @@ export function GroupIndex({ groups }: { groups: IndexGroup[] }) {
           if (entry.isIntersecting) inBand.add(id);
           else inBand.delete(id);
         }
+        if (locked.current) return;
         const first = sections.find((section) => inBand.has(section.dataset.learnGroup ?? ""));
         if (first?.dataset.learnGroup) setCurrent(first.dataset.learnGroup);
       },
@@ -70,24 +101,55 @@ export function GroupIndex({ groups }: { groups: IndexGroup[] }) {
     return () => observer.disconnect();
   }, []);
 
+  // The marker takes the current link's place, and a chip row keeps the current chip in view.
+  useLayoutEffect(() => {
+    const box = list.current;
+    const link = box?.querySelector<HTMLElement>('[aria-current="location"]');
+    if (!box || !link) return;
+    const place = () => setMarker({ top: link.offsetTop, height: link.offsetHeight });
+    place();
+    if (box.scrollWidth > box.clientWidth) {
+      const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      box.scrollTo({ left: link.offsetLeft - (box.clientWidth - link.offsetWidth) / 2, behavior: reduced ? "auto" : "smooth" });
+    }
+    if (typeof ResizeObserver === "undefined") return;
+    const resize = new ResizeObserver(place);
+    resize.observe(box);
+    return () => resize.disconnect();
+  }, [current]);
+
+  const follow = (event: React.MouseEvent<HTMLAnchorElement>) =>
+    followAnchor(event, {
+      onStart: (id) => {
+        locked.current = true;
+        setCurrent(id.replace(/^group-/, ""));
+      },
+      onEnd: () => {
+        locked.current = false;
+      },
+    });
+
   return (
     <nav className={styles.index} aria-label="Groups" data-testid="group-index">
-      <ol>
-        {groups.map((group) => (
-          <li key={group.id}>
-            <a
-              href={`#group-${group.id}`}
-              className={styles.indexLink}
-              aria-current={current === group.id ? "location" : undefined}
-              data-testid={`index-${group.id}`}
-            >
-              <span className={styles.indexNumber}>{group.number}</span>
-              <span className={styles.indexTitle}>{group.title}</span>
-              <IndexCount lessons={group.lessons} />
-            </a>
-          </li>
-        ))}
-      </ol>
+      <p className={styles.indexHead}>
+        <span className={styles.indexHeadTitle}>Your path</span>
+        <IndexTotal groups={groups} />
+      </p>
+      <div className={styles.indexTrack}>
+        <span
+          className={styles.indexMarker}
+          aria-hidden="true"
+          data-placed={marker ? true : undefined}
+          style={marker ? { transform: `translateY(${marker.top}px) scaleY(${marker.height})` } : undefined}
+        />
+        <ol ref={list} className={styles.indexList}>
+          {groups.map((group) => (
+            <li key={group.id}>
+              <IndexItem group={group} current={current === group.id} onFollow={follow} />
+            </li>
+          ))}
+        </ol>
+      </div>
     </nav>
   );
 }

@@ -1,5 +1,28 @@
 # DEVLOG
 
+## UI phase 2: eight brand themes, springy buttons, the Learn index card, smooth section scrolling
+
+Type: Change
+
+Goal: Keep only themes that fit the mascot and the illustration plate, make every button give under a press and spring back, put the Learn group index to work in the space beside the path, and scroll to a section instead of jumping. Design: `docs/superpowers/specs/2026-11-17-ui-polish-2-design.md`; plan: `docs/superpowers/plans/2026-11-17-ui-polish-2.md`.
+
+What should be done: Cut the catalog to codebases Light, codebases Dark and a few soft color themes; animate and reposition the Learn group index; add a press with give and a bounce on release that shows a canceled half-press; remove "How it works" from `/learn`; scroll smoothly when an index link is followed.
+
+What was done (technical):
+- **Themes.** The catalog is eight: `default-light`, `default-dark`, and six authored in `lib/themes/brand-palettes.ts` from the mascot's colors (`cream`, `periwinkle-mist`, `mint-mist`, `ink`, `dusk`, `pine`), derived by the same `deriveTheme` and held to the same contrast checks, plus a new check that a brand page background stays under 0.08 OKLCH chroma. The 173 Monkeytype-derived presets, `names.ts`, `removed.ts`, `clash.ts`, `scripts/theme-clash.mjs` and `docs/themes/monkeytype-presets.json` are gone. `KNOWN_THEME_IDS`/`isKnownTheme` in `tokens.ts` decide the fallback: a saved ID that isn't known resolves to codebases Light on the server (`appearanceFrom`, which no longer imports the catalog), in the controller and in the pre-paint script, with no catalog load. The stored row keeps the old ID until the user chooses again.
+- **Picker.** A grid of System and the eight themes with the preview, Apply, Cancel, Restore default and arrow keys. Search, the scheme tabs and favorites are removed. `PUT /api/me/preferences` accepts a `favorites` list and ignores it; the response's `favorites` is always empty; `user_preferences.favorite_themes` is left in place, unread. The controller deletes the browser's old `cb-theme-favorites` key when a guest's theme is adopted. The Settings appearance placeholder is resized to the smaller picker.
+- **Buttons.** `--press-scale` 0.96 with a 90ms press (`--press-in`) and a 420ms release on `--spring-release`, a `linear()` curve that passes full size once and settles (the plain ease where `linear()` isn't supported). It is one transition on `transform`, switched by `--press-time`/`--press-ease` under `:active`, so a press released early or dragged off returns from where it got to, with an overshoot in proportion. `.press-soft` (0.985) is on lesson rows, start choices, index links and the lesson's section links; `.press-icon` (0.92) exists for small icon controls. Off under reduced motion. `tests/foundation.test.ts` checks the tokens, that no `.btn` rule uses `animation`, and the single peak.
+- **Learn group index.** `GroupIndex.tsx` is a sticky "Your path" card in a 280px column from 1100px: the course count, each group's count and a progress bar that fills by transition, and one marker that slides to the group being read (placed from the current link's measured offset). Below 1100px it is a sticky row of chips above the path that keeps the current chip in view. A complete group shows a check through `SwapIcon`.
+- **Smooth section scrolling.** `components/site/SmoothAnchor.tsx` (`followAnchor`, `SmoothAnchor`) scrolls to an in-page target, honors `scroll-margin-top`, then updates the address and moves focus to the target; it jumps under reduced motion and leaves modified clicks alone. The address changes after the scroll, because the router's answer to a changed hash stopped the scroll when it came first. The group index locks its marker to the chosen group until the scroll ends. The lesson page's "On this page" links use it too.
+- **"How it works"** is removed from `/learn` with its styles.
+- **Illustration plates follow the theme.** The four Learn illustrations are now cut-outs with an alpha channel (`web/scripts/learn-cutout.mjs`: the background connected to the image's edge is removed, and each pixel along the cut takes its strongest neighbor's color and a proportional alpha, so no pale fringe shows on a dark plate). `.plate` is `--surface-1` with 8% of the accent instead of the fixed cream, and on dark schemes the picture gets the mascot's light edge as a `drop-shadow` in place of the old dimming. No new images were generated. A first attempt that also removed enclosed background-colored patches cut out the mascot's face in two pictures, where the face is filled with the background color, so enclosed patches stay.
+- **Docs.** `CLAUDE.md` (motion rule, themes, Learn index), `spec.md` (themes, preferences route), `docs/themes/README.md`, `VISUAL_REVIEW.md`.
+
+Still open:
+- `/privacy` still says an account stores "the themes you mark as favorites" and lists `cb-theme-favorites`. Existing rows and browsers still hold that data, so the text stays until the owner decides whether to clear `favorite_themes` in a migration and edit the policy.
+- `docs/performance.md`'s JavaScript figure for `/settings` predates the smaller catalog and is not remeasured.
+- The clash contact sheet in `docs/superpowers/specs/assets/` is historical; its script is deleted.
+
 ## Learn path, Challenges layout, mascot logo, button motion and craft details
 
 Type: Change

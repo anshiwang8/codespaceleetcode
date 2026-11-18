@@ -3,7 +3,7 @@ import { getCurrentUser } from "@/lib/server/auth";
 import { errorResponse, isSameOriginRequest, jsonResponse, readJson, route } from "@/lib/server/http";
 import { getAppearance, preferencesBody, saveAppearance } from "@/lib/server/settings";
 
-/** Saves the account's theme and/or favorite themes. */
+/** Saves the account's theme. A `favorites` list from an older build is accepted and ignored. */
 export const PUT = route("me.preferences", async (request) => {
   if (!isSameOriginRequest(request.headers)) return errorResponse(403, "Request refused");
   const user = await getCurrentUser(request.headers);

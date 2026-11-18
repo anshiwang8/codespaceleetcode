@@ -53,31 +53,31 @@ test.describe("themes", () => {
     expect(await bg(page)).toBe("#ffffff");
 
     // Choosing previews without saving; Cancel puts it back.
-    await chooseTheme(page, "dracula", false);
-    await expect.poll(() => bg(page)).toBe("#282a36");
+    await chooseTheme(page, "ink", false);
+    await expect.poll(() => bg(page)).toBe("#161940");
     await page.getByTestId("theme-dialog").getByTestId("theme-cancel").click();
     await expect.poll(() => bg(page)).toBe("#ffffff");
     await page.reload();
     expect(await bg(page)).toBe("#ffffff");
 
     // Escape cancels too.
-    await chooseTheme(page, "nord", false);
+    await chooseTheme(page, "pine", false);
     await page.keyboard.press("Escape");
     await expect.poll(() => bg(page)).toBe("#ffffff");
 
-    await chooseTheme(page, "dracula");
-    await expect.poll(() => bg(page)).toBe("#282a36");
+    await chooseTheme(page, "ink");
+    await expect.poll(() => bg(page)).toBe("#161940");
 
     // With every Next.js script blocked, only the inline pre-paint script can have set the theme.
     await page.route("**/_next/static/**/*.js", (route) => route.abort());
     await page.goto("/puzzles");
-    expect(await page.evaluate(() => document.documentElement.style.getPropertyValue("--bg"))).toBe("#282a36");
+    expect(await page.evaluate(() => document.documentElement.style.getPropertyValue("--bg"))).toBe("#161940");
     expect(await page.evaluate(() => document.documentElement.dataset.scheme)).toBe("dark");
     await page.unrouteAll();
 
     // The landing page, which is static and has no account, uses it too.
     await page.goto("/");
-    expect(await bg(page)).toBe("#282a36");
+    expect(await bg(page)).toBe("#161940");
 
     await openThemes(page);
     await page.getByTestId("theme-dialog").getByTestId("theme-restore").click();
@@ -98,30 +98,60 @@ test.describe("themes", () => {
     expect(await bg(page)).toBe("#0f141b");
   });
 
-  test("search, filters and favorites work from the keyboard", async ({ page }) => {
+  test("the picker is a grid of System and the eight themes, and the arrow keys move the choice", async ({ page }) => {
     await openThemes(page);
     const dialog = page.getByTestId("theme-dialog");
-    await dialog.getByTestId("theme-search").fill("fjord");
-    await expect(dialog.getByTestId("theme-list").locator("label")).toHaveCount(2);
-    await dialog.getByRole("radiogroup", { name: "Show" }).getByText("Dark", { exact: true }).click();
-    await expect(dialog.getByTestId("theme-list").locator("label")).toHaveCount(1);
+    const list = dialog.getByTestId("theme-list");
+    await expect(list.getByRole("radio")).toHaveCount(9);
+    expect(await list.getByRole("radio").evaluateAll((radios) => radios.map((radio) => (radio as HTMLInputElement).value))).toEqual([
+      "system", "default-light", "default-dark", "cream", "periwinkle-mist", "mint-mist", "ink", "dusk", "pine",
+    ]);
+    // Search, the filter tabs and favorites are gone.
+    await expect(dialog.getByTestId("theme-search")).toHaveCount(0);
+    await expect(dialog.getByTestId("theme-favorite")).toHaveCount(0);
+    await expect(dialog.getByRole("radiogroup")).toHaveCount(1);
     // Arrow keys move the choice and preview it.
-    await dialog.getByTestId("theme-search").fill("");
-    await dialog.getByTestId("theme-list").getByRole("radio").first().focus();
+    await list.getByRole("radio", { checked: true }).focus();
+    await expect(list.getByRole("radio", { checked: true })).toHaveValue("default-light");
+    await page.keyboard.press("ArrowRight");
+    await expect(list.getByRole("radio", { checked: true })).toHaveValue("default-dark");
+    await expect.poll(() => bg(page)).toBe("#0f141b");
     await page.keyboard.press("ArrowDown");
-    const checked = await dialog.getByTestId("theme-list").getByRole("radio", { checked: true }).getAttribute("value");
-    expect(checked).not.toBeNull();
-    await dialog.getByTestId("theme-favorite").click();
-    await dialog.getByRole("radiogroup", { name: "Show" }).getByText("Favorites", { exact: true }).click();
-    await expect(dialog.getByTestId(`theme-option-${checked}`)).toBeVisible();
+    await expect(list.getByRole("radio", { checked: true })).toHaveValue("cream");
+    await expect.poll(() => bg(page)).toBe("#fcf7f2");
+    await expect(dialog.getByTestId("theme-preview")).toContainText("Cream");
+    await page.keyboard.press("ArrowLeft");
+    await expect(list.getByRole("radio", { checked: true })).toHaveValue("default-dark");
     await page.keyboard.press("Escape");
+    await expect.poll(() => bg(page)).toBe("#ffffff");
+  });
+
+  test("a saved theme that's no longer in the catalog shows the default, before any app script runs", async ({ page }) => {
+    await page.goto("/puzzles");
+    // What a browser kept from the earlier catalog: the choice, favorites and resolved tokens.
+    await page.evaluate(() => {
+      localStorage.setItem("cb-theme-guest", JSON.stringify({ mode: "theme", id: "dracula" }));
+      localStorage.setItem("cb-theme-favorites", JSON.stringify(["dracula", "nord"]));
+      localStorage.setItem(
+        "cb-theme",
+        JSON.stringify({ v: 1, owner: "guest", preference: { mode: "theme", id: "dracula" }, theme: { scheme: "dark", vars: { bg: "#282a36", text: "#f8f8f2" } } }),
+      );
+    });
+    await page.route("**/_next/static/**/*.js", (route) => route.abort());
+    await page.goto("/puzzles");
+    expect(await page.evaluate(() => document.documentElement.style.getPropertyValue("--bg"))).toBe("");
+    expect(await bg(page)).toBe("#ffffff");
+    await page.unrouteAll();
+    await page.goto("/puzzles");
+    await expect.poll(() => page.evaluate(() => ["cb-theme", "cb-theme-guest", "cb-theme-favorites"].map((key) => localStorage.getItem(key)))).toEqual([null, null, null]);
+    expect(await bg(page)).toBe("#ffffff");
   });
 
   test("a theme belongs to its account: signing out or in as someone else never keeps it", async ({ page }) => {
     const alice = unique("theme-alice");
     await devLogin(page, alice);
     await page.goto("/puzzles");
-    await chooseTheme(page, "dracula");
+    await chooseTheme(page, "ink");
     await signOutFromHeader(page);
     await expect.poll(() => bg(page)).toBe("#ffffff");
 
@@ -133,7 +163,7 @@ test.describe("themes", () => {
     // Alice's choice comes back for Alice, on any browser, from her account.
     await devLogin(page, alice);
     await page.goto("/puzzles");
-    await expect.poll(() => bg(page)).toBe("#282a36");
+    await expect.poll(() => bg(page)).toBe("#161940");
   });
 
   test("a theme change restyles Monaco without remounting it", async ({ page }) => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { memo, useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import styles from "@/components/themes/themes.module.css";
 import {
   cancelPreview,
@@ -9,23 +9,13 @@ import {
   loadCatalog,
   preview,
   subscribe,
-  toggleFavorite,
   type AppearanceState,
 } from "@/lib/themes/controller";
 import { DEFAULT_PREFERENCE, SYSTEM_THEMES, type ThemePreference } from "@/lib/themes/runtime";
 import { DEFAULT_LIGHT_ID, type ThemeDefinition } from "@/lib/themes/tokens";
 import { Icon } from "@/components/site/Icon";
-import { SwapIcon } from "@/components/site/SwapIcon";
 
-type Filter = "all" | "light" | "dark" | "favorites";
-const FILTERS: { value: Filter; label: string }[] = [
-  { value: "all", label: "All" },
-  { value: "light", label: "Light" },
-  { value: "dark", label: "Dark" },
-  { value: "favorites", label: "Favorites" },
-];
-
-const SERVER_STATE: AppearanceState = { committed: DEFAULT_PREFERENCE, favorites: [], previewing: null, scope: "guest" };
+const SERVER_STATE: AppearanceState = { committed: DEFAULT_PREFERENCE, previewing: null, scope: "guest" };
 const keyOf = (preference: ThemePreference) => (preference.mode === "system" ? "system" : preference.id);
 
 interface ThemePickerProps {
@@ -35,7 +25,8 @@ interface ThemePickerProps {
 }
 
 /**
- * Picks a theme. Choosing one previews it on the whole page without saving; Apply saves it (to the
+ * Picks a theme from a grid of swatches: System, then every theme in the catalog. The options are
+ * one group of radios, so the arrow keys move between them. Choosing one previews it on the whole page without saving; Apply saves it (to the
  * account when signed in, to this browser otherwise), and Cancel goes back to the saved theme.
  * Leaving without applying cancels the preview too.
  */
@@ -43,11 +34,8 @@ export function ThemePicker({ variant, onClose }: ThemePickerProps) {
   const appearance = useSyncExternalStore(subscribe, getState, () => SERVER_STATE);
   const [themes, setThemes] = useState<readonly ThemeDefinition[] | null>(null);
   const [loadError, setLoadError] = useState(false);
-  const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState<Filter>("all");
   const [candidate, setCandidate] = useState<ThemePreference>(appearance.committed);
   const [status, setStatus] = useState<{ kind: "saved" | "error" | "pending"; text: string } | null>(null);
-  const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let active = true;
@@ -71,27 +59,6 @@ export function ThemePicker({ variant, onClose }: ThemePickerProps) {
   }
 
   const byId = useMemo(() => new Map((themes ?? []).map((theme) => [theme.id, theme])), [themes]);
-  const favorites = useMemo(() => new Set(appearance.favorites), [appearance.favorites]);
-  // Sorted once per catalog, with each name lowercased once, rather than on every keystroke.
-  const ordered = useMemo(() => {
-    if (!themes) return [];
-    const defaults = themes.filter((theme) => theme.source === null);
-    const rest = themes.filter((theme) => theme.source !== null).sort((a, b) => a.name.localeCompare(b.name, "en-US"));
-    return [...defaults, ...rest].map((theme) => ({ theme, key: theme.name.toLowerCase() }));
-  }, [themes]);
-  const needle = query.trim().toLowerCase();
-  const shown = useMemo(
-    () =>
-      ordered
-        .filter(
-          ({ theme, key }) =>
-            (filter === "all" || (filter === "favorites" ? favorites.has(theme.id) : theme.scheme === filter)) &&
-            (needle === "" || key.includes(needle)),
-        )
-        .map(({ theme }) => theme),
-    [ordered, needle, filter, favorites],
-  );
-  const showSystem = filter === "all" && (needle === "" || "system".includes(needle));
   const systemSwatches = useMemo(() => [byId.get(SYSTEM_THEMES.light), byId.get(SYSTEM_THEMES.dark)], [byId]);
 
   // Stable, so choosing a theme re-renders only the two options whose checked state changed.
@@ -135,38 +102,8 @@ export function ThemePicker({ variant, onClose }: ThemePickerProps) {
 
   return (
     <div className={`${styles.picker} ${variant === "dialog" ? styles.dialogPicker : ""}`} data-testid="theme-picker">
-      <div className={styles.controls}>
-        <label className={styles.search}>
-          <span className="field-label">Search themes</span>
-          <input
-            type="search"
-            className="input"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Theme name"
-            data-testid="theme-search"
-          />
-        </label>
-        <div className={styles.filters} role="radiogroup" aria-label="Show">
-          {FILTERS.map((option) => (
-            <label key={option.value} className={styles.filter} data-selected={filter === option.value || undefined}>
-              <input
-                type="radio"
-                name={`theme-filter-${variant}`}
-                value={option.value}
-                checked={filter === option.value}
-                onChange={() => setFilter(option.value)}
-                className="visually-hidden"
-              />
-              {option.label}
-            </label>
-          ))}
-        </div>
-      </div>
-
-
       <div className={styles.body}>
-        <div className={styles.list} ref={listRef} role="radiogroup" aria-label="Themes" data-testid="theme-list">
+        <div className={styles.list} role="radiogroup" aria-label="Themes" data-testid="theme-list">
           {loadError ? (
             <p className="notice notice-error">The theme list couldn&apos;t be loaded. Reload the page to try again.</p>
           ) : !themes ? (
@@ -175,40 +112,29 @@ export function ThemePicker({ variant, onClose }: ThemePickerProps) {
             </p>
           ) : (
             <>
-              {showSystem ? (
-                <ThemeOption
-                  name={`theme-${variant}`}
-                  value="system"
-                  label="System"
-                  detail="Light or dark, following this device"
-                  checked={candidateKey === "system"}
-                  saved={committedKey === "system"}
-                  favorite={false}
-                  swatches={systemSwatches}
-                  onChoose={chooseValue}
-                />
-              ) : null}
-              {shown.map((theme) => (
+              <ThemeOption
+                name={`theme-${variant}`}
+                value="system"
+                label="System"
+                detail="Follows this device"
+                checked={candidateKey === "system"}
+                saved={committedKey === "system"}
+                swatches={systemSwatches}
+                onChoose={chooseValue}
+              />
+              {themes.map((theme) => (
                 <ThemeOption
                   key={theme.id}
                   name={`theme-${variant}`}
                   value={theme.id}
                   label={theme.name}
-                  detail={theme.id === DEFAULT_LIGHT_ID ? "Default · light" : theme.scheme === "dark" ? "Dark" : "Light"}
+                  detail={theme.id === DEFAULT_LIGHT_ID ? "Default" : theme.scheme === "dark" ? "Dark" : "Light"}
                   checked={candidateKey === theme.id}
                   saved={committedKey === theme.id}
-                  favorite={favorites.has(theme.id)}
                   theme={theme}
                   onChoose={chooseValue}
                 />
               ))}
-              {shown.length === 0 && !showSystem ? (
-                <p className={styles.none}>
-                  {filter === "favorites"
-                    ? "No favorites yet. Choose a theme, then Add to favorites."
-                    : "No theme has that name."}
-                </p>
-              ) : null}
             </>
           )}
         </div>
@@ -229,22 +155,6 @@ export function ThemePicker({ variant, onClose }: ThemePickerProps) {
               {variant === "dialog" ? "Cancel" : "Cancel preview"}
             </button>
           </div>
-          {candidate.mode === "theme" ? (
-            <button
-              type="button"
-              className="btn btn-small btn-quiet"
-              aria-pressed={favorites.has(candidate.id)}
-              onClick={() =>
-                void toggleFavorite(candidate.id).catch((error: unknown) =>
-                  setStatus({ kind: "error", text: error instanceof Error ? error.message : "Couldn't save favorites." }),
-                )
-              }
-              data-testid="theme-favorite"
-            >
-              <SwapIcon name={favorites.has(candidate.id) ? "star-filled" : "star"} />
-              {favorites.has(candidate.id) ? "Remove from favorites" : "Add to favorites"}
-            </button>
-          ) : null}
           <button
             type="button"
             className="btn btn-small btn-quiet"
@@ -283,14 +193,13 @@ interface ThemeOptionProps {
   detail: string;
   checked: boolean;
   saved: boolean;
-  favorite: boolean;
   /** One theme's swatch, or `swatches` for System's light and dark pair. */
   theme?: ThemeDefinition;
   swatches?: (ThemeDefinition | undefined)[];
   onChoose: (value: string) => void;
 }
 
-/** Memoized: with stable props, only options whose checked, saved or favorite state changed re-render. */
+/** Memoized: with stable props, only options whose checked or saved state changed re-render. */
 const ThemeOption = memo(function ThemeOption({
   name,
   value,
@@ -298,7 +207,6 @@ const ThemeOption = memo(function ThemeOption({
   detail,
   checked,
   saved,
-  favorite,
   theme,
   swatches,
   onChoose,
@@ -317,22 +225,15 @@ const ThemeOption = memo(function ThemeOption({
       <span className={styles.swatches} aria-hidden="true">
         {shownSwatches.map((swatch, index) =>
           swatch ? (
-            <span key={index} className={styles.swatch} style={{ background: swatch.tokens.bg }}>
+            <span key={index} className={styles.swatch} style={{ background: swatch.tokens.bg, color: swatch.tokens.text }}>
+              Aa
               <span style={{ background: swatch.tokens.accent }} />
-              <span style={{ background: swatch.tokens.text }} />
             </span>
           ) : null,
         )}
       </span>
       <span className={styles.optionText}>
-        <span className={styles.optionName}>
-          {label}
-          {favorite ? (
-            <span className={styles.star} role="img" aria-label="favorite">
-              <Icon name="star-filled" />
-            </span>
-          ) : null}
-        </span>
+        <span className={styles.optionName}>{label}</span>
         <span className={styles.optionDetail}>
           {detail}
           {saved ? " · saved" : ""}

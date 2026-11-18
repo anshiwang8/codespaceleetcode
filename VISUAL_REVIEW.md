@@ -61,9 +61,10 @@ Checked by eye in the final images: dense and sparse activity, the rolling perio
 
 `e2e/visual-themes.spec.ts` (part of `pnpm visual:review`) writes to `web/visual-review/after/themes/`:
 
-- `contact-sheet-1.png` to `contact-sheet-4.png`: every one of the 175 themes as a card drawn only from its tokens: its name and ID, secondary text, a link, the default avatar, the primary and danger buttons, a picked chip, the Correct, Hint and Wrong chips on their tints, the five heat levels, and two lines of syntax colors on the editor background.
-- Key screens at 1440px (puzzle list, landing, a dense profile, Settings with an inline error, the theme dialog, and the workspace after a wrong answer) in 7 representative themes: `default-light`, `default-dark`, `dracula` (saturated dark), `arch` (near-black), `botanical` (light, background moved off mid-gray), `diner` (dark, moved the same way) and `beach` (the accent needing the biggest change).
-- Settings and the open theme dialog at 375px in `default-light` and `dracula`.
+- (Since UI phase 2, November 17, 2026, the catalog is eight themes: the spec writes one contact sheet, captures the key screens in all eight, and uses `ink` for the 375px captures. The record below describes the 175-theme catalog as it was inspected then.)
+- `contact-sheet-1.png` to `contact-sheet-4.png`: every theme as a card drawn only from its tokens: its name and ID, secondary text, a link, the default avatar, the primary and danger buttons, a picked chip, the Correct, Hint and Wrong chips on their tints, the five heat levels, and two lines of syntax colors on the editor background.
+- Key screens at 1440px (puzzle list, landing, a dense profile, Settings with an inline error, the theme dialog, and the workspace after a wrong answer) in 7 representative themes of that catalog.
+- Settings and the open theme dialog at 375px in a light and a dark theme.
 
 All four contact sheets were inspected in halves at full size, and the dracula Settings, botanical workspace, diner profile and both phone dialogs opened at full size. That found and fixed:
 
